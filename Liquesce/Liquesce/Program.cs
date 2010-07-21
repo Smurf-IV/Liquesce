@@ -9,11 +9,7 @@ namespace Liquesce
       /// </summary>
       static void Main()
       {
-         ServiceBase[] servicesToRun = new ServiceBase[] 
-                                          { 
-                                             new Main() 
-                                          };
-         ServiceBase.Run(servicesToRun);
+         ServiceBase.Run(new ServiceBase[] { new Main() });
       }
    }
 }
