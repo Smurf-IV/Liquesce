@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Liquesce")]
+[assembly: AssemblyTitle("LiquesceSvc")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Smurf-IV")]
-[assembly: AssemblyProduct("Liquesce")]
+[assembly: AssemblyProduct("LiquesceSvc")]
 [assembly: AssemblyCopyright("Copyright © Smurf-IV 2010")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("3feec58f-ab7b-402f-b78f-5e5aefee7f6d")]
+[assembly: Guid("f58ce85d-120a-4d4e-bde1-8e52ebd50b95")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("2010.7.22.15")]
-[assembly: AssemblyFileVersion("2010.7.22.15")]
+[assembly: AssemblyVersion("2010.7.22.2")]
+[assembly: AssemblyFileVersion("2010.7.22.2")]

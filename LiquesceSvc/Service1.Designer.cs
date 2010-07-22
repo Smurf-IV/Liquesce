@@ -1,6 +1,6 @@
-﻿namespace Liquesce
+﻿namespace LiquesceSvc
 {
-   partial class Main
+   partial class Service1
    {
       /// <summary> 
       /// Required designer variable.
