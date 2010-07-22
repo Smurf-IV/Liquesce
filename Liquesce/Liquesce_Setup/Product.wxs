@@ -1,27 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-	<Product Id="c51c686d-ccee-4e50-9a7a-4ec07cc8a71a" Name="Liquesce_Setup" Language="1033" Version="1.0.0.0" Manufacturer="Liquesce_Setup" UpgradeCode="f6f94f17-a05f-4824-8dd9-9f5e8267d783">
-		<Package InstallerVersion="200" Compressed="yes" />
+   <Product Id="c51c686d-ccee-4e50-9a7a-4ec07cc8a71a" 
+            Name="Liquesce_Setup" Language="1033" 
+            Version="1.0.0.0" 
+            Manufacturer="Liquesce_Setup" 
+            UpgradeCode="f6f94f17-a05f-4824-8dd9-9f5e8267d783"
+            >
+      <Package InstallerVersion="200" Compressed="yes" />
 
-		<Media Id="1" Cabinet="media1.cab" EmbedCab="yes" />
+      <Media Id="1" Cabinet="media1.cab" EmbedCab="yes" />
 
-		<Directory Id="TARGETDIR" Name="SourceDir">
-			<Directory Id="ProgramFilesFolder">
-				<Directory Id="INSTALLLOCATION" Name="Liquesce_Setup">
-					<!-- TODO: Remove the comments around this Component element and the ComponentRef below in order to add resources to this installer. -->
-					<!-- <Component Id="ProductComponent" Guid="5ebf3f29-9cf1-44fe-a94c-cc1b4fe09367"> -->
-						<!-- TODO: Insert files, registry keys, and other resources here. -->
-					<!-- </Component> -->
-				</Directory>
-			</Directory>
-		</Directory>
+      <Directory Id="TARGETDIR" Name="SourceDir">
+         <Directory Id="ProgramFilesFolder">
+            <Directory Id="INSTALLLOCATION" Name="Liquesce_Setup">
+               <!-- TODO: Remove the comments around this Component element and the ComponentRef below in order to add resources to this installer. -->
+               <!-- <Component Id="ProductComponent" Guid="5ebf3f29-9cf1-44fe-a94c-cc1b4fe09367"> -->
+                  <!-- TODO: Insert files, registry keys, and other resources here. -->
+               <!-- </Component> -->
+            </Directory>
+         </Directory>
+      </Directory>
 
-		<Feature Id="ProductFeature" Title="Liquesce_Setup" Level="1">
-			<!-- TODO: Remove the comments around this ComponentRef element and the Component above in order to add resources to this installer. -->
-			<!-- <ComponentRef Id="ProductComponent" /> -->
-			
-			<!-- Note: The following ComponentGroupRef is required to pull in generated authoring from project references. -->
-			<ComponentGroupRef Id="Product.Generated" />
-		</Feature>
-	</Product>
+      <Feature Id="ProductFeature" Title="Liquesce_Setup" Level="1">
+         <!-- TODO: Remove the comments around this ComponentRef element and the Component above in order to add resources to this installer. -->
+         <!-- <ComponentRef Id="ProductComponent" /> -->
+         
+         <!-- Note: The following ComponentGroupRef is required to pull in generated authoring from project references. -->
+         <ComponentGroupRef Id="Product.Generated" />
+      </Feature>
+   </Product>
 </Wix>
