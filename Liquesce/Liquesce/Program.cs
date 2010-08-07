@@ -7,7 +7,7 @@ namespace Liquesce
    static class Program
    {
       
-      private static readonly Logger log = LogManager.GetLogger("Program");
+      private static readonly Logger Log = LogManager.GetLogger("Program");
       /// <summary>
       /// The main entry point for the application.
       /// </summary>
@@ -22,47 +22,47 @@ namespace Liquesce
          {
             try
             {
-               log.FatalException("Failed to attach unhandled exception handler...", ex);
+               Log.FatalException("Failed to attach unhandled exception handler...", ex);
             }
-            catch (Exception)
+            catch
             {
             }
          }
          try
          {
-            log.Error("=====================================================================");
-            log.Error(String.Concat("File Re-opened: ", DateTime.UtcNow));
+            Log.Error("=====================================================================");
+            Log.Error(String.Concat("File Re-opened: ", DateTime.UtcNow));
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new MainForm());
          }
          catch (Exception ex)
          {
-            log.Fatal("Exception has not been caught by the rest of the application!", ex);
+            Log.Fatal("Exception has not been caught by the rest of the application!", ex);
             MessageBox.Show(ex.Message, "Uncaught Exception - Exiting !");
          }
          finally
          {
-            log.Error("File Closing");
-            log.Error("=====================================================================");
+            Log.Error("File Closing");
+            Log.Error("=====================================================================");
          }
       }
       private static void logUnhandledException(object sender, UnhandledExceptionEventArgs e)
       {
          try
          {
-            log.Fatal("Unhandled exception.\r\n{0}", e.ExceptionObject);
+            Log.Fatal("Unhandled exception.\r\n{0}", e.ExceptionObject);
             Exception ex = e.ExceptionObject as Exception;
             if (ex != null)
             {
-               log.FatalException("Exception details", ex);
+               Log.FatalException("Exception details", ex);
             }
             else
             {
-               log.Fatal("Unexpected exception.");
+               Log.Fatal("Unexpected exception.");
             }
          }
-         catch (Exception)
+         catch
          {
          }
       }
