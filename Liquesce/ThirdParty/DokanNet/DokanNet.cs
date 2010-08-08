@@ -4,25 +4,14 @@ namespace DokanNet
 {
    public class DokanOptions
    {
-      public readonly char DriveLetter;
-      public readonly ushort ThreadCount;
-      public readonly bool DebugMode;
-      public readonly bool UseStdErr;
-      public readonly bool UseAltStream;
-      public readonly bool UseKeepAlive;
-      public readonly bool NetworkDrive;
+      public char DriveLetter;
+      public ushort ThreadCount;
+      public bool DebugMode;
+      public bool UseStdErr;
+      public bool UseAltStream;
+      public bool UseKeepAlive;
+      public bool NetworkDrive;
       public string VolumeLabel;
-
-      public DokanOptions(char driveLetter, ushort threadCount, bool debugMode, bool useStdErr, bool useAltStream, bool useKeepAlive, bool networkDrive)
-      {
-         DriveLetter = driveLetter;
-         NetworkDrive = networkDrive;
-         UseKeepAlive = useKeepAlive;
-         UseAltStream = useAltStream;
-         UseStdErr = useStdErr;
-         DebugMode = debugMode;
-         ThreadCount = threadCount;
-      }
    }
 
 

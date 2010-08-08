@@ -98,6 +98,12 @@
     </None>
     <AppDesigner Include="Properties\" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LiquesceFaçade\LiquesceFaçade.csproj">
+      <Project>{CFE5DC7B-25FB-45C4-AF18-1963853375E1}</Project>
+      <Name>LiquesceFaçade</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
