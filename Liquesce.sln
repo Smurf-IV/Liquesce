@@ -16,9 +16,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ThirdParty", "ThirdParty", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DokanNet", "ThirdParty\DokanNet\DokanNet.csproj", "{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiquesceFaçade", "LiquesceFaçade\LiquesceFaçade.csproj", "{CFE5DC7B-25FB-45C4-AF18-1963853375E1}"
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 6
+		SccNumberOfProjects = 7
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs08
 		SccLocalPath0 = .
@@ -38,6 +40,9 @@ Global
 		SccProjectTopLevelParentUniqueName5 = Liquesce.sln
 		SccProjectName5 = ThirdParty/DokanNet
 		SccLocalPath5 = ThirdParty\\DokanNet
+		SccProjectUniqueName6 = LiquesceFaçade\\LiquesceFaçade.csproj
+		SccProjectName6 = LiquesceFaçade
+		SccLocalPath6 = LiquesceFaçade
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -98,6 +103,16 @@ Global
 		{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C}.Release|x86.ActiveCfg = Release|Any CPU
+		{CFE5DC7B-25FB-45C4-AF18-1963853375E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CFE5DC7B-25FB-45C4-AF18-1963853375E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CFE5DC7B-25FB-45C4-AF18-1963853375E1}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{CFE5DC7B-25FB-45C4-AF18-1963853375E1}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{CFE5DC7B-25FB-45C4-AF18-1963853375E1}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{CFE5DC7B-25FB-45C4-AF18-1963853375E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CFE5DC7B-25FB-45C4-AF18-1963853375E1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CFE5DC7B-25FB-45C4-AF18-1963853375E1}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{CFE5DC7B-25FB-45C4-AF18-1963853375E1}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{CFE5DC7B-25FB-45C4-AF18-1963853375E1}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
