@@ -14,6 +14,7 @@ namespace LiquesceSvc
          Log.Error("=====================================================================");
          Log.Error("File Re-opened: " + System.DateTime.UtcNow);
          ServiceBase.Run(new ServiceBase[] { new LiquesceService() });
+         Log.Error("========================Clean=Exit===================================");
       }
    }
 }

@@ -47,7 +47,7 @@ namespace LiquesceSvc
                Log.Fatal("Unexpected exception.");
             }
          }
-         catch 
+         catch
          {
          }
       }
@@ -58,14 +58,14 @@ namespace LiquesceSvc
          try
          {
             RequestAdditionalTime(30000); // let the SCM know that this part could take a while due to other services starting up
-            foreach ( string arg in args )
+            foreach (string arg in args)
             {
-               Log.Debug( arg );
+               Log.Debug(arg);
                switch (arg.ToUpper())
                {
                   case "-DEBUG":
-                     Log.Info( "Launching debugger." );
-                     Debugger.Launch( );
+                     Log.Info("Launching debugger.");
+                     Debugger.Launch();
                      break;
                }
             }
@@ -73,7 +73,7 @@ namespace LiquesceSvc
             // it is in the same directory as the location of the assembly that we
             // are inside (then appending ".config"). This is needed in the service
             // since the working directory will be c:\windows\system32. 
-            string configPath = Assembly.GetExecutingAssembly().Location + ".config";
+            string configPath = Assembly.GetExecutingAssembly().Location + ".config"; 
             Log.Info("Loading configuration from " + configPath);
             RemotingStartHelper.Configure(configPath, false, this);
 
@@ -84,16 +84,16 @@ namespace LiquesceSvc
             RequestAdditionalTime(30000); // let the SCM know that this part could take a while due to other services starting up
 
             // Queue the main work as a thread pool task as we want this method to finish promptly.
-			   ThreadPool.QueueUserWorkItem(ThreadProc, this);
+            ThreadPool.QueueUserWorkItem(ThreadProc, this);
          }
-         catch ( System.Runtime.Remoting.RemotingException e )
+         catch (System.Runtime.Remoting.RemotingException e)
          {
             base.EventLog.WriteEntry(e.Message, EventLogEntryType.Error);
             OnStop();
             Stop();
             throw;
          }
-         catch ( Exception ex )
+         catch (Exception ex)
          {
             Log.ErrorException("LiquesceService startup error.", ex);
             base.EventLog.WriteEntry(ex.Message, EventLogEntryType.Error);
@@ -103,32 +103,38 @@ namespace LiquesceSvc
          }
       }
 
-		/// <summary>
+      /// <summary>
       /// This thread routine performs the task of initializing the ManagementLayer.
-		/// </summary>
-		/// <param name="stateInfo">Object passed into the method for context info.</param>
-		static void ThreadProc(Object stateInfo) 
-		{
+      /// </summary>
+      /// <param name="stateInfo">Object passed into the method for context info.</param>
+      static void ThreadProc(Object stateInfo)
+      {
          Log.Info("LiquesceService object starting.");
          LiquesceService me = stateInfo as LiquesceService;
          try
          {
             Log.Info("Running Assembly Information.");
 
-            if ( !ManagementLayer.Instance.Start() )
+            if (!ManagementLayer.Instance.Start())
             {
                Log.Error("ManagementLayer startup error.");
-               me.OnStop();
-               ((ServiceBase)me)/*.base*/.Stop();
+               if (me != null)
+               {
+                  me.OnStop();
+                  ((ServiceBase)me)/*.base*/.Stop();
+               }
             }
 
             Log.Info("LiquesceService started.");
          }
-         catch ( Exception ex )
+         catch (Exception ex)
          {
             Log.ErrorException("LiquesceService startup error.", ex);
-            me.OnStop();
-            ((ServiceBase)me)/*.base*/.Stop();
+            if (me != null)
+            {
+               me.OnStop();
+               ((ServiceBase)me)/*.base*/.Stop();
+            }
             throw;
          }
       }
@@ -136,13 +142,12 @@ namespace LiquesceSvc
       /// <summary>
       /// "Play nice" with exceptions so that the service can exit when asked (Forced)
       /// </summary>
-      protected override void OnStop( )
+      protected override void OnStop()
       {
          try
          {
             Log.Info("Stop the ManagementLayer and remove");
             RequestAdditionalTime(30000);
-            base.Stop();
             ManagementLayer.Instance.Stop();
 
             Log.Info("LiquesceService stopped.");
@@ -153,6 +158,7 @@ namespace LiquesceSvc
          }
          finally
          {
+            Log.Info("base.OnStop()");
             base.OnStop();
          }
       }

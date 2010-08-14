@@ -12,8 +12,10 @@ namespace LiquesceFaçade
    {
       public uint DelayStartMilliSec;
       public char DriveLetter;
+      public ushort ThreadCount;
       public bool DebugMode;
       public string VolumeLabel;
+      public UInt64 HoldOffBufferBytes = 10L<<10<<10<<10; // ==10GB;
       public List<string> SourceLocations;
       // TODO: Extend to include encypted ACL's and things
 

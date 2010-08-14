@@ -1,12 +1,14 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Collections;
+using System.Security.AccessControl;
 
 namespace DokanNet
 {
    public class DokanFileInfo
    {
-      private Object context;
+      public Object Context; // This is initialised to null
       public bool IsDirectory;
       public ulong InfoId;
       public uint ProcessId;
@@ -15,11 +17,11 @@ namespace DokanNet
       public bool SynchronousIo;
       public bool Nocache;
       public bool WriteToEndOfFile;
-      public readonly ulong DokanContext; // for internal use
+      internal ulong DokanContext; // for internal use
 
       public DokanFileInfo(ulong dokanContext)
       {
-         context = null;
+         Context = null;
          IsDirectory = false;
          DeleteOnClose = false;
          PagingIo = false;
@@ -51,7 +53,7 @@ namespace DokanNet
 
    public interface IDokanOperations
    {
-      int CreateFile( string filename, FileAccess access, FileShare share, FileMode mode, FileOptions options, DokanFileInfo info);
+      int CreateFileRaw(string filename, uint rawAccessMode, uint rawShare, uint rawCreationDisposition, uint rawFlagsAndAttributes, DokanFileInfo info);
 
       int OpenDirectory( string filename, DokanFileInfo info);
 
@@ -69,7 +71,7 @@ namespace DokanNet
 
       int GetFileInformation( string filename, FileInformation fileinfo, DokanFileInfo info);
 
-      int FindFiles( string filename, ArrayList files, DokanFileInfo info);
+      int FindFiles(string filename, List<FileInformation> files, DokanFileInfo info);
 
       int SetFileAttributes( string filename, FileAttributes attr, DokanFileInfo info);
 
