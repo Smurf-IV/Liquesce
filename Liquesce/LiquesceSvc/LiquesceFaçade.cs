@@ -22,8 +22,8 @@ namespace LiquesceSvc
 
       public ConfigDetails ConfigDetails
       {
-         get { return ManagementLayer.Instance.ConfigDetails; }
-         set { ManagementLayer.Instance.ConfigDetails = value; }
+         get { return ManagementLayer.Instance.CurrentConfigDetails; }
+         set { ManagementLayer.Instance.CurrentConfigDetails = value; }
       }
 
    }

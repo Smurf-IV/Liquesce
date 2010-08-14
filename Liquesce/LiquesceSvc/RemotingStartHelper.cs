@@ -90,7 +90,7 @@ namespace LiquesceSvc
                   Log.Debug(tcpRow.LocalEndPoint.Port);
                }
             }
-            catch (System.Exception e)
+            catch (Exception e)
             {
                Log.WarnException("Cannot get the process information for the port in use", e);
             }
@@ -159,7 +159,7 @@ namespace LiquesceSvc
       /// </summary>
       public IEnumerable<TcpRow> Rows
       {
-         get { return this.tcpRows; }
+         get { return tcpRows; }
       }
 
       #endregion
@@ -171,7 +171,7 @@ namespace LiquesceSvc
       /// <returns></returns>
       public IEnumerator<TcpRow> GetEnumerator()
       {
-         return this.tcpRows.GetEnumerator();
+         return tcpRows.GetEnumerator();
       }
 
       #endregion
@@ -183,7 +183,7 @@ namespace LiquesceSvc
       /// <returns></returns>
       IEnumerator IEnumerable.GetEnumerator()
       {
-         return this.tcpRows.GetEnumerator();
+         return tcpRows.GetEnumerator();
       }
 
       #endregion

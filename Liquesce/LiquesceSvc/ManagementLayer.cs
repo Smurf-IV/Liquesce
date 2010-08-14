@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Threading;
+using System.Xml.Serialization;
 using DokanNet;
 using LiquesceFaçade;
 using NLog;
@@ -10,10 +13,9 @@ namespace LiquesceSvc
    {
       static private readonly Logger Log = LogManager.GetCurrentClassLogger();
       private static ManagementLayer instance;
-      private readonly object aLock = new object();
-      private TimeSpan isAlivePeriodms;
-      private readonly object runLock = new object();
-      private ConfigDetails configDetails;
+      private ConfigDetails currentConfigDetails;
+      private readonly DateTime startTime;
+      private readonly string configFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "LiquesceSvc", Settings1.Default.ConfigFileName);
 
       /// <summary>
       /// Returns "The single instance" of this singleton class.
@@ -31,6 +33,7 @@ namespace LiquesceSvc
          try
          {
             Log.Debug("New ManagementLayer created.");
+            startTime = DateTime.UtcNow;
          }
          catch (Exception ex)
          {
@@ -38,39 +41,70 @@ namespace LiquesceSvc
          }
       }
 
+      /// <summary>
+      /// Invokes DokanNet.DokanMain function to mount a drive. 
+      /// The function blocks until the file system is unmounted.
+      /// Administrator privilege is needed to communicate with Dokan driver. 
+      /// You need a manifest file for .NET application.
+      /// </summary>
+      /// <returns></returns>
       public bool Start()
       {
-         bool success;
+         bool success = false;
          try
          {
-            lock (aLock)
-            {
                if (!IsRunning)
                {
-                  DokanOptions options = new DokanOptions();
-                  IDokanOperations dokanOperations = new LiquesceOps();
+                  if (currentConfigDetails == null)
+                     ReadConfigDetails();
+                  TimeSpan delayStart = DateTime.UtcNow - startTime;
                   State = LiquesceSvcState.InError;
-                  int retVal = DokanNet.DokanNet.DokanMain(options, dokanOperations);
+                  if (currentConfigDetails == null)
+                  {
+                     Log.Error("Unable to read the config details to allow this service to run. Wil now exit");
+                     return false;
+                  }
+                  if (delayStart.Milliseconds > currentConfigDetails.DelayStartMilliSec)
+                  {
+                     Log.Info("Delay Start needs to be obeyed");
+                     Thread.Sleep((int)(currentConfigDetails.DelayStartMilliSec - delayStart.Milliseconds));
+                  }
+                  DokanOptions options = new DokanOptions
+                                            {
+                                               DriveLetter = currentConfigDetails.DriveLetter,
+                                               ThreadCount = currentConfigDetails.ThreadCount,
+                                               DebugMode = currentConfigDetails.DebugMode,
+//      public bool UseStdErr;
+  //    public bool UseAltStream;
+                                               UseKeepAlive = true,  // When you set TRUE on DokanOptions->UseKeepAlive, dokan library automatically unmounts 15 seconds after user-mode file system hanged up
+                                               NetworkDrive = false,
+                                               VolumeLabel = currentConfigDetails.VolumeLabel
+                                            };
+
+                  IDokanOperations dokanOperations = new LiquesceOps(currentConfigDetails);
+                  State = LiquesceSvcState.Running;
+                  IsRunning = true;
+                  int retVal = Dokan.DokanMain(options, dokanOperations);
+                  State = LiquesceSvcState.Unknown;
+                  IsRunning = false;
                   switch (retVal)
                   {
-                     case DokanNet.DokanNet.DOKAN_SUCCESS: // = 0;
+                     case Dokan.DOKAN_SUCCESS: // = 0;
                         Log.Info("DOKAN_SUCCESS");
-                        State = LiquesceSvcState.Running;
-                        IsRunning = true;
                         break;
-                     case DokanNet.DokanNet.DOKAN_ERROR:// = -1; // General Error
+                     case Dokan.DOKAN_ERROR:// = -1; // General Error
                         Log.Info("DOKAN_ERROR");
                         break;
-                     case DokanNet.DokanNet.DOKAN_DRIVE_LETTER_ERROR: // = -2; // Bad Drive letter
+                     case Dokan.DOKAN_DRIVE_LETTER_ERROR: // = -2; // Bad Drive letter
                         Log.Info("DOKAN_DRIVE_LETTER_ERROR");
                         break;
-                     case DokanNet.DokanNet.DOKAN_DRIVER_INSTALL_ERROR: // = -3; // Can't install driver
+                     case Dokan.DOKAN_DRIVER_INSTALL_ERROR: // = -3; // Can't install driver
                         Log.Info("DOKAN_DRIVER_INSTALL_ERROR");
                         break;
-                     case DokanNet.DokanNet.DOKAN_START_ERROR: // = -4; // Driver something wrong
+                     case Dokan.DOKAN_START_ERROR: // = -4; // Driver something wrong
                         Log.Info("DOKAN_START_ERROR");
                         break;
-                     case DokanNet.DokanNet.DOKAN_MOUNT_ERROR: // = -5; // Can't assign drive letter
+                     case Dokan.DOKAN_MOUNT_ERROR: // = -5; // Can't assign drive letter
                         Log.Info("DOKAN_MOUNT_ERROR");
                         break;
                      default:
@@ -78,48 +112,110 @@ namespace LiquesceSvc
                         break;
                   }
                }
-            }
-            success = IsRunning;
          }
          catch (Exception ex)
          {
             Log.ErrorException("Start has failed in an uncontrolled way: ", ex);
-            success = false;
          }
          return success;
       }
 
       private bool IsRunning { get; set; }
 
-      public ConfigDetails ConfigDetails
+      public ConfigDetails CurrentConfigDetails
       {
-         get { return configDetails; }
-         set { configDetails = value; }
+         get { return currentConfigDetails; }
+         set
+         {
+            currentConfigDetails = value;
+            // I know.. Bad form calling a function in a setter !
+            WriteOutConfigDetails();
+         }
       }
 
       public LiquesceSvcState State { get; private set; }
 
       public void Stop()
       {
-         lock (aLock)
-         {
             if (IsRunning
                && (State != LiquesceSvcState.Unknown)
                )
             {
                State = LiquesceSvcState.Unknown;
-               int retVal = DokanNet.DokanNet.DokanUnmount(configDetails.DriveLetter);
+               int retVal = Dokan.DokanUnmount(currentConfigDetails.DriveLetter);
+               IsRunning = false;
                Log.Info("Stop returned[{0}]", retVal);
             }
+      }
+
+
+      private void ReadConfigDetails()
+      {
+         try
+         {
+            InitialiseToDefault();
+            XmlSerializer x = new XmlSerializer(currentConfigDetails.GetType());
+            Log.Info("Attempting to read Dokan Drive details from: [{0}]", configFile);
+            using (TextReader textReader = new StreamReader(configFile))
+            {
+               currentConfigDetails = x.Deserialize(textReader) as ConfigDetails;
+            }
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException("Cannot read the configDetails: ", ex);
+            currentConfigDetails = null;
+         }
+         finally
+         {
+            InitialiseToDefault();
+         }
+
+      }
+
+      private void InitialiseToDefault()
+      {
+         try 
+         {
+            if (currentConfigDetails == null)
+            {
+               currentConfigDetails = new ConfigDetails
+                                         {
+                                            DebugMode = true,
+                                            DelayStartMilliSec = (uint) short.MaxValue,
+                                            DriveLetter = 'N',
+                                            SourceLocations = new List<string>(1),
+                                            ThreadCount = 1,
+                                            //HoldOffBufferBytes = 10*1024*1024*1024, // ==10GB
+                                            VolumeLabel = "InternallyCreated"
+                                         };
+               currentConfigDetails.SourceLocations.Add(@"C:\");
+            }
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException("Cannot create the default configDetails: ", ex);
+            currentConfigDetails = null;
          }
       }
 
-
-      public void ReadConfigDetails()
+      private void WriteOutConfigDetails()
       {
-         throw new NotImplementedException();
-         // configDetails = ??
+         if (currentConfigDetails != null)
+            try
+         {
+            XmlSerializer x = new XmlSerializer(currentConfigDetails.GetType());
+            using (TextWriter textWriter = new StreamWriter(configFile))
+            {
+               x.Serialize(textWriter, currentConfigDetails);
+            }
+         }
+         catch(Exception ex)
+         {
+            Log.ErrorException("Cannot save configDetails: ", ex);
+         } 
       }
+
 
    }
 }

@@ -107,42 +107,11 @@ namespace DokanNet
 
       private static string GetFileName(IntPtr fileName)
       {
-         string uniString = Marshal.PtrToStringUni(fileName);
-         Log.Info(uniString);
-         return uniString;
+         return Marshal.PtrToStringUni(fileName);
       }
 
 
-      private const uint GENERIC_READ = 0x80000000;
-      private const uint GENERIC_WRITE = 0x40000000;
-      private const uint GENERIC_EXECUTE = 0x20000000;
-
-      private const uint FILE_READ_DATA = 0x0001;
-      private const uint FILE_READ_ATTRIBUTES = 0x0080;
-      private const uint FILE_READ_EA = 0x0008;
-      private const uint FILE_WRITE_DATA = 0x0002;
-      private const uint FILE_WRITE_ATTRIBUTES = 0x0100;
-      private const uint FILE_WRITE_EA = 0x0010;
-
-      private const uint FILE_SHARE_READ = 0x00000001;
-      private const uint FILE_SHARE_WRITE = 0x00000002;
-      private const uint FILE_SHARE_DELETE = 0x00000004;
-
-      private const uint CREATE_NEW = 1;
-      private const uint CREATE_ALWAYS = 2;
-      private const uint OPEN_EXISTING = 3;
-      private const uint OPEN_ALWAYS = 4;
-      private const uint TRUNCATE_EXISTING = 5;
-
-      private const uint FILE_ATTRIBUTE_ARCHIVE = 0x00000020;
-      private const uint FILE_ATTRIBUTE_ENCRYPTED = 0x00004000;
-      private const uint FILE_ATTRIBUTE_HIDDEN = 0x00000002;
-      private const uint FILE_ATTRIBUTE_NORMAL = 0x00000080;
-      private const uint FILE_ATTRIBUTE_NOT_CONTENT_INDEXED = 0x00002000;
-      private const uint FILE_ATTRIBUTE_OFFLINE = 0x00001000;
-      private const uint FILE_ATTRIBUTE_READONLY = 0x00000001;
-      private const uint FILE_ATTRIBUTE_SYSTEM = 0x00000004;
-      private const uint FILE_ATTRIBUTE_TEMPORARY = 0x00000100;
+	
 
 
       public delegate int CreateFileDelegate( IntPtr rawFilName, uint rawAccessMode, uint rawShare, uint rawCreationDisposition, uint rawFlagsAndAttributes, ref DOKAN_FILE_INFO dokanFileInfo);
@@ -151,64 +120,11 @@ namespace DokanNet
       {
          try
          {
-            Log.Info("Start CreateFileProxy");
             string file = GetFileName(rawFileName);
 
             DokanFileInfo info = GetNewFileInfo(ref rawFileInfo);
 
-            FileAccess access = FileAccess.Read;
-            FileShare share = FileShare.None;
-            FileMode mode = FileMode.Open;
-            FileOptions options = FileOptions.None;
-
-            if ((rawAccessMode & FILE_READ_DATA) != 0 && (rawAccessMode & FILE_WRITE_DATA) != 0)
-            {
-               access = FileAccess.ReadWrite;
-            }
-            else if ((rawAccessMode & FILE_WRITE_DATA) != 0)
-            {
-               access = FileAccess.Write;
-            }
-            else
-            {
-               access = FileAccess.Read;
-            }
-
-            if ((rawShare & FILE_SHARE_READ) != 0)
-            {
-               share = FileShare.Read;
-            }
-
-            if ((rawShare & FILE_SHARE_WRITE) != 0)
-            {
-               share |= FileShare.Write;
-            }
-
-            if ((rawShare & FILE_SHARE_DELETE) != 0)
-            {
-               share |= FileShare.Delete;
-            }
-
-            switch (rawCreationDisposition)
-            {
-               case CREATE_NEW:
-                  mode = FileMode.CreateNew;
-                  break;
-               case CREATE_ALWAYS:
-                  mode = FileMode.Create;
-                  break;
-               case OPEN_EXISTING:
-                  mode = FileMode.Open;
-                  break;
-               case OPEN_ALWAYS:
-                  mode = FileMode.OpenOrCreate;
-                  break;
-               case TRUNCATE_EXISTING:
-                  mode = FileMode.Truncate;
-                  break;
-            }
-
-            int ret = operations.CreateFile(file, access, share, mode, options, info);
+            int ret = operations.CreateFileRaw(file, rawAccessMode, rawShare, rawCreationDisposition, rawFlagsAndAttributes, info);
 
             if (info.IsDirectory)
                rawFileInfo.IsDirectory = 1;
@@ -218,7 +134,7 @@ namespace DokanNet
          catch (Exception ex)
          {
             Log.ErrorException("CreateFileProxy threw:", ex);
-            return -2;
+            return Dokan.ERROR_FILE_NOT_FOUND;
          }
 
       }
@@ -231,12 +147,10 @@ namespace DokanNet
       {
          try
          {
-            Log.Info("Start OpenDirectoryProxy");
             string file = GetFileName(rawFileName);
 
             DokanFileInfo info = GetNewFileInfo(ref rawFileInfo);
             return operations.OpenDirectory(file, info);
-
          }
          catch (Exception ex)
          {
@@ -253,12 +167,10 @@ namespace DokanNet
       {
          try
          {
-            Log.Info("Start CreateDirectoryProxy");
             string file = GetFileName(rawFileName);
 
             DokanFileInfo info = GetNewFileInfo(ref rawFileInfo);
             return operations.CreateDirectory(file, info);
-
          }
          catch (Exception ex)
          {
@@ -275,10 +187,8 @@ namespace DokanNet
       {
          try
          {
-            Log.Info("Start CleanupProxy");
             string file = GetFileName(rawFileName);
             return operations.Cleanup(file, GetFileInfo(ref rawFileInfo));
-
          }
          catch (Exception ex)
          {
@@ -295,7 +205,6 @@ namespace DokanNet
       {
          try
          {
-            Log.Info("Start CloseFileProxy");
             string file = GetFileName(rawFileName);
             DokanFileInfo info = GetFileInfo(ref rawFileInfo);
 
@@ -308,7 +217,6 @@ namespace DokanNet
                infoTable.Remove(info.InfoId);
             }
             return ret;
-
          }
          catch (Exception ex)
          {
@@ -325,7 +233,6 @@ namespace DokanNet
       {
          try
          {
-            Log.Info("Start ReadFileProxy");
             string file = GetFileName(rawFileName);
 
             byte[] buf = new Byte[rawBufferLength];
@@ -339,7 +246,6 @@ namespace DokanNet
                Marshal.Copy(buf, 0, rawBuffer, (int)rawBufferLength);
             }
             return ret;
-
          }
          catch (Exception ex)
          {
@@ -356,7 +262,6 @@ namespace DokanNet
       {
          try
          {
-            Log.Info("Start WriteFileProxy");
             string file = GetFileName(rawFileName);
 
             Byte[] buf = new Byte[rawNumberOfBytesToWrite];
@@ -368,7 +273,6 @@ namespace DokanNet
             if (ret == 0)
                rawNumberOfBytesWritten = bytesWritten;
             return ret;
-
          }
          catch (Exception ex)
          {
@@ -385,11 +289,9 @@ namespace DokanNet
       {
          try
          {
-            Log.Info("Start FlushFileBuffersProxy");
             string file = GetFileName(rawFileName);
             int ret = operations.FlushFileBuffers(file, GetFileInfo(ref rawFileInfo));
             return ret;
-
          }
          catch (Exception ex)
          {
@@ -406,7 +308,6 @@ namespace DokanNet
       {
          try
          {
-            Log.Info("Start GetFileInformationProxy");
             string file = GetFileName(rawFileName);
 
             FileInformation fi = new FileInformation();
@@ -431,7 +332,6 @@ namespace DokanNet
             }
 
             return ret;
-
          }
          catch (Exception ex)
          {
@@ -470,10 +370,9 @@ namespace DokanNet
       {
          try
          {
-            Log.Info("Start FindFilesProxy");
             string file = GetFileName(rawFileName);
 
-            ArrayList files = new ArrayList();
+            List<FileInformation> files = new List<FileInformation>();
             int ret = operations.FindFiles(file, files, GetFileInfo(ref rawFileInfo));
 
             FILL_FIND_DATA fill = (FILL_FIND_DATA)Marshal.GetDelegateForFunctionPointer( rawFillFindData, typeof(FILL_FIND_DATA));
@@ -508,7 +407,6 @@ namespace DokanNet
 
             }
             return ret;
-
          }
          catch (Exception ex)
          {
@@ -526,11 +424,9 @@ namespace DokanNet
       {
          try
          {
-            Log.Info("Start SetEndOfFileProxy");
             string file = GetFileName(rawFileName);
 
             return operations.SetEndOfFile(file, rawByteOffset, GetFileInfo(ref rawFileInfo));
-
          }
          catch (Exception ex)
          {
@@ -546,11 +442,9 @@ namespace DokanNet
       {
          try
          {
-            Log.Info("Start SetAllocationSizeProxy");
             string file = GetFileName(rawFileName);
 
             return operations.SetAllocationSize(file, rawLength, GetFileInfo(ref rawFileInfo));
-
          }
          catch (Exception ex)
          {
@@ -568,12 +462,10 @@ namespace DokanNet
       {
          try
          {
-            Log.Info("Start SetFileAttributesProxy");
             string file = GetFileName(rawFileName);
 
             FileAttributes attr = (FileAttributes)rawAttributes;
             return operations.SetFileAttributes(file, attr, GetFileInfo(ref rawFileInfo));
-
          }
          catch (Exception ex)
          {
@@ -592,7 +484,6 @@ namespace DokanNet
       {
          try
          {
-            Log.Info("Start SetFileTimeProxy");
             string file = GetFileName(rawFileName);
 
             long time = ((long)rawCreationTime.dwHighDateTime << 32) + (uint)rawCreationTime.dwLowDateTime;
@@ -614,7 +505,6 @@ namespace DokanNet
                mtime = DateTime.MinValue;
 
             return operations.SetFileTime( file, ctime, atime, mtime, GetFileInfo(ref rawFileInfo));
-
          }
          catch (Exception ex)
          {
@@ -631,11 +521,9 @@ namespace DokanNet
       {
          try
          {
-            Log.Info("Start DeleteFileProxy");
             string file = GetFileName(rawFileName);
 
             return operations.DeleteFile(file, GetFileInfo(ref rawFileInfo));
-
          }
          catch (Exception ex)
          {
@@ -652,10 +540,8 @@ namespace DokanNet
       {
          try
          {
-            Log.Info("Start DeleteDirectoryProxy");
             string file = GetFileName(rawFileName);
             return operations.DeleteDirectory(file, GetFileInfo(ref rawFileInfo));
-
          }
          catch (Exception ex)
          {
@@ -672,12 +558,10 @@ namespace DokanNet
       {
          try
          {
-            Log.Info("Start MoveFileProxy");
             string file = GetFileName(rawFileName);
             string newfile = GetFileName(rawNewFileName);
 
             return operations.MoveFile( file, newfile, rawReplaceIfExisting != 0 ? true : false, GetFileInfo(ref rawFileInfo));
-
          }
          catch (Exception ex)
          {
@@ -694,10 +578,8 @@ namespace DokanNet
       {
          try
          {
-            Log.Info("Start LockFileProxy");
             string file = GetFileName(rawFileName);
             return operations.LockFile( file, rawByteOffset, rawLength, GetFileInfo(ref rawFileInfo));
-
          }
          catch (Exception ex)
          {
@@ -714,10 +596,8 @@ namespace DokanNet
       {
          try
          {
-            Log.Info("Start UnlockFileProxy");
             string file = GetFileName(rawFileName);
             return operations.UnlockFile( file, rawByteOffset, rawLength, GetFileInfo(ref rawFileInfo));
-
          }
          catch (Exception ex)
          {
@@ -736,7 +616,6 @@ namespace DokanNet
       {
          try
          {
-            Log.Info("Start GetDiskFreeSpaceProxy");
             return operations.GetDiskFreeSpace( ref rawFreeBytesAvailable, ref rawTotalNumberOfBytes,
                 ref rawTotalNumberOfFreeBytes, GetFileInfo(ref rawFileInfo));
          }
@@ -755,7 +634,6 @@ namespace DokanNet
       {
          try
          {
-            Log.Info("Start GetVolumeInformationProxy");
             byte[] volume = System.Text.Encoding.Unicode.GetBytes(options.VolumeLabel);
             Marshal.Copy(volume, 0, rawVolumeNameBuffer, Math.Min((int)rawVolumeNameSize, volume.Length));
             rawVolumeSerialNumber = 0x19831116;
@@ -769,7 +647,6 @@ namespace DokanNet
             byte[] sys = System.Text.Encoding.Unicode.GetBytes("DOKAN");
             Marshal.Copy(sys, 0, rawFileSystemNameBuffer, Math.Min((int)rawFileSystemNameSize, sys.Length));
             return 0;
-
          }
          catch (Exception ex)
          {
@@ -785,7 +662,6 @@ namespace DokanNet
       {
          try
          {
-            Log.Info("Start UnmountProxy");
             return operations.Unmount(GetFileInfo(ref rawFileInfo));
          }
          catch (Exception ex)
