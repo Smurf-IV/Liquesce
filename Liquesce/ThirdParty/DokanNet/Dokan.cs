@@ -19,6 +19,8 @@ namespace DokanNet
    {
       static private readonly Logger Log = LogManager.GetCurrentClassLogger();
 
+// ReSharper disable InconsistentNaming
+#pragma warning disable 169
       #region File Operation Errors (From WinError.h)
       public const int ERROR_FILE_NOT_FOUND = -2;  // MessageText: The system cannot find the file specified.
       public const int ERROR_PATH_NOT_FOUND = -3;  // MessageText: The system cannot find the path specified.
@@ -46,6 +48,8 @@ namespace DokanNet
       private const uint DOKAN_OPTION_KEEP_ALIVE = 8;
       private const uint DOKAN_OPTION_NETWORK = 16;
       #endregion
+#pragma warning restore 169
+// ReSharper restore InconsistentNaming
 
 
 
