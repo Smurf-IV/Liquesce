@@ -47,69 +47,6 @@ namespace DokanNet
       private const uint DOKAN_OPTION_NETWORK = 16;
       #endregion
 
-#region File Constants from Win32
-      public const uint GENERIC_READ = 0x80000000;
-      public const uint GENERIC_WRITE = 0x40000000;
-      public const uint GENERIC_EXECUTE = 0x20000000;
-
-      public const uint FILE_READ_DATA = 0x00000001;
-      public const uint FILE_WRITE_DATA = 0x00000002;
-      public const uint FILE_APPEND_DATA = 0x00000004;
-      public const uint FILE_READ_EA = 0x00000008;
-      public const uint FILE_WRITE_EA = 0x00000010;
-      public const uint FILE_EXECUTE = 0x00000020;
-      public const uint FILE_READ_ATTRIBUTES = 0x00000080;
-      public const uint FILE_WRITE_ATTRIBUTES = 0x00000100;
-      public const uint DELETE = 0x00010000;
-      public const uint READ_CONTROL = 0x00020000;
-      public const uint WRITE_DAC = 0x00040000;
-      public const uint WRITE_OWNER = 0x00080000;
-      public const uint SYNCHRONIZE = 0x00100000;
-
-      public const uint STANDARD_RIGHTS_REQUIRED = 0x000F0000;
-
-      public const uint STANDARD_RIGHTS_READ = READ_CONTROL;
-      public const uint STANDARD_RIGHTS_WRITE = READ_CONTROL;
-      public const uint STANDARD_RIGHTS_EXECUTE = READ_CONTROL;
-
-      public const uint FILE_SHARE_READ = 0x00000001;
-      public const uint FILE_SHARE_WRITE = 0x00000002;
-      public const uint FILE_SHARE_DELETE = 0x00000004;
-
-      public const uint CREATE_NEW = 1;
-      public const uint CREATE_ALWAYS = 2;
-      public const uint OPEN_EXISTING = 3;
-      public const uint OPEN_ALWAYS = 4;
-      public const uint TRUNCATE_EXISTING = 5;
-
-      public const uint FILE_ATTRIBUTE_ARCHIVE = 0x00000020;
-      public const uint FILE_ATTRIBUTE_ENCRYPTED = 0x00004000;
-      public const uint FILE_ATTRIBUTE_HIDDEN = 0x00000002;
-      public const uint FILE_ATTRIBUTE_NORMAL = 0x00000080;
-      public const uint FILE_ATTRIBUTE_NOT_CONTENT_INDEXED = 0x00002000;
-      public const uint FILE_ATTRIBUTE_OFFLINE = 0x00001000;
-      public const uint FILE_ATTRIBUTE_READONLY = 0x00000001;
-      public const uint FILE_ATTRIBUTE_SYSTEM = 0x00000004;
-      public const uint FILE_ATTRIBUTE_TEMPORARY = 0x00000100;
-
-      //
-      // File creation flags must start at the high end since they
-      // are combined with the attributes
-      //
-
-      public const uint FILE_FLAG_WRITE_THROUGH = 0x80000000;
-      public const uint FILE_FLAG_OVERLAPPED = 0x40000000;
-      public const uint FILE_FLAG_NO_BUFFERING = 0x20000000;
-      public const uint FILE_FLAG_RANDOM_ACCESS = 0x10000000;
-      public const uint FILE_FLAG_SEQUENTIAL_SCAN = 0x08000000;
-      public const uint FILE_FLAG_DELETE_ON_CLOSE = 0x04000000;
-      public const uint FILE_FLAG_BACKUP_SEMANTICS = 0x02000000;
-      public const uint FILE_FLAG_POSIX_SEMANTICS = 0x01000000;
-      public const uint FILE_FLAG_OPEN_REPARSE_POINT = 0x00200000;
-      public const uint FILE_FLAG_OPEN_NO_RECALL = 0x00100000;
-      public const uint FILE_FLAG_FIRST_PIPE_INSTANCE = 0x00080000;
-
-#endregion
 
 
       public static int DokanMain(DokanOptions options, IDokanOperations operations)
