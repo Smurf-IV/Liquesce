@@ -53,7 +53,7 @@ namespace DokanNet
 
    public interface IDokanOperations
    {
-      int CreateFileRaw(string filename, uint rawAccessMode, uint rawShare, uint rawCreationDisposition, uint rawFlagsAndAttributes, DokanFileInfo info);
+      int CreateFile( string filename, FileMode fileMode, FileAccess fileAccess, FileShare fileShare, FileOptions fileOptions, DokanFileInfo info);
 
       int OpenDirectory( string filename, DokanFileInfo info);
 

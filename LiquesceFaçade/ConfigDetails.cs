@@ -16,6 +16,7 @@ namespace LiquesceFaçade
       public bool DebugMode;
       public string VolumeLabel;
       public UInt64 HoldOffBufferBytes = 10L<<10<<10<<10; // ==10GB;
+      public UInt32 BufferReadSize = 4 << 10;   // == 4K Standard OS build block size
       public List<string> SourceLocations;
       // TODO: Extend to include encypted ACL's and things
 
