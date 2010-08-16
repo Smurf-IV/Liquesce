@@ -54,7 +54,7 @@ namespace LiquesceSvc
                return OpenDirectory( filename, info );
             }
 
-            int actualErrorCode = Dokan.DOKAN_SUCCESS;
+            const int actualErrorCode = Dokan.DOKAN_SUCCESS;
             //bool fileExists = File.Exists( path );
             //switch (fileMode)
             //{

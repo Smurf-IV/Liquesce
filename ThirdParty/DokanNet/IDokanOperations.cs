@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Collections;
-using System.Security.AccessControl;
 
 namespace DokanNet
 {
@@ -11,13 +9,15 @@ namespace DokanNet
       public Object Context; // This is initialised to null
       public bool IsDirectory;
       public ulong InfoId;
+// ReSharper disable UnaccessedField.Global
       public uint ProcessId;
       public bool DeleteOnClose;
       public bool PagingIo;
       public bool SynchronousIo;
       public bool Nocache;
       public bool WriteToEndOfFile;
-      internal ulong DokanContext; // for internal use
+// ReSharper restore UnaccessedField.Global
+      internal readonly ulong DokanContext; // for internal use
 
       public DokanFileInfo(ulong dokanContext)
       {

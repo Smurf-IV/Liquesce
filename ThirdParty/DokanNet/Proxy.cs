@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using NLog;
 using ComTypes = System.Runtime.InteropServices.ComTypes;
@@ -29,14 +28,14 @@ namespace DokanNet
    {
       public ulong Context;
       public ulong DokanContext;
-      public IntPtr DokanOptions;
-      public uint ProcessId;
+      private readonly IntPtr DokanOptions;
+      public readonly uint ProcessId;
       public byte IsDirectory;
-      public byte DeleteOnClose;
-      public byte PagingIo;
-      public byte SynchronousIo;
-      public byte Nocache;
-      public byte WriteToEndOfFile;
+      public readonly byte DeleteOnClose;
+      public readonly byte PagingIo;
+      public readonly byte SynchronousIo;
+      public readonly byte Nocache;
+      public readonly byte WriteToEndOfFile;
    }
 
 
@@ -44,7 +43,6 @@ namespace DokanNet
    {
       static private readonly Logger Log = LogManager.GetCurrentClassLogger();
       private readonly IDokanOperations operations;
-      private ArrayList array;
       private readonly Dictionary<ulong, DokanFileInfo> infoTable;
       private ulong infoId;
       private readonly object infoTableLock = new object();
@@ -55,7 +53,6 @@ namespace DokanNet
          infoId = 0;
          this.operations = operations;
          this.options = options;
-         array = new ArrayList();
          infoTable = new Dictionary<ulong, DokanFileInfo>();
       }
 
@@ -114,6 +111,8 @@ namespace DokanNet
 
 
       #region Win32 Constants fro file controls
+// ReSharper disable InconsistentNaming
+#pragma warning disable 169
       private const uint GENERIC_READ = 0x80000000;
       private const uint GENERIC_WRITE = 0x40000000;
       private const uint GENERIC_EXECUTE = 0x20000000;
@@ -174,7 +173,9 @@ namespace DokanNet
       private const uint FILE_FLAG_OPEN_REPARSE_POINT = 0x00200000;
       private const uint FILE_FLAG_OPEN_NO_RECALL = 0x00100000;
       private const uint FILE_FLAG_FIRST_PIPE_INSTANCE = 0x00080000;
-      #endregion
+#pragma warning restore 169
+// ReSharper restore InconsistentNaming
+#endregion
 
       public delegate int CreateFileDelegate( IntPtr rawFilName, uint rawAccessMode, uint rawShare, uint rawCreationDisposition, uint rawFlagsAndAttributes, ref DOKAN_FILE_INFO dokanFileInfo );
 
@@ -223,7 +224,7 @@ namespace DokanNet
                fileAccess = FileAccess.Write;
             }
 
-            FileMode fileMode = FileMode.Open;
+            FileMode fileMode;
             switch (rawCreationDisposition)
             {
                case CREATE_NEW:
@@ -320,7 +321,7 @@ namespace DokanNet
 
       ////
 
-      public delegate int OpenDirectoryDelegate( IntPtr FileName, ref DOKAN_FILE_INFO FileInfo );
+      public delegate int OpenDirectoryDelegate( IntPtr fileName, ref DOKAN_FILE_INFO fileInfo );
 
       public int OpenDirectoryProxy( IntPtr rawFileName, ref DOKAN_FILE_INFO rawFileInfo )
       {
@@ -481,7 +482,7 @@ namespace DokanNet
 
       ////
 
-      public delegate int GetFileInformationDelegate( IntPtr FileName, ref BY_HANDLE_FILE_INFORMATION HandleFileInfo, ref DOKAN_FILE_INFO FileInfo );
+      public delegate int GetFileInformationDelegate( IntPtr fileName, ref BY_HANDLE_FILE_INFORMATION handleFileInfo, ref DOKAN_FILE_INFO fileInfo );
 
       public int GetFileInformationProxy( IntPtr rawFileName, ref BY_HANDLE_FILE_INFORMATION rawHandleFileInformation, ref DOKAN_FILE_INFO rawFileInfo )
       {
@@ -531,12 +532,12 @@ namespace DokanNet
          public ComTypes.FILETIME ftLastWriteTime;
          public uint nFileSizeHigh;
          public uint nFileSizeLow;
-         public uint dwReserved0;
-         public uint dwReserved1;
+         private readonly uint dwReserved0;
+         private readonly uint dwReserved1;
          [MarshalAs( UnmanagedType.ByValTStr, SizeConst = 260 )]
          public string cFileName;
-         [MarshalAs( UnmanagedType.ByValTStr, SizeConst = 14 )]
-         public string cAlternateFileName;
+         [MarshalAs( UnmanagedType.ByValTStr, SizeConst = 14 )] 
+         private readonly string cAlternateFileName;
       }
 
       private delegate int FILL_FIND_DATA( ref WIN32_FIND_DATA rawFindData, ref DOKAN_FILE_INFO rawFileInfo );
@@ -562,24 +563,29 @@ namespace DokanNet
                while (entry.MoveNext())
                {
                   FileInformation fi = (FileInformation)(entry.Current);
-                  WIN32_FIND_DATA data = new WIN32_FIND_DATA();
+                  WIN32_FIND_DATA data = new WIN32_FIND_DATA
+                                            {
+                                               dwFileAttributes = fi.Attributes,
+                                               ftCreationTime =
+                                                  {
+                                                     dwHighDateTime = (int) (fi.CreationTime.ToFileTime() >> 32),
+                                                     dwLowDateTime = (int) (fi.CreationTime.ToFileTime() & 0xffffffff)
+                                                  },
+                                               ftLastAccessTime =
+                                                  {
+                                                     dwHighDateTime = (int) (fi.LastAccessTime.ToFileTime() >> 32),
+                                                     dwLowDateTime = (int) (fi.LastAccessTime.ToFileTime() & 0xffffffff)
+                                                  },
+                                               ftLastWriteTime =
+                                                  {
+                                                     dwHighDateTime = (int) (fi.LastWriteTime.ToFileTime() >> 32),
+                                                     dwLowDateTime = (int) (fi.LastWriteTime.ToFileTime() & 0xffffffff)
+                                                  },
+                                               nFileSizeLow = (uint) (fi.Length & 0xffffffff),
+                                               nFileSizeHigh = (uint) (fi.Length >> 32),
+                                               cFileName = fi.FileName
+                                            };
                   //ZeroMemory(&data, sizeof(WIN32_FIND_DATAW));
-
-                  data.dwFileAttributes = fi.Attributes;
-
-                  data.ftCreationTime.dwHighDateTime = (int)(fi.CreationTime.ToFileTime() >> 32);
-                  data.ftCreationTime.dwLowDateTime = (int)(fi.CreationTime.ToFileTime() & 0xffffffff);
-
-                  data.ftLastAccessTime.dwHighDateTime = (int)(fi.LastAccessTime.ToFileTime() >> 32);
-                  data.ftLastAccessTime.dwLowDateTime = (int)(fi.LastAccessTime.ToFileTime() & 0xffffffff);
-
-                  data.ftLastWriteTime.dwHighDateTime = (int)(fi.LastWriteTime.ToFileTime() >> 32);
-                  data.ftLastWriteTime.dwLowDateTime = (int)(fi.LastWriteTime.ToFileTime() & 0xffffffff);
-
-                  data.nFileSizeLow = (uint)(fi.Length & 0xffffffff);
-                  data.nFileSizeHigh = (uint)(fi.Length >> 32);
-
-                  data.cFileName = fi.FileName;
 
                   fill( ref data, ref rawFileInfo );
                }
