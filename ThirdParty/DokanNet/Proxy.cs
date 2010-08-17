@@ -111,7 +111,7 @@ namespace DokanNet
 
 
       #region Win32 Constants fro file controls
-// ReSharper disable InconsistentNaming
+      // ReSharper disable InconsistentNaming
 #pragma warning disable 169
       private const uint GENERIC_READ = 0x80000000;
       private const uint GENERIC_WRITE = 0x40000000;
@@ -174,8 +174,8 @@ namespace DokanNet
       private const uint FILE_FLAG_OPEN_NO_RECALL = 0x00100000;
       private const uint FILE_FLAG_FIRST_PIPE_INSTANCE = 0x00080000;
 #pragma warning restore 169
-// ReSharper restore InconsistentNaming
-#endregion
+      // ReSharper restore InconsistentNaming
+      #endregion
 
       public delegate int CreateFileDelegate( IntPtr rawFilName, uint rawAccessMode, uint rawShare, uint rawCreationDisposition, uint rawFlagsAndAttributes, ref DOKAN_FILE_INFO dokanFileInfo );
 
@@ -214,7 +214,7 @@ namespace DokanNet
              * */
             FileAccess fileAccess = FileAccess.Read;
             if (readRequired
-               && writeRequired 
+               && writeRequired
                )
             {
                fileAccess = FileAccess.ReadWrite;
@@ -290,19 +290,19 @@ namespace DokanNet
             //MirrorCheckFlag( FlagsAndAttributes, SECURITY_SQOS_PRESENT );
 
             FileOptions fileOptions = FileOptions.None;
-            if ( (rawFlagsAndAttributes & FILE_FLAG_WRITE_THROUGH) == FILE_FLAG_WRITE_THROUGH )
+            if ((rawFlagsAndAttributes & FILE_FLAG_WRITE_THROUGH) == FILE_FLAG_WRITE_THROUGH)
                fileOptions |= FileOptions.WriteThrough;
-            else if ( (rawFlagsAndAttributes & FILE_FLAG_OVERLAPPED) == FILE_FLAG_OVERLAPPED )
+            else if ((rawFlagsAndAttributes & FILE_FLAG_OVERLAPPED) == FILE_FLAG_OVERLAPPED)
                fileOptions |= FileOptions.Asynchronous;
-            else if ( (rawFlagsAndAttributes & FILE_FLAG_RANDOM_ACCESS) == FILE_FLAG_RANDOM_ACCESS )
+            else if ((rawFlagsAndAttributes & FILE_FLAG_RANDOM_ACCESS) == FILE_FLAG_RANDOM_ACCESS)
                fileOptions |= FileOptions.RandomAccess;
-            else if ( (rawFlagsAndAttributes & FILE_FLAG_DELETE_ON_CLOSE) == FILE_FLAG_DELETE_ON_CLOSE )
+            else if ((rawFlagsAndAttributes & FILE_FLAG_DELETE_ON_CLOSE) == FILE_FLAG_DELETE_ON_CLOSE)
                fileOptions |= FileOptions.DeleteOnClose;
-            else if ( (rawFlagsAndAttributes & FILE_FLAG_SEQUENTIAL_SCAN) == FILE_FLAG_SEQUENTIAL_SCAN )
+            else if ((rawFlagsAndAttributes & FILE_FLAG_SEQUENTIAL_SCAN) == FILE_FLAG_SEQUENTIAL_SCAN)
                fileOptions |= FileOptions.SequentialScan;
 
             // TODO: Sort out this option
-             //  case FileOptions.Encrypted:
+            //  case FileOptions.Encrypted:
 
             int ret = operations.CreateFile( file, fileMode, fileAccess, fileShare, fileOptions, info );
 
@@ -536,7 +536,7 @@ namespace DokanNet
          private readonly uint dwReserved1;
          [MarshalAs( UnmanagedType.ByValTStr, SizeConst = 260 )]
          public string cFileName;
-         [MarshalAs( UnmanagedType.ByValTStr, SizeConst = 14 )] 
+         [MarshalAs( UnmanagedType.ByValTStr, SizeConst = 14 )]
          private readonly string cAlternateFileName;
       }
 
@@ -552,44 +552,22 @@ namespace DokanNet
          {
             string file = GetFileName( rawFileName );
 
-            List<FileInformation> files = new List<FileInformation>();
-            int ret = operations.FindFiles( file, files, GetFileInfo( ref rawFileInfo ) );
+            FileInformation[] files;
+            int ret = operations.FindFiles( file, out files, GetFileInfo( ref rawFileInfo ) );
 
             FILL_FIND_DATA fill = (FILL_FIND_DATA)Marshal.GetDelegateForFunctionPointer( rawFillFindData, typeof( FILL_FIND_DATA ) );
 
-            if (ret == 0)
+            if ((ret == 0)
+               &&(files != null)
+               )
             {
-               IEnumerator entry = files.GetEnumerator();
-               while (entry.MoveNext())
+               // ReSharper disable ForCanBeConvertedToForeach
+               // Used a single entry call to speed up the "enumeration" of the list
+               for (int index = 0; index < files.Length; index++)
+               // ReSharper restore ForCanBeConvertedToForeach
                {
-                  FileInformation fi = (FileInformation)(entry.Current);
-                  WIN32_FIND_DATA data = new WIN32_FIND_DATA
-                                            {
-                                               dwFileAttributes = fi.Attributes,
-                                               ftCreationTime =
-                                                  {
-                                                     dwHighDateTime = (int) (fi.CreationTime.ToFileTime() >> 32),
-                                                     dwLowDateTime = (int) (fi.CreationTime.ToFileTime() & 0xffffffff)
-                                                  },
-                                               ftLastAccessTime =
-                                                  {
-                                                     dwHighDateTime = (int) (fi.LastAccessTime.ToFileTime() >> 32),
-                                                     dwLowDateTime = (int) (fi.LastAccessTime.ToFileTime() & 0xffffffff)
-                                                  },
-                                               ftLastWriteTime =
-                                                  {
-                                                     dwHighDateTime = (int) (fi.LastWriteTime.ToFileTime() >> 32),
-                                                     dwLowDateTime = (int) (fi.LastWriteTime.ToFileTime() & 0xffffffff)
-                                                  },
-                                               nFileSizeLow = (uint) (fi.Length & 0xffffffff),
-                                               nFileSizeHigh = (uint) (fi.Length >> 32),
-                                               cFileName = fi.FileName
-                                            };
-                  //ZeroMemory(&data, sizeof(WIN32_FIND_DATAW));
-
-                  fill( ref data, ref rawFileInfo );
+                  Addto( fill, ref rawFileInfo, files[index] );
                }
-
             }
             return ret;
          }
@@ -598,6 +576,36 @@ namespace DokanNet
             Log.ErrorException( "FindFilesProxy threw: ", ex );
             return -1;
          }
+
+      }
+
+      private void Addto( FILL_FIND_DATA fill, ref DOKAN_FILE_INFO rawFileInfo, FileInformation fi )
+      {
+         WIN32_FIND_DATA data = new WIN32_FIND_DATA
+         {
+            dwFileAttributes = fi.Attributes,
+            ftCreationTime =
+            {
+               dwHighDateTime = (int)(fi.CreationTime.ToFileTime() >> 32),
+               dwLowDateTime = (int)(fi.CreationTime.ToFileTime() & 0xffffffff)
+            },
+            ftLastAccessTime =
+            {
+               dwHighDateTime = (int)(fi.LastAccessTime.ToFileTime() >> 32),
+               dwLowDateTime = (int)(fi.LastAccessTime.ToFileTime() & 0xffffffff)
+            },
+            ftLastWriteTime =
+            {
+               dwHighDateTime = (int)(fi.LastWriteTime.ToFileTime() >> 32),
+               dwLowDateTime = (int)(fi.LastWriteTime.ToFileTime() & 0xffffffff)
+            },
+            nFileSizeLow = (uint)(fi.Length & 0xffffffff),
+            nFileSizeHigh = (uint)(fi.Length >> 32),
+            cFileName = fi.FileName
+         };
+         //ZeroMemory(&data, sizeof(WIN32_FIND_DATAW));
+
+         fill( ref data, ref rawFileInfo );
 
       }
 
