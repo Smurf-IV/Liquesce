@@ -42,13 +42,6 @@ namespace DokanNet
       public DateTime LastWriteTime;
       public long Length;
       public string FileName;
-      /*
-      public FileInformation()
-      {
-          Attributes = FileAttributes.Normal;
-          Length = 0;
-      }
-       */
    }
 
    public interface IDokanOperations
@@ -71,7 +64,7 @@ namespace DokanNet
 
       int GetFileInformation( string filename, FileInformation fileinfo, DokanFileInfo info);
 
-      int FindFiles(string filename, List<FileInformation> files, DokanFileInfo info);
+      int FindFiles(string filename, out FileInformation[] files, DokanFileInfo info);
 
       int SetFileAttributes( string filename, FileAttributes attr, DokanFileInfo info);
 

@@ -23,9 +23,6 @@ namespace LiquesceSvc
       {
          root = Path.GetFullPath( configDetails.SourceLocations[0] );
          this.configDetails = configDetails;
-#if DEBUG
-         configDetails.HoldOffBufferBytes /= 100;
-#endif
       }
 
       #region IDokanOperations Implementation
@@ -403,30 +400,38 @@ namespace LiquesceSvc
          return Dokan.DOKAN_ERROR;
       }
 
-      public int FindFiles( string filename, List<FileInformation> files, DokanFileInfo info )
+      public int FindFiles( string filename, out FileInformation[] files, DokanFileInfo info )
       {
+         files = null;
          try
          {
             Log.Trace( "FindFiles IN" );
-
+            Dictionary<string, FileInformation> uniqueFiles = new Dictionary<string, FileInformation>();
             string path = GetPath( filename );
             if (!Directory.Exists( path ))
             {
                return Dokan.DOKAN_ERROR;
             }
             Log.Info( "FindFiles filename: {0} path:{1} Root: {2}", filename, path, root );
-            // TODO: This nneds to be redone in order to have multiple Dir's in different drive locations
+            // TODO: This needs to be redone in order to have multiple Dir's in different drive locations
             if (path == root)
             {
                Log.Info( "Root!" );
                rootPaths.Clear();
-               configDetails.SourceLocations.ForEach( str2 => AddFiles( str2, files, true ) );
+               configDetails.SourceLocations.ForEach( str2 => AddFiles( str2, uniqueFiles ) );
             }
             else
             {
-               AddFiles( path, files, false );
+               AddFiles( path, uniqueFiles );
             }
-
+            files = new FileInformation[uniqueFiles.Values.Count];
+            uniqueFiles.Values.CopyTo( files, 0 );
+         }
+         catch (Exception ex)
+         {
+            int win32 = ((short)Marshal.GetHRForException( ex ) * -1);
+            Log.ErrorException( "FindFiles threw: ", ex );
+            return (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
          }
          finally
          {
@@ -735,7 +740,12 @@ namespace LiquesceSvc
             freeBytesAvailable = localFreeBytesAvailable;
             totalBytes = localTotalBytes;
             totalFreeBytes = localTotalFreeBytes;
-
+         }
+         catch (Exception ex)
+         {
+            int win32 = ((short)Marshal.GetHRForException( ex ) * -1);
+            Log.ErrorException( "UnlockFile threw: ", ex );
+            return (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
          }
          finally
          {
@@ -776,42 +786,59 @@ namespace LiquesceSvc
             {
                int index = filename.IndexOf( '\\', 1 );
                string key = index > 0 ? filename.Substring( 1, index - 1 ) : filename.Substring( 1 );
-               foundPath = (rootPaths.ContainsKey( key ) ? rootPaths[key] : root) + filename;
+               foundPath = rootPaths.ContainsKey( key ) ? rootPaths[key] : root + filename;
             }
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException( "GetPath threw: ", ex );
          }
          finally
          {
-            foundPath = Path.GetFullPath( foundPath );
             Log.Debug( "GetPath from [{0}] found [{1}]", filename, foundPath );
          }
          return foundPath;
       }
 
-      private void AddFiles( string path, List<FileInformation> files, bool isRoot )
+      private void AddFiles( string path, Dictionary<string,FileInformation> files )
       {
-         FileSystemInfo[] fileSystemInfos = new DirectoryInfo( path ).GetFileSystemInfos();
-         foreach (FileSystemInfo info2 in fileSystemInfos)
+         try
          {
-            FileInformation item = new FileInformation
-                                      {
-                                         Attributes = info2.Attributes,
-                                         CreationTime = info2.CreationTime,
-                                         LastAccessTime = info2.LastAccessTime,
-                                         LastWriteTime = info2.LastWriteTime,
-                                         Length = (info2 is DirectoryInfo) ? 0L : ((FileInfo)info2).Length,
-                                         FileName = info2.Name
-                                      };
-            if (isRoot
-               && !(info2.Name.StartsWith( "$" )
-                  || info2.Attributes.ToString().Contains( "Hidden" )
-                  )
-               )
+            FileSystemInfo[] fileSystemInfos = new DirectoryInfo( path ).GetFileSystemInfos();
+            foreach (FileSystemInfo info2 in fileSystemInfos)
             {
-               rootPaths.Add( info2.Name, path );
+               bool isDirectoy = (info2.Attributes & FileAttributes.Directory) == FileAttributes.Directory;
+               FileInformation item = new FileInformation
+                                         {
+                                            Attributes = info2.Attributes,
+                                            CreationTime = info2.CreationTime,
+                                            LastAccessTime = info2.LastAccessTime,
+                                            LastWriteTime = info2.LastWriteTime,
+                                            Length = (isDirectoy) ? 0L : ((FileInfo)info2).Length,
+                                            FileName = info2.Name
+                                         };
+               files[TrimAndAddUnique( info2.FullName )] = item;
             }
-            files.Add( item );
+
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException( "AddFiles threw: ", ex );
          }
       }
+
+      private string TrimAndAddUnique(string fullFilePath)
+      {
+         int index = configDetails.SourceLocations.FindIndex( fullFilePath.StartsWith );
+         if (index >= 0)
+         {
+            string key = fullFilePath.Remove( 0, configDetails.SourceLocations[index].Length );
+            rootPaths[key] = fullFilePath;
+            return key;
+         }
+         throw new ArgumentException( "Unable to find BelongTo Path:" + fullFilePath, fullFilePath );
+      }
+
 
       private void CloseAndRemove( DokanFileInfo info )
       {
