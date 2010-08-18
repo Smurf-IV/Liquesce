@@ -159,7 +159,8 @@ namespace LiquesceSvc
                return Dokan.ERROR_ALREADY_EXISTS;
             }
             info.IsDirectory = true;
-            Directory.CreateDirectory( path );
+            if ( Directory.CreateDirectory( path ).Exists )
+               TrimAndAddUnique( path );
             return Dokan.DOKAN_SUCCESS;
          }
          catch (Exception ex)
@@ -208,14 +209,29 @@ namespace LiquesceSvc
                   Log.Trace( "DeleteOnClose Directory" );
                   if (Directory.Exists( path ))
                   {
-                     Directory.Delete( path, false );
+                     FileInformation[] files;
+                     int errorCode = FindFiles( filename, out files );
+                     if (Dokan.DOKAN_SUCCESS == errorCode)
+                     {
+                        if (files.Length == 0)
+                        {
+                           Directory.Delete(path, false);
+                        }
+                        else
+                           return Dokan.ERROR_DIR_NOT_EMPTY;
+                     }
+                     else
+                     {
+                        return errorCode;
+                     }
                   }
                }
-               else if (info.DeleteOnClose)
+               else
                {
                   Log.Trace( "DeleteOnClose File" );
                   File.Delete( path );
                }
+               rootPaths.Remove( filename );
             }
          }
          catch (Exception ex)
@@ -402,28 +418,16 @@ namespace LiquesceSvc
 
       public int FindFiles( string filename, out FileInformation[] files, DokanFileInfo info )
       {
+         return FindFiles( filename, out files );
+      }
+      private int FindFiles( string filename, out FileInformation[] files )
+      {
          files = null;
          try
          {
             Log.Trace( "FindFiles IN" );
             Dictionary<string, FileInformation> uniqueFiles = new Dictionary<string, FileInformation>();
-            string path = GetPath( filename );
-            if (!Directory.Exists( path ))
-            {
-               return Dokan.DOKAN_ERROR;
-            }
-            Log.Info( "FindFiles filename: {0} path:{1} Root: {2}", filename, path, root );
-            // TODO: This needs to be redone in order to have multiple Dir's in different drive locations
-            if (path == root)
-            {
-               Log.Info( "Root!" );
-               rootPaths.Clear();
-               configDetails.SourceLocations.ForEach( str2 => AddFiles( str2, uniqueFiles ) );
-            }
-            else
-            {
-               AddFiles( path, uniqueFiles );
-            }
+            configDetails.SourceLocations.ForEach( str2 => AddFiles( str2 + filename, uniqueFiles ) );
             files = new FileInformation[uniqueFiles.Values.Count];
             uniqueFiles.Values.CopyTo( files, 0 );
          }
@@ -779,14 +783,17 @@ namespace LiquesceSvc
       #endregion
       private string GetPath( string filename )
       {
-         string foundPath = root;
+         string foundPath = String.Empty;
          try
          {
             if (filename != @"\")
             {
-               int index = filename.IndexOf( '\\', 1 );
-               string key = index > 0 ? filename.Substring( 1, index - 1 ) : filename.Substring( 1 );
-               foundPath = rootPaths.ContainsKey( key ) ? rootPaths[key] : root + filename;
+               if (!rootPaths.TryGetValue( filename, out foundPath ))
+                  foundPath = root + filename;  // This is used when creating new directory / file
+            }
+            else
+            {
+               foundPath = root;
             }
          }
          catch (Exception ex)
@@ -804,22 +811,25 @@ namespace LiquesceSvc
       {
          try
          {
-            FileSystemInfo[] fileSystemInfos = new DirectoryInfo( path ).GetFileSystemInfos();
-            foreach (FileSystemInfo info2 in fileSystemInfos)
+            DirectoryInfo dirInfo = new DirectoryInfo( path );
+            if (dirInfo.Exists)
             {
-               bool isDirectoy = (info2.Attributes & FileAttributes.Directory) == FileAttributes.Directory;
-               FileInformation item = new FileInformation
-                                         {
-                                            Attributes = info2.Attributes,
-                                            CreationTime = info2.CreationTime,
-                                            LastAccessTime = info2.LastAccessTime,
-                                            LastWriteTime = info2.LastWriteTime,
-                                            Length = (isDirectoy) ? 0L : ((FileInfo)info2).Length,
-                                            FileName = info2.Name
-                                         };
-               files[TrimAndAddUnique( info2.FullName )] = item;
+               FileSystemInfo[] fileSystemInfos = new DirectoryInfo(path).GetFileSystemInfos();
+               foreach (FileSystemInfo info2 in fileSystemInfos)
+               {
+                  bool isDirectoy = (info2.Attributes & FileAttributes.Directory) == FileAttributes.Directory;
+                  FileInformation item = new FileInformation
+                                            {
+                                               Attributes = info2.Attributes,
+                                               CreationTime = info2.CreationTime,
+                                               LastAccessTime = info2.LastAccessTime,
+                                               LastWriteTime = info2.LastWriteTime,
+                                               Length = (isDirectoy) ? 0L : ((FileInfo) info2).Length,
+                                               FileName = info2.Name
+                                            };
+                  files[TrimAndAddUnique(info2.FullName)] = item;
+               }
             }
-
          }
          catch (Exception ex)
          {
