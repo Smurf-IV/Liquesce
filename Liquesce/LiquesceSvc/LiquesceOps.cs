@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading;
 using DokanNet;
 using LiquesceFaçade;
 using NLog;
@@ -17,6 +18,8 @@ namespace LiquesceSvc
       private readonly Dictionary<UInt64, FileStream> openFiles = new Dictionary<UInt64, FileStream>();
       private UInt64 openFilesNextKey;
       private readonly string root;
+      // This would normally be static, but then there should only ever be one of these classes present from the Dokan Lib callback.
+      private ReaderWriterLockSlim rootPathsSync = new ReaderWriterLockSlim( LockRecursionPolicy.SupportsRecursion );
       private readonly Dictionary<string, string> rootPaths = new Dictionary<string, string>();
 
       public LiquesceOps( ConfigDetails configDetails )
@@ -231,7 +234,15 @@ namespace LiquesceSvc
                   Log.Trace( "DeleteOnClose File" );
                   File.Delete( path );
                }
-               rootPaths.Remove( filename );
+               try
+               {
+                  rootPathsSync.TryEnterWriteLock( configDetails.LockTimeout );
+                  rootPaths.Remove( filename );
+               }
+               finally
+               {
+                  rootPathsSync.ExitWriteLock();
+               }
             }
          }
          catch (Exception ex)
@@ -788,8 +799,16 @@ namespace LiquesceSvc
          {
             if (filename != @"\")
             {
-               if (!rootPaths.TryGetValue( filename, out foundPath ))
-                  foundPath = root + filename;  // This is used when creating new directory / file
+               try
+               {
+                  rootPathsSync.TryEnterReadLock( configDetails.LockTimeout );
+                  if (!rootPaths.TryGetValue( filename, out foundPath ))
+                     foundPath = root + filename;  // This is used when creating new directory / file
+               }
+               finally
+               {
+                  rootPathsSync.ExitReadLock();
+               }
             }
             else
             {
@@ -843,10 +862,18 @@ namespace LiquesceSvc
          if (index >= 0)
          {
             string key = fullFilePath.Remove( 0, configDetails.SourceLocations[index].Length );
-            rootPaths[key] = fullFilePath;
+            try
+            {
+               rootPathsSync.TryEnterWriteLock( configDetails.LockTimeout );
+               rootPaths[key] = fullFilePath;
+            }
+            finally
+            {
+               rootPathsSync.ExitWriteLock();
+            }
             return key;
          }
-         throw new ArgumentException( "Unable to find BelongTo Path:" + fullFilePath, fullFilePath );
+         throw new ArgumentException( "Unable to find BelongTo Path: " + fullFilePath, fullFilePath );
       }
 
 

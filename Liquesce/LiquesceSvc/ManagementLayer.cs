@@ -71,7 +71,7 @@ namespace LiquesceSvc
                   }
                   DokanOptions options = new DokanOptions
                                             {
-                                               DriveLetter = currentConfigDetails.DriveLetter,
+                                               DriveLetter = currentConfigDetails.DriveLetter[0],
                                                ThreadCount = currentConfigDetails.ThreadCount,
                                                DebugMode = currentConfigDetails.DebugMode,
 //      public bool UseStdErr;
@@ -142,7 +142,7 @@ namespace LiquesceSvc
                )
             {
                State = LiquesceSvcState.Unknown;
-               int retVal = Dokan.DokanUnmount(currentConfigDetails.DriveLetter);
+               int retVal = Dokan.DokanUnmount( currentConfigDetails.DriveLetter[0] );
                IsRunning = false;
                Log.Info("Stop returned[{0}]", retVal);
             }
@@ -183,10 +183,10 @@ namespace LiquesceSvc
                                          {
                                             DebugMode = true,
                                             DelayStartMilliSec = (uint) short.MaxValue,
-                                            DriveLetter = 'N',
+                                            DriveLetter = "N",
                                             SourceLocations = new List<string>(1),
                                             ThreadCount = 1,
-                                            //HoldOffBufferBytes = 10*1024*1024*1024, // ==10GB
+                                            //HoldOffBufferBytes = 1*1024*1024*1024, // ==1GB
                                             VolumeLabel = "InternallyCreated"
                                          };
                currentConfigDetails.SourceLocations.Add(@"C:\");
