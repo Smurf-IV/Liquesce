@@ -11,7 +11,9 @@ namespace LiquesceFaçade
    public class ConfigDetails 
    {
       public uint DelayStartMilliSec;
-      public string DriveLetter; // Make this is a string so that the XML looks better (Rather than exporting 72 for 'N')
+      // Make this is a string so that the XML looks better (Rather than exporting 72 for 'N')
+      // Also the V 0.6 of Dokan is supposed to be able to use Mount points so this can then be reused for that..
+      public string DriveLetter; 
       public ushort ThreadCount;
       public int LockTimeout = short.MaxValue; // Useful if you are getting locks in the multiple threads - Can be set to -1 for infinite
       public bool DebugMode;
