@@ -29,6 +29,7 @@
       private void InitializeComponent()
       {
          this.components = new System.ComponentModel.Container();
+         System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
          this.splitContainer1 = new System.Windows.Forms.SplitContainer();
          this.driveAndDirTreeView = new System.Windows.Forms.TreeView();
          this.imageListUnits = new System.Windows.Forms.ImageList(this.components);
@@ -51,6 +52,7 @@
          this.label3 = new System.Windows.Forms.Label();
          this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
          this.FillExpectedLayoutWorker = new System.ComponentModel.BackgroundWorker();
+         this.serviceController1 = new System.ServiceProcess.ServiceController();
          ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
          this.splitContainer1.Panel1.SuspendLayout();
          this.splitContainer1.Panel2.SuspendLayout();
@@ -97,7 +99,6 @@
          this.driveAndDirTreeView.TabIndex = 0;
          this.toolTip1.SetToolTip(this.driveAndDirTreeView, "Drag from here and drop in the middle");
          this.driveAndDirTreeView.BeforeExpand += new System.Windows.Forms.TreeViewCancelEventHandler(this.driveAndDirTreeView_BeforeExpand);
-         this.driveAndDirTreeView.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.driveAndDirTreeView_NodeMouseDoubleClick);
          this.driveAndDirTreeView.MouseDown += new System.Windows.Forms.MouseEventHandler(this.driveAndDirTreeView_MouseDown);
          // 
          // imageListUnits
@@ -357,6 +358,11 @@
          this.FillExpectedLayoutWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.FillExpectedLayoutWorker_DoWork);
          this.FillExpectedLayoutWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.FillExpectedLayoutWorker_RunWorkerCompleted);
          // 
+         // serviceController1
+         // 
+         this.serviceController1.MachineName = "127.0.0.1";
+         this.serviceController1.ServiceName = "LiquesceSvc";
+         // 
          // MainForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 14F);
@@ -364,6 +370,7 @@
          this.ClientSize = new System.Drawing.Size(770, 489);
          this.Controls.Add(this.splitContainer1);
          this.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+         this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
          this.MainMenuStrip = this.menuStrip1;
          this.MinimumSize = new System.Drawing.Size(778, 516);
          this.Name = "MainForm";
@@ -413,5 +420,6 @@
       private System.Windows.Forms.TextBox VolumeLabel;
       private System.Windows.Forms.ToolStripMenuItem advancedToolStripMenuItem;
       private System.Windows.Forms.ImageList imageListUnits;
+      private System.ServiceProcess.ServiceController serviceController1;
    }
 }

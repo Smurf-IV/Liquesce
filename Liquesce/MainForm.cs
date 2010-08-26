@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.ServiceProcess;
 using System.Threading;
 using System.Windows.Forms;
 using LiquesceFaçade;
@@ -14,6 +15,9 @@ namespace Liquesce
    public sealed partial class MainForm : Form
    {
       static private readonly Logger Log = LogManager.GetCurrentClassLogger();
+      private static readonly string tcpLiquescefaçade = "tcp://127.0.0.1:41014/LiquesceFaçade";
+      private ConfigDetails cd = new ConfigDetails();
+
       public MainForm()
       {
          // Force use of Segou UI Font in Vista and above
@@ -40,6 +44,45 @@ namespace Liquesce
       {
          StartTree();
          PopulatePoolSettings();
+         if (serviceController1.Status != ServiceControllerStatus.Running)
+         {
+            commitToolStripMenuItem.Text = "Service is not running";
+            commitToolStripMenuItem.Enabled = false;
+         }
+         else
+         {
+            try
+            {
+               LFRemotingInterface remoteIF = new LFRemotingInterface(new Uri(tcpLiquescefaçade));
+               remoteIF.Init();
+               cd = remoteIF.theFacade.ConfigDetails;
+
+            }
+            catch (Exception ex)
+            {
+               Log.ErrorException("Unable to attach to the service, even tho it is running", ex);
+               MessageBox.Show(this, ex.Message, "Has the firewall blocked the communications ?", MessageBoxButtons.OK,
+                               MessageBoxIcon.Stop);
+            }
+         }
+         InitialiseWith();
+      }
+
+      private void InitialiseWith()
+      {
+         MountPoint.Text = cd.DriveLetter;
+         foreach (TreeNode tn in cd.SourceLocations.Select(sourceLocation => new TreeNode
+                                                                                {
+                                                                                   Text = sourceLocation, 
+                                                                                   ImageKey = sourceLocation, 
+                                                                                   SelectedImageKey = sourceLocation
+                                                                                }))
+         {
+            mergeList.Nodes.Add(tn);
+         }
+         DelayCreation.Text = cd.DelayStartMilliSec.ToString();
+         VolumeLabel.Text = cd.VolumeLabel;
+         RestartExpectedOutput();
       }
 
       private void PopulatePoolSettings()
@@ -213,17 +256,6 @@ namespace Liquesce
                if (!String.IsNullOrEmpty(ud.Name))
                   driveAndDirTreeView.DoDragDrop(ud, DragDropEffects.All);
             }
-         }
-      }
-
-      private void driveAndDirTreeView_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
-      {
-         // Get the node underneath the mouse.
-         TreeNode selected = driveAndDirTreeView.SelectedNode;
-
-         if (selected != null)
-         {
-            CheckAndAddNewPath(mergeList, new DragDropItem(GetSelectedNodesPath(selected)));
          }
       }
 
