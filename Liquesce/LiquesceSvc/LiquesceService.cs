@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Reflection;
+using System.ServiceModel;
 using System.ServiceProcess;
 using System.Threading;
 using NLog;
@@ -52,6 +53,8 @@ namespace LiquesceSvc
          }
       }
 
+      private static ServiceHost _ILiquesceHost;
+
       protected override void OnStart(string[] args)
       {
          Log.Info("OnStart");
@@ -69,13 +72,8 @@ namespace LiquesceSvc
                      break;
                }
             }
-            // This line obtains the location of the config file by assuming that
-            // it is in the same directory as the location of the assembly that we
-            // are inside (then appending ".config"). This is needed in the service
-            // since the working directory will be c:\windows\system32. 
-            string configPath = Assembly.GetExecutingAssembly().Location + ".config"; 
-            Log.Info("Loading configuration from " + configPath);
-            RemotingStartHelper.Configure(configPath, false, this);
+            _ILiquesceHost = new ServiceHost(typeof(LiquesceFaçade));
+            _ILiquesceHost.Open();
 
             RequestAdditionalTime(30000); // let the SCM know that this part could take a while due to other services starting up
             base.OnStart(args);

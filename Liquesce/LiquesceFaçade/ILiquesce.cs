@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.ServiceModel;
 
 namespace LiquesceFaçade
 {
@@ -14,14 +12,28 @@ namespace LiquesceFaçade
       InWarning
    }
 
+   [ServiceContract]
    public interface ILiquesce
    {
+      [OperationContract]
       void Stop();
 
+      [OperationContract]
       bool Start();
 
-      LiquesceSvcState State { get; }
+      LiquesceSvcState State
+      {
+         [OperationContract]
+         get;
+      }
 
-      ConfigDetails ConfigDetails { get; set; }
+      
+      ConfigDetails ConfigDetails
+      {
+         [OperationContract]
+         get;
+         [OperationContract]
+         set;
+      }
    }
 }
