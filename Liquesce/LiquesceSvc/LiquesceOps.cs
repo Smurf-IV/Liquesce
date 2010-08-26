@@ -833,7 +833,7 @@ namespace LiquesceSvc
             DirectoryInfo dirInfo = new DirectoryInfo( path );
             if (dirInfo.Exists)
             {
-               FileSystemInfo[] fileSystemInfos = new DirectoryInfo(path).GetFileSystemInfos();
+               FileSystemInfo[] fileSystemInfos = dirInfo.GetFileSystemInfos();
                foreach (FileSystemInfo info2 in fileSystemInfos)
                {
                   bool isDirectoy = (info2.Attributes & FileAttributes.Directory) == FileAttributes.Directory;
