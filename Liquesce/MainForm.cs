@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.ServiceModel;
 using System.ServiceProcess;
 using System.Threading;
 using System.Windows.Forms;
@@ -15,7 +16,6 @@ namespace Liquesce
    public sealed partial class MainForm : Form
    {
       static private readonly Logger Log = LogManager.GetCurrentClassLogger();
-      private static readonly string tcpLiquescefaçade = "tcp://127.0.0.1:41014/LiquesceFaçade";
       private ConfigDetails cd = new ConfigDetails();
 
       public MainForm()
@@ -24,23 +24,11 @@ namespace Liquesce
          if (SystemFonts.MessageBoxFont.Size >= 9)
             Font = SystemFonts.MessageBoxFont;
          InitializeComponent();
-         //this.imageListUnits.TransparentColor = System.Drawing.Color.Transparent;
          Icon icon = ExtractIcon.GetIconForFilename(Environment.GetFolderPath(Environment.SpecialFolder.MyComputer), true);
          imageListUnits.Images.Add("MyComputer", icon.ToBitmap());
-         //this.imageListUnits.Images.Add( DriveImages.Floppy2.ToString(), ExtractIcon.GetFolderIcon( true ) );
-         //this.imageListUnits.Images.Add( DriveImages.Floppy5.ToString(), ExtractIcon.GetFolderIcon( true ) );
-         //this.imageListUnits.Images.Add( DriveImages.HardDrive.ToString(), ExtractIcon.GetFolderIcon( true ) );
-         //this.imageListUnits.Images.Add( DriveImages.CDRomDrive.ToString(), ExtractIcon.GetFolderIcon( true ) );
-         //this.imageListUnits.Images.Add( DriveImages.Network.ToString(), ExtractIcon.GetFolderIcon( true ) );
-         //this.imageListUnits.Images.Add( DriveImages.MiscRemoveable.ToString(), ExtractIcon.GetFolderIcon( true ) );
-         //this.imageListUnits.Images.Add( DriveImages.ClosedFolder.ToString(), ExtractIcon.GetFolderIcon( true ) );
-         //this.imageListUnits.Images.Add( DriveImages.OpenFolder.ToString(), ExtractIcon.GetFolderIcon( true ) );
-         //this.imageListUnits.Images.Add( DriveImages.NetworkFolder.ToString(), ExtractIcon.GetFolderIcon( true ) );
-         //this.imageListUnits.Images.Add( DriveImages.DisconnectedNetwork.ToString(), ExtractIcon.GetFolderIcon( true ) );
-
       }
 
-      private void MainForm_Shown( object sender, EventArgs e )
+      private void MainForm_Shown(object sender, EventArgs e)
       {
          StartTree();
          PopulatePoolSettings();
@@ -53,10 +41,9 @@ namespace Liquesce
          {
             try
             {
-               LFRemotingInterface remoteIF = new LFRemotingInterface(new Uri(tcpLiquescefaçade));
-               remoteIF.Init();
-               cd = remoteIF.theFacade.ConfigDetails;
-
+               ChannelFactory<ILiquesce> factory = new ChannelFactory<ILiquesce>("LiquesceFaçade");
+               ILiquesce remoteIF = factory.CreateChannel();
+               cd = remoteIF.ConfigDetails;
             }
             catch (Exception ex)
             {
@@ -70,16 +57,19 @@ namespace Liquesce
 
       private void InitialiseWith()
       {
+         // Add the drive letter back in as this would already have been removed
+         MountPoint.Items.Add(cd.DriveLetter);
          MountPoint.Text = cd.DriveLetter;
-         foreach (TreeNode tn in cd.SourceLocations.Select(sourceLocation => new TreeNode
-                                                                                {
-                                                                                   Text = sourceLocation, 
-                                                                                   ImageKey = sourceLocation, 
-                                                                                   SelectedImageKey = sourceLocation
-                                                                                }))
-         {
-            mergeList.Nodes.Add(tn);
-         }
+         if (cd.SourceLocations != null)
+            foreach (TreeNode tn in cd.SourceLocations.Select(sourceLocation => new TreeNode
+                                                                                   {
+                                                                                      Text = sourceLocation,
+                                                                                      ImageKey = sourceLocation,
+                                                                                      SelectedImageKey = sourceLocation
+                                                                                   }))
+            {
+               mergeList.Nodes.Add(tn);
+            }
          DelayCreation.Text = cd.DelayStartMilliSec.ToString();
          VolumeLabel.Text = cd.VolumeLabel;
          RestartExpectedOutput();
@@ -107,31 +97,31 @@ namespace Liquesce
             UseWaitCursor = true;
             driveAndDirTreeView.Nodes.Clear();
 
-            Log.Debug( "Create the root node." );
+            Log.Debug("Create the root node.");
             tvwRoot = new TreeNode
                          {
                             Text = Environment.MachineName,
                             ImageKey = "MyComputer",
                             SelectedImageKey = "MyComputer"
                          };
-            driveAndDirTreeView.Nodes.Add( tvwRoot );
-            Log.Debug( "Now we need to add any children to the root node." );
+            driveAndDirTreeView.Nodes.Add(tvwRoot);
+            Log.Debug("Now we need to add any children to the root node.");
 
-            Log.Debug( "Start with drives if you have to search the entire computer." );
+            Log.Debug("Start with drives if you have to search the entire computer.");
             string[] drives = Environment.GetLogicalDrives();
             foreach (string dr in drives)
             {
-               Log.Debug( dr );
-               DriveInfo di = new DriveInfo( dr );
-               
-               FillInDirectoryType( tvwRoot, di );
+               Log.Debug(dr);
+               DriveInfo di = new DriveInfo(dr);
+
+               FillInDirectoryType(tvwRoot, di);
             }
 
             tvwRoot.Expand();
          }
          catch (Exception ex)
          {
-            Log.ErrorException( "StartTree Threw: ", ex );
+            Log.ErrorException("StartTree Threw: ", ex);
          }
          finally
          {
@@ -140,15 +130,30 @@ namespace Liquesce
          }
       }
 
-      private void FillInDirectoryType( TreeNode parentNode, DriveInfo di )
+      private void FillInDirectoryType(TreeNode parentNode, DriveInfo di)
       {
-         if (di != null)
+         if ( di != null)
          {
-            if (!imageListUnits.Images.ContainsKey(di.Name))
+            if( ( (di.DriveType == DriveType.Fixed)
+                  || (di.DriveType == DriveType.Network)
+                  )
+               && (di.DriveFormat == "DOKAN")
+               )
             {
-               imageListUnits.Images.Add(di.Name, ExtractIcon.GetIconForFilename(di.Name, true).ToBitmap());
+               Log.Info("Removing the existing DOKAN drive as this would cause confusion ! [{0}]", di.Name);
+               return;
             }
-            string label = !String.IsNullOrWhiteSpace(di.VolumeLabel) ? di.VolumeLabel : di.DriveType.ToString();
+            SafelyAddIcon(di.Name);
+            string label;
+            try
+            {
+               label = !String.IsNullOrWhiteSpace(di.VolumeLabel) ? di.VolumeLabel : di.DriveType.ToString();
+            }
+            catch
+            {
+               // The above throws a wobble e.g. if the CD_Rom does not have a disk in it
+               label = di.DriveType.ToString();
+            } 
             label += " (" + di.Name + ")";
             TreeNode thisNode = new TreeNode
                                    {
@@ -158,38 +163,35 @@ namespace Liquesce
                                       Tag = di.RootDirectory
                                    };
             if (di.IsReady)
-               thisNode.Nodes.Add( "DummyNode" );
-            parentNode.Nodes.Add( thisNode );
+               thisNode.Nodes.Add("DummyNode");
+            parentNode.Nodes.Add(thisNode);
          }
       }
 
-      private void WalkNextTreeLevel( TreeNode parentNode )
+      private void WalkNextTreeLevel(TreeNode parentNode)
       {
          try
          {
             DirectoryInfo root = parentNode.Tag as DirectoryInfo;
             if (root != null)
             {
-               Log.Debug( "// Find all the subdirectories under this directory." );
+               Log.Debug("// Find all the subdirectories under this directory.");
                DirectoryInfo[] subDirs = root.GetDirectories();
                if (subDirs != null)
                {
                   foreach (DirectoryInfo dirInfo in subDirs)
                   {
                      // Recursive call for each subdirectory.
-                     if (!imageListUnits.Images.ContainsKey(dirInfo.Name))
-                     {
-                        imageListUnits.Images.Add(dirInfo.Name, ExtractIcon.GetIconForFilename(dirInfo.FullName, true).ToBitmap());
-                     }
+                     SafelyAddIcon(dirInfo.FullName);
                      TreeNode tvwChild = new TreeNode
                                             {
                                                Text = dirInfo.Name,
-                                               ImageKey = dirInfo.Name,
-                                               SelectedImageKey = dirInfo.Name,
+                                               ImageKey = dirInfo.FullName,
+                                               SelectedImageKey = dirInfo.FullName,
                                                Tag = dirInfo
                                             };
 
-                     Log.Debug( "If this is a folder item and has children then add a place holder node." );
+                     Log.Debug("If this is a folder item and has children then add a place holder node.");
                      try
                      {
                         DirectoryInfo[] subChildDirs = dirInfo.GetDirectories();
@@ -200,37 +202,37 @@ namespace Liquesce
                      }
                      catch (UnauthorizedAccessException uaex)
                      {
-                        Log.InfoException( "No Access to subdirs in " + tvwChild.Text, uaex );
+                        Log.InfoException("No Access to subdirs in " + tvwChild.Text, uaex);
                      }
-                     parentNode.Nodes.Add( tvwChild );
+                     parentNode.Nodes.Add(tvwChild);
                   }
                }
             }
          }
          catch (Exception ex)
          {
-            Log.ErrorException( "RecurseAddChildren has thrown:", ex );
+            Log.ErrorException("RecurseAddChildren has thrown:", ex);
          }
       }
 
-      private void driveAndDirTreeView_BeforeExpand( object sender, TreeViewCancelEventArgs e )
+      private void driveAndDirTreeView_BeforeExpand(object sender, TreeViewCancelEventArgs e)
       {
          Enabled = false;
          UseWaitCursor = true;
          try
          {
-            Log.Debug( "Remove the placeholder node." );
+            Log.Debug("Remove the placeholder node.");
             DirectoryInfo root = e.Node.Tag as DirectoryInfo;
             if (root != null)
             {
                e.Node.Nodes.Clear();
-               WalkNextTreeLevel( e.Node );
+               WalkNextTreeLevel(e.Node);
             }
             e.Cancel = false;
          }
          catch (Exception ex)
          {
-            Log.ErrorException( "BeforeExpand has thrown: ", ex );
+            Log.ErrorException("BeforeExpand has thrown: ", ex);
          }
          finally
          {
@@ -298,7 +300,7 @@ namespace Liquesce
                              {
                                 Text = newPath.Name,
                                 ImageKey = newPath.Name,
-                                SelectedImageKey = newPath.Name 
+                                SelectedImageKey = newPath.Name
                              };
             targetTree.Nodes.Add(tn);
             RestartExpectedOutput();
@@ -333,21 +335,22 @@ namespace Liquesce
          }
          ConfigDetails cd = new ConfigDetails
                                {
-                                  DelayStartMilliSec = (uint) DelayCreation.Value,
+                                  DelayStartMilliSec = (uint)DelayCreation.Value,
                                   DriveLetter = MountPoint.Text,
                                   VolumeLabel = VolumeLabel.Text,
                                   SourceLocations = new List<string>(mergeList.Nodes.Count)
                                };
-         foreach (TreeNode node in mergeList.Nodes)
-         {
-            cd.SourceLocations.Add(node.Text);
-         }
+         if (mergeList.Nodes != null)
+            foreach (TreeNode node in mergeList.Nodes)
+            {
+               cd.SourceLocations.Add(node.Text);
+            }
          FillExpectedLayoutWorker.RunWorkerAsync(cd);
       }
 
       private void FillExpectedLayoutWorker_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e)
       {
-         SetProgressBarStyle( ProgressBarStyle.Continuous );
+         SetProgressBarStyle(ProgressBarStyle.Continuous);
       }
 
       private void FillExpectedLayoutWorker_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
@@ -365,7 +368,7 @@ namespace Liquesce
          }
          TreeNode root = new TreeNode(cd.VolumeLabel + " (" + cd.DriveLetter + ")");
          AddExpectedNode(null, root);
-         if ( worker.CancellationPending)
+         if (worker.CancellationPending)
             return;
          WalkExpectedNextTreeLevel(root, cd.SourceLocations);
          if (worker.CancellationPending)
@@ -383,7 +386,8 @@ namespace Liquesce
                FileSystemInfo[] fileSystemInfos = dirInfo.GetFileSystemInfos();
                allFiles.AddRange(fileSystemInfos.Select(info2 => new ExpectedDetailResult
                                                                     {
-                                                                       DisplayName = TrimAndAdd(sourceLocations, info2.FullName), ActualFileLocation = info2.FullName
+                                                                       DisplayName = TrimAndAdd(sourceLocations, info2.FullName),
+                                                                       ActualFileLocation = info2.FullName
                                                                     }));
             }
          }
@@ -399,7 +403,7 @@ namespace Liquesce
          if (index >= 0)
          {
             string key = fullFilePath.Remove(0, sourceLocations[index].Length);
-           return key;
+            return key;
          }
          throw new ArgumentException("Unable to find BelongTo Path: " + fullFilePath, fullFilePath);
       }
@@ -411,11 +415,11 @@ namespace Liquesce
          if (expectedTreeView.InvokeRequired)
          {
             AddExpecteddNodeCallBack d = AddExpectedNode;
-            Invoke(d, new object[] {parent, child});
+            Invoke(d, new object[] { parent, child });
          }
          else
          {
-            if ( parent == null )
+            if (parent == null)
                expectedTreeView.Nodes.Add(child);
             else
             {
@@ -464,12 +468,12 @@ namespace Liquesce
             SetProgressBarStyle(ProgressBarStyle.Marquee);
             Log.Debug("Remove the placeholder node.");
             string root = e.Node.Tag as string;
-            if ( !String.IsNullOrEmpty(root ))
+            if (!String.IsNullOrEmpty(root))
             {
                e.Node.Nodes.Clear();
                List<string> sourceLocations = new List<string>(mergeList.Nodes.Count);
                sourceLocations.AddRange(from TreeNode node in mergeList.Nodes select node.Text);
-               WalkExpectedNextTreeLevel(e.Node, sourceLocations, root );
+               WalkExpectedNextTreeLevel(e.Node, sourceLocations, root);
             }
             e.Cancel = false;
          }
@@ -491,7 +495,8 @@ namespace Liquesce
       private void WalkExpectedNextTreeLevel(TreeNode parent, List<string> sourceLocations, string expectedStartLocation)
       {
          List<ExpectedDetailResult> allFiles = new List<ExpectedDetailResult>();
-         sourceLocations.ForEach(str2 => AddFiles(sourceLocations, str2 + expectedStartLocation, allFiles));
+         if (sourceLocations != null)
+            sourceLocations.ForEach(str2 => AddFiles(sourceLocations, str2 + expectedStartLocation, allFiles));
          allFiles.Sort();
          Log.Debug("Should now have a huge list of filePaths");
          AddNextExpectedLevel(allFiles, parent);
@@ -499,40 +504,38 @@ namespace Liquesce
 
       private void AddNextExpectedLevel(List<ExpectedDetailResult> allFiles, TreeNode parent)
       {
-         foreach (ExpectedDetailResult kvp in allFiles)
-         {
-            if ( Directory.Exists(kvp.ActualFileLocation))
+         if (allFiles != null)
+            foreach (ExpectedDetailResult kvp in allFiles)
             {
-               // This is a Dir, so make a new child
-               string label = kvp.DisplayName;
-               int index = kvp.DisplayName.LastIndexOf(Path.DirectorySeparatorChar);
-               if ( index > 0 )
-                  label = kvp.DisplayName.Substring(index+1);
-               TreeNode child = new TreeNode
-                                   {
-                                      Text = label,
-                                      Tag = kvp.DisplayName,
-                                      ToolTipText = kvp.ActualFileLocation
-                                   };
-               child.Nodes.Add("DummyNode");
-               AddExpectedNode(parent, child);
+               if (Directory.Exists(kvp.ActualFileLocation))
+               {
+                  // This is a Dir, so make a new child
+                  string label = kvp.DisplayName;
+                  int index = kvp.DisplayName.LastIndexOf(Path.DirectorySeparatorChar);
+                  if (index > 0)
+                     label = kvp.DisplayName.Substring(index + 1);
+                  TreeNode child = new TreeNode
+                                      {
+                                         Text = label,
+                                         Tag = kvp.DisplayName,
+                                         ToolTipText = kvp.ActualFileLocation
+                                      };
+                  child.Nodes.Add("DummyNode");
+                  AddExpectedNode(parent, child);
+               }
+               else
+               {
+                  AddFileNodeCallBack d = AddFileNode;
+                  Invoke(d, new object[] { kvp, parent });
+               }
             }
-            else
-            {
-               AddFileNodeCallBack d = AddFileNode;
-               Invoke(d, new object[] { kvp, parent });
-            }
-         }
       }
 
       private delegate void AddFileNodeCallBack(ExpectedDetailResult kvp, TreeNode parent);
 
       private void AddFileNode(ExpectedDetailResult kvp, TreeNode parent)
       {
-         if (!imageListUnits.Images.ContainsKey(kvp.ActualFileLocation))
-         {
-            imageListUnits.Images.Add(kvp.ActualFileLocation, ExtractIcon.GetIconForFilename(kvp.ActualFileLocation, true).ToBitmap());
-         }
+         SafelyAddIcon(kvp.ActualFileLocation);
          TreeNode child = new TreeNode
                              {
                                 Text = Path.GetFileName(kvp.DisplayName),
@@ -540,6 +543,18 @@ namespace Liquesce
                                 ToolTipText = kvp.ActualFileLocation
                              };
          AddExpectedNode(parent, child);
+      }
+
+      private void SafelyAddIcon(string fullFileName)
+      {
+         try
+         {
+            if (!imageListUnits.Images.ContainsKey(fullFileName))
+            {
+               imageListUnits.Images.Add(fullFileName, ExtractIcon.GetIconForFilename(fullFileName, true).ToBitmap());
+            }
+         }
+         catch { }
       }
    }
 }
