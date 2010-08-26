@@ -129,7 +129,21 @@
   <metadata name="FillExpectedLayoutWorker.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
+  <metadata name="serviceController1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>522, 17</value>
+  </metadata>
   <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>54</value>
   </metadata>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        AAABAAEAEBAQAAAABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAABAA
+        AAAAAAAAAACAAACAAAAAgIAAgAAAAIAAgACAgAAAgICAAMDAwAAAAP8AAP8AAAD//wD/AAAA/wD/AP//
+        AAD///8AAAAAAACDI4AAAAAACDeHOHd3ADIidwdyeIcAd3OAAIJ4hwB4d4gHcnd3AHd3eIcyAAAAAAAH
+        d4AAgAAAAAAHAACIiIh3d3cAAAAACIAAAAAAAAAAAAAAAAAAAId3AAAAAAAAiIcAAAAAAACIhwAAAAAA
+        AIiIAAAAAAAAAAAAAAD/wQAA/4AAAAwIAAAMHAAADAgAAAwAAAD/4QAA3/sAAMADAAD+fwAA//8AAPw/
+        AAD8PwAA/D8AAPw/AAD//wAA
+</value>
+  </data>
 </root>
