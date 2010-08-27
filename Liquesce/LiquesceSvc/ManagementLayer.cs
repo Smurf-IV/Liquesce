@@ -163,6 +163,11 @@ namespace LiquesceSvc
             {
                currentConfigDetails = x.Deserialize(textReader) as ConfigDetails;
             }
+            Log.Info("Now normalise the paths to allow the file finders to work correctly");
+            List<string> fileSourceLocations = new List<string>(currentConfigDetails.SourceLocations);
+            currentConfigDetails.SourceLocations.Clear();
+            fileSourceLocations.ForEach(
+               location => currentConfigDetails.SourceLocations.Add(Path.GetPathRoot(location).TrimEnd(Path.DirectorySeparatorChar)));
          }
          catch (Exception ex)
          {

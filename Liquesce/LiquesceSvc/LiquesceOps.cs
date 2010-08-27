@@ -46,7 +46,7 @@ namespace LiquesceSvc
       {
          try
          {
-            Log.Trace( "CreateFile IN filename [{0}], fileMode[{1}], fileAccess[{2}], fileShare[{3}], fileOptions[{4}]",
+            Log.Debug( "CreateFile IN filename [{0}], fileMode[{1}], fileAccess[{2}], fileShare[{3}], fileOptions[{4}]",
                         filename, fileMode, fileAccess, fileShare, fileOptions );
             string path = GetPath( filename );
             if (Directory.Exists( path ))
