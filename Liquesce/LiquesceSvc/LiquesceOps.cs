@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using DokanNet;
 using LiquesceFaçade;
@@ -19,7 +20,7 @@ namespace LiquesceSvc
       private UInt64 openFilesNextKey;
       private readonly string root;
       // This would normally be static, but then there should only ever be one of these classes present from the Dokan Lib callback.
-      private ReaderWriterLockSlim rootPathsSync = new ReaderWriterLockSlim( LockRecursionPolicy.SupportsRecursion );
+      private readonly ReaderWriterLockSlim rootPathsSync = new ReaderWriterLockSlim( LockRecursionPolicy.SupportsRecursion );
       private readonly Dictionary<string, string> rootPaths = new Dictionary<string, string>();
 
       public LiquesceOps( ConfigDetails configDetails )
@@ -212,21 +213,7 @@ namespace LiquesceSvc
                   Log.Trace( "DeleteOnClose Directory" );
                   if (Directory.Exists( path ))
                   {
-                     FileInformation[] files;
-                     int errorCode = FindFiles( filename, out files );
-                     if (Dokan.DOKAN_SUCCESS == errorCode)
-                     {
-                        if (files.Length == 0)
-                        {
-                           Directory.Delete(path, false);
-                        }
-                        else
-                           return Dokan.ERROR_DIR_NOT_EMPTY;
-                     }
-                     else
-                     {
-                        return errorCode;
-                     }
+                     Directory.Delete(path, false);
                   }
                }
                else
@@ -427,20 +414,26 @@ namespace LiquesceSvc
          return Dokan.DOKAN_ERROR;
       }
 
+      public int FindFilesWithPattern(string filename, string pattern, out FileInformation[] files, DokanFileInfo info)
+      {
+         return FindFiles(filename, out files, pattern);
+      }
+
       public int FindFiles( string filename, out FileInformation[] files, DokanFileInfo info )
       {
-         return FindFiles( filename, out files );
+         return FindFiles(filename, out files);
       }
-      private int FindFiles( string filename, out FileInformation[] files )
+
+      private int FindFiles(string filename, out FileInformation[] files, string pattern = "*")
       {
          files = null;
          try
          {
-            Log.Trace( "FindFiles IN" );
+            Log.Debug( "FindFiles IN [{0}], pattern[{1}]", filename, pattern );
             Dictionary<string, FileInformation> uniqueFiles = new Dictionary<string, FileInformation>();
-            configDetails.SourceLocations.ForEach( str2 => AddFiles( str2 + filename, uniqueFiles ) );
+            configDetails.SourceLocations.ForEach(location => AddFiles(location + filename, uniqueFiles, pattern ));
             files = new FileInformation[uniqueFiles.Values.Count];
-            uniqueFiles.Values.CopyTo( files, 0 );
+            uniqueFiles.Values.CopyTo(files, 0);
          }
          catch (Exception ex)
          {
@@ -450,7 +443,20 @@ namespace LiquesceSvc
          }
          finally
          {
-            Log.Trace( "FindFiles OUT" );
+            Log.Debug( "FindFiles OUT [found {0}]", (files != null? files.Length: 0) );
+            if (Log.IsTraceEnabled)
+            {
+               if (files != null)
+               {
+                  StringBuilder sb = new StringBuilder();
+                  sb.AppendLine();
+                  foreach (FileInformation fileInformation in files)
+                  {
+                     sb.AppendLine(fileInformation.FileName);
+                  }
+                  Log.Trace(sb.ToString());
+               }
+            }
          }
          return Dokan.DOKAN_SUCCESS;
       }
@@ -826,14 +832,14 @@ namespace LiquesceSvc
          return foundPath;
       }
 
-      private void AddFiles( string path, Dictionary<string,FileInformation> files )
+      private void AddFiles( string path, Dictionary<string,FileInformation> files, string pattern)
       {
          try
          {
             DirectoryInfo dirInfo = new DirectoryInfo( path );
             if (dirInfo.Exists)
             {
-               FileSystemInfo[] fileSystemInfos = dirInfo.GetFileSystemInfos();
+               FileSystemInfo[] fileSystemInfos = dirInfo.GetFileSystemInfos( pattern, SearchOption.TopDirectoryOnly);
                foreach (FileSystemInfo info2 in fileSystemInfos)
                {
                   bool isDirectoy = (info2.Attributes & FileAttributes.Directory) == FileAttributes.Directory;
@@ -864,6 +870,7 @@ namespace LiquesceSvc
             string key = fullFilePath.Remove( 0, configDetails.SourceLocations[index].Length );
             try
             {
+               Log.Trace("Setting [{0}] to [{1}]", key, fullFilePath);
                rootPathsSync.TryEnterWriteLock( configDetails.LockTimeout );
                rootPaths[key] = fullFilePath;
             }

@@ -66,7 +66,9 @@ namespace DokanNet
 
       int FindFiles(string filename, out FileInformation[] files, DokanFileInfo info);
 
-      int SetFileAttributes( string filename, FileAttributes attr, DokanFileInfo info);
+      int FindFilesWithPattern(string filename, string pattern, out FileInformation[] files, DokanFileInfo info);
+
+      int SetFileAttributes(string filename, FileAttributes attr, DokanFileInfo info);
 
       int SetFileTime( string filename, DateTime ctime, DateTime atime, DateTime mtime, DokanFileInfo info);
 

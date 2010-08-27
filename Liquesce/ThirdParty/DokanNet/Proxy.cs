@@ -579,7 +579,46 @@ namespace DokanNet
 
       }
 
-      private void Addto( FILL_FIND_DATA fill, ref DOKAN_FILE_INFO rawFileInfo, FileInformation fi )
+      public delegate int FindFilesWithPatternDelegate(IntPtr rawFileName, IntPtr rawSearchPattern,
+          IntPtr rawFillFindData, // function pointer
+          ref DOKAN_FILE_INFO rawFileInfo);
+
+      public int FindFilesWithPatternProxy(IntPtr rawFileName, IntPtr rawSearchPattern, IntPtr rawFillFindData, // function pointer
+          ref DOKAN_FILE_INFO rawFileInfo)
+      {
+         try
+         {
+            string file = GetFileName(rawFileName);
+            string pattern = GetFileName(rawSearchPattern);
+
+            FileInformation[] files;
+            int ret = operations.FindFilesWithPattern(file, pattern, out files, GetFileInfo(ref rawFileInfo));
+
+            FILL_FIND_DATA fill = (FILL_FIND_DATA)Marshal.GetDelegateForFunctionPointer(rawFillFindData, typeof(FILL_FIND_DATA));
+
+            if ((ret == 0)
+               && (files != null)
+               )
+            {
+               // ReSharper disable ForCanBeConvertedToForeach
+               // Used a single entry call to speed up the "enumeration" of the list
+               for (int index = 0; index < files.Length; index++)
+               // ReSharper restore ForCanBeConvertedToForeach
+               {
+                  Addto(fill, ref rawFileInfo, files[index]);
+               }
+            }
+            return ret;
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException("FindFilesProxy threw: ", ex);
+            return -1;
+         }
+
+      }
+
+      private void Addto(FILL_FIND_DATA fill, ref DOKAN_FILE_INFO rawFileInfo, FileInformation fi)
       {
          WIN32_FIND_DATA data = new WIN32_FIND_DATA
          {
@@ -838,11 +877,12 @@ namespace DokanNet
             rawVolumeSerialNumber = 0x19831116;
             rawMaximumComponentLength = 256;
 
-            // FILE_CASE_SENSITIVE_SEARCH | 
-            // FILE_CASE_PRESERVED_NAMES |
-            // FILE_UNICODE_ON_DISK
+//#define FILE_CASE_SENSITIVE_SEARCH      0x00000001  
+//#define FILE_CASE_PRESERVED_NAMES       0x00000002  
+//#define FILE_UNICODE_ON_DISK            0x00000004  
+//#define FILE_PERSISTENT_ACLS            0x00000008  
             rawFileSystemFlags = 7;
-
+            
             byte[] sys = System.Text.Encoding.Unicode.GetBytes( "DOKAN" );
             Marshal.Copy( sys, 0, rawFileSystemNameBuffer, Math.Min( (int)rawFileSystemNameSize, sys.Length ) );
             return 0;
