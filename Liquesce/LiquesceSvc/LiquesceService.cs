@@ -113,16 +113,7 @@ namespace LiquesceSvc
          {
             Log.Info("Running Assembly Information.");
 
-            if (!ManagementLayer.Instance.Start())
-            {
-               Log.Error("ManagementLayer startup error.");
-               if (me != null)
-               {
-                  me.OnStop();
-                  ((ServiceBase)me)/*.base*/.Stop();
-               }
-            }
-
+            ManagementLayer.Instance.Start(null);
             Log.Info("LiquesceService started.");
          }
          catch (Exception ex)

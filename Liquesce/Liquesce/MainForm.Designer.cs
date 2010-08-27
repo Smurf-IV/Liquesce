@@ -193,6 +193,7 @@
          this.VolumeLabel.Size = new System.Drawing.Size(234, 22);
          this.VolumeLabel.TabIndex = 0;
          this.toolTip1.SetToolTip(this.VolumeLabel, "Label that will be visible in Windows explorer");
+         this.VolumeLabel.Validated += new System.EventHandler(this.VolumeLabel_Validated);
          // 
          // MountPoint
          // 
@@ -228,8 +229,10 @@
          this.MountPoint.Location = new System.Drawing.Point(90, 32);
          this.MountPoint.Name = "MountPoint";
          this.MountPoint.Size = new System.Drawing.Size(154, 22);
+         this.MountPoint.Sorted = true;
          this.MountPoint.TabIndex = 3;
          this.toolTip1.SetToolTip(this.MountPoint, "Drive letter to be used for the new volume");
+         this.MountPoint.TextChanged += new System.EventHandler(this.MountPoint_TextChanged);
          // 
          // label5
          // 
@@ -317,13 +320,14 @@
          this.commitToolStripMenuItem.Size = new System.Drawing.Size(60, 20);
          this.commitToolStripMenuItem.Text = "&Commit";
          this.commitToolStripMenuItem.ToolTipText = "Send the information above to the service";
+         this.commitToolStripMenuItem.Click += new System.EventHandler(this.commitToolStripMenuItem_Click);
          // 
          // advancedToolStripMenuItem
          // 
          this.advancedToolStripMenuItem.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.advancedToolStripMenuItem.Name = "advancedToolStripMenuItem";
-         this.advancedToolStripMenuItem.Size = new System.Drawing.Size(73, 20);
-         this.advancedToolStripMenuItem.Text = "&Advanced";
+         this.advancedToolStripMenuItem.Size = new System.Drawing.Size(94, 20);
+         this.advancedToolStripMenuItem.Text = "&Advanced...";
          this.advancedToolStripMenuItem.ToolTipText = "Advanced options to aid in debug and testing";
          // 
          // expectedTreeView
@@ -338,7 +342,7 @@
          this.expectedTreeView.ShowNodeToolTips = true;
          this.expectedTreeView.Size = new System.Drawing.Size(257, 472);
          this.expectedTreeView.TabIndex = 0;
-         this.toolTip1.SetToolTip(this.expectedTreeView, "Expand to see if nay dusplicates have been found");
+         this.toolTip1.SetToolTip(this.expectedTreeView, "Expand to see if any duplicates have been found");
          this.expectedTreeView.BeforeExpand += new System.Windows.Forms.TreeViewCancelEventHandler(this.expectedTreeView_BeforeExpand);
          // 
          // label3
