@@ -16,6 +16,7 @@ namespace LiquesceSvc
       private ConfigDetails currentConfigDetails;
       private readonly DateTime startTime;
       private readonly string configFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "LiquesceSvc", Settings1.Default.ConfigFileName);
+      private char mountedDriveLetter;
 
       /// <summary>
       /// Returns "The single instance" of this singleton class.
@@ -48,9 +49,8 @@ namespace LiquesceSvc
       /// You need a manifest file for .NET application.
       /// </summary>
       /// <returns></returns>
-      public bool Start()
+      public void Start( object obj)
       {
-         bool success = false;
          try
          {
                if (!IsRunning)
@@ -61,8 +61,11 @@ namespace LiquesceSvc
                   State = LiquesceSvcState.InError;
                   if (currentConfigDetails == null)
                   {
-                     Log.Error("Unable to read the config details to allow this service to run. Wil now exit");
-                     return false;
+                     Log.Fatal("Unable to read the config details to allow this service to run. Will now exit");
+                     Environment.Exit(-1);
+// ReSharper disable HeuristicUnreachableCode
+                     return;
+// ReSharper restore HeuristicUnreachableCode
                   }
                   if (delayStart.Milliseconds > currentConfigDetails.DelayStartMilliSec)
                   {
@@ -84,6 +87,7 @@ namespace LiquesceSvc
                   IDokanOperations dokanOperations = new LiquesceOps(currentConfigDetails);
                   State = LiquesceSvcState.Running;
                   IsRunning = true;
+                  mountedDriveLetter = currentConfigDetails.DriveLetter[0];
                   int retVal = Dokan.DokanMain(options, dokanOperations);
                   State = LiquesceSvcState.Unknown;
                   IsRunning = false;
@@ -117,7 +121,6 @@ namespace LiquesceSvc
          {
             Log.ErrorException("Start has failed in an uncontrolled way: ", ex);
          }
-         return success;
       }
 
       private bool IsRunning { get; set; }
@@ -142,7 +145,7 @@ namespace LiquesceSvc
                )
             {
                State = LiquesceSvcState.Unknown;
-               int retVal = Dokan.DokanUnmount( currentConfigDetails.DriveLetter[0] );
+               int retVal = Dokan.DokanUnmount(mountedDriveLetter);
                IsRunning = false;
                Log.Info("Stop returned[{0}]", retVal);
             }

@@ -1,4 +1,5 @@
 ﻿using System.ServiceModel;
+using System.Threading;
 using LiquesceFaçade;
 using NLog;
 
@@ -20,10 +21,11 @@ namespace LiquesceSvc
          ManagementLayer.Instance.Stop();
       }
 
-      public bool Start()
+      public void Start()
       {
          Log.Debug("Calling Start");
-         return ManagementLayer.Instance.Start();
+         // Queue the main work as a thread pool task as we want this method to finish promptly.
+         ThreadPool.QueueUserWorkItem(ManagementLayer.Instance.Start);
       }
 
       public LiquesceSvcState State

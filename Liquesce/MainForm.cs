@@ -57,22 +57,26 @@ namespace Liquesce
 
       private void InitialiseWith()
       {
-         // Add the drive letter back in as this would already have been removed
-         MountPoint.Items.Add(cd.DriveLetter);
-         MountPoint.Text = cd.DriveLetter;
-         if (cd.SourceLocations != null)
-            foreach (TreeNode tn in cd.SourceLocations.Select(sourceLocation => new TreeNode
-                                                                                   {
-                                                                                      Text = sourceLocation,
-                                                                                      ImageKey = sourceLocation,
-                                                                                      SelectedImageKey = sourceLocation
-                                                                                   }))
-            {
-               mergeList.Nodes.Add(tn);
-            }
-         DelayCreation.Text = cd.DelayStartMilliSec.ToString();
-         VolumeLabel.Text = cd.VolumeLabel;
-         RestartExpectedOutput();
+         if (!String.IsNullOrWhiteSpace(cd.DriveLetter))
+         {
+            // Add the drive letter back in as this would already have been removed
+            MountPoint.Items.Add(cd.DriveLetter);
+            MountPoint.Text = cd.DriveLetter;
+            if (cd.SourceLocations != null)
+               foreach (TreeNode tn in cd.SourceLocations.Select(sourceLocation => new TreeNode
+                                                                                      {
+                                                                                         Text = sourceLocation,
+                                                                                         ImageKey = sourceLocation,
+                                                                                         SelectedImageKey =
+                                                                                            sourceLocation
+                                                                                      }))
+               {
+                  mergeList.Nodes.Add(tn);
+               }
+            DelayCreation.Text = cd.DelayStartMilliSec.ToString();
+            VolumeLabel.Text = cd.VolumeLabel;
+            RestartExpectedOutput();
+         }
       }
 
       private void PopulatePoolSettings()
@@ -555,6 +559,51 @@ namespace Liquesce
             }
          }
          catch { }
+      }
+
+      private void commitToolStripMenuItem_Click(object sender, EventArgs e)
+      {
+         try
+         {
+            SetProgressBarStyle(ProgressBarStyle.Marquee);
+            cd.DelayStartMilliSec = (uint)DelayCreation.Value;
+            cd.DriveLetter = MountPoint.Text;
+            cd.VolumeLabel = VolumeLabel.Text;
+            cd.SourceLocations = new List<string>(mergeList.Nodes.Count);
+            if (mergeList.Nodes != null)
+               foreach (TreeNode node in mergeList.Nodes)
+               {
+                  cd.SourceLocations.Add(node.Text);
+               }
+
+            ChannelFactory<ILiquesce> factory = new ChannelFactory<ILiquesce>("LiquesceFaçade");
+            ILiquesce remoteIF = factory.CreateChannel();
+            remoteIF.ConfigDetails = cd;
+            Log.Info("Didn't go bang so stop");
+            remoteIF.Stop();
+            Log.Info("Now start");
+            remoteIF.Start();
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException("Unable to attach to the service, even tho it is running", ex);
+            MessageBox.Show(this, ex.Message, "Has the firewall blocked the communications ?", MessageBoxButtons.OK,
+                            MessageBoxIcon.Stop);
+         }
+         finally
+         {
+            SetProgressBarStyle(ProgressBarStyle.Continuous);
+         }
+      }
+
+      private void MountPoint_TextChanged(object sender, EventArgs e)
+      {
+         RestartExpectedOutput();
+      }
+
+      private void VolumeLabel_Validated(object sender, EventArgs e)
+      {
+         RestartExpectedOutput();
       }
    }
 }

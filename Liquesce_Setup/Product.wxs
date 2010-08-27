@@ -5,7 +5,7 @@
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
      >
    <?define UpgradeCode = "f6f94f17-a05f-4824-8dd9-9f5e8267d783" ?>
-   <?define Version = "10.8.26" ?>
+   <?define Version = "10.8.27" ?>
    <?define ProductName = "Liquesce Windows HDD Pooling Suite"?>
    <?define ProductID = "{c51c686d-ccee-4e50-9a7a-4ec07cc8a71a}"?>
 
@@ -39,6 +39,17 @@
       <Property Id="DOKANINSTALLED" >
          <RegistrySearch Id="IsDokanServiceInstalled" Root="HKLM" Key="SYSTEM\CurrentControlSet\services\Dokan" Name="DisplayName" Type="raw" />
       </Property>
+
+      <Property Id="DOKANVERCHECK">
+         <DirectorySearch Id="Dokan.sys.version" Path="[SystemFolder]\Drivers">
+            <!--Make sure that the min / max _straddle_ the actual version..  -->
+            <FileSearch Name="Dokan.sys" MinVersion="6.1.7600.16384"  MaxVersion="6.1.7600.16386"/>
+         </DirectorySearch>
+      </Property>
+
+      <Condition Message="This application requires Dokan Ver 0.5.3.">
+         <![CDATA[Installed OR DOKANVERCHECK]]>
+      </Condition>
 
       <!--Some test conditions to allow the installer to run-->
       <Condition Message="Dokan Driver Is Not Installed">

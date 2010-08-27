@@ -19,7 +19,7 @@ namespace LiquesceFaçade
       void Stop();
 
       [OperationContract]
-      bool Start();
+      void Start();
 
       LiquesceSvcState State
       {
