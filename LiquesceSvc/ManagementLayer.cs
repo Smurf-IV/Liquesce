@@ -67,10 +67,14 @@ namespace LiquesceSvc
                      return;
 // ReSharper restore HeuristicUnreachableCode
                   }
-                  if (delayStart.Milliseconds > currentConfigDetails.DelayStartMilliSec)
+                  // Sometimes the math gets all confused due to the casting !!
+                  int delayStartMilliseconds = (int) (currentConfigDetails.DelayStartMilliSec - delayStart.Milliseconds);
+                  if ((delayStartMilliseconds > 0)
+                     &&(delayStartMilliseconds < UInt16.MaxValue)
+                     )
                   {
                      Log.Info("Delay Start needs to be obeyed");
-                     Thread.Sleep((int)(currentConfigDetails.DelayStartMilliSec - delayStart.Milliseconds));
+                     Thread.Sleep(delayStartMilliseconds);
                   }
                   DokanOptions options = new DokanOptions
                                             {

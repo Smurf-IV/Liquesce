@@ -26,7 +26,7 @@ namespace DokanNet
       public Proxy.FlushFileBuffersDelegate FlushFileBuffers;
       public Proxy.GetFileInformationDelegate GetFileInformation;
       public Proxy.FindFilesDelegate FindFiles;
-      private readonly IntPtr FindFilesWithPattern; // this is not used in DokanNet
+      public Proxy.FindFilesWithPatternDelegate FindFilesWithPattern; // this is not used in DokanNet
       public Proxy.SetFileAttributesDelegate SetFileAttributes;
       public Proxy.SetFileTimeDelegate SetFileTime;
       public Proxy.DeleteFileDelegate DeleteFile;
@@ -57,5 +57,6 @@ namespace DokanNet
 
       [DllImport("dokan.dll")]
       public static extern bool DokanResetTimeout(uint timeout, ref DOKAN_FILE_INFO rawFileInfo);
+
    }
 }

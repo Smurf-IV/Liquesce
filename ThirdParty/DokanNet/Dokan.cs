@@ -87,6 +87,7 @@ namespace DokanNet
                                                   FlushFileBuffers = proxy.FlushFileBuffersProxy,
                                                   GetFileInformation = proxy.GetFileInformationProxy,
                                                   FindFiles = proxy.FindFilesProxy,
+                                                  FindFilesWithPattern = proxy.FindFilesWithPatternProxy,
                                                   SetFileAttributes = proxy.SetFileAttributesProxy,
                                                   SetFileTime = proxy.SetFileTimeProxy,
                                                   DeleteFile = proxy.DeleteFileProxy,
