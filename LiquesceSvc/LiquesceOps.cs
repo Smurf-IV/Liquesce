@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.ServiceProcess;
 using System.Text;
 using System.Threading;
 using DokanNet;
@@ -28,40 +29,6 @@ namespace LiquesceSvc
       {
          root = Path.GetFullPath(configDetails.SourceLocations[0]).TrimEnd(Path.DirectorySeparatorChar);
          this.configDetails = configDetails;
-         if ( (configDetails.ShareDetails != null)
-            && (configDetails.ShareDetails.Count > 0)
-            )
-         {
-            try
-            {
-               rootPathsSync.TryEnterWriteLock(configDetails.LockTimeout);
-               HashSet<string> doneAlready = new HashSet<string>();
-               // If this has shares, then they can come stright in and screw things over royally !
-               // e.g. win 7 can attempt to delete a share without any reference or traversal of the drive
-               configDetails.ShareDetails.ForEach(delegate(ShareDetail shareDetail)
-               {
-                  int lastDir = shareDetail.Path.LastIndexOf(Path.DirectorySeparatorChar);
-                  if (lastDir > -1)
-                  {
-                     Log.Trace("Perform search for path: {0}", shareDetail.Path);
-                     string subString = shareDetail.Path.Substring(0, lastDir);
-                     if (String.IsNullOrWhiteSpace(subString))
-                        subString = PathDirectorySeparatorChar;
-                     if (doneAlready.Add(subString))
-                     {
-                        Log.Debug("Adding search from path: {0}", subString);
-                        FileInformation[] files;
-                        FindFiles(subString, out files);
-                     }
-                  }
-
-               });
-            }
-            finally
-            {
-               rootPathsSync.ExitWriteLock();
-            }
-         }
       }
 
       #region IDokanOperations Implementation
@@ -465,15 +432,27 @@ namespace LiquesceSvc
          try
          {
             Log.Debug("FindFiles IN [{0}], pattern[{1}]", filename, pattern);
-            if (filename.EndsWith(PathDirectorySeparatorChar))
+            if ((filename != PathDirectorySeparatorChar)
+               && filename.EndsWith(PathDirectorySeparatorChar)
+               )
             {
                // Win 7 uses this to denote a remote connection over the share
                filename = filename.TrimEnd(Path.DirectorySeparatorChar);
                if (!configDetails.ShareDetails.Exists(share => share.Path == filename))
                {
                   Log.Debug("Adding a new share for path: {0}", filename);
-                  configDetails.ShareDetails.Add(new ShareDetail {Path = filename});
+                  configDetails.ShareDetails.Add(new ShareDetail { Path = filename });
+                  int lastDir = filename.LastIndexOf(Path.DirectorySeparatorChar);
+                  if (lastDir > 0)
+                  {
+                     Log.Trace("Perform search for path: {0}", filename);
+                     string newPart = filename.Substring(lastDir);
+                     filename = filename.Substring(0, lastDir);
+                  }
+                  else
+                     filename = PathDirectorySeparatorChar;
                }
+               Log.Debug("Will attempt to find share details for [{0}]", filename);
             }
             Dictionary<string, FileInformation> uniqueFiles = new Dictionary<string, FileInformation>();
             configDetails.SourceLocations.ForEach(location => AddFiles(location + filename, uniqueFiles, pattern));
@@ -664,13 +643,18 @@ namespace LiquesceSvc
          try
          {
             Log.Trace("SetEndOfFile IN");
-            string path = GetPath(filename);
-            // TODO: Should this be detecting if the file is already in the cache
-            using (Stream stream = File.Open(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+            int error = SetAllocationSize(filename, length, info);
+            if (error == Dokan.ERROR_FILE_NOT_FOUND)
             {
-               stream.SetLength(length);
-               stream.Close();
+               string path = GetPath(filename);
+               using (Stream stream = File.Open(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+               {
+                  stream.SetLength(length);
+                  stream.Close();
+               }
+               error = Dokan.DOKAN_SUCCESS;
             }
+            return error;
          }
          catch (Exception ex)
          {
@@ -682,7 +666,6 @@ namespace LiquesceSvc
          {
             Log.Trace("SetEndOfFile OUT");
          }
-         return Dokan.DOKAN_SUCCESS;
       }
 
       public int SetAllocationSize(string filename, long length, DokanFileInfo info)
@@ -854,7 +837,7 @@ namespace LiquesceSvc
                {
                   // Sometimes the windows share put a slash on the end .. Sometimes !!
                   filename = filename.TrimEnd(Path.DirectorySeparatorChar);
-                  rootPathsSync.TryEnterReadLock(configDetails.LockTimeout);
+                  rootPathsSync.TryEnterUpgradeableReadLock(configDetails.LockTimeout);
                   if (!rootPaths.TryGetValue(filename, out foundPath))
                   {
                      bool found = false;
@@ -893,7 +876,7 @@ namespace LiquesceSvc
                }
                finally
                {
-                  rootPathsSync.ExitReadLock();
+                  rootPathsSync.ExitUpgradeableReadLock();
                }
             }
             else
@@ -986,5 +969,64 @@ namespace LiquesceSvc
       static extern int MoveFileEx(string lpExistingFileName, string lpNewFileName, UInt32 dwFlags);
 
       #endregion
+
+      public void InitialiseShares(object state)
+      {
+         Log.Debug("InitialiseShares IN");
+         try
+         {
+            Thread.Sleep(250); // Give the driver some time to mount
+            if (ManagementLayer.Instance.State != LiquesceSvcState.Running)
+               return; // A request to exit has occurred
+            do
+            {
+               string[] drives = Environment.GetLogicalDrives();
+               if (Array.Exists(drives, dr => dr.Remove(1) == configDetails.DriveLetter))
+                  break;
+               Log.Info("Waiting for Dokan to create the drive letter before reappling the shares");
+               Thread.Sleep(100);
+            } while (ManagementLayer.Instance.State == LiquesceSvcState.Running);
+
+            if (configDetails.ShareDetails == null)
+               configDetails.ShareDetails = new List<ShareDetail>();
+            // I could do this: "Restart LanmanServer after the drive is mounted",
+            // But then that would be painful on the OS and if the Service is just being restarted !
+            // BUT - this way means that I do not have to work out what security each of the shares is supposed to have ;-)
+            ServiceController sc = new ServiceController("Server"); // This name is also used in Win 7
+            if (ManagementLayer.Instance.State == LiquesceSvcState.Running)
+            {
+               while (sc.Status != ServiceControllerStatus.Stopped)
+               {
+                  Log.Info("Attempting to stop " + sc.DisplayName);
+                  sc.Stop();
+                  Thread.Sleep(1000);
+                  sc.Refresh();
+               }
+               Thread.Sleep(1000);
+            }
+
+            List<RegistryLanManShare> matchedShares = LanManShares.MatchDriveLanManShares(configDetails.DriveLetter + Path.VolumeSeparatorChar);
+            foreach (RegistryLanManShare share in matchedShares)
+            {
+               FileInformation[] files;
+               FindFiles(share.Path.Substring(2) + Path.DirectorySeparatorChar, out files);
+            }
+            while (sc.Status != ServiceControllerStatus.Running)
+            {
+               Log.Info("Attempting to start " + sc.DisplayName);
+               sc.Start();
+               Thread.Sleep(1000);
+               sc.Refresh();
+            }
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException("Init shares threw: ", ex);
+         }
+         finally
+         {
+            Log.Debug("InitialiseShares OUT");
+         }
+      }
    }
 }

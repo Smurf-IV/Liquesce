@@ -67,6 +67,9 @@ namespace LiquesceSvc
                   return;
                   // ReSharper restore HeuristicUnreachableCode
                }
+               State = LiquesceSvcState.Running;
+               IsRunning = true;
+
                // Sometimes the math gets all confused due to the casting !!
                int delayStartMilliseconds = (int)(currentConfigDetails.DelayStartMilliSec - delayStart.Milliseconds);
                if ((delayStartMilliseconds > 0)
@@ -76,6 +79,8 @@ namespace LiquesceSvc
                   Log.Info("Delay Start needs to be obeyed");
                   Thread.Sleep(delayStartMilliseconds);
                }
+               if ( State != LiquesceSvcState.Running)
+                  return;  // We have been asked to exit via the stop
                DokanOptions options = new DokanOptions
                                          {
                                             DriveLetter = currentConfigDetails.DriveLetter[0],
@@ -88,9 +93,9 @@ namespace LiquesceSvc
                                             VolumeLabel = currentConfigDetails.VolumeLabel
                                          };
 
-               IDokanOperations dokanOperations = new LiquesceOps(currentConfigDetails);
-               State = LiquesceSvcState.Running;
-               IsRunning = true;
+               LiquesceOps dokanOperations = new LiquesceOps(currentConfigDetails);
+               ThreadPool.QueueUserWorkItem(dokanOperations.InitialiseShares, dokanOperations);
+
                mountedDriveLetter = currentConfigDetails.DriveLetter[0];
                int retVal = Dokan.DokanMain(options, dokanOperations);
                State = LiquesceSvcState.Unknown;
@@ -172,33 +177,6 @@ namespace LiquesceSvc
             currentConfigDetails.SourceLocations.Clear();
             fileSourceLocations.ForEach(
                location => currentConfigDetails.SourceLocations.Add(Path.GetPathRoot(location).TrimEnd(Path.DirectorySeparatorChar)));
-            if (currentConfigDetails.ShareDetails == null)
-               currentConfigDetails.ShareDetails = new List<ShareDetail>();
-            IEnumerable<Win32Share> shares = Win32Share.GetAllShares();
-            if (shares != null)
-            {
-               // This is crying out for a linq style thing, but then the logging would probably be gone !
-               foreach (Win32Share share in shares)
-               {
-                  Log.Info("Name[{0}], Path[{1}], Status[{2}], Type[{3}]", share.Name, share.Path, share.Status,
-                           share.Type);
-                  if (share.Type != Win32Share.ShareType.DiskDrive) 
-                     continue;
-                  if (currentConfigDetails.ShareDetails.Exists(oldShare => oldShare.Name == share.Name)) 
-                     continue;
-                  Log.Debug("Check to see if this share name exists from the new drive");
-                  if ( share.Path.StartsWith(currentConfigDetails.DriveLetter))
-                  {
-                     Log.Debug("!! It Does !!");
-                     currentConfigDetails.ShareDetails.Add(new ShareDetail
-                                                              {
-                                                                 Description = share.Description,
-                                                                 Name = share.Name,
-                                                                 Path = share.Path.Substring(2) // Remove the drive rubbish
-                                                              });
-                  }
-               }
-            }
          }
          catch (Exception ex)
          {
