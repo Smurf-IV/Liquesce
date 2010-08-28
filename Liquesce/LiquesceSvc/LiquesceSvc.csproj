@@ -73,6 +73,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="LanManShares.cs" />
     <Compile Include="LiquesceFaçade.cs" />
     <Compile Include="LiquesceOps.cs" />
     <Compile Include="LiquesceService.cs">
@@ -96,7 +97,6 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings1.settings</DependentUpon>
     </Compile>
-    <Compile Include="Win32Share.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
