@@ -442,15 +442,19 @@ namespace LiquesceSvc
                {
                   Log.Debug("Adding a new share for path: {0}", filename);
                   configDetails.ShareDetails.Add(new ShareDetail { Path = filename });
-                  int lastDir = filename.LastIndexOf(Path.DirectorySeparatorChar);
-                  if (lastDir > 0)
+                  if (!Directory.Exists(GetPath(filename)))
                   {
-                     Log.Trace("Perform search for path: {0}", filename);
-                     string newPart = filename.Substring(lastDir);
-                     filename = filename.Substring(0, lastDir);
+                     Log.Info("Share has not been traversed (Might be command line add");
+                     int lastDir = filename.LastIndexOf(Path.DirectorySeparatorChar);
+                     if (lastDir > 0)
+                     {
+                        Log.Trace("Perform search for path: {0}", filename);
+                        string newPart = filename.Substring(lastDir);
+                        filename = filename.Substring(0, lastDir);
+                     }
+                     else
+                        filename = PathDirectorySeparatorChar;
                   }
-                  else
-                     filename = PathDirectorySeparatorChar;
                }
                Log.Debug("Will attempt to find share details for [{0}]", filename);
             }

@@ -11,7 +11,7 @@ namespace LiquesceSvc
       public string Path;
       public uint Permissions;
       public string Remark;
-      public Win32Share.ShareType Type;
+      public int Type;
    }
 
    class LanManShares
@@ -51,7 +51,7 @@ namespace LiquesceSvc
                               share.Remark = splits[1];
                               break;
                            case "Type":
-                              share.Type = (Win32Share.ShareType)int.Parse(splits[1]);
+                              share.Type = int.Parse(splits[1]);
                               break;
                         }
                      }
