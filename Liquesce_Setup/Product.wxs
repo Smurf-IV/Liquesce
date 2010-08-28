@@ -5,11 +5,10 @@
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
      >
    <?define UpgradeCode = "f6f94f17-a05f-4824-8dd9-9f5e8267d783" ?>
-   <?define Version = "10.8.27" ?>
+   <?define Version = "10.8.28" ?>
    <?define ProductName = "Liquesce Windows HDD Pooling Suite"?>
-   <?define ProductID = "{c51c686d-ccee-4e50-9a7a-4ec07cc8a71a}"?>
 
-   <Product Version="$(var.Version)" Id="$(var.ProductID)" UpgradeCode="$(var.UpgradeCode)"
+   <Product Version="$(var.Version)" Id="*" UpgradeCode="$(var.UpgradeCode)"
           Name="$(var.ProductName)" Language="1033" Manufacturer="http://liquesce.codeplex.com/" >
 
       <Package Id="*" Keywords='Installer'
@@ -31,10 +30,6 @@
       <!-- Properties to allow detection of .Net installation -->
       <PropertyRef Id="NETFRAMEWORK40FULL"/>
       <PropertyRef Id="NETFRAMEWORK40FULLINSTALLROOTDIR" />
-
-      <!-- Now setup some stuff to detect app launch on exit -->
-      <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch $(var.ProductName) when setup exits." />
-      <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
 
       <Property Id="DOKANINSTALLED" >
          <RegistrySearch Id="IsDokanServiceInstalled" Root="HKLM" Key="SYSTEM\CurrentControlSet\services\Dokan" Name="DisplayName" Type="raw" />
@@ -61,9 +56,9 @@
       <Condition Message="You need to be an administrator to install this product.">
          Privileged
       </Condition>
-      <Condition Message="A later version of [ProductName] is already installed. Setup will now exit.">
+      <!--<Condition Message="A later version of [ProductName] is already installed. Setup will now exit.">
          <![CDATA[NOT NEWERVERSIONDETECTED OR Installed]]>
-      </Condition>
+      </Condition>-->
 
       <!--Allow 7 zip compression to squeeze this tighter -->
       <Media Id="1" Cabinet="Setup.cab" EmbedCab="yes" CompressionLevel="none" />
@@ -79,24 +74,24 @@
                         <Shortcut Id="startmenuShortcut" Directory="ProgramMenuDir2" Name="$(var.ProductName)" WorkingDirectory="ClientDIR" Icon="client.ico" IconIndex="0" Advertise="yes"/>
                      </File>
                   </Component>
-                  <Component Id="ChangeLog.Component" Guid="5ebf3f29-9cf1-44fe-a94c-cc1b4fe09368">
-                     <File Id="ChangeLog.rtf.File" Name="ChangeLog.rtf" Source="Z:\Liquesce\Liquesce\ChangeLog.rtf" KeyPath="yes" />
+                  <Component Id="ChangeLog.Component" >
+                     <File Source="Z:\Liquesce\Liquesce\ChangeLog.rtf" KeyPath="yes" />
                   </Component>
-                  <Component Id="Liquesce.exe.config.Component" Guid="5ebf3f29-9cf1-44fe-a94c-cc1b4fe09369">
-                     <File Id="Liquesce.exe.config.File" Name="Liquesce.exe.config" Source="Z:\Liquesce\Liquesce\bin\Release\Liquesce.exe.config" KeyPath="yes" />
+                  <Component Id="Liquesce.exe.config.Component" >
+                     <File Source="Z:\Liquesce\Liquesce\bin\Release\Liquesce.exe.config" KeyPath="yes" />
                   </Component>
-                  <Component Id="C_NLog.dll.Component" Guid="5ebf3f29-9cf1-44fe-a94c-cc1b4fe0936a">
-                     <File Id="C_NLog.dll.File" Name="NLog.dll" Source="Z:\Liquesce\Liquesce\bin\Release\NLog.dll" KeyPath="yes" />
+                  <Component Id="C_NLog.dll.Component" >
+                     <File Id="C_NLog.dll" Source="Z:\Liquesce\Liquesce\bin\Release\NLog.dll" KeyPath="yes" />
                   </Component>
-                  <Component Id="C_LiquesceFacade.dll.Component" Guid="5ebf3f29-9cf1-44fe-a94c-cc1b4fe0936b">
-                     <File Id="C_LiquesceFacade.dll.File" Name="LiquesceFaçade.dll" Source="Z:\Liquesce\Liquesce\bin\Release\LiquesceFaçade.dll" KeyPath="yes" />
+                  <Component Id="C_LiquesceFacade.dll.Component" >
+                     <File Id="C_LiquesceFacade.dll" Source="Z:\Liquesce\Liquesce\bin\Release\LiquesceFaçade.dll" KeyPath="yes" />
                   </Component>
-                  <Component Id="LiquesceTray.exe.Component" Guid="5ebf3f29-9cf1-44fe-a94c-cc1b4fe0936c">
-                     <File Id="LiquesceTray.exe.File" Name="LiquesceTray.exe" Source="Z:\Liquesce\LiquesceTray\bin\Release\LiquesceTray.exe" KeyPath="yes" />
+                  <Component Id="LiquesceTray.exe.Component" >
+                     <File Source="Z:\Liquesce\LiquesceTray\bin\Release\LiquesceTray.exe" KeyPath="yes" />
                   </Component>
                </Directory>
                <Directory Id="ServiceDIR" Name="Liquesce Service">
-                  <Component Id="LiquesceSvc.Component" DiskId="1" Guid="Bebf3f29-9cf1-44fe-a94c-cc1b4fe09367">
+                  <Component Id="LiquesceSvc.Component" Guid="Bebf3f29-9cf1-44fe-a94c-cc1b4fe09367">
                      <File Id="LiquesceSvc.File" Name="LiquesceSvc.exe" Source="Z:\Liquesce\LiquesceSvc\bin\Release\LiquesceSvc.exe" KeyPath="yes">
                         <fire:FirewallException Id="LiquesceFWX2" Name="LiquesceSvc" Scope="localSubnet" IgnoreFailure="yes" />
                         <netfx:NativeImage Id="ngen_LiquesceSvc.exe" Platform="all" Priority="3" AppBaseDirectory="ServiceDIR"/>
@@ -105,14 +100,14 @@
                      <ServiceControl Id='MyServiceControl' Name='LiquesceSvc'
                          Start='install' Stop='uninstall' Remove='uninstall' />
                   </Component>
-                  <Component Id="DokanNet.dll.Component" DiskId="1" Guid="Bebf3f29-9cf1-44fe-a94c-cc1b4fe09368">
-                     <File Id="DokanNet.dll.File" Name="DokanNet.dll" Source="Z:\Liquesce\LiquesceSvc\bin\Release\DokanNet.dll" KeyPath="yes" />
+                  <Component Id="DokanNet.dll.Component" >
+                     <File Source="Z:\Liquesce\LiquesceSvc\bin\Release\DokanNet.dll" KeyPath="yes" />
                   </Component>
-                  <Component Id="LiquesceFacade.dll.Component" DiskId="1" Guid="Bebf3f29-9cf1-44fe-a94c-cc1b4fe09369">
-                     <File Id="LiquesceFacade.dll.File" Name="LiquesceFaçade.dll" Source="Z:\Liquesce\LiquesceSvc\bin\Release\LiquesceFaçade.dll" KeyPath="yes" />
+                  <Component Id="LiquesceFacade.dll.Component" >
+                     <File Source="Z:\Liquesce\LiquesceSvc\bin\Release\LiquesceFaçade.dll" KeyPath="yes" />
                   </Component>
-                  <Component Id="NLog.dll.Component" DiskId="1" Guid="Bebf3f29-9cf1-44fe-a94c-cc1b4fe0936a">
-                     <File Id="NLog.dll.File" Name="NLog.dll" Source="Z:\Liquesce\LiquesceSvc\bin\Release\NLog.dll" KeyPath="yes" />
+                  <Component Id="NLog.dll.Component" >
+                     <File Source="Z:\Liquesce\LiquesceSvc\bin\Release\NLog.dll" KeyPath="yes" />
                   </Component>
                </Directory>
             </Directory>
@@ -126,7 +121,7 @@
                   <RegistryValue Root='HKCU' Key='Software\[Manufacturer]\[ProductName]' Type='string' Value='' KeyPath='yes' />
                </Component>
                <Directory Id="ProgramMenuDir2" Name="$(var.ProductName)" >
-                  <Component Id="ProgramMenuDir2" Guid="11234567-7E98-44CE-B049-C477CC0A2B00">
+                  <Component Id="ProgramMenuDir2" Guid="11234567-7E98-44CE-B049-C477CC0A2B01">
                      <RemoveFolder Id='ProgramMenuDir2' On='uninstall' />
                      <RegistryValue Root='HKCU' Key='Software\[Manufacturer]\[ProductName]' Type='string' Value='' KeyPath='yes' />
                      <util:InternetShortcut Type="url" Id="Home" Name='Liquesce' Target='[ARPHELPLINK]' />
@@ -185,7 +180,7 @@
 
       <!-- Now to sequence these Custom Actions in the execute sequence -->
       <InstallExecuteSequence>
-         <RemoveExistingProducts After='InstallFinalize' />
+         <!--<RemoveExistingProducts After='InstallFinalize' />-->
 
          <Custom Action="LiquesceSvc.commit.SetProperty" After="InstallServices"><![CDATA[ $LiquesceSvc.Component > 2 ]]></Custom>
          <Custom Action="LiquesceSvc.commit" After="LiquesceSvc.commit.SetProperty"><![CDATA[ $LiquesceSvc.Component > 2 ]]></Custom>
@@ -201,7 +196,8 @@
       </InstallExecuteSequence>
 
 
-      <Upgrade Id="$(var.UpgradeCode)">
+      <MajorUpgrade DowngradeErrorMessage="Downgrades are not allowed - Use add/remove from the control panel" />
+      <!--<Upgrade Id="$(var.UpgradeCode)">
          <UpgradeVersion Minimum="1.0.0"
                          IncludeMinimum="yes"
                          Maximum="$(var.Version)"
@@ -209,7 +205,7 @@
          <UpgradeVersion Minimum="$(var.Version)"
                          OnlyDetect="yes"
                          Property="NEWERVERSIONDETECTED" />
-      </Upgrade>
+      </Upgrade>-->
 
    </Product>
 </Wix>
