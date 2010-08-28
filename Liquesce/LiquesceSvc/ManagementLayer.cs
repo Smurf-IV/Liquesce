@@ -26,7 +26,7 @@ namespace LiquesceSvc
          get { return instance ?? (instance = new ManagementLayer()); }
       }
 
-            /// <summary>
+      /// <summary>
       /// Private constructor to prevent multiple instances
       /// </summary>
       private ManagementLayer()
@@ -49,77 +49,77 @@ namespace LiquesceSvc
       /// You need a manifest file for .NET application.
       /// </summary>
       /// <returns></returns>
-      public void Start( object obj)
+      public void Start(object obj)
       {
          try
          {
-               if (!IsRunning)
+            if (!IsRunning)
+            {
+               if (currentConfigDetails == null)
+                  ReadConfigDetails();
+               TimeSpan delayStart = DateTime.UtcNow - startTime;
+               State = LiquesceSvcState.InError;
+               if (currentConfigDetails == null)
                {
-                  if (currentConfigDetails == null)
-                     ReadConfigDetails();
-                  TimeSpan delayStart = DateTime.UtcNow - startTime;
-                  State = LiquesceSvcState.InError;
-                  if (currentConfigDetails == null)
-                  {
-                     Log.Fatal("Unable to read the config details to allow this service to run. Will now exit");
-                     Environment.Exit(-1);
-// ReSharper disable HeuristicUnreachableCode
-                     return;
-// ReSharper restore HeuristicUnreachableCode
-                  }
-                  // Sometimes the math gets all confused due to the casting !!
-                  int delayStartMilliseconds = (int) (currentConfigDetails.DelayStartMilliSec - delayStart.Milliseconds);
-                  if ((delayStartMilliseconds > 0)
-                     &&(delayStartMilliseconds < UInt16.MaxValue)
-                     )
-                  {
-                     Log.Info("Delay Start needs to be obeyed");
-                     Thread.Sleep(delayStartMilliseconds);
-                  }
-                  DokanOptions options = new DokanOptions
-                                            {
-                                               DriveLetter = currentConfigDetails.DriveLetter[0],
-                                               ThreadCount = currentConfigDetails.ThreadCount,
-                                               DebugMode = currentConfigDetails.DebugMode,
-//      public bool UseStdErr;
-  //    public bool UseAltStream;
-                                               UseKeepAlive = true,  // When you set TRUE on DokanOptions->UseKeepAlive, dokan library automatically unmounts 15 seconds after user-mode file system hanged up
-                                               NetworkDrive = false,
-                                               VolumeLabel = currentConfigDetails.VolumeLabel
-                                            };
-
-                  IDokanOperations dokanOperations = new LiquesceOps(currentConfigDetails);
-                  State = LiquesceSvcState.Running;
-                  IsRunning = true;
-                  mountedDriveLetter = currentConfigDetails.DriveLetter[0];
-                  int retVal = Dokan.DokanMain(options, dokanOperations);
-                  State = LiquesceSvcState.Unknown;
-                  IsRunning = false;
-                  switch (retVal)
-                  {
-                     case Dokan.DOKAN_SUCCESS: // = 0;
-                        Log.Info("DOKAN_SUCCESS");
-                        break;
-                     case Dokan.DOKAN_ERROR:// = -1; // General Error
-                        Log.Info("DOKAN_ERROR");
-                        break;
-                     case Dokan.DOKAN_DRIVE_LETTER_ERROR: // = -2; // Bad Drive letter
-                        Log.Info("DOKAN_DRIVE_LETTER_ERROR");
-                        break;
-                     case Dokan.DOKAN_DRIVER_INSTALL_ERROR: // = -3; // Can't install driver
-                        Log.Info("DOKAN_DRIVER_INSTALL_ERROR");
-                        break;
-                     case Dokan.DOKAN_START_ERROR: // = -4; // Driver something wrong
-                        Log.Info("DOKAN_START_ERROR");
-                        break;
-                     case Dokan.DOKAN_MOUNT_ERROR: // = -5; // Can't assign drive letter
-                        Log.Info("DOKAN_MOUNT_ERROR");
-                        break;
-                     default:
-                        Log.Info("Unknown Error retirn {0}", retVal);
-                        break;
-                  }
+                  Log.Fatal("Unable to read the config details to allow this service to run. Will now exit");
+                  Environment.Exit(-1);
+                  // ReSharper disable HeuristicUnreachableCode
+                  return;
+                  // ReSharper restore HeuristicUnreachableCode
                }
+               // Sometimes the math gets all confused due to the casting !!
+               int delayStartMilliseconds = (int)(currentConfigDetails.DelayStartMilliSec - delayStart.Milliseconds);
+               if ((delayStartMilliseconds > 0)
+                  && (delayStartMilliseconds < UInt16.MaxValue)
+                  )
+               {
+                  Log.Info("Delay Start needs to be obeyed");
+                  Thread.Sleep(delayStartMilliseconds);
+               }
+               DokanOptions options = new DokanOptions
+                                         {
+                                            DriveLetter = currentConfigDetails.DriveLetter[0],
+                                            ThreadCount = currentConfigDetails.ThreadCount,
+                                            DebugMode = currentConfigDetails.DebugMode,
+                                            //      public bool UseStdErr;
+                                            //    public bool UseAltStream;
+                                            UseKeepAlive = true,  // When you set TRUE on DokanOptions->UseKeepAlive, dokan library automatically unmounts 15 seconds after user-mode file system hanged up
+                                            NetworkDrive = false,
+                                            VolumeLabel = currentConfigDetails.VolumeLabel
+                                         };
+
+               IDokanOperations dokanOperations = new LiquesceOps(currentConfigDetails);
+               State = LiquesceSvcState.Running;
+               IsRunning = true;
+               mountedDriveLetter = currentConfigDetails.DriveLetter[0];
+               int retVal = Dokan.DokanMain(options, dokanOperations);
+               State = LiquesceSvcState.Unknown;
+               IsRunning = false;
+               switch (retVal)
+               {
+                  case Dokan.DOKAN_SUCCESS: // = 0;
+                     Log.Info("DOKAN_SUCCESS");
+                     break;
+                  case Dokan.DOKAN_ERROR:// = -1; // General Error
+                     Log.Info("DOKAN_ERROR");
+                     break;
+                  case Dokan.DOKAN_DRIVE_LETTER_ERROR: // = -2; // Bad Drive letter
+                     Log.Info("DOKAN_DRIVE_LETTER_ERROR");
+                     break;
+                  case Dokan.DOKAN_DRIVER_INSTALL_ERROR: // = -3; // Can't install driver
+                     Log.Info("DOKAN_DRIVER_INSTALL_ERROR");
+                     break;
+                  case Dokan.DOKAN_START_ERROR: // = -4; // Driver something wrong
+                     Log.Info("DOKAN_START_ERROR");
+                     break;
+                  case Dokan.DOKAN_MOUNT_ERROR: // = -5; // Can't assign drive letter
+                     Log.Info("DOKAN_MOUNT_ERROR");
+                     break;
+                  default:
+                     Log.Info("Unknown Error retirn {0}", retVal);
+                     break;
+               }
+            }
          }
          catch (Exception ex)
          {
@@ -144,15 +144,15 @@ namespace LiquesceSvc
 
       public void Stop()
       {
-            if (IsRunning
-               && (State != LiquesceSvcState.Unknown)
-               )
-            {
-               State = LiquesceSvcState.Unknown;
-               int retVal = Dokan.DokanUnmount(mountedDriveLetter);
-               IsRunning = false;
-               Log.Info("Stop returned[{0}]", retVal);
-            }
+         if (IsRunning
+            && (State != LiquesceSvcState.Unknown)
+            )
+         {
+            State = LiquesceSvcState.Unknown;
+            int retVal = Dokan.DokanUnmount(mountedDriveLetter);
+            IsRunning = false;
+            Log.Info("Stop returned[{0}]", retVal);
+         }
       }
 
 
@@ -172,6 +172,33 @@ namespace LiquesceSvc
             currentConfigDetails.SourceLocations.Clear();
             fileSourceLocations.ForEach(
                location => currentConfigDetails.SourceLocations.Add(Path.GetPathRoot(location).TrimEnd(Path.DirectorySeparatorChar)));
+            if (currentConfigDetails.ShareDetails == null)
+               currentConfigDetails.ShareDetails = new List<ShareDetail>();
+            IEnumerable<Win32Share> shares = Win32Share.GetAllShares();
+            if (shares != null)
+            {
+               // This is crying out for a linq style thing, but then the logging would probably be gone !
+               foreach (Win32Share share in shares)
+               {
+                  Log.Info("Name[{0}], Path[{1}], Status[{2}], Type[{3}]", share.Name, share.Path, share.Status,
+                           share.Type);
+                  if (share.Type != Win32Share.ShareType.DiskDrive) 
+                     continue;
+                  if (currentConfigDetails.ShareDetails.Exists(oldShare => oldShare.Name == share.Name)) 
+                     continue;
+                  Log.Debug("Check to see if this share name exists from the new drive");
+                  if ( share.Path.StartsWith(currentConfigDetails.DriveLetter))
+                  {
+                     Log.Debug("!! It Does !!");
+                     currentConfigDetails.ShareDetails.Add(new ShareDetail
+                                                              {
+                                                                 Description = share.Description,
+                                                                 Name = share.Name,
+                                                                 Path = share.Path.Substring(2) // Remove the drive rubbish
+                                                              });
+                  }
+               }
+            }
          }
          catch (Exception ex)
          {
@@ -187,14 +214,14 @@ namespace LiquesceSvc
 
       private void InitialiseToDefault()
       {
-         try 
+         try
          {
             if (currentConfigDetails == null)
             {
                currentConfigDetails = new ConfigDetails
                                          {
                                             DebugMode = true,
-                                            DelayStartMilliSec = (uint) short.MaxValue,
+                                            DelayStartMilliSec = (uint)short.MaxValue,
                                             DriveLetter = "N",
                                             SourceLocations = new List<string>(1),
                                             ThreadCount = 1,
@@ -215,17 +242,17 @@ namespace LiquesceSvc
       {
          if (currentConfigDetails != null)
             try
-         {
-            XmlSerializer x = new XmlSerializer(currentConfigDetails.GetType());
-            using (TextWriter textWriter = new StreamWriter(configFile))
             {
-               x.Serialize(textWriter, currentConfigDetails);
+               XmlSerializer x = new XmlSerializer(currentConfigDetails.GetType());
+               using (TextWriter textWriter = new StreamWriter(configFile))
+               {
+                  x.Serialize(textWriter, currentConfigDetails);
+               }
             }
-         }
-         catch(Exception ex)
-         {
-            Log.ErrorException("Cannot save configDetails: ", ex);
-         } 
+            catch (Exception ex)
+            {
+               Log.ErrorException("Cannot save configDetails: ", ex);
+            }
       }
 
 

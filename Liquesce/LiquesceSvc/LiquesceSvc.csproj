@@ -96,6 +96,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings1.settings</DependentUpon>
     </Compile>
+    <Compile Include="Win32Share.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
