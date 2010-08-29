@@ -18,6 +18,7 @@ namespace LiquesceSvc
       static private readonly string PathDirectorySeparatorChar = Path.DirectorySeparatorChar.ToString();
       static private readonly Logger Log = LogManager.GetCurrentClassLogger();
       private readonly ConfigDetails configDetails;
+      private readonly ReaderWriterLockSlim openFilesSync = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
       private readonly Dictionary<UInt64, FileStream> openFiles = new Dictionary<UInt64, FileStream>();
       private UInt64 openFilesNextKey;
       private readonly string root;
@@ -47,17 +48,18 @@ namespace LiquesceSvc
       /// <returns></returns>
       public int CreateFile(string filename, FileMode fileMode, FileAccess fileAccess, FileShare fileShare, FileOptions fileOptions, DokanFileInfo info)
       {
+         int actualErrorCode = Dokan.DOKAN_SUCCESS;
          try
          {
-            Log.Debug("CreateFile IN filename [{0}], fileMode[{1}], fileAccess[{2}], fileShare[{3}], fileOptions[{4}]",
-                        filename, fileMode, fileAccess, fileShare, fileOptions);
+            Log.Debug("CreateFile IN filename [{0}], fileMode[{1}], fileAccess[{2}], fileShare[{3}], fileOptions[{4}] DokanProcessId[{5}]",
+                        filename, fileMode, fileAccess, fileShare, fileOptions, info.ProcessId);
             string path = GetPath(filename, fileMode == FileMode.CreateNew);
             if (Directory.Exists(path))
             {
-               return OpenDirectory(filename, info);
+               actualErrorCode = OpenDirectory(filename, info);
+               return actualErrorCode;
             }
 
-            const int actualErrorCode = Dokan.DOKAN_SUCCESS;
             //bool fileExists = File.Exists( path );
             //switch (fileMode)
             //{
@@ -116,29 +118,36 @@ namespace LiquesceSvc
                   Directory.CreateDirectory(newDir);
             }
 
-            // might be better to use this
             FileStream fs = new FileStream(path, fileMode, fileAccess, fileShare, (int)configDetails.BufferReadSize, fileOptions);
             info.Context = ++openFilesNextKey; // never be Zero !
-            openFiles.Add(openFilesNextKey, fs);
-            return actualErrorCode;
+            try
+            {
+               openFilesSync.EnterWriteLock();
+               openFiles.Add(openFilesNextKey, fs);
+            }
+            finally
+            {
+               openFilesSync.ExitWriteLock();
+            }
          }
          catch (Exception ex)
          {
             int win32 = ((short)Marshal.GetHRForException(ex) * -1);
             Log.ErrorException("CreateFile threw: ", ex);
-            return (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            actualErrorCode = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
          }
          finally
          {
-            Log.Trace("CreateFile OUT");
+            Log.Trace("CreateFile OUT actualErrorCode=[{0}] context[{1}]", actualErrorCode, openFilesNextKey);
          }
+         return actualErrorCode;
       }
 
       public int OpenDirectory(string filename, DokanFileInfo info)
       {
          try
          {
-            Log.Trace("OpenDirectory IN");
+            Log.Trace("OpenDirectory IN DokanProcessId[{0}]", info.ProcessId);
             if (Directory.Exists(GetPath(filename)))
             {
                info.IsDirectory = true;
@@ -157,7 +166,7 @@ namespace LiquesceSvc
       {
          try
          {
-            Log.Trace("CreateDirectory IN");
+            Log.Trace("CreateDirectory IN DokanProcessId[{0}]", info.ProcessId);
             string path = GetPath(filename, true);
             // TODO : Hunt for the parent and create from there downwards.
             if (Directory.Exists(path))
@@ -205,7 +214,7 @@ namespace LiquesceSvc
       {
          try
          {
-            Log.Trace("Cleanup IN");
+            Log.Trace("Cleanup IN DokanProcessId[{0}]", info.ProcessId);
             CloseAndRemove(info);
             if (info.DeleteOnClose)
             {
@@ -251,7 +260,7 @@ namespace LiquesceSvc
       {
          try
          {
-            Log.Trace("CloseFile IN");
+            Log.Trace("CloseFile IN DokanProcessId[{0}]", info.ProcessId);
             CloseAndRemove(info);
          }
          catch (Exception ex)
@@ -269,32 +278,37 @@ namespace LiquesceSvc
 
       public int ReadFile(string filename, byte[] buffer, ref uint readBytes, long offset, DokanFileInfo info)
       {
+         int errorCode = Dokan.DOKAN_SUCCESS;
          try
          {
-            Log.Trace("ReadFile IN");
+            Log.Debug("ReadFile IN offset=[{1}] DokanProcessId[{0}]", info.ProcessId, offset);
             bool closeOnReturn = false;
-            DokanFileInfo info2 = new DokanFileInfo(1);
+            FileStream fileStream;
             UInt64 context = Convert.ToUInt64(info.Context);
             if (IsNullOrDefault(context))
             {
                string path = GetPath(filename);
-
                Log.Warn("No context handle for [" + path + "]");
-               int returnValue = CreateFile(filename, FileMode.Open, FileAccess.Read, FileShare.Read, FileOptions.SequentialScan, info2);
-               if (returnValue != Dokan.DOKAN_SUCCESS)
-                  return returnValue;
-               context = Convert.ToUInt64(info2.Context);
-               if (IsNullOrDefault(context))
-               {
-                  return Dokan.ERROR_FILE_NOT_FOUND;
-               }
+               fileStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, (int)configDetails.BufferReadSize);
                closeOnReturn = true;
             }
-            FileStream fileStream = openFiles[context];
+            else
+            {
+               Log.Trace("context [{0}]", context);
+               try
+               {
+                  openFilesSync.TryEnterReadLock(configDetails.LockTimeout);
+                  fileStream = openFiles[context];
+               }
+               finally
+               {
+                  openFilesSync.ExitReadLock();
+               }
+            }
             if (offset > fileStream.Length)
             {
                readBytes = 0;
-               return Dokan.DOKAN_ERROR;
+               errorCode = Dokan.DOKAN_ERROR;
             }
             else
             {
@@ -302,30 +316,40 @@ namespace LiquesceSvc
                readBytes = (uint)fileStream.Read(buffer, 0, buffer.Length);
             }
             if (closeOnReturn)
-               CloseAndRemove(info2);
+               fileStream.Close();
          }
          catch (Exception ex)
          {
             int win32 = ((short)Marshal.GetHRForException(ex) * -1);
             Log.ErrorException("ReadFile threw: ", ex);
-            return (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            errorCode = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
          }
          finally
          {
-            Log.Trace("ReadFile OUT");
+            Log.Debug("ReadFile OUT readBytes=[{0}], errorCode[{1}]", readBytes, errorCode);
          }
-         return Dokan.DOKAN_SUCCESS;
+         return errorCode;
       }
 
       public int WriteFile(string filename, byte[] buffer, ref uint writtenBytes, long offset, DokanFileInfo info)
       {
          try
          {
-            Log.Trace("WriteFile IN");
+            Log.Trace("WriteFile IN DokanProcessId[{0}]", info.ProcessId);
             UInt64 context = Convert.ToUInt64(info.Context);
             if (!IsNullOrDefault(context))
             {
-               FileStream fileStream = openFiles[context];
+               Log.Trace("context [{0}]", context);
+               FileStream fileStream;
+               try
+               {
+                  openFilesSync.TryEnterReadLock(configDetails.LockTimeout);
+                  fileStream = openFiles[context];
+               }
+               finally
+               {
+                  openFilesSync.ExitReadLock();
+               }
                fileStream.Seek(offset, SeekOrigin.Begin);
                fileStream.Write(buffer, 0, buffer.Length);
                writtenBytes = (uint)buffer.Length;
@@ -357,11 +381,20 @@ namespace LiquesceSvc
       {
          try
          {
-            Log.Trace("FlushFileBuffers IN");
+            Log.Trace("FlushFileBuffers IN DokanProcessId[{0}]", info.ProcessId);
             UInt64 context = Convert.ToUInt64(info.Context);
             if (!IsNullOrDefault(context))
             {
-               openFiles[context].Flush();
+               Log.Trace("context [{0}]", context);
+               try
+               {
+                  openFilesSync.TryEnterReadLock(configDetails.LockTimeout);
+                  openFiles[context].Flush();
+               }
+               finally
+               {
+                  openFilesSync.ExitReadLock();
+               }
             }
             else
             {
@@ -385,7 +418,7 @@ namespace LiquesceSvc
       {
          try
          {
-            Log.Trace("GetFileInformation IN");
+            Log.Trace("GetFileInformation IN DokanProcessId[{0}]", info.ProcessId);
             string path = GetPath(filename);
             if (File.Exists(path))
             {
@@ -411,7 +444,7 @@ namespace LiquesceSvc
          }
          finally
          {
-            Log.Trace("GetFileInformation OUT");
+            Log.Trace("GetFileInformation OUT Attributes[{0}] Length[{1}]", fileinfo.Attributes, fileinfo.Length);
          }
          return Dokan.DOKAN_ERROR;
       }
@@ -493,7 +526,7 @@ namespace LiquesceSvc
       {
          try
          {
-            Log.Trace("SetFileAttributes IN");
+            Log.Trace("SetFileAttributes IN DokanProcessId[{0}]", info.ProcessId);
             string path = GetPath(filename);
             File.SetAttributes(path, attr);
          }
@@ -514,7 +547,7 @@ namespace LiquesceSvc
       {
          try
          {
-            Log.Trace("SetFileTime IN");
+            Log.Trace("SetFileTime IN DokanProcessId[{0}]", info.ProcessId);
             string path = GetPath(filename);
             FileInfo info2 = new FileInfo(path);
             if (ctime != DateTime.MinValue)
@@ -556,6 +589,7 @@ namespace LiquesceSvc
       {
          try
          {
+            Log.Trace("DeleteFile IN DokanProcessId[{0}]", info.ProcessId);
             return (File.Exists(GetPath(filename)) ? Dokan.DOKAN_SUCCESS : Dokan.ERROR_FILE_NOT_FOUND);
          }
          catch (Exception ex)
@@ -574,7 +608,7 @@ namespace LiquesceSvc
       {
          try
          {
-            Log.Trace("DeleteDirectory IN");
+            Log.Trace("DeleteDirectory IN DokanProcessId[{0}]", info.ProcessId);
             return (Directory.Exists(GetPath(filename)) ? Dokan.DOKAN_SUCCESS : Dokan.ERROR_FILE_NOT_FOUND);
          }
          catch (Exception ex)
@@ -593,7 +627,7 @@ namespace LiquesceSvc
       {
          try
          {
-            Log.Trace("MoveFile IN");
+            Log.Trace("MoveFile IN DokanProcessId[{0}]", info.ProcessId);
             Log.Info("MoveFile replaceIfExisting [{0}] filename: [{1}] newname: [{2}]", replaceIfExisting, filename, newname);
             string pathSource = GetPath(filename);
             string pathTarget = GetPath(newname, true);
@@ -646,7 +680,7 @@ namespace LiquesceSvc
       {
          try
          {
-            Log.Trace("SetEndOfFile IN");
+            Log.Trace("SetEndOfFile IN DokanProcessId[{0}]", info.ProcessId);
             int error = SetAllocationSize(filename, length, info);
             if (error == Dokan.ERROR_FILE_NOT_FOUND)
             {
@@ -676,12 +710,20 @@ namespace LiquesceSvc
       {
          try
          {
-            Log.Trace("SetAllocationSize OUT");
+            Log.Trace("SetAllocationSize IN DokanProcessId[{0}]", info.ProcessId);
             UInt64 context = Convert.ToUInt64(info.Context);
             if (!IsNullOrDefault(context))
             {
-               FileStream fileStream = openFiles[context];
-               fileStream.SetLength(length);
+               Log.Trace("context [{0}]", context);
+               try
+               {
+                  openFilesSync.TryEnterReadLock(configDetails.LockTimeout);
+                  openFiles[context].SetLength(length);
+               }
+               finally
+               {
+                  openFilesSync.ExitReadLock();
+               }
             }
             else
             {
@@ -706,7 +748,7 @@ namespace LiquesceSvc
       {
          try
          {
-            Log.Trace("LockFile IN");
+            Log.Trace("LockFile IN DokanProcessId[{0}]", info.ProcessId);
             if (length < 0)
             {
                Log.Warn("Resetting length to [0] from [{0}]", length);
@@ -715,8 +757,16 @@ namespace LiquesceSvc
             UInt64 context = Convert.ToUInt64(info.Context);
             if (!IsNullOrDefault(context))
             {
-               FileStream fileStream = openFiles[context];
-               fileStream.Lock(offset, length);
+               Log.Trace("context [{0}]", context);
+               try
+               {
+                  openFilesSync.TryEnterReadLock(configDetails.LockTimeout);
+                  openFiles[context].Lock(offset, length);
+               }
+               finally
+               {
+                  openFilesSync.ExitReadLock();
+               }
             }
             else
             {
@@ -741,7 +791,7 @@ namespace LiquesceSvc
       {
          try
          {
-            Log.Trace("UnlockFile IN");
+            Log.Trace("UnlockFile IN DokanProcessId[{0}]", info.ProcessId);
             if (length < 0)
             {
                Log.Warn("Resetting length to [0] from [{0}]", length);
@@ -750,8 +800,16 @@ namespace LiquesceSvc
             UInt64 context = Convert.ToUInt64(info.Context);
             if (!IsNullOrDefault(context))
             {
-               FileStream fileStream = openFiles[context];
-               fileStream.Unlock(offset, length);
+               Log.Trace("context [{0}]", context);
+               try
+               {
+                  openFilesSync.TryEnterReadLock(configDetails.LockTimeout);
+                  openFiles[context].Unlock(offset, length);
+               }
+               finally
+               {
+                  openFilesSync.ExitReadLock();
+               }
             }
             else
             {
@@ -776,7 +834,7 @@ namespace LiquesceSvc
       {
          try
          {
-            Log.Trace("GetDiskFreeSpace IN");
+            Log.Trace("GetDiskFreeSpace IN DokanProcessId[{0}]", info.ProcessId);
             ulong localFreeBytesAvailable = 0, localTotalBytes = 0, localTotalFreeBytes = 0;
             configDetails.SourceLocations.ForEach(str =>
                                                      {
@@ -809,22 +867,30 @@ namespace LiquesceSvc
 
       public int Unmount(DokanFileInfo info)
       {
-         Log.Trace("Unmount IN");
-         foreach (FileStream obj2 in openFiles.Values)
+         Log.Trace("Unmount IN DokanProcessId[{0}]", info.ProcessId);
+         try
          {
-            try
+            openFilesSync.EnterWriteLock();
+            foreach (FileStream obj2 in openFiles.Values)
             {
-               if (obj2 != null)
+               try
                {
-                  obj2.Close();
+                  if (obj2 != null)
+                  {
+                     obj2.Close();
+                  }
+               }
+               catch (Exception ex)
+               {
+                  Log.InfoException("Unmount closing files threw: ", ex);
                }
             }
-            catch (Exception ex)
-            {
-               Log.InfoException("Unmount closing files threw: ", ex);
-            }
+            openFiles.Clear();
          }
-         openFiles.Clear();
+         finally
+         {
+            openFilesSync.ExitWriteLock();
+         } 
          Log.Trace("Unmount out");
          return Dokan.DOKAN_SUCCESS;
       }
@@ -956,11 +1022,21 @@ namespace LiquesceSvc
          UInt64 context = Convert.ToUInt64(info.Context);
          if (!IsNullOrDefault(context))
          {
-            FileStream fileStream = openFiles[context];
-            Log.Trace("CloseAndRemove [{0}]", fileStream.Name);
+            Log.Trace("context [{0}]", context);
+            FileStream fileStream;
+            try
+            {
+               openFilesSync.EnterWriteLock();
+               fileStream = openFiles[context];
+               openFiles.Remove(context);
+            }
+            finally
+            {
+               openFilesSync.ExitWriteLock();
+            }
+            Log.Trace("CloseAndRemove [{0}] context[{1}]", fileStream.Name, context);
             fileStream.Flush();
             fileStream.Close();
-            openFiles.Remove(context);
             info.Context = 0;
          }
       }
@@ -993,34 +1069,35 @@ namespace LiquesceSvc
 
             if (configDetails.ShareDetails == null)
                configDetails.ShareDetails = new List<ShareDetail>();
-            // I could do this: "Restart LanmanServer after the drive is mounted",
-            // But then that would be painful on the OS and if the Service is just being restarted !
-            // BUT - this way means that I do not have to work out what security each of the shares is supposed to have ;-)
-            ServiceController sc = new ServiceController("Server"); // This name is also used in Win 7
-            if (ManagementLayer.Instance.State == LiquesceSvcState.Running)
-            {
-               while (sc.Status != ServiceControllerStatus.Stopped)
-               {
-                  Log.Info("Attempting to stop " + sc.DisplayName);
-                  sc.Stop();
-                  Thread.Sleep(1000);
-                  sc.Refresh();
-               }
-               Thread.Sleep(1000);
-            }
-
+            Log.Info("Now pretension the searches ready for the direct share attach");
             List<RegistryLanManShare> matchedShares = LanManShares.MatchDriveLanManShares(configDetails.DriveLetter + Path.VolumeSeparatorChar);
             foreach (RegistryLanManShare share in matchedShares)
             {
                FileInformation[] files;
                FindFiles(share.Path.Substring(2) + Path.DirectorySeparatorChar, out files);
             }
-            while (sc.Status != ServiceControllerStatus.Running)
+            // I could do this: "Restart LanmanServer after the drive is mounted",
+            // But then that would be painful on the OS and if the Service is just being restarted !
+            // BUT - this way means that I do not have to work out what security each of the shares is supposed to have ;-)
+            ServiceController sc = new ServiceController("Server"); // This name is also used in Win 7
+            foreach (ServiceController scDepends in sc.DependentServices)
             {
-               Log.Info("Attempting to start " + sc.DisplayName);
-               sc.Start();
-               Thread.Sleep(1000);
-               sc.Refresh();
+               Log.Info("Attempting to stop " + scDepends.ServiceName);
+               scDepends.Stop();
+               scDepends.WaitForStatus(ServiceControllerStatus.Stopped);
+            }
+            Log.Info("Attempting to stop " + sc.ServiceName);
+            sc.Stop();
+            sc.WaitForStatus(ServiceControllerStatus.Stopped);
+            Thread.Sleep(250); //Have to keep these tight, as the Computer Browser service can be triggered from the OS as well.
+            Log.Info("Attempting to start " + sc.ServiceName);
+            sc.Start();
+            sc.WaitForStatus(ServiceControllerStatus.Running);
+            foreach (ServiceController scDepends in sc.DependentServices)
+            {
+               Log.Info("Attempting to start " + scDepends.ServiceName);
+               scDepends.Start();
+               scDepends.WaitForStatus(ServiceControllerStatus.Running);
             }
          }
          catch (Exception ex)
