@@ -183,11 +183,13 @@ namespace DokanNet
       {
          try
          {
+            Log.Trace("CreateFileProxy IN  rawFileName[{0}], rawAccessMode[{1}], rawShare[{2}], rawCreationDisposition[{3}], rawFlagsAndAttributes[{4}]", 
+                        rawFileName, rawAccessMode, rawShare, rawCreationDisposition, rawFlagsAndAttributes );
             string file = GetFileName( rawFileName );
 
             DokanFileInfo info = GetNewFileInfo( ref rawFileInfo );
 
-            //rawAccessMode, DELETE );
+            //rawAccessMode, DELETE ) ?? ;
 
             bool readRequired = (((rawAccessMode & FILE_READ_DATA) == FILE_READ_DATA)
                  || ((rawAccessMode & FILE_READ_ATTRIBUTES) == FILE_READ_ATTRIBUTES)
@@ -203,7 +205,6 @@ namespace DokanNet
                  || ((rawAccessMode & FILE_APPEND_DATA) == FILE_APPEND_DATA)
                  || ((rawAccessMode & WRITE_DAC) == WRITE_DAC)
                  || ((rawAccessMode & WRITE_OWNER) == WRITE_OWNER)
-                 || ((rawAccessMode & SYNCHRONIZE) == SYNCHRONIZE)
                  || ((rawAccessMode & STANDARD_RIGHTS_WRITE) == STANDARD_RIGHTS_WRITE)
                );
 
@@ -265,30 +266,6 @@ namespace DokanNet
                fileShare |= FileShare.Inheritable; // Not currently a Win32 option
 
 
-            //MirrorCheckFlag( FlagsAndAttributes, FILE_ATTRIBUTE_ARCHIVE );
-            //MirrorCheckFlag( FlagsAndAttributes, FILE_ATTRIBUTE_ENCRYPTED );
-            //MirrorCheckFlag( FlagsAndAttributes, FILE_ATTRIBUTE_HIDDEN );
-            //MirrorCheckFlag( FlagsAndAttributes, FILE_ATTRIBUTE_NORMAL );
-            //MirrorCheckFlag( FlagsAndAttributes, FILE_ATTRIBUTE_NOT_CONTENT_INDEXED );
-            //MirrorCheckFlag( FlagsAndAttributes, FILE_ATTRIBUTE_OFFLINE );
-            //MirrorCheckFlag( FlagsAndAttributes, FILE_ATTRIBUTE_READONLY );
-            //MirrorCheckFlag( FlagsAndAttributes, FILE_ATTRIBUTE_SYSTEM );
-            //MirrorCheckFlag( FlagsAndAttributes, FILE_ATTRIBUTE_TEMPORARY );
-
-            //MirrorCheckFlag( FlagsAndAttributes, FILE_FLAG_NO_BUFFERING );
-
-            //MirrorCheckFlag( FlagsAndAttributes, FILE_FLAG_BACKUP_SEMANTICS );
-            //MirrorCheckFlag( FlagsAndAttributes, FILE_FLAG_POSIX_SEMANTICS );
-            //MirrorCheckFlag( FlagsAndAttributes, FILE_FLAG_OPEN_REPARSE_POINT );
-            //MirrorCheckFlag( FlagsAndAttributes, FILE_FLAG_OPEN_NO_RECALL );
-            //MirrorCheckFlag( FlagsAndAttributes, SECURITY_ANONYMOUS );
-            //MirrorCheckFlag( FlagsAndAttributes, SECURITY_IDENTIFICATION );
-            //MirrorCheckFlag( FlagsAndAttributes, SECURITY_IMPERSONATION );
-            //MirrorCheckFlag( FlagsAndAttributes, SECURITY_DELEGATION );
-            //MirrorCheckFlag( FlagsAndAttributes, SECURITY_CONTEXT_TRACKING );
-            //MirrorCheckFlag( FlagsAndAttributes, SECURITY_EFFECTIVE_ONLY );
-            //MirrorCheckFlag( FlagsAndAttributes, SECURITY_SQOS_PRESENT );
-
             FileOptions fileOptions = FileOptions.None;
             if ((rawFlagsAndAttributes & FILE_FLAG_WRITE_THROUGH) == FILE_FLAG_WRITE_THROUGH)
                fileOptions |= FileOptions.WriteThrough;
@@ -301,7 +278,7 @@ namespace DokanNet
             else if ((rawFlagsAndAttributes & FILE_FLAG_SEQUENTIAL_SCAN) == FILE_FLAG_SEQUENTIAL_SCAN)
                fileOptions |= FileOptions.SequentialScan;
 
-            // TODO: Sort out this option
+            // TODO: Sort / Test out this option
             //  case FileOptions.Encrypted:
 
             int ret = operations.CreateFile( file, fileMode, fileAccess, fileShare, fileOptions, info );
