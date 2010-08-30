@@ -20,7 +20,7 @@ namespace LiquesceSvc
       private readonly ConfigDetails configDetails;
       private readonly ReaderWriterLockSlim openFilesSync = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
       private readonly Dictionary<UInt64, FileStream> openFiles = new Dictionary<UInt64, FileStream>();
-      private UInt64 openFilesNextKey;
+      private UInt64 openFilesLastKey;
       private readonly string root;
       // This would normally be static, but then there should only ever be one of these classes present from the Dokan Lib callback.
       private readonly ReaderWriterLockSlim rootPathsSync = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
@@ -53,7 +53,7 @@ namespace LiquesceSvc
          {
             Log.Debug("CreateFile IN filename [{0}], fileMode[{1}], fileAccess[{2}], fileShare[{3}], fileOptions[{4}] DokanProcessId[{5}]",
                         filename, fileMode, fileAccess, fileShare, fileOptions, info.ProcessId);
-            string path = GetPath(filename, fileMode == FileMode.CreateNew);
+            string path = GetPath(filename, (fileMode == FileMode.CreateNew) || (fileMode == FileMode.Create));
             if (Directory.Exists(path))
             {
                actualErrorCode = OpenDirectory(filename, info);
@@ -90,7 +90,7 @@ namespace LiquesceSvc
             if (fileAccess != FileAccess.Read)
             {
                // Find Quota
-               string newDir = Path.GetPathRoot(path);
+               string newDir = Path.GetDirectoryName(path);
                ulong lpFreeBytesAvailable, lpTotalNumberOfBytes, lpTotalNumberOfFreeBytes;
                // Check to see if the location has enough space 
                if (GetDiskFreeSpaceEx(newDir, out lpFreeBytesAvailable, out lpTotalNumberOfBytes, out lpTotalNumberOfFreeBytes)
@@ -103,7 +103,7 @@ namespace LiquesceSvc
                   if (!String.IsNullOrEmpty(newDirLocation))
                   {
                      path = Path.Combine(newDirLocation, filename);
-                     newDir = Path.GetPathRoot(path);
+                     newDir = Path.GetDirectoryName(path);
                   }
                   else
                   {
@@ -119,11 +119,11 @@ namespace LiquesceSvc
             }
 
             FileStream fs = new FileStream(path, fileMode, fileAccess, fileShare, (int)configDetails.BufferReadSize, fileOptions);
-            info.Context = ++openFilesNextKey; // never be Zero !
+            info.Context = ++openFilesLastKey; // never be Zero !
             try
             {
                openFilesSync.EnterWriteLock();
-               openFiles.Add(openFilesNextKey, fs);
+               openFiles.Add(openFilesLastKey, fs);
             }
             finally
             {
@@ -138,7 +138,7 @@ namespace LiquesceSvc
          }
          finally
          {
-            Log.Trace("CreateFile OUT actualErrorCode=[{0}] context[{1}]", actualErrorCode, openFilesNextKey);
+            Log.Trace("CreateFile OUT actualErrorCode=[{0}] context[{1}]", actualErrorCode, openFilesLastKey);
          }
          return actualErrorCode;
       }
