@@ -38,7 +38,7 @@
       <Property Id="DOKANVERCHECK">
          <DirectorySearch Id="Dokan.sys.version" Path="[SystemFolder]\Drivers">
             <!--Make sure that the min / max _straddle_ the actual version..  -->
-            <FileSearch Name="Dokan.sys" MinVersion="6.1.7600.16384"  MaxVersion="6.1.7600.16386"/>
+            <FileSearch Name="Dokan.sys" MinSize="84991" MaxSize="84993"  MinVersion="6.1.7600.16384"  MaxVersion="6.1.7600.16386"/>
          </DirectorySearch>
       </Property>
 
