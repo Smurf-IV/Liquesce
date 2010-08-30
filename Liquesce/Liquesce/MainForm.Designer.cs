@@ -53,6 +53,8 @@
          this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
          this.FillExpectedLayoutWorker = new System.ComponentModel.BackgroundWorker();
          this.serviceController1 = new System.ServiceProcess.ServiceController();
+         this.refreshExpected = new System.Windows.Forms.ContextMenuStrip(this.components);
+         this.refreshExpectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
          this.splitContainer1.Panel1.SuspendLayout();
          this.splitContainer1.Panel2.SuspendLayout();
@@ -65,6 +67,7 @@
          this.groupBox1.SuspendLayout();
          ((System.ComponentModel.ISupportInitialize)(this.DelayCreation)).BeginInit();
          this.menuStrip1.SuspendLayout();
+         this.refreshExpected.SuspendLayout();
          this.SuspendLayout();
          // 
          // splitContainer1
@@ -326,12 +329,13 @@
          // 
          this.advancedToolStripMenuItem.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.advancedToolStripMenuItem.Name = "advancedToolStripMenuItem";
-         this.advancedToolStripMenuItem.Size = new System.Drawing.Size(94, 20);
+         this.advancedToolStripMenuItem.Size = new System.Drawing.Size(85, 20);
          this.advancedToolStripMenuItem.Text = "&Advanced...";
          this.advancedToolStripMenuItem.ToolTipText = "Advanced options to aid in debug and testing";
          // 
          // expectedTreeView
          // 
+         this.expectedTreeView.ContextMenuStrip = this.refreshExpected;
          this.expectedTreeView.Dock = System.Windows.Forms.DockStyle.Fill;
          this.expectedTreeView.FullRowSelect = true;
          this.expectedTreeView.ImageIndex = 0;
@@ -367,6 +371,21 @@
          this.serviceController1.MachineName = "127.0.0.1";
          this.serviceController1.ServiceName = "LiquesceSvc";
          // 
+         // refreshExpected
+         // 
+         this.refreshExpected.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.refreshExpectedToolStripMenuItem});
+         this.refreshExpected.Name = "refreshExpected";
+         this.refreshExpected.Size = new System.Drawing.Size(191, 48);
+         // 
+         // refreshExpectedToolStripMenuItem
+         // 
+         this.refreshExpectedToolStripMenuItem.Name = "refreshExpectedToolStripMenuItem";
+         this.refreshExpectedToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F5;
+         this.refreshExpectedToolStripMenuItem.Size = new System.Drawing.Size(190, 22);
+         this.refreshExpectedToolStripMenuItem.Text = "&Refresh Expected";
+         this.refreshExpectedToolStripMenuItem.Click += new System.EventHandler(this.refreshExpectedToolStripMenuItem_Click);
+         // 
          // MainForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 14F);
@@ -396,6 +415,7 @@
          ((System.ComponentModel.ISupportInitialize)(this.DelayCreation)).EndInit();
          this.menuStrip1.ResumeLayout(false);
          this.menuStrip1.PerformLayout();
+         this.refreshExpected.ResumeLayout(false);
          this.ResumeLayout(false);
 
       }
@@ -425,5 +445,7 @@
       private System.Windows.Forms.ToolStripMenuItem advancedToolStripMenuItem;
       private System.Windows.Forms.ImageList imageListUnits;
       private System.ServiceProcess.ServiceController serviceController1;
+      private System.Windows.Forms.ContextMenuStrip refreshExpected;
+      private System.Windows.Forms.ToolStripMenuItem refreshExpectedToolStripMenuItem;
    }
 }

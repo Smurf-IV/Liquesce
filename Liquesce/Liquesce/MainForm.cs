@@ -518,14 +518,18 @@ namespace Liquesce
                   int index = kvp.DisplayName.LastIndexOf(Path.DirectorySeparatorChar);
                   if (index > 0)
                      label = kvp.DisplayName.Substring(index + 1);
-                  TreeNode child = new TreeNode
-                                      {
-                                         Text = label,
-                                         Tag = kvp.DisplayName,
-                                         ToolTipText = kvp.ActualFileLocation
-                                      };
-                  child.Nodes.Add("DummyNode");
-                  AddExpectedNode(parent, child);
+                  bool found = parent.Nodes.Cast<TreeNode>().Any(node => node.Text == label);
+                  if (!found)
+                  {
+                     TreeNode child = new TreeNode
+                                         {
+                                            Text = label,
+                                            Tag = kvp.DisplayName,
+                                            ToolTipText = kvp.ActualFileLocation
+                                         };
+                     child.Nodes.Add("DummyNode");
+                     AddExpectedNode(parent, child);
+                  }
                }
                else
                {
@@ -565,24 +569,27 @@ namespace Liquesce
       {
          try
          {
-            SetProgressBarStyle(ProgressBarStyle.Marquee);
-            cd.DelayStartMilliSec = (uint)DelayCreation.Value;
-            cd.DriveLetter = MountPoint.Text;
-            cd.VolumeLabel = VolumeLabel.Text;
-            cd.SourceLocations = new List<string>(mergeList.Nodes.Count);
-            if (mergeList.Nodes != null)
-               foreach (TreeNode node in mergeList.Nodes)
-               {
-                  cd.SourceLocations.Add(node.Text);
-               }
+            if (DialogResult.Yes == MessageBox.Show(this, "Performing this action will \"Interupt All Shares\" on this machine.\nDo you wish to continue ?", "Caution..", MessageBoxButtons.YesNo, MessageBoxIcon.Question))
+            {
+               SetProgressBarStyle(ProgressBarStyle.Marquee);
+               cd.DelayStartMilliSec = (uint) DelayCreation.Value;
+               cd.DriveLetter = MountPoint.Text;
+               cd.VolumeLabel = VolumeLabel.Text;
+               cd.SourceLocations = new List<string>(mergeList.Nodes.Count);
+               if (mergeList.Nodes != null)
+                  foreach (TreeNode node in mergeList.Nodes)
+                  {
+                     cd.SourceLocations.Add(node.Text);
+                  }
 
-            ChannelFactory<ILiquesce> factory = new ChannelFactory<ILiquesce>("LiquesceFaçade");
-            ILiquesce remoteIF = factory.CreateChannel();
-            remoteIF.ConfigDetails = cd;
-            Log.Info("Didn't go bang so stop");
-            remoteIF.Stop();
-            Log.Info("Now start");
-            remoteIF.Start();
+               ChannelFactory<ILiquesce> factory = new ChannelFactory<ILiquesce>("LiquesceFaçade");
+               ILiquesce remoteIF = factory.CreateChannel();
+               remoteIF.ConfigDetails = cd;
+               Log.Info("Didn't go bang so stop");
+               remoteIF.Stop();
+               Log.Info("Now start");
+               remoteIF.Start();
+            }
          }
          catch (Exception ex)
          {
@@ -602,6 +609,11 @@ namespace Liquesce
       }
 
       private void VolumeLabel_Validated(object sender, EventArgs e)
+      {
+         RestartExpectedOutput();
+      }
+
+      private void refreshExpectedToolStripMenuItem_Click(object sender, EventArgs e)
       {
          RestartExpectedOutput();
       }
