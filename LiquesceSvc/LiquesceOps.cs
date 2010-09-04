@@ -60,25 +60,29 @@ namespace LiquesceSvc
                return actualErrorCode;
             }
 
-            //bool fileExists = File.Exists( path );
-            //switch (fileMode)
-            //{
-            //   //case FileMode.Create:
-            //   //case FileMode.OpenOrCreate:
-            //   //   if (fileExists)
-            //   //      actualErrorCode = Dokan.ERROR_ALREADY_EXISTS;
-            //   //   break;
-            //   case FileMode.CreateNew:
-            //      if (fileExists)
-            //         return Dokan.ERROR_FILE_EXISTS;
-            //      break;
-            //   case FileMode.Open:
-            //   case FileMode.Append:
-            //   case FileMode.Truncate:
-            //      if (!fileExists)
-            //         return Dokan.ERROR_FILE_NOT_FOUND;
-            //      break;
-            //}
+            // Stop using exceptions to throw ERROR_FILE_NOT_FOUND
+            bool fileExists = File.Exists(path);
+            switch (fileMode)
+            {
+               //case FileMode.Create:
+               //case FileMode.OpenOrCreate:
+               //   if (fileExists)
+               //      actualErrorCode = Dokan.ERROR_ALREADY_EXISTS;
+               //   break;
+               //case FileMode.CreateNew:
+               //   if (fileExists)
+               //      return Dokan.ERROR_FILE_EXISTS;
+               //   break;
+               case FileMode.Open:
+               case FileMode.Append:
+               case FileMode.Truncate:
+                  if (!fileExists)
+                  {
+                     Log.Debug("filename [{0}] ERROR_FILE_NOT_FOUND", filename);
+                     return Dokan.ERROR_FILE_NOT_FOUND;
+                  }
+                  break;
+            }
             //if (!fileExists)
             //{
             //   if (fileAccess == FileAccess.Read)
@@ -898,10 +902,12 @@ namespace LiquesceSvc
       #endregion
       private string GetPath(string filename, bool isCreate = false)
       {
-         string foundPath = String.Empty;
+         string foundPath = root;
          try
          {
-            if (filename != PathDirectorySeparatorChar)
+            if ( !String.IsNullOrWhiteSpace(filename) // Win 7 (x64) passes in a blank
+               && (filename != PathDirectorySeparatorChar)
+               )
             {
                try
                {
@@ -911,6 +917,8 @@ namespace LiquesceSvc
                   if (!rootPaths.TryGetValue(filename, out foundPath))
                   {
                      bool found = false;
+                     if (String.IsNullOrWhiteSpace(filename))
+                        throw new ArgumentNullException(filename, "Not allowed to pass this length 2");
                      if (filename[0] != Path.DirectorySeparatorChar)
                         filename = PathDirectorySeparatorChar + filename;
                      if (configDetails.ShareDetails != null)
@@ -948,10 +956,6 @@ namespace LiquesceSvc
                {
                   rootPathsSync.ExitUpgradeableReadLock();
                }
-            }
-            else
-            {
-               foundPath = root;
             }
          }
          catch (Exception ex)
@@ -1079,13 +1083,15 @@ namespace LiquesceSvc
             // I could do this: "Restart LanmanServer after the drive is mounted",
             // But then that would be painful on the OS and if the Service is just being restarted !
             // BUT - this way means that I do not have to work out what security each of the shares is supposed to have ;-)
+            // A BIGGER BUT - "http://liquesce.codeplex.com/workitem/7106"
+
             ServiceController sc = new ServiceController("Server"); // This name is also used in Win 7
-            foreach (ServiceController scDepends in sc.DependentServices)
-            {
-               Log.Info("Attempting to stop " + scDepends.ServiceName);
-               scDepends.Stop();
-               scDepends.WaitForStatus(ServiceControllerStatus.Stopped);
-            }
+            //foreach (ServiceController scDepends in sc.DependentServices)
+            //{
+            //   Log.Info("Attempting to stop " + scDepends.ServiceName);
+            //   scDepends.Stop();
+            //   scDepends.WaitForStatus(ServiceControllerStatus.Stopped);
+            //}
             Log.Info("Attempting to stop " + sc.ServiceName);
             sc.Stop();
             sc.WaitForStatus(ServiceControllerStatus.Stopped);
@@ -1093,11 +1099,17 @@ namespace LiquesceSvc
             Log.Info("Attempting to start " + sc.ServiceName);
             sc.Start();
             sc.WaitForStatus(ServiceControllerStatus.Running);
+            Thread.Sleep(250);
             foreach (ServiceController scDepends in sc.DependentServices)
             {
-               Log.Info("Attempting to start " + scDepends.ServiceName);
-               scDepends.Start();
-               scDepends.WaitForStatus(ServiceControllerStatus.Running);
+               if ((scDepends.Status != ServiceControllerStatus.Running)
+                  && (scDepends.Status != ServiceControllerStatus.StartPending)
+                  )
+               {
+                  Log.Info("Attempting to start " + scDepends.ServiceName);
+                  scDepends.Start();
+                  scDepends.WaitForStatus(ServiceControllerStatus.Running);
+               }
             }
          }
          catch (Exception ex)
