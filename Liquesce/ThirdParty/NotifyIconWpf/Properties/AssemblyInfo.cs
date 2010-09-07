@@ -1,20 +1,22 @@
 ﻿using System.Reflection;
-using System.Resources;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Markup;
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("LiquesceTray")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("NotifyIcon for WPF")]
+[assembly: AssemblyDescription("NotifyIcon Implementation for the WPF platform.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Smurf-IV")]
-[assembly: AssemblyProduct("LiquesceTray")]
-[assembly: AssemblyCopyright("Copyright © Smurf-IV 2010")]
+[assembly: AssemblyCompany("hardcodet.net")]
+[assembly: AssemblyProduct("NotifyIcon WPF")]
+[assembly: AssemblyCopyright("Copyright © Philipp Sumi 2009")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
+
+//provides simplified declaration
+[assembly: XmlnsDefinition("http://www.hardcodet.net/taskbar", "Hardcodet.Wpf.TaskbarNotification")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
 // to COM components.  If you need to access a type in this assembly from 
@@ -33,11 +35,11 @@ using System.Windows;
 
 [assembly: ThemeInfo(
     ResourceDictionaryLocation.None, //where theme specific resource dictionaries are located
-   //(used if a resource is not found in the page, 
-   // or application resource dictionaries)
+  //(used if a resource is not found in the page, 
+  // or application resource dictionaries)
     ResourceDictionaryLocation.SourceAssembly //where the generic resource dictionary is located
-   //(used if a resource is not found in the page, 
-   // app, or any theme specific resource dictionaries)
+  //(used if a resource is not found in the page, 
+  // app, or any theme specific resource dictionaries)
 )]
 
 
@@ -51,5 +53,5 @@ using System.Windows;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("2010.9.6.184")]
-[assembly: AssemblyFileVersion("2010.9.6.184")]
+[assembly: AssemblyVersion("2010.9.6.4")]
+[assembly: AssemblyFileVersion("2010.9.6.4")]
