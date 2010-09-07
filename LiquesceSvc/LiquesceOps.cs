@@ -1062,12 +1062,20 @@ namespace LiquesceSvc
             Thread.Sleep(250); // Give the driver some time to mount
             if (ManagementLayer.Instance.State != LiquesceSvcState.Running)
                return; // A request to exit has occurred
+            // Now check (in 2 phases) the existence of the drive
+            string path = configDetails.DriveLetter + ":" + PathDirectorySeparatorChar;
+            while (!Directory.Exists(path))
+            {
+               Log.Info("Waiting for Dokan to create the drive letter before reapplying the shares");
+               Thread.Sleep(1000);
+            }
+            // 2nd phase as the above is supposed to be cheap but can return false +ves
             do
             {
                string[] drives = Environment.GetLogicalDrives();
                if (Array.Exists(drives, dr => dr.Remove(1) == configDetails.DriveLetter))
                   break;
-               Log.Info("Waiting for Dokan to create the drive letter before reappling the shares");
+               Log.Info("Waiting for Dokan to create the drive letter before reapplying the shares (Phase 2)");
                Thread.Sleep(100);
             } while (ManagementLayer.Instance.State == LiquesceSvcState.Running);
 
@@ -1106,15 +1114,24 @@ namespace LiquesceSvc
                   && (scDepends.Status != ServiceControllerStatus.StartPending)
                   )
                {
-                  Log.Info("Attempting to start " + scDepends.ServiceName);
-                  scDepends.Start();
-                  scDepends.WaitForStatus(ServiceControllerStatus.Running);
+                  try
+                  {
+                     Log.Info("Attempting to start " + scDepends.ServiceName);
+                     scDepends.Start();
+                     scDepends.WaitForStatus(ServiceControllerStatus.Running);
+                  }
+                  catch( Exception ex)
+                  {
+                     Log.WarnException("Above service reported this on start:", ex);
+                     ManagementLayer.Instance.SetState( LiquesceSvcState.InWarning, scDepends.ServiceName + " reports " + ex.Message);
+                  }
                }
             }
          }
          catch (Exception ex)
          {
             Log.ErrorException("Init shares threw: ", ex);
+            ManagementLayer.Instance.SetState( LiquesceSvcState.InError, "Init shares reports " + ex.Message);
          }
          finally
          {

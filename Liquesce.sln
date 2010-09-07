@@ -7,13 +7,10 @@ Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "Liquesce_Setup", "Liquesce_
 	ProjectSection(ProjectDependencies) = postProject
 		{74447D1D-F52F-485C-BDEE-66B114A45460} = {74447D1D-F52F-485C-BDEE-66B114A45460}
 		{CFE5DC7B-25FB-45C4-AF18-1963853375E1} = {CFE5DC7B-25FB-45C4-AF18-1963853375E1}
-		{435498EA-A91C-41E5-A724-3F75789E389A} = {435498EA-A91C-41E5-A724-3F75789E389A}
 		{5E5EF4EC-A54C-45A7-970A-68FC4B5057D9} = {5E5EF4EC-A54C-45A7-970A-68FC4B5057D9}
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiquesceSvc", "LiquesceSvc\LiquesceSvc.csproj", "{5E5EF4EC-A54C-45A7-970A-68FC4B5057D9}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiquesceTray", "LiquesceTray\LiquesceTray.csproj", "{435498EA-A91C-41E5-A724-3F75789E389A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ThirdParty", "ThirdParty", "{C1ADA293-B55A-4B33-AE5A-6FC40323FC39}"
 	ProjectSection(SolutionItems) = preProject
@@ -24,6 +21,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DokanNet", "ThirdParty\DokanNet\DokanNet.csproj", "{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiquesceFaçade", "LiquesceFaçade\LiquesceFaçade.csproj", "{CFE5DC7B-25FB-45C4-AF18-1963853375E1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NotifyIconWpf", "ThirdParty\NotifyIconWpf\NotifyIconWpf.csproj", "{7AC63864-7638-41C4-969C-D3197EF2BED9}"
 EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
@@ -37,19 +36,20 @@ Global
 		SccProjectUniqueName2 = LiquesceSvc\\LiquesceSvc.csproj
 		SccProjectName2 = LiquesceSvc
 		SccLocalPath2 = LiquesceSvc
-		SccProjectUniqueName3 = LiquesceTray\\LiquesceTray.csproj
-		SccProjectName3 = LiquesceTray
-		SccLocalPath3 = LiquesceTray
-		SccProjectUniqueName4 = Liquesce_Setup\\Liquesce_Setup.wixproj
-		SccProjectName4 = Liquesce_Setup
-		SccLocalPath4 = Liquesce_Setup
-		SccProjectUniqueName5 = ThirdParty\\DokanNet\\DokanNet.csproj
-		SccProjectTopLevelParentUniqueName5 = Liquesce.sln
-		SccProjectName5 = ThirdParty/DokanNet
-		SccLocalPath5 = ThirdParty\\DokanNet
-		SccProjectUniqueName6 = LiquesceFaçade\\LiquesceFaçade.csproj
-		SccProjectName6 = LiquesceFaçade
-		SccLocalPath6 = LiquesceFaçade
+		SccProjectUniqueName3 = Liquesce_Setup\\Liquesce_Setup.wixproj
+		SccProjectName3 = Liquesce_Setup
+		SccLocalPath3 = Liquesce_Setup
+		SccProjectUniqueName4 = ThirdParty\\DokanNet\\DokanNet.csproj
+		SccProjectTopLevelParentUniqueName4 = Liquesce.sln
+		SccProjectName4 = ThirdParty/DokanNet
+		SccLocalPath4 = ThirdParty\\DokanNet
+		SccProjectUniqueName5 = LiquesceFaçade\\LiquesceFaçade.csproj
+		SccProjectName5 = LiquesceFaçade
+		SccLocalPath5 = LiquesceFaçade
+		SccProjectUniqueName6 = ThirdParty\\NotifyIconWpf\\NotifyIconWpf.csproj
+		SccProjectTopLevelParentUniqueName6 = Liquesce.sln
+		SccProjectName6 = ThirdParty/NotifyIconWpf
+		SccLocalPath6 = ThirdParty\\NotifyIconWpf
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -89,16 +89,6 @@ Global
 		{5E5EF4EC-A54C-45A7-970A-68FC4B5057D9}.Release|Mixed Platforms.Build.0 = Release|x86
 		{5E5EF4EC-A54C-45A7-970A-68FC4B5057D9}.Release|x86.ActiveCfg = Release|x86
 		{5E5EF4EC-A54C-45A7-970A-68FC4B5057D9}.Release|x86.Build.0 = Release|x86
-		{435498EA-A91C-41E5-A724-3F75789E389A}.Debug|Any CPU.ActiveCfg = Debug|x86
-		{435498EA-A91C-41E5-A724-3F75789E389A}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
-		{435498EA-A91C-41E5-A724-3F75789E389A}.Debug|Mixed Platforms.Build.0 = Debug|x86
-		{435498EA-A91C-41E5-A724-3F75789E389A}.Debug|x86.ActiveCfg = Debug|x86
-		{435498EA-A91C-41E5-A724-3F75789E389A}.Debug|x86.Build.0 = Debug|x86
-		{435498EA-A91C-41E5-A724-3F75789E389A}.Release|Any CPU.ActiveCfg = Release|x86
-		{435498EA-A91C-41E5-A724-3F75789E389A}.Release|Mixed Platforms.ActiveCfg = Release|x86
-		{435498EA-A91C-41E5-A724-3F75789E389A}.Release|Mixed Platforms.Build.0 = Release|x86
-		{435498EA-A91C-41E5-A724-3F75789E389A}.Release|x86.ActiveCfg = Release|x86
-		{435498EA-A91C-41E5-A724-3F75789E389A}.Release|x86.Build.0 = Release|x86
 		{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
@@ -119,11 +109,22 @@ Global
 		{CFE5DC7B-25FB-45C4-AF18-1963853375E1}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{CFE5DC7B-25FB-45C4-AF18-1963853375E1}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{CFE5DC7B-25FB-45C4-AF18-1963853375E1}.Release|x86.ActiveCfg = Release|Any CPU
+		{7AC63864-7638-41C4-969C-D3197EF2BED9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7AC63864-7638-41C4-969C-D3197EF2BED9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7AC63864-7638-41C4-969C-D3197EF2BED9}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{7AC63864-7638-41C4-969C-D3197EF2BED9}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{7AC63864-7638-41C4-969C-D3197EF2BED9}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{7AC63864-7638-41C4-969C-D3197EF2BED9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7AC63864-7638-41C4-969C-D3197EF2BED9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7AC63864-7638-41C4-969C-D3197EF2BED9}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{7AC63864-7638-41C4-969C-D3197EF2BED9}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{7AC63864-7638-41C4-969C-D3197EF2BED9}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C} = {C1ADA293-B55A-4B33-AE5A-6FC40323FC39}
+		{7AC63864-7638-41C4-969C-D3197EF2BED9} = {C1ADA293-B55A-4B33-AE5A-6FC40323FC39}
 	EndGlobalSection
 EndGlobal

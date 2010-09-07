@@ -58,7 +58,7 @@ namespace LiquesceSvc
                if (currentConfigDetails == null)
                   ReadConfigDetails();
                TimeSpan delayStart = DateTime.UtcNow - startTime;
-               State = LiquesceSvcState.InError;
+               SetState(LiquesceSvcState.InError, "Starting up");
                if (currentConfigDetails == null)
                {
                   Log.Fatal("Unable to read the config details to allow this service to run. Will now exit");
@@ -67,7 +67,7 @@ namespace LiquesceSvc
                   return;
                   // ReSharper restore HeuristicUnreachableCode
                }
-               State = LiquesceSvcState.Running;
+               SetState(LiquesceSvcState.Running, "Dokan initialised");
                IsRunning = true;
 
                // Sometimes the math gets all confused due to the casting !!
@@ -98,7 +98,7 @@ namespace LiquesceSvc
 
                mountedDriveLetter = currentConfigDetails.DriveLetter[0];
                int retVal = Dokan.DokanMain(options, dokanOperations);
-               State = LiquesceSvcState.Unknown;
+               SetState(LiquesceSvcState.Unknown, "Stopping Dokan interface");
                IsRunning = false;
                switch (retVal)
                {
@@ -234,5 +234,20 @@ namespace LiquesceSvc
       }
 
 
+      public void SetState(LiquesceSvcState state, string message)
+      {
+         try
+         {
+            Log.Info("New state [{0}] with message [{1}]", state, message );
+            State = state;
+            // TODO: Report this back to the user
+            // Should it be an event ?
+
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException("SetStae threw:", ex );
+         }
+      }
    }
 }
