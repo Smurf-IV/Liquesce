@@ -185,7 +185,8 @@ namespace LiquesceSvc
          }
          finally
          {
-            InitialiseToDefault();
+            if ( currentConfigDetails == null)
+               InitialiseToDefault();
          }
 
       }
