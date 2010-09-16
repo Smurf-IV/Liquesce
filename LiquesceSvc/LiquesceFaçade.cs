@@ -1,11 +1,18 @@
-﻿using System.ServiceModel;
+﻿using System;
+using System.Collections.Generic;
+using System.ServiceModel;
 using System.Threading;
 using LiquesceFaçade;
 using NLog;
 
 namespace LiquesceSvc
 {
-   [ServiceBehavior(IncludeExceptionDetailInFaults = true)]
+   [ServiceBehavior(
+      InstanceContextMode = InstanceContextMode.Single,
+           ConcurrencyMode = ConcurrencyMode.Multiple,
+           IncludeExceptionDetailInFaults = true
+           )
+   ]
    public class LiquesceFaçade : ILiquesce
    {
       static private readonly Logger Log = LogManager.GetCurrentClassLogger();
@@ -35,6 +42,18 @@ namespace LiquesceSvc
             Log.Debug("Calling State");
             return ManagementLayer.Instance.State;
          }
+      }
+
+      public void Subscribe( Guid id )
+      {
+         Log.Debug("Calling Subscribe");
+         ManagementLayer.Instance.Subscribe( id );
+      }
+
+      public void Unsubscribe( Guid id )
+      {
+         Log.Debug("Calling Unsubscribe");
+         ManagementLayer.Instance.Unsubscribe(id);
       }
 
       public ConfigDetails ConfigDetails

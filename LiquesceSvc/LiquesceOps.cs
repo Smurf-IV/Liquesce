@@ -1123,7 +1123,7 @@ namespace LiquesceSvc
                   catch( Exception ex)
                   {
                      Log.WarnException("Above service reported this on start:", ex);
-                     ManagementLayer.Instance.SetState( LiquesceSvcState.InWarning, scDepends.ServiceName + " reports " + ex.Message);
+                     ManagementLayer.Instance.FireStateChange( LiquesceSvcState.InWarning, scDepends.ServiceName + " reports: " + ex.Message);
                   }
                }
             }
@@ -1131,7 +1131,7 @@ namespace LiquesceSvc
          catch (Exception ex)
          {
             Log.ErrorException("Init shares threw: ", ex);
-            ManagementLayer.Instance.SetState( LiquesceSvcState.InError, "Init shares reports " + ex.Message);
+            ManagementLayer.Instance.FireStateChange(LiquesceSvcState.InError, "Init shares reports: " + ex.Message);
          }
          finally
          {

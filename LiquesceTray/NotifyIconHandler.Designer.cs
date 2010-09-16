@@ -36,6 +36,8 @@
          this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
          this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.notifyIcon1 = new System.Windows.Forms.NotifyIcon(this.components);
+         this.serviceController1 = new System.ServiceProcess.ServiceController();
+         this.timer1 = new System.Windows.Forms.Timer(this.components);
          this.rightClickContextMenu.SuspendLayout();
          this.SuspendLayout();
          // 
@@ -83,9 +85,18 @@
          // notifyIcon1
          // 
          this.notifyIcon1.ContextMenuStrip = this.rightClickContextMenu;
-         this.notifyIcon1.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIcon1.Icon")));
+         this.notifyIcon1.Icon = global::LiquesceTray.Properties.Resources.LiquesceIcon;
          this.notifyIcon1.Text = "Liquesce Starting up";
          this.notifyIcon1.Visible = true;
+         // 
+         // serviceController1
+         // 
+         this.serviceController1.ServiceName = "LiquesceSvc";
+         // 
+         // timer1
+         // 
+         this.timer1.Interval = 5000;
+         this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
          // 
          // NotifyIconHandler
          // 
@@ -107,5 +118,7 @@
       private System.Windows.Forms.ToolStripMenuItem managementApp;
       private System.Windows.Forms.ToolStripMenuItem repeatLastMessage;
       private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+      private System.ServiceProcess.ServiceController serviceController1;
+      private System.Windows.Forms.Timer timer1;
    }
 }

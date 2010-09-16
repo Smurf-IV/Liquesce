@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.ServiceModel;
 using System.Threading;
 using System.Xml.Serialization;
 using DokanNet;
@@ -17,6 +19,9 @@ namespace LiquesceSvc
       private readonly DateTime startTime;
       private readonly string configFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "LiquesceSvc", Settings1.Default.ConfigFileName);
       private char mountedDriveLetter;
+      private LiquesceSvcState state = LiquesceSvcState.Stopped;
+      private static readonly Dictionary<Client, IStateChange> subscribers = new Dictionary<Client, IStateChange>();
+      private static readonly ReaderWriterLockSlim subscribersLock = new ReaderWriterLockSlim();
 
       /// <summary>
       /// Returns "The single instance" of this singleton class.
@@ -42,6 +47,50 @@ namespace LiquesceSvc
          }
       }
 
+      public void Subscribe(Guid guid)
+      {
+         try
+         {
+            IStateChange callback = OperationContext.Current.GetCallbackChannel<IStateChange>();
+            try
+            {
+               subscribersLock.EnterWriteLock();
+               subscribers.Add(new Client { id = guid }, callback);
+            }
+            finally
+            {
+               subscribersLock.ExitWriteLock();
+            } 
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException("Subscribe", ex);
+         }
+      }
+
+      public void Unsubscribe(Guid guid)
+      {
+         try
+         {
+            IStateChange callback = OperationContext.Current.GetCallbackChannel<IStateChange>();
+            try
+            {
+               subscribersLock.EnterWriteLock();
+               var query = from c in subscribers.Keys
+                           where c.id == guid
+                           select c;
+               subscribers.Remove(query.First());
+            }
+            finally
+            {
+               subscribersLock.ExitWriteLock();
+            } 
+         }
+         catch(Exception ex)
+         {
+            Log.ErrorException("Unsubscribe", ex);
+         }
+      }
       /// <summary>
       /// Invokes DokanNet.DokanMain function to mount a drive. 
       /// The function blocks until the file system is unmounted.
@@ -58,7 +107,7 @@ namespace LiquesceSvc
                if (currentConfigDetails == null)
                   ReadConfigDetails();
                TimeSpan delayStart = DateTime.UtcNow - startTime;
-               SetState(LiquesceSvcState.InError, "Starting up");
+               FireStateChange(LiquesceSvcState.InError, "Starting up");
                if (currentConfigDetails == null)
                {
                   Log.Fatal("Unable to read the config details to allow this service to run. Will now exit");
@@ -67,7 +116,7 @@ namespace LiquesceSvc
                   return;
                   // ReSharper restore HeuristicUnreachableCode
                }
-               SetState(LiquesceSvcState.Running, "Dokan initialised");
+               FireStateChange(LiquesceSvcState.Running, "Dokan initialised");
                IsRunning = true;
 
                // Sometimes the math gets all confused due to the casting !!
@@ -79,7 +128,7 @@ namespace LiquesceSvc
                   Log.Info("Delay Start needs to be obeyed");
                   Thread.Sleep(delayStartMilliseconds);
                }
-               if ( State != LiquesceSvcState.Running)
+               if (State != LiquesceSvcState.Running)
                   return;  // We have been asked to exit via the stop
                DokanOptions options = new DokanOptions
                                          {
@@ -98,30 +147,29 @@ namespace LiquesceSvc
 
                mountedDriveLetter = currentConfigDetails.DriveLetter[0];
                int retVal = Dokan.DokanMain(options, dokanOperations);
-               SetState(LiquesceSvcState.Unknown, "Stopping Dokan interface");
                IsRunning = false;
                switch (retVal)
                {
                   case Dokan.DOKAN_SUCCESS: // = 0;
-                     Log.Info("DOKAN_SUCCESS");
+                     FireStateChange(LiquesceSvcState.Stopped, "Dokan is not mounted");
                      break;
                   case Dokan.DOKAN_ERROR:// = -1; // General Error
-                     Log.Info("DOKAN_ERROR");
+                     FireStateChange(LiquesceSvcState.InError, "Dokan is not mounted [DOKAN_ERROR]");
                      break;
                   case Dokan.DOKAN_DRIVE_LETTER_ERROR: // = -2; // Bad Drive letter
-                     Log.Info("DOKAN_DRIVE_LETTER_ERROR");
+                     FireStateChange(LiquesceSvcState.InError, "Dokan is not mounted [DOKAN_DRIVE_LETTER_ERROR]");
                      break;
                   case Dokan.DOKAN_DRIVER_INSTALL_ERROR: // = -3; // Can't install driver
-                     Log.Info("DOKAN_DRIVER_INSTALL_ERROR");
+                     FireStateChange(LiquesceSvcState.InError, "Dokan is not mounted [DOKAN_DRIVER_INSTALL_ERROR]");
                      break;
                   case Dokan.DOKAN_START_ERROR: // = -4; // Driver something wrong
-                     Log.Info("DOKAN_START_ERROR");
+                     FireStateChange(LiquesceSvcState.InError, "Dokan is not mounted [DOKAN_START_ERROR]");
                      break;
                   case Dokan.DOKAN_MOUNT_ERROR: // = -5; // Can't assign drive letter
-                     Log.Info("DOKAN_MOUNT_ERROR");
+                     FireStateChange(LiquesceSvcState.InError, "Dokan is not mounted [DOKAN_MOUNT_ERROR]");
                      break;
                   default:
-                     Log.Info("Unknown Error retirn {0}", retVal);
+                     FireStateChange(LiquesceSvcState.InError, String.Format("Dokan is not mounted [Uknown Error: {0}]", retVal));
                      break;
                }
             }
@@ -145,7 +193,39 @@ namespace LiquesceSvc
          }
       }
 
-      public LiquesceSvcState State { get; private set; }
+      internal void FireStateChange(LiquesceSvcState newState, string message)
+      {
+         try
+         {
+            state = newState;
+            Log.Info("Changing newState to [{0}]:[{1}]", newState, message);
+            try
+            {
+               subscribersLock.EnterReadLock();
+               // Get all the clients in dictionary
+               var query = (from c in subscribers
+                            select c.Value).ToList();
+               // Create the callback action
+               Action<IStateChange> action = callback => callback.Update(newState, message);
+
+               // For each connected client, invoke the callback
+               query.ForEach(action);
+            }
+            finally
+            {
+               subscribersLock.ExitReadLock();
+            }
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException("Unable to fire state change", ex);
+         }
+      }
+
+      public LiquesceSvcState State 
+      {
+         get { return state; }
+      }
 
       public void Stop()
       {
@@ -153,7 +233,7 @@ namespace LiquesceSvc
             && (State != LiquesceSvcState.Unknown)
             )
          {
-            State = LiquesceSvcState.Unknown;
+            FireStateChange(LiquesceSvcState.Unknown, "Stop has been requested");
             int retVal = Dokan.DokanUnmount(mountedDriveLetter);
             IsRunning = false;
             Log.Info("Stop returned[{0}]", retVal);
@@ -185,7 +265,7 @@ namespace LiquesceSvc
          }
          finally
          {
-            if ( currentConfigDetails == null)
+            if (currentConfigDetails == null)
                InitialiseToDefault();
          }
 
@@ -232,23 +312,6 @@ namespace LiquesceSvc
             {
                Log.ErrorException("Cannot save configDetails: ", ex);
             }
-      }
-
-
-      public void SetState(LiquesceSvcState state, string message)
-      {
-         try
-         {
-            Log.Info("New state [{0}] with message [{1}]", state, message );
-            State = state;
-            // TODO: Report this back to the user
-            // Should it be an event ?
-
-         }
-         catch (Exception ex)
-         {
-            Log.ErrorException("SetStae threw:", ex );
-         }
       }
    }
 }
