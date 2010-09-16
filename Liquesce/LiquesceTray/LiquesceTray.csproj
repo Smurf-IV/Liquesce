@@ -49,6 +49,8 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
     <Reference Include="System.ServiceProcess" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xaml" />
@@ -64,6 +66,12 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Service References\ILiquesceCallback\Reference.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Reference.svcmap</DependentUpon>
+    </Compile>
+    <Compile Include="StateChangeHandler.cs" />
     <EmbeddedResource Include="NotifyIconHandler.resx">
       <DependentUpon>NotifyIconHandler.cs</DependentUpon>
     </EmbeddedResource>
@@ -87,6 +95,19 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <None Include="Service References\ILiquesceCallback\item.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Service References\ILiquesceCallback\item1.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Service References\ILiquesceCallback\item2.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Service References\ILiquesceCallback\item3.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Service References\ILiquesceCallback\LiquesceFaçade.wsdl" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LiquesceFaçade\LiquesceFaçade.csproj">
@@ -103,9 +124,22 @@
     <Content Include="Icons\Question.ico" />
     <Content Include="Icons\Stop.ico" />
     <Content Include="Icons\Warning.ico" />
+    <None Include="Service References\ILiquesceCallback\Reference.svcmap">
+      <Generator>WCF Proxy Generator</Generator>
+      <LastGenOutput>Reference.cs</LastGenOutput>
+    </None>
+    <None Include="Service References\ILiquesceCallback\configuration.svcinfo" />
+    <None Include="Service References\ILiquesceCallback\configuration91.svcinfo" />
+    <None Include="Service References\ILiquesceCallback\item.disco" />
     <None Include="Resources\Question.ico" />
     <None Include="Resources\Liquesce.ico" />
     <None Include="Resources\Stop.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Service References\" />
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadataStorage Include="Service References\ILiquesceCallback\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

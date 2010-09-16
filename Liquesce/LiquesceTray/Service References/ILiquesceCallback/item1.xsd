@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns:tns="http://schemas.datacontract.org/2004/07/LiquesceFa%C3%A7ade" elementFormDefault="qualified" targetNamespace="http://schemas.datacontract.org/2004/07/LiquesceFa%C3%A7ade" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:import schemaLocation="http://localhost:8731/Design_Time_Addresses/LiquesceSvc/LiquesceFaçade/?xsd=xsd3" namespace="http://schemas.microsoft.com/2003/10/Serialization/Arrays" />
+  <xs:simpleType name="LiquesceSvcState">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Unknown" />
+      <xs:enumeration value="Running" />
+      <xs:enumeration value="InError" />
+      <xs:enumeration value="InWarning" />
+      <xs:enumeration value="Stopped" />
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:element name="LiquesceSvcState" nillable="true" type="tns:LiquesceSvcState" />
+  <xs:complexType name="ConfigDetails">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="BufferReadSize" type="xs:unsignedInt" />
+      <xs:element minOccurs="0" name="DebugMode" type="xs:boolean" />
+      <xs:element name="DelayStartMilliSec" type="xs:unsignedInt" />
+      <xs:element name="DriveLetter" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="HoldOffBufferBytes" type="xs:unsignedLong" />
+      <xs:element minOccurs="0" name="LockTimeout" type="xs:int" />
+      <xs:element xmlns:q1="http://schemas.microsoft.com/2003/10/Serialization/Arrays" name="SourceLocations" nillable="true" type="q1:ArrayOfstring" />
+      <xs:element minOccurs="0" name="ThreadCount" type="xs:unsignedShort" />
+      <xs:element name="VolumeLabel" nillable="true" type="xs:string" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="ConfigDetails" nillable="true" type="tns:ConfigDetails" />
+</xs:schema>

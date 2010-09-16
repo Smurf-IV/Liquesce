@@ -60,9 +60,9 @@ namespace LiquesceTray.Properties {
             }
         }
         
-        internal static System.Drawing.Icon Error {
+        internal static System.Drawing.Icon ErrorIcon {
             get {
-                object obj = ResourceManager.GetObject("Error", resourceCulture);
+                object obj = ResourceManager.GetObject("ErrorIcon", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
             }
         }
@@ -71,6 +71,20 @@ namespace LiquesceTray.Properties {
             get {
                 object obj = ResourceManager.GetObject("Liquesce", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Icon LiquesceIcon {
+            get {
+                object obj = ResourceManager.GetObject("LiquesceIcon", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Icon OKIcon {
+            get {
+                object obj = ResourceManager.GetObject("OKIcon", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
             }
         }
         
@@ -85,6 +99,13 @@ namespace LiquesceTray.Properties {
             get {
                 object obj = ResourceManager.GetObject("Stop", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Icon StopIcon {
+            get {
+                object obj = ResourceManager.GetObject("StopIcon", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
             }
         }
     }

@@ -121,7 +121,7 @@
   <data name="Stop" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Stop.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="Error" type="System.Resources.ResXFileRef, System.Windows.Forms">
+  <data name="ErrorIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Icons\Error.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="Liquesce" type="System.Resources.ResXFileRef, System.Windows.Forms">
@@ -129,5 +129,14 @@
   </data>
   <data name="Question" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Question.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="LiquesceIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Icons\Liquesce.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="OKIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Icons\OK.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="StopIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Icons\Stop.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>
