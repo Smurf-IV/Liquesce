@@ -255,8 +255,9 @@ namespace LiquesceSvc
             Log.Info("Now normalise the paths to allow the file finders to work correctly");
             List<string> fileSourceLocations = new List<string>(currentConfigDetails.SourceLocations);
             currentConfigDetails.SourceLocations.Clear();
+
             fileSourceLocations.ForEach(
-               location => currentConfigDetails.SourceLocations.Add(Path.GetPathRoot(location).TrimEnd(Path.DirectorySeparatorChar)));
+               location => currentConfigDetails.SourceLocations.Add(Path.GetFullPath(location)));
          }
          catch (Exception ex)
          {
