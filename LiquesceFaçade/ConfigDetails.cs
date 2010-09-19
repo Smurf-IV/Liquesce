@@ -18,19 +18,19 @@ namespace LiquesceFaçade
    public class ConfigDetails 
    {
       [DataMember(IsRequired = true)]
-      public uint DelayStartMilliSec;
+      public uint DelayStartMilliSec = (uint) short.MaxValue;
       // Make this is a string so that the XML looks better (Rather than exporting 72 for 'N')
       // Also the V 0.6 of Dokan is supposed to be able to use Mount points so this can then be reused for that..
       [DataMember(IsRequired = true)]
-      public string DriveLetter;
+      public string DriveLetter ="N";
       [DataMember]
-      public ushort ThreadCount;
+      public ushort ThreadCount = 5;
       [DataMember]
       public int LockTimeout = short.MaxValue; // Useful if you are getting locks in the multiple threads - Can be set to -1 for infinite
       [DataMember]
-      public bool DebugMode;
+      public bool DebugMode = false;
       [DataMember(IsRequired = true)]
-      public string VolumeLabel;
+      public string VolumeLabel = "Demo";
       [DataMember]
       public UInt64 HoldOffBufferBytes = 1L << 10 << 10 << 10; // ==1GB;
       [DataMember]

@@ -635,5 +635,23 @@ namespace Liquesce
          RestartExpectedOutput();
       }
 
+      private void globalConfigSettingsToolStripMenuItem_Click(object sender, EventArgs e)
+      {
+         AdvancedSettings advancedSettings = new AdvancedSettings { AdvancedConfigDetails = cd };
+         if (advancedSettings.ShowDialog(this) == DialogResult.OK)
+            cd = advancedSettings.AdvancedConfigDetails;
+      }
+
+      private void userLogViewToolStripMenuItem_Click(object sender, EventArgs e)
+      {
+         new LogDisplay(@"/Liquesce/Logs").ShowDialog(this);
+      }
+
+      private void serviceLogViewToolStripMenuItem_Click(object sender, EventArgs e)
+      {
+         new LogDisplay(@"/LiquesceSvc/Logs").ShowDialog(this);
+
+      }
+
    }
 }
