@@ -36,7 +36,6 @@
          this.label1 = new System.Windows.Forms.Label();
          this.splitContainer2 = new System.Windows.Forms.SplitContainer();
          this.mergeList = new System.Windows.Forms.TreeView();
-         this.panel1 = new System.Windows.Forms.Panel();
          this.groupBox1 = new System.Windows.Forms.GroupBox();
          this.VolumeLabel = new System.Windows.Forms.TextBox();
          this.MountPoint = new System.Windows.Forms.ComboBox();
@@ -55,6 +54,7 @@
          this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
          this.FillExpectedLayoutWorker = new System.ComponentModel.BackgroundWorker();
          this.serviceController1 = new System.ServiceProcess.ServiceController();
+         this.splitContainer3 = new System.Windows.Forms.SplitContainer();
          ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
          this.splitContainer1.Panel1.SuspendLayout();
          this.splitContainer1.Panel2.SuspendLayout();
@@ -63,11 +63,14 @@
          this.splitContainer2.Panel1.SuspendLayout();
          this.splitContainer2.Panel2.SuspendLayout();
          this.splitContainer2.SuspendLayout();
-         this.panel1.SuspendLayout();
          this.groupBox1.SuspendLayout();
          ((System.ComponentModel.ISupportInitialize)(this.DelayCreation)).BeginInit();
          this.menuStrip1.SuspendLayout();
          this.refreshExpected.SuspendLayout();
+         ((System.ComponentModel.ISupportInitialize)(this.splitContainer3)).BeginInit();
+         this.splitContainer3.Panel1.SuspendLayout();
+         this.splitContainer3.Panel2.SuspendLayout();
+         this.splitContainer3.SuspendLayout();
          this.SuspendLayout();
          // 
          // splitContainer1
@@ -128,9 +131,7 @@
          // 
          // splitContainer2.Panel1
          // 
-         this.splitContainer2.Panel1.Controls.Add(this.mergeList);
-         this.splitContainer2.Panel1.Controls.Add(this.panel1);
-         this.splitContainer2.Panel1.Controls.Add(this.progressBar1);
+         this.splitContainer2.Panel1.Controls.Add(this.splitContainer3);
          this.splitContainer2.Panel1.Controls.Add(this.label2);
          this.splitContainer2.Panel1.Controls.Add(this.menuStrip1);
          // 
@@ -151,37 +152,24 @@
          this.mergeList.ImageIndex = 0;
          this.mergeList.ImageList = this.imageListUnits;
          this.mergeList.ItemHeight = 14;
-         this.mergeList.Location = new System.Drawing.Point(0, 17);
+         this.mergeList.Location = new System.Drawing.Point(0, 0);
          this.mergeList.Name = "mergeList";
          this.mergeList.SelectedImageIndex = 0;
-         this.mergeList.Size = new System.Drawing.Size(247, 324);
+         this.mergeList.Size = new System.Drawing.Size(247, 318);
          this.mergeList.TabIndex = 3;
          this.toolTip1.SetToolTip(this.mergeList, "Drop the Entries here");
          this.mergeList.DragDrop += new System.Windows.Forms.DragEventHandler(this.mergeList_DragDrop);
          this.mergeList.DragOver += new System.Windows.Forms.DragEventHandler(this.mergeList_DragOver);
          this.mergeList.KeyUp += new System.Windows.Forms.KeyEventHandler(this.mergeList_KeyUp);
          // 
-         // panel1
-         // 
-         this.panel1.Controls.Add(this.groupBox1);
-         this.panel1.Controls.Add(this.MountPoint);
-         this.panel1.Controls.Add(this.label5);
-         this.panel1.Controls.Add(this.label4);
-         this.panel1.Controls.Add(this.DelayCreation);
-         this.panel1.Dock = System.Windows.Forms.DockStyle.Bottom;
-         this.panel1.Location = new System.Drawing.Point(0, 341);
-         this.panel1.Name = "panel1";
-         this.panel1.Size = new System.Drawing.Size(247, 101);
-         this.panel1.TabIndex = 6;
-         // 
          // groupBox1
          // 
          this.groupBox1.Controls.Add(this.VolumeLabel);
          this.groupBox1.Dock = System.Windows.Forms.DockStyle.Bottom;
-         this.groupBox1.Location = new System.Drawing.Point(0, 58);
+         this.groupBox1.Location = new System.Drawing.Point(0, 59);
          this.groupBox1.Margin = new System.Windows.Forms.Padding(0);
          this.groupBox1.Name = "groupBox1";
-         this.groupBox1.Size = new System.Drawing.Size(247, 43);
+         this.groupBox1.Size = new System.Drawing.Size(247, 44);
          this.groupBox1.TabIndex = 4;
          this.groupBox1.TabStop = false;
          this.groupBox1.Text = "&Volume Label :";
@@ -190,7 +178,7 @@
          // 
          this.VolumeLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
                      | System.Windows.Forms.AnchorStyles.Right)));
-         this.VolumeLabel.Location = new System.Drawing.Point(7, 17);
+         this.VolumeLabel.Location = new System.Drawing.Point(7, 18);
          this.VolumeLabel.MaxLength = 32;
          this.VolumeLabel.Name = "VolumeLabel";
          this.VolumeLabel.Size = new System.Drawing.Size(234, 22);
@@ -229,7 +217,7 @@
             "X",
             "Y",
             "Z"});
-         this.MountPoint.Location = new System.Drawing.Point(90, 32);
+         this.MountPoint.Location = new System.Drawing.Point(87, 30);
          this.MountPoint.Name = "MountPoint";
          this.MountPoint.Size = new System.Drawing.Size(154, 22);
          this.MountPoint.Sorted = true;
@@ -240,7 +228,7 @@
          // label5
          // 
          this.label5.AutoSize = true;
-         this.label5.Location = new System.Drawing.Point(7, 35);
+         this.label5.Location = new System.Drawing.Point(4, 33);
          this.label5.Name = "label5";
          this.label5.Size = new System.Drawing.Size(77, 14);
          this.label5.TabIndex = 2;
@@ -249,7 +237,7 @@
          // label4
          // 
          this.label4.AutoSize = true;
-         this.label4.Location = new System.Drawing.Point(4, 6);
+         this.label4.Location = new System.Drawing.Point(4, 4);
          this.label4.Name = "label4";
          this.label4.Size = new System.Drawing.Size(118, 14);
          this.label4.TabIndex = 1;
@@ -262,7 +250,7 @@
             0,
             0,
             0});
-         this.DelayCreation.Location = new System.Drawing.Point(143, 4);
+         this.DelayCreation.Location = new System.Drawing.Point(140, 2);
          this.DelayCreation.Maximum = new decimal(new int[] {
             300000,
             0,
@@ -288,7 +276,7 @@
          // 
          this.progressBar1.Dock = System.Windows.Forms.DockStyle.Bottom;
          this.progressBar1.ForeColor = System.Drawing.Color.LawnGreen;
-         this.progressBar1.Location = new System.Drawing.Point(0, 442);
+         this.progressBar1.Location = new System.Drawing.Point(0, 103);
          this.progressBar1.Name = "progressBar1";
          this.progressBar1.Size = new System.Drawing.Size(247, 23);
          this.progressBar1.Step = 5;
@@ -354,7 +342,7 @@
          this.refreshExpected.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.refreshExpectedToolStripMenuItem});
          this.refreshExpected.Name = "refreshExpected";
-         this.refreshExpected.Size = new System.Drawing.Size(191, 48);
+         this.refreshExpected.Size = new System.Drawing.Size(191, 26);
          // 
          // refreshExpectedToolStripMenuItem
          // 
@@ -386,10 +374,33 @@
          this.serviceController1.MachineName = "127.0.0.1";
          this.serviceController1.ServiceName = "LiquesceSvc";
          // 
+         // splitContainer3
+         // 
+         this.splitContainer3.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.splitContainer3.Location = new System.Drawing.Point(0, 17);
+         this.splitContainer3.Name = "splitContainer3";
+         this.splitContainer3.Orientation = System.Windows.Forms.Orientation.Horizontal;
+         // 
+         // splitContainer3.Panel1
+         // 
+         this.splitContainer3.Panel1.Controls.Add(this.mergeList);
+         // 
+         // splitContainer3.Panel2
+         // 
+         this.splitContainer3.Panel2.Controls.Add(this.groupBox1);
+         this.splitContainer3.Panel2.Controls.Add(this.MountPoint);
+         this.splitContainer3.Panel2.Controls.Add(this.label5);
+         this.splitContainer3.Panel2.Controls.Add(this.label4);
+         this.splitContainer3.Panel2.Controls.Add(this.DelayCreation);
+         this.splitContainer3.Panel2.Controls.Add(this.progressBar1);
+         this.splitContainer3.Size = new System.Drawing.Size(247, 448);
+         this.splitContainer3.SplitterDistance = 318;
+         this.splitContainer3.TabIndex = 7;
+         // 
          // MainForm
          // 
-         this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 14F);
-         this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+         this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
+         this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
          this.ClientSize = new System.Drawing.Size(770, 489);
          this.Controls.Add(this.splitContainer1);
          this.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -409,14 +420,17 @@
          this.splitContainer2.Panel2.ResumeLayout(false);
          ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).EndInit();
          this.splitContainer2.ResumeLayout(false);
-         this.panel1.ResumeLayout(false);
-         this.panel1.PerformLayout();
          this.groupBox1.ResumeLayout(false);
          this.groupBox1.PerformLayout();
          ((System.ComponentModel.ISupportInitialize)(this.DelayCreation)).EndInit();
          this.menuStrip1.ResumeLayout(false);
          this.menuStrip1.PerformLayout();
          this.refreshExpected.ResumeLayout(false);
+         this.splitContainer3.Panel1.ResumeLayout(false);
+         this.splitContainer3.Panel2.ResumeLayout(false);
+         this.splitContainer3.Panel2.PerformLayout();
+         ((System.ComponentModel.ISupportInitialize)(this.splitContainer3)).EndInit();
+         this.splitContainer3.ResumeLayout(false);
          this.ResumeLayout(false);
 
       }
@@ -436,7 +450,6 @@
       private System.Windows.Forms.TreeView expectedTreeView;
       private System.Windows.Forms.Label label3;
       private System.ComponentModel.BackgroundWorker FillExpectedLayoutWorker;
-      private System.Windows.Forms.Panel panel1;
       private System.Windows.Forms.Label label4;
       private System.Windows.Forms.NumericUpDown DelayCreation;
       private System.Windows.Forms.ComboBox MountPoint;
@@ -448,5 +461,6 @@
       private System.ServiceProcess.ServiceController serviceController1;
       private System.Windows.Forms.ContextMenuStrip refreshExpected;
       private System.Windows.Forms.ToolStripMenuItem refreshExpectedToolStripMenuItem;
+      private System.Windows.Forms.SplitContainer splitContainer3;
    }
 }

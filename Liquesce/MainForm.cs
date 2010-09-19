@@ -22,8 +22,10 @@ namespace Liquesce
       public MainForm()
       {
          // Force use of Segou UI Font in Vista and above
-         if (SystemFonts.MessageBoxFont.Size >= 9)
-            Font = SystemFonts.MessageBoxFont;
+         // But this makes a mess of the layouts when they are autoscaled !!!
+         //if (SystemFonts.MessageBoxFont.Size >= 9)
+         //   Font = SystemFonts.MessageBoxFont;
+ 
          InitializeComponent();
          Icon icon = ExtractIcon.GetIconForFilename(Environment.GetFolderPath(Environment.SpecialFolder.MyComputer), true);
          imageListUnits.Images.Add("MyComputer", icon.ToBitmap());
