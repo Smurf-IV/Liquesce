@@ -17,6 +17,7 @@ namespace Liquesce
    {
       static private readonly Logger Log = LogManager.GetCurrentClassLogger();
       private ConfigDetails cd = new ConfigDetails();
+      private bool isClosing;
 
       public MainForm()
       {
@@ -53,6 +54,17 @@ namespace Liquesce
             }
          }
          InitialiseWith();
+      }
+
+      private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+      {
+         isClosing = true;
+         FillExpectedLayoutWorker.CancelAsync();
+      }
+
+      private bool IsClosing
+      {
+         get { return isClosing; }
       }
 
       private void InitialiseWith()
@@ -181,7 +193,7 @@ namespace Liquesce
             {
                Log.Debug("// Find all the subdirectories under this directory.");
                DirectoryInfo[] subDirs = root.GetDirectories();
-               if (subDirs != null)
+               // if (subDirs != null) // Apperently always true
                {
                   foreach (DirectoryInfo dirInfo in subDirs)
                   {
@@ -199,8 +211,8 @@ namespace Liquesce
                      try
                      {
                         DirectoryInfo[] subChildDirs = dirInfo.GetDirectories();
-                        if ((subChildDirs != null)
-                            && (subChildDirs.Length > 0)
+                        if (/*(subChildDirs != null) // Apperently always true
+                            &&*/ (subChildDirs.Length > 0)
                            )
                            tvwChild.Nodes.Add("DummyNode");
                      }
@@ -331,50 +343,53 @@ namespace Liquesce
 
       private void RestartExpectedOutput()
       {
+         if (IsClosing)
+            return;
          FillExpectedLayoutWorker.CancelAsync();
          while (FillExpectedLayoutWorker.IsBusy)
          {
             Thread.Sleep(500);
             Application.DoEvents();
          }
-         ConfigDetails cd = new ConfigDetails
+         ConfigDetails configDetails = new ConfigDetails
                                {
                                   DelayStartMilliSec = (uint)DelayCreation.Value,
                                   DriveLetter = MountPoint.Text,
                                   VolumeLabel = VolumeLabel.Text,
                                   SourceLocations = new List<string>(mergeList.Nodes.Count)
                                };
-         if (mergeList.Nodes != null)
+         // if (mergeList.Nodes != null) // Apperently always true
             foreach (TreeNode node in mergeList.Nodes)
             {
-               cd.SourceLocations.Add(node.Text);
+               configDetails.SourceLocations.Add(node.Text);
             }
-         FillExpectedLayoutWorker.RunWorkerAsync(cd);
+         FillExpectedLayoutWorker.RunWorkerAsync(configDetails);
       }
 
-      private void FillExpectedLayoutWorker_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e)
+
+      private void FillExpectedLayoutWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
       {
          SetProgressBarStyle(ProgressBarStyle.Continuous);
       }
 
-      private void FillExpectedLayoutWorker_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
+      private void FillExpectedLayoutWorker_DoWork(object sender, DoWorkEventArgs e)
       {
          SetProgressBarStyle(ProgressBarStyle.Marquee);
          ClearExpectedList();
-         ConfigDetails cd = e.Argument as ConfigDetails;
+         ConfigDetails configDetails = e.Argument as ConfigDetails;
          BackgroundWorker worker = sender as BackgroundWorker;
-         if ((cd == null)
+         if ((configDetails == null)
             || (worker == null)
             )
          {
             Log.Error("Worker, or auguments are null, exiting.");
             return;
          }
-         TreeNode root = new TreeNode(cd.VolumeLabel + " (" + cd.DriveLetter + ")");
+         TreeNode root = new TreeNode(configDetails.VolumeLabel + " (" + configDetails.DriveLetter + ")");
          AddExpectedNode(null, root);
          if (worker.CancellationPending)
             return;
-         WalkExpectedNextTreeLevel(root, cd.SourceLocations);
+         WalkExpectedNextTreeLevel(root, configDetails.SourceLocations);
          if (worker.CancellationPending)
             return;
       }
@@ -576,7 +591,7 @@ namespace Liquesce
                cd.DriveLetter = MountPoint.Text;
                cd.VolumeLabel = VolumeLabel.Text;
                cd.SourceLocations = new List<string>(mergeList.Nodes.Count);
-               if (mergeList.Nodes != null)
+               // if (mergeList.Nodes != null) // Apperently always true
                   foreach (TreeNode node in mergeList.Nodes)
                   {
                      cd.SourceLocations.Add(node.Text);
@@ -617,5 +632,6 @@ namespace Liquesce
       {
          RestartExpectedOutput();
       }
+
    }
 }

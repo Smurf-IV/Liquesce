@@ -49,12 +49,12 @@
          this.commitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.advancedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.expectedTreeView = new System.Windows.Forms.TreeView();
+         this.refreshExpected = new System.Windows.Forms.ContextMenuStrip(this.components);
+         this.refreshExpectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.label3 = new System.Windows.Forms.Label();
          this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
          this.FillExpectedLayoutWorker = new System.ComponentModel.BackgroundWorker();
          this.serviceController1 = new System.ServiceProcess.ServiceController();
-         this.refreshExpected = new System.Windows.Forms.ContextMenuStrip(this.components);
-         this.refreshExpectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
          this.splitContainer1.Panel1.SuspendLayout();
          this.splitContainer1.Panel2.SuspendLayout();
@@ -349,6 +349,21 @@
          this.toolTip1.SetToolTip(this.expectedTreeView, "Expand to see if any duplicates have been found");
          this.expectedTreeView.BeforeExpand += new System.Windows.Forms.TreeViewCancelEventHandler(this.expectedTreeView_BeforeExpand);
          // 
+         // refreshExpected
+         // 
+         this.refreshExpected.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.refreshExpectedToolStripMenuItem});
+         this.refreshExpected.Name = "refreshExpected";
+         this.refreshExpected.Size = new System.Drawing.Size(191, 48);
+         // 
+         // refreshExpectedToolStripMenuItem
+         // 
+         this.refreshExpectedToolStripMenuItem.Name = "refreshExpectedToolStripMenuItem";
+         this.refreshExpectedToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F5;
+         this.refreshExpectedToolStripMenuItem.Size = new System.Drawing.Size(190, 22);
+         this.refreshExpectedToolStripMenuItem.Text = "&Refresh Expected";
+         this.refreshExpectedToolStripMenuItem.Click += new System.EventHandler(this.refreshExpectedToolStripMenuItem_Click);
+         // 
          // label3
          // 
          this.label3.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
@@ -371,21 +386,6 @@
          this.serviceController1.MachineName = "127.0.0.1";
          this.serviceController1.ServiceName = "LiquesceSvc";
          // 
-         // refreshExpected
-         // 
-         this.refreshExpected.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.refreshExpectedToolStripMenuItem});
-         this.refreshExpected.Name = "refreshExpected";
-         this.refreshExpected.Size = new System.Drawing.Size(191, 48);
-         // 
-         // refreshExpectedToolStripMenuItem
-         // 
-         this.refreshExpectedToolStripMenuItem.Name = "refreshExpectedToolStripMenuItem";
-         this.refreshExpectedToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F5;
-         this.refreshExpectedToolStripMenuItem.Size = new System.Drawing.Size(190, 22);
-         this.refreshExpectedToolStripMenuItem.Text = "&Refresh Expected";
-         this.refreshExpectedToolStripMenuItem.Click += new System.EventHandler(this.refreshExpectedToolStripMenuItem_Click);
-         // 
          // MainForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 14F);
@@ -398,6 +398,7 @@
          this.MinimumSize = new System.Drawing.Size(778, 516);
          this.Name = "MainForm";
          this.Text = "Liquesce Mount Management";
+         this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
          this.Shown += new System.EventHandler(this.MainForm_Shown);
          this.splitContainer1.Panel1.ResumeLayout(false);
          this.splitContainer1.Panel2.ResumeLayout(false);

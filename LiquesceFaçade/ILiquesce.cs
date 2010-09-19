@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.Serialization;
 using System.ServiceModel;
 
 namespace LiquesceFaçade
@@ -14,16 +13,7 @@ namespace LiquesceFaçade
       Stopped
    }
 
-   public interface IStateChange
-   {
-      [OperationContract(IsOneWay = true)]
-      void Update(LiquesceSvcState state, string message);
-   }
-
-   [ServiceContract(
-      CallbackContract = typeof(IStateChange), 
-      SessionMode = SessionMode.Required)
-   ]
+   [ServiceContract]
    public interface ILiquesce
    {
       [OperationContract(IsOneWay = true)]
@@ -38,12 +28,6 @@ namespace LiquesceFaçade
          get;
       }
 
-      [OperationContract(IsOneWay = true)]
-      void Subscribe( Guid id );
-
-      [OperationContract(IsOneWay = true)]
-      void Unsubscribe(Guid id);
-
       ConfigDetails ConfigDetails
       {
          [OperationContract]
@@ -51,13 +35,5 @@ namespace LiquesceFaçade
          [OperationContract(IsOneWay = true)]
          set;
       }
-   }
-
-   //---each client connected to the service has a GUID---
-   [DataContract]
-   public class Client
-   {
-      [DataMember]
-      public Guid id { get; set; }
    }
 }

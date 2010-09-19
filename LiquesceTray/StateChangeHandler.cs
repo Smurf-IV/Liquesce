@@ -1,44 +1,67 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using LiquesceFaçade;
 using System.ServiceModel;
+using LiquesceFaçade;
+using NLog;
 
 namespace LiquesceTray
 {
-
-   class StateChangeHandler : ILiquesceCallback.ILiquesceCallback
+   public class StateChangeHandler : LiquesceCallbackReference.ILiquesceCallBackCallback
    {
-      private ILiquesceCallback.LiquesceClient client;
-      private Guid guid = Guid.NewGuid();
+      private static readonly Logger Log = LogManager.GetCurrentClassLogger();
+      private LiquesceCallbackReference.LiquesceCallBackClient client;
+      private readonly Guid guid = Guid.NewGuid();
 
       public delegate void SetStateDelegate(LiquesceSvcState state, string text);
       private SetStateDelegate setStateDelegate;
 
-      public void CreateCallBack( SetStateDelegate setStateDelegate)
+      public void CreateCallBack( SetStateDelegate newDelegate)
       {
-         InstanceContext context = new InstanceContext(this);
-         client = new ILiquesceCallback.LiquesceClient(context);
-         client.Subscribe(guid);
-         this.setStateDelegate = setStateDelegate;
-      }
-
-      public void RemoveCallback()
-      {
-         if (client != null)
+         try
          {
-            client.Unsubscribe(guid);
+            InstanceContext context = new InstanceContext(this);
+            client = new LiquesceCallbackReference.LiquesceCallBackClient(context);
+            client.Subscribe(guid);
+            setStateDelegate = newDelegate;
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException("CreateCallBack:", ex);
+            Update(LiquesceSvcState.InError, ex.Message);
             client = null;
             setStateDelegate = null;
          }
       }
 
+      public void RemoveCallback()
+      {
+         try
+         {
+            if (client != null)
+            {
+               client.Unsubscribe(guid);
+            }
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException("RemoveCallback:", ex);
+            Update(LiquesceSvcState.InError, ex.Message);
+         }
+         finally
+         {
+            client = null;
+            setStateDelegate = null;
+         }
+      }
+
+      #region Implementation of ILiquesceCallback
+
       public void Update(LiquesceSvcState state, string message)
       {
          SetStateDelegate handler = setStateDelegate;
-         if ( handler != null )
+         if (handler != null)
             handler(state, message);
       }
+
+      #endregion
    }
 }

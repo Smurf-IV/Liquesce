@@ -44,18 +44,6 @@ namespace LiquesceSvc
          }
       }
 
-      public void Subscribe( Guid id )
-      {
-         Log.Debug("Calling Subscribe");
-         ManagementLayer.Instance.Subscribe( id );
-      }
-
-      public void Unsubscribe( Guid id )
-      {
-         Log.Debug("Calling Unsubscribe");
-         ManagementLayer.Instance.Unsubscribe(id);
-      }
-
       public ConfigDetails ConfigDetails
       {
          get

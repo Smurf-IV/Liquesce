@@ -5,7 +5,7 @@
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
      >
    <?define UpgradeCode = "f6f94f17-a05f-4824-8dd9-9f5e8267d783" ?>
-   <?define Version = "10.09.05" ?>
+   <?define Version = "10.09.19" ?>
    <?define ProductName = "Liquesce Windows HDD Pooling Suite"?>
 
    <Product Version="$(var.Version)" Id="*" UpgradeCode="$(var.UpgradeCode)"
@@ -18,6 +18,8 @@
                AdminImage='no'
                Platform='x86'
                />
+
+      <MajorUpgrade DowngradeErrorMessage="Downgrades are not allowed - Use add/remove from the control panel" />
 
       <!-- Support Information shown in Add/Remove programs (this is optional) -->
       <Property Id="ARPHELPLINK" Value="http://liquesce.codeplex.com/documentation" />
@@ -62,6 +64,7 @@
       <Condition Message="You need to be an administrator to install this product.">
          Privileged
       </Condition>
+
       <!--<Condition Message="A later version of [ProductName] is already installed. Setup will now exit.">
          <![CDATA[NOT NEWERVERSIONDETECTED OR Installed]]>
       </Condition>-->
@@ -80,6 +83,7 @@
          </Directory>
          <Directory Id="ProgramMenuFolder">
             <Directory Id="ProgramMenuDir" Name="Liquesce"/>
+            <Directory Id="StartupFolder" Name="Startup" />
          </Directory>
 
          <Directory Id="CommonAppDataFolder" Name="CommonAppData">
@@ -110,10 +114,7 @@
             <File Id="C_LiquesceFacade.dll" Source="Z:\Liquesce\Liquesce\bin\Release\LiquesceFaçade.dll" KeyPath="yes" />
          </Component>
          <Component Id="LiquesceTray.exe.Component" >
-            <File Source="Z:\Liquesce\LiquesceTray\bin\Release\LiquesceTray.exe" KeyPath="yes" />
-         </Component>
-         <Component Id="NotifyIconWpf.dll.Component" >
-            <File Source="Z:\Liquesce\Liquesce\bin\Release\NotifyIconWpf.dll" KeyPath="yes" />
+            <File Id="LiquesceTray.exe" Source="Z:\Liquesce\LiquesceTray\bin\Release\LiquesceTray.exe" KeyPath="yes" />
          </Component>
       </DirectoryRef>
       <DirectoryRef Id="ServiceDIR">
@@ -136,10 +137,11 @@
             <File Source="Z:\Liquesce\LiquesceSvc\bin\Release\NLog.dll" KeyPath="yes" />
          </Component>
       </DirectoryRef>
-
       <DirectoryRef Id="ProgramMenuDir">
          <Component Id="ProgramMenuDir2" Guid="11234567-7E98-44CE-B049-C477CC0A2B01">
             <Shortcut Id="Liquesce_Shortcut" Name="Liquesce MGT" Description="Liquesce Management Application" Target="[ClientDIR]Liquesce.exe" WorkingDirectory="ClientDIR" Icon="client.ico" IconIndex="0" />
+            <Shortcut Id="LiquesceTray_Shortcut" Name="Liquesce Tray" Description="Liquesce Tray Application" Target="[ClientDIR]LiquesceTray.exe" WorkingDirectory="ClientDIR" Icon="client.ico" IconIndex="0" />
+            <Shortcut Id="LiquesceTray_Start" Name="Liquesce Tray" Directory="StartupFolder" Description="Liquesce Tray Application" Target="[ClientDIR]LiquesceTray.exe" WorkingDirectory="ClientDIR" Icon="client.ico" IconIndex="0" />
             <util:InternetShortcut Type="url" Id="Home" Name="Liquesce Forum" Target="[ARPHELPLINK]" />
             <util:InternetShortcut Type="link" Id="Change" Name="Change Log" Target="[ClientDIR]ChangeLog.rtf"/>
             <RemoveFolder Id="ProgramMenuDir" On="uninstall"/>
@@ -159,7 +161,6 @@
          <ComponentRef Id="Liquesce.exe.config.Component" />
          <ComponentRef Id="C_NLog.dll.Component" />
          <ComponentRef Id="C_LiquesceFacade.dll.Component" />
-         <ComponentRef Id="NotifyIconWpf.dll.Component" />
          <ComponentRef Id='ProgramMenuDir2'/>
 
          <ComponentRef Id="LiquesceTray.exe.Component" />
@@ -190,8 +191,18 @@
       <CustomAction Id="StartService.SetProperty" Property="StartService" Value='"[System64Folder]Net.exe start FRWinService"' />
       <CustomAction Id="StartService" BinaryKey="WixCA" DllEntry="CAQuietExec" Execute="deferred" Impersonate="no" Return="check"/>
 
+      <!--Custom Actions to start stop Application tray-->
+      <CustomAction Id="StartTrayApp" FileKey="LiquesceTray.exe" ExeCommand="" Return="asyncNoWait" />
+      <util:CloseApplication CloseMessage="yes" Id="CloseServerTray" Target="LiquesceTray.exe" RebootPrompt="no"/>
+
+      <InstallUISequence>
+         <Custom Action="WixCloseApplications" Before="LaunchConditions" />
+      </InstallUISequence>
+
       <!-- Now to sequence these Custom Actions in the execute sequence -->
       <InstallExecuteSequence>
+         <Custom Action="WixCloseApplications" Before="LaunchConditions" />
+
          <Custom Action="LiquesceSvc.commit.SetProperty" After="InstallServices"><![CDATA[ $LiquesceSvc.Component > 2 ]]></Custom>
          <Custom Action="LiquesceSvc.commit" After="LiquesceSvc.commit.SetProperty"><![CDATA[ $LiquesceSvc.Component > 2 ]]></Custom>
 
@@ -203,9 +214,8 @@
 
          <Custom Action="LiquesceSvc.uninstall.SetProperty" After="MsiUnpublishAssemblies"><![CDATA[ $LiquesceSvc.Component = 2 ]]></Custom>
          <Custom Action="LiquesceSvc.uninstall" After="LiquesceSvc.uninstall.SetProperty"><![CDATA[ $LiquesceSvc.Component = 2 ]]></Custom>
+         <Custom Action="StartTrayApp" After="InstallFinalize">Not Installed</Custom>
       </InstallExecuteSequence>
 
-
-      <MajorUpgrade DowngradeErrorMessage="Downgrades are not allowed - Use add/remove from the control panel" />
    </Product>
 </Wix>
