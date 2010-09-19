@@ -36,7 +36,7 @@ namespace LiquesceTray
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             nih = new NotifyIconHandler();
-            Application.Run();
+            Application.Run( new HiddenFormToAcceptCloseMessage());
          }
          catch (Exception ex)
          {
