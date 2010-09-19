@@ -35,6 +35,7 @@
          this.imageListUnits = new System.Windows.Forms.ImageList(this.components);
          this.label1 = new System.Windows.Forms.Label();
          this.splitContainer2 = new System.Windows.Forms.SplitContainer();
+         this.splitContainer3 = new System.Windows.Forms.SplitContainer();
          this.mergeList = new System.Windows.Forms.TreeView();
          this.groupBox1 = new System.Windows.Forms.GroupBox();
          this.VolumeLabel = new System.Windows.Forms.TextBox();
@@ -47,6 +48,7 @@
          this.menuStrip1 = new System.Windows.Forms.MenuStrip();
          this.commitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.advancedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+         this.globalConfigSettingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.expectedTreeView = new System.Windows.Forms.TreeView();
          this.refreshExpected = new System.Windows.Forms.ContextMenuStrip(this.components);
          this.refreshExpectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -54,7 +56,8 @@
          this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
          this.FillExpectedLayoutWorker = new System.ComponentModel.BackgroundWorker();
          this.serviceController1 = new System.ServiceProcess.ServiceController();
-         this.splitContainer3 = new System.Windows.Forms.SplitContainer();
+         this.userLogViewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+         this.serviceLogViewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
          this.splitContainer1.Panel1.SuspendLayout();
          this.splitContainer1.Panel2.SuspendLayout();
@@ -63,14 +66,14 @@
          this.splitContainer2.Panel1.SuspendLayout();
          this.splitContainer2.Panel2.SuspendLayout();
          this.splitContainer2.SuspendLayout();
-         this.groupBox1.SuspendLayout();
-         ((System.ComponentModel.ISupportInitialize)(this.DelayCreation)).BeginInit();
-         this.menuStrip1.SuspendLayout();
-         this.refreshExpected.SuspendLayout();
          ((System.ComponentModel.ISupportInitialize)(this.splitContainer3)).BeginInit();
          this.splitContainer3.Panel1.SuspendLayout();
          this.splitContainer3.Panel2.SuspendLayout();
          this.splitContainer3.SuspendLayout();
+         this.groupBox1.SuspendLayout();
+         ((System.ComponentModel.ISupportInitialize)(this.DelayCreation)).BeginInit();
+         this.menuStrip1.SuspendLayout();
+         this.refreshExpected.SuspendLayout();
          this.SuspendLayout();
          // 
          // splitContainer1
@@ -143,6 +146,29 @@
          this.splitContainer2.SplitterDistance = 247;
          this.splitContainer2.SplitterWidth = 5;
          this.splitContainer2.TabIndex = 0;
+         // 
+         // splitContainer3
+         // 
+         this.splitContainer3.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.splitContainer3.Location = new System.Drawing.Point(0, 17);
+         this.splitContainer3.Name = "splitContainer3";
+         this.splitContainer3.Orientation = System.Windows.Forms.Orientation.Horizontal;
+         // 
+         // splitContainer3.Panel1
+         // 
+         this.splitContainer3.Panel1.Controls.Add(this.mergeList);
+         // 
+         // splitContainer3.Panel2
+         // 
+         this.splitContainer3.Panel2.Controls.Add(this.groupBox1);
+         this.splitContainer3.Panel2.Controls.Add(this.MountPoint);
+         this.splitContainer3.Panel2.Controls.Add(this.label5);
+         this.splitContainer3.Panel2.Controls.Add(this.label4);
+         this.splitContainer3.Panel2.Controls.Add(this.DelayCreation);
+         this.splitContainer3.Panel2.Controls.Add(this.progressBar1);
+         this.splitContainer3.Size = new System.Drawing.Size(247, 448);
+         this.splitContainer3.SplitterDistance = 318;
+         this.splitContainer3.TabIndex = 7;
          // 
          // mergeList
          // 
@@ -315,11 +341,23 @@
          // 
          // advancedToolStripMenuItem
          // 
+         this.advancedToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.globalConfigSettingsToolStripMenuItem,
+            this.serviceLogViewToolStripMenuItem,
+            this.userLogViewToolStripMenuItem});
          this.advancedToolStripMenuItem.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.advancedToolStripMenuItem.Name = "advancedToolStripMenuItem";
          this.advancedToolStripMenuItem.Size = new System.Drawing.Size(85, 20);
          this.advancedToolStripMenuItem.Text = "&Advanced...";
          this.advancedToolStripMenuItem.ToolTipText = "Advanced options to aid in debug and testing";
+         // 
+         // globalConfigSettingsToolStripMenuItem
+         // 
+         this.globalConfigSettingsToolStripMenuItem.Name = "globalConfigSettingsToolStripMenuItem";
+         this.globalConfigSettingsToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
+         this.globalConfigSettingsToolStripMenuItem.Text = "&Global Config Settings...";
+         this.globalConfigSettingsToolStripMenuItem.ToolTipText = "Access to the settings that control access to the OS and the Dokan Driver";
+         this.globalConfigSettingsToolStripMenuItem.Click += new System.EventHandler(this.globalConfigSettingsToolStripMenuItem_Click);
          // 
          // expectedTreeView
          // 
@@ -374,28 +412,19 @@
          this.serviceController1.MachineName = "127.0.0.1";
          this.serviceController1.ServiceName = "LiquesceSvc";
          // 
-         // splitContainer3
+         // userLogViewToolStripMenuItem
          // 
-         this.splitContainer3.Dock = System.Windows.Forms.DockStyle.Fill;
-         this.splitContainer3.Location = new System.Drawing.Point(0, 17);
-         this.splitContainer3.Name = "splitContainer3";
-         this.splitContainer3.Orientation = System.Windows.Forms.Orientation.Horizontal;
+         this.userLogViewToolStripMenuItem.Name = "userLogViewToolStripMenuItem";
+         this.userLogViewToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
+         this.userLogViewToolStripMenuItem.Text = "&User Log View...";
+         this.userLogViewToolStripMenuItem.Click += new System.EventHandler(this.userLogViewToolStripMenuItem_Click);
          // 
-         // splitContainer3.Panel1
+         // serviceLogViewToolStripMenuItem
          // 
-         this.splitContainer3.Panel1.Controls.Add(this.mergeList);
-         // 
-         // splitContainer3.Panel2
-         // 
-         this.splitContainer3.Panel2.Controls.Add(this.groupBox1);
-         this.splitContainer3.Panel2.Controls.Add(this.MountPoint);
-         this.splitContainer3.Panel2.Controls.Add(this.label5);
-         this.splitContainer3.Panel2.Controls.Add(this.label4);
-         this.splitContainer3.Panel2.Controls.Add(this.DelayCreation);
-         this.splitContainer3.Panel2.Controls.Add(this.progressBar1);
-         this.splitContainer3.Size = new System.Drawing.Size(247, 448);
-         this.splitContainer3.SplitterDistance = 318;
-         this.splitContainer3.TabIndex = 7;
+         this.serviceLogViewToolStripMenuItem.Name = "serviceLogViewToolStripMenuItem";
+         this.serviceLogViewToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
+         this.serviceLogViewToolStripMenuItem.Text = "&Service Log View...";
+         this.serviceLogViewToolStripMenuItem.Click += new System.EventHandler(this.serviceLogViewToolStripMenuItem_Click);
          // 
          // MainForm
          // 
@@ -420,17 +449,17 @@
          this.splitContainer2.Panel2.ResumeLayout(false);
          ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).EndInit();
          this.splitContainer2.ResumeLayout(false);
+         this.splitContainer3.Panel1.ResumeLayout(false);
+         this.splitContainer3.Panel2.ResumeLayout(false);
+         this.splitContainer3.Panel2.PerformLayout();
+         ((System.ComponentModel.ISupportInitialize)(this.splitContainer3)).EndInit();
+         this.splitContainer3.ResumeLayout(false);
          this.groupBox1.ResumeLayout(false);
          this.groupBox1.PerformLayout();
          ((System.ComponentModel.ISupportInitialize)(this.DelayCreation)).EndInit();
          this.menuStrip1.ResumeLayout(false);
          this.menuStrip1.PerformLayout();
          this.refreshExpected.ResumeLayout(false);
-         this.splitContainer3.Panel1.ResumeLayout(false);
-         this.splitContainer3.Panel2.ResumeLayout(false);
-         this.splitContainer3.Panel2.PerformLayout();
-         ((System.ComponentModel.ISupportInitialize)(this.splitContainer3)).EndInit();
-         this.splitContainer3.ResumeLayout(false);
          this.ResumeLayout(false);
 
       }
@@ -462,5 +491,8 @@
       private System.Windows.Forms.ContextMenuStrip refreshExpected;
       private System.Windows.Forms.ToolStripMenuItem refreshExpectedToolStripMenuItem;
       private System.Windows.Forms.SplitContainer splitContainer3;
+      private System.Windows.Forms.ToolStripMenuItem globalConfigSettingsToolStripMenuItem;
+      private System.Windows.Forms.ToolStripMenuItem serviceLogViewToolStripMenuItem;
+      private System.Windows.Forms.ToolStripMenuItem userLogViewToolStripMenuItem;
    }
 }
