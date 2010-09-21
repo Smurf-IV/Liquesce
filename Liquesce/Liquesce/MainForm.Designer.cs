@@ -45,19 +45,20 @@
          this.DelayCreation = new System.Windows.Forms.NumericUpDown();
          this.progressBar1 = new System.Windows.Forms.ProgressBar();
          this.label2 = new System.Windows.Forms.Label();
-         this.menuStrip1 = new System.Windows.Forms.MenuStrip();
-         this.commitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-         this.advancedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-         this.globalConfigSettingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.expectedTreeView = new System.Windows.Forms.TreeView();
          this.refreshExpected = new System.Windows.Forms.ContextMenuStrip(this.components);
          this.refreshExpectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.label3 = new System.Windows.Forms.Label();
+         this.menuStrip1 = new System.Windows.Forms.MenuStrip();
+         this.commitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+         this.logsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+         this.serviceLogViewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+         this.userLogViewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+         this.advancedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+         this.globalConfigSettingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
          this.FillExpectedLayoutWorker = new System.ComponentModel.BackgroundWorker();
          this.serviceController1 = new System.ServiceProcess.ServiceController();
-         this.userLogViewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-         this.serviceLogViewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
          this.splitContainer1.Panel1.SuspendLayout();
          this.splitContainer1.Panel2.SuspendLayout();
@@ -72,14 +73,14 @@
          this.splitContainer3.SuspendLayout();
          this.groupBox1.SuspendLayout();
          ((System.ComponentModel.ISupportInitialize)(this.DelayCreation)).BeginInit();
-         this.menuStrip1.SuspendLayout();
          this.refreshExpected.SuspendLayout();
+         this.menuStrip1.SuspendLayout();
          this.SuspendLayout();
          // 
          // splitContainer1
          // 
          this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
-         this.splitContainer1.Location = new System.Drawing.Point(0, 0);
+         this.splitContainer1.Location = new System.Drawing.Point(0, 24);
          this.splitContainer1.Name = "splitContainer1";
          // 
          // splitContainer1.Panel1
@@ -90,7 +91,7 @@
          // splitContainer1.Panel2
          // 
          this.splitContainer1.Panel2.Controls.Add(this.splitContainer2);
-         this.splitContainer1.Size = new System.Drawing.Size(770, 489);
+         this.splitContainer1.Size = new System.Drawing.Size(770, 465);
          this.splitContainer1.SplitterDistance = 256;
          this.splitContainer1.SplitterWidth = 5;
          this.splitContainer1.TabIndex = 0;
@@ -104,7 +105,7 @@
          this.driveAndDirTreeView.Location = new System.Drawing.Point(0, 17);
          this.driveAndDirTreeView.Name = "driveAndDirTreeView";
          this.driveAndDirTreeView.SelectedImageIndex = 0;
-         this.driveAndDirTreeView.Size = new System.Drawing.Size(256, 472);
+         this.driveAndDirTreeView.Size = new System.Drawing.Size(256, 448);
          this.driveAndDirTreeView.TabIndex = 0;
          this.toolTip1.SetToolTip(this.driveAndDirTreeView, "Drag from here and drop in the middle");
          this.driveAndDirTreeView.BeforeExpand += new System.Windows.Forms.TreeViewCancelEventHandler(this.driveAndDirTreeView_BeforeExpand);
@@ -136,13 +137,12 @@
          // 
          this.splitContainer2.Panel1.Controls.Add(this.splitContainer3);
          this.splitContainer2.Panel1.Controls.Add(this.label2);
-         this.splitContainer2.Panel1.Controls.Add(this.menuStrip1);
          // 
          // splitContainer2.Panel2
          // 
          this.splitContainer2.Panel2.Controls.Add(this.expectedTreeView);
          this.splitContainer2.Panel2.Controls.Add(this.label3);
-         this.splitContainer2.Size = new System.Drawing.Size(509, 489);
+         this.splitContainer2.Size = new System.Drawing.Size(509, 465);
          this.splitContainer2.SplitterDistance = 247;
          this.splitContainer2.SplitterWidth = 5;
          this.splitContainer2.TabIndex = 0;
@@ -318,47 +318,6 @@
          this.label2.TabIndex = 2;
          this.label2.Text = "Merge points:-";
          // 
-         // menuStrip1
-         // 
-         this.menuStrip1.Dock = System.Windows.Forms.DockStyle.Bottom;
-         this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.commitToolStripMenuItem,
-            this.advancedToolStripMenuItem});
-         this.menuStrip1.Location = new System.Drawing.Point(0, 465);
-         this.menuStrip1.Name = "menuStrip1";
-         this.menuStrip1.Size = new System.Drawing.Size(247, 24);
-         this.menuStrip1.TabIndex = 5;
-         this.menuStrip1.Text = "menuStrip1";
-         // 
-         // commitToolStripMenuItem
-         // 
-         this.commitToolStripMenuItem.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-         this.commitToolStripMenuItem.Name = "commitToolStripMenuItem";
-         this.commitToolStripMenuItem.Size = new System.Drawing.Size(60, 20);
-         this.commitToolStripMenuItem.Text = "&Commit";
-         this.commitToolStripMenuItem.ToolTipText = "Send the information above to the service";
-         this.commitToolStripMenuItem.Click += new System.EventHandler(this.commitToolStripMenuItem_Click);
-         // 
-         // advancedToolStripMenuItem
-         // 
-         this.advancedToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.globalConfigSettingsToolStripMenuItem,
-            this.serviceLogViewToolStripMenuItem,
-            this.userLogViewToolStripMenuItem});
-         this.advancedToolStripMenuItem.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-         this.advancedToolStripMenuItem.Name = "advancedToolStripMenuItem";
-         this.advancedToolStripMenuItem.Size = new System.Drawing.Size(85, 20);
-         this.advancedToolStripMenuItem.Text = "&Advanced...";
-         this.advancedToolStripMenuItem.ToolTipText = "Advanced options to aid in debug and testing";
-         // 
-         // globalConfigSettingsToolStripMenuItem
-         // 
-         this.globalConfigSettingsToolStripMenuItem.Name = "globalConfigSettingsToolStripMenuItem";
-         this.globalConfigSettingsToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
-         this.globalConfigSettingsToolStripMenuItem.Text = "&Global Config Settings...";
-         this.globalConfigSettingsToolStripMenuItem.ToolTipText = "Access to the settings that control access to the OS and the Dokan Driver";
-         this.globalConfigSettingsToolStripMenuItem.Click += new System.EventHandler(this.globalConfigSettingsToolStripMenuItem_Click);
-         // 
          // expectedTreeView
          // 
          this.expectedTreeView.ContextMenuStrip = this.refreshExpected;
@@ -370,7 +329,7 @@
          this.expectedTreeView.Name = "expectedTreeView";
          this.expectedTreeView.SelectedImageIndex = 0;
          this.expectedTreeView.ShowNodeToolTips = true;
-         this.expectedTreeView.Size = new System.Drawing.Size(257, 472);
+         this.expectedTreeView.Size = new System.Drawing.Size(257, 448);
          this.expectedTreeView.TabIndex = 0;
          this.toolTip1.SetToolTip(this.expectedTreeView, "Expand to see if any duplicates have been found");
          this.expectedTreeView.BeforeExpand += new System.Windows.Forms.TreeViewCancelEventHandler(this.expectedTreeView_BeforeExpand);
@@ -380,13 +339,13 @@
          this.refreshExpected.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.refreshExpectedToolStripMenuItem});
          this.refreshExpected.Name = "refreshExpected";
-         this.refreshExpected.Size = new System.Drawing.Size(191, 26);
+         this.refreshExpected.Size = new System.Drawing.Size(183, 26);
          // 
          // refreshExpectedToolStripMenuItem
          // 
          this.refreshExpectedToolStripMenuItem.Name = "refreshExpectedToolStripMenuItem";
          this.refreshExpectedToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F5;
-         this.refreshExpectedToolStripMenuItem.Size = new System.Drawing.Size(190, 22);
+         this.refreshExpectedToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
          this.refreshExpectedToolStripMenuItem.Text = "&Refresh Expected";
          this.refreshExpectedToolStripMenuItem.Click += new System.EventHandler(this.refreshExpectedToolStripMenuItem_Click);
          // 
@@ -400,6 +359,66 @@
          this.label3.TabIndex = 2;
          this.label3.Text = "Expected layout :-";
          // 
+         // menuStrip1
+         // 
+         this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.commitToolStripMenuItem,
+            this.logsToolStripMenuItem,
+            this.advancedToolStripMenuItem});
+         this.menuStrip1.Location = new System.Drawing.Point(0, 0);
+         this.menuStrip1.Name = "menuStrip1";
+         this.menuStrip1.Size = new System.Drawing.Size(770, 24);
+         this.menuStrip1.TabIndex = 5;
+         this.menuStrip1.Text = "menuStrip1";
+         // 
+         // commitToolStripMenuItem
+         // 
+         this.commitToolStripMenuItem.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+         this.commitToolStripMenuItem.Name = "commitToolStripMenuItem";
+         this.commitToolStripMenuItem.Size = new System.Drawing.Size(60, 20);
+         this.commitToolStripMenuItem.Text = "&Commit";
+         this.commitToolStripMenuItem.ToolTipText = "Send the information above to the service";
+         this.commitToolStripMenuItem.Click += new System.EventHandler(this.commitToolStripMenuItem_Click);
+         // 
+         // logsToolStripMenuItem
+         // 
+         this.logsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.serviceLogViewToolStripMenuItem,
+            this.userLogViewToolStripMenuItem});
+         this.logsToolStripMenuItem.Name = "logsToolStripMenuItem";
+         this.logsToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
+         this.logsToolStripMenuItem.Text = "&Logs";
+         // 
+         // serviceLogViewToolStripMenuItem
+         // 
+         this.serviceLogViewToolStripMenuItem.Name = "serviceLogViewToolStripMenuItem";
+         this.serviceLogViewToolStripMenuItem.Size = new System.Drawing.Size(171, 22);
+         this.serviceLogViewToolStripMenuItem.Text = "&Service Log View...";
+         // 
+         // userLogViewToolStripMenuItem
+         // 
+         this.userLogViewToolStripMenuItem.Name = "userLogViewToolStripMenuItem";
+         this.userLogViewToolStripMenuItem.Size = new System.Drawing.Size(171, 22);
+         this.userLogViewToolStripMenuItem.Text = "&User Log View...";
+         // 
+         // advancedToolStripMenuItem
+         // 
+         this.advancedToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.globalConfigSettingsToolStripMenuItem});
+         this.advancedToolStripMenuItem.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+         this.advancedToolStripMenuItem.Name = "advancedToolStripMenuItem";
+         this.advancedToolStripMenuItem.Size = new System.Drawing.Size(73, 20);
+         this.advancedToolStripMenuItem.Text = "&Advanced";
+         this.advancedToolStripMenuItem.ToolTipText = "Advanced options to aid in debug and testing";
+         // 
+         // globalConfigSettingsToolStripMenuItem
+         // 
+         this.globalConfigSettingsToolStripMenuItem.Name = "globalConfigSettingsToolStripMenuItem";
+         this.globalConfigSettingsToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
+         this.globalConfigSettingsToolStripMenuItem.Text = "&Global Config Settings...";
+         this.globalConfigSettingsToolStripMenuItem.ToolTipText = "Access to the settings that control access to the OS and the Dokan Driver";
+         this.globalConfigSettingsToolStripMenuItem.Click += new System.EventHandler(this.globalConfigSettingsToolStripMenuItem_Click);
+         // 
          // FillExpectedLayoutWorker
          // 
          this.FillExpectedLayoutWorker.WorkerReportsProgress = true;
@@ -412,26 +431,13 @@
          this.serviceController1.MachineName = "127.0.0.1";
          this.serviceController1.ServiceName = "LiquesceSvc";
          // 
-         // userLogViewToolStripMenuItem
-         // 
-         this.userLogViewToolStripMenuItem.Name = "userLogViewToolStripMenuItem";
-         this.userLogViewToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
-         this.userLogViewToolStripMenuItem.Text = "&User Log View...";
-         this.userLogViewToolStripMenuItem.Click += new System.EventHandler(this.userLogViewToolStripMenuItem_Click);
-         // 
-         // serviceLogViewToolStripMenuItem
-         // 
-         this.serviceLogViewToolStripMenuItem.Name = "serviceLogViewToolStripMenuItem";
-         this.serviceLogViewToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
-         this.serviceLogViewToolStripMenuItem.Text = "&Service Log View...";
-         this.serviceLogViewToolStripMenuItem.Click += new System.EventHandler(this.serviceLogViewToolStripMenuItem_Click);
-         // 
          // MainForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
          this.ClientSize = new System.Drawing.Size(770, 489);
          this.Controls.Add(this.splitContainer1);
+         this.Controls.Add(this.menuStrip1);
          this.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
          this.MainMenuStrip = this.menuStrip1;
@@ -445,7 +451,6 @@
          ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
          this.splitContainer1.ResumeLayout(false);
          this.splitContainer2.Panel1.ResumeLayout(false);
-         this.splitContainer2.Panel1.PerformLayout();
          this.splitContainer2.Panel2.ResumeLayout(false);
          ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).EndInit();
          this.splitContainer2.ResumeLayout(false);
@@ -457,10 +462,11 @@
          this.groupBox1.ResumeLayout(false);
          this.groupBox1.PerformLayout();
          ((System.ComponentModel.ISupportInitialize)(this.DelayCreation)).EndInit();
+         this.refreshExpected.ResumeLayout(false);
          this.menuStrip1.ResumeLayout(false);
          this.menuStrip1.PerformLayout();
-         this.refreshExpected.ResumeLayout(false);
          this.ResumeLayout(false);
+         this.PerformLayout();
 
       }
 
@@ -492,6 +498,7 @@
       private System.Windows.Forms.ToolStripMenuItem refreshExpectedToolStripMenuItem;
       private System.Windows.Forms.SplitContainer splitContainer3;
       private System.Windows.Forms.ToolStripMenuItem globalConfigSettingsToolStripMenuItem;
+      private System.Windows.Forms.ToolStripMenuItem logsToolStripMenuItem;
       private System.Windows.Forms.ToolStripMenuItem serviceLogViewToolStripMenuItem;
       private System.Windows.Forms.ToolStripMenuItem userLogViewToolStripMenuItem;
    }
