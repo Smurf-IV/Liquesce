@@ -25,7 +25,7 @@ namespace Liquesce
          // But this makes a mess of the layouts when they are autoscaled !!!
          //if (SystemFonts.MessageBoxFont.Size >= 9)
          //   Font = SystemFonts.MessageBoxFont;
- 
+
          InitializeComponent();
          Icon icon = ExtractIcon.GetIconForFilename(Environment.GetFolderPath(Environment.SpecialFolder.MyComputer), true);
          imageListUnits.Images.Add("MyComputer", icon.ToBitmap());
@@ -35,7 +35,16 @@ namespace Liquesce
       {
          StartTree();
          PopulatePoolSettings();
-         if (serviceController1.Status != ServiceControllerStatus.Running)
+         ServiceControllerStatus serviceStatus = ServiceControllerStatus.Stopped;
+         try
+         {
+            serviceStatus = serviceController1.Status;
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException("Service is probably not installed", ex);
+         }
+         if (serviceStatus != ServiceControllerStatus.Running)
          {
             commitToolStripMenuItem.Text = "Service is not running";
             commitToolStripMenuItem.Enabled = false;
@@ -150,9 +159,9 @@ namespace Liquesce
 
       private void FillInDirectoryType(TreeNode parentNode, DriveInfo di)
       {
-         if ( di != null)
+         if (di != null)
          {
-            if( ( (di.DriveType == DriveType.Fixed)
+            if (((di.DriveType == DriveType.Fixed)
                   || (di.DriveType == DriveType.Network)
                   )
                && (di.DriveFormat == "DOKAN")
@@ -171,7 +180,7 @@ namespace Liquesce
             {
                // The above throws a wobble e.g. if the CD_Rom does not have a disk in it
                label = di.DriveType.ToString();
-            } 
+            }
             label += " (" + di.Name + ")";
             TreeNode thisNode = new TreeNode
                                    {
@@ -361,10 +370,10 @@ namespace Liquesce
                                   SourceLocations = new List<string>(mergeList.Nodes.Count)
                                };
          // if (mergeList.Nodes != null) // Apperently always true
-            foreach (TreeNode node in mergeList.Nodes)
-            {
-               configDetails.SourceLocations.Add(node.Text);
-            }
+         foreach (TreeNode node in mergeList.Nodes)
+         {
+            configDetails.SourceLocations.Add(node.Text);
+         }
          FillExpectedLayoutWorker.RunWorkerAsync(configDetails);
       }
 
@@ -589,15 +598,15 @@ namespace Liquesce
             if (DialogResult.Yes == MessageBox.Show(this, "Performing this action will \"Interupt All Shares\" on this machine.\nDo you wish to continue ?", "Caution..", MessageBoxButtons.YesNo, MessageBoxIcon.Question))
             {
                SetProgressBarStyle(ProgressBarStyle.Marquee);
-               cd.DelayStartMilliSec = (uint) DelayCreation.Value;
+               cd.DelayStartMilliSec = (uint)DelayCreation.Value;
                cd.DriveLetter = MountPoint.Text;
                cd.VolumeLabel = VolumeLabel.Text;
                cd.SourceLocations = new List<string>(mergeList.Nodes.Count);
                // if (mergeList.Nodes != null) // Apperently always true
-                  foreach (TreeNode node in mergeList.Nodes)
-                  {
-                     cd.SourceLocations.Add(node.Text);
-                  }
+               foreach (TreeNode node in mergeList.Nodes)
+               {
+                  cd.SourceLocations.Add(node.Text);
+               }
 
                ChannelFactory<ILiquesce> factory = new ChannelFactory<ILiquesce>("LiquesceFaçade");
                ILiquesce remoteIF = factory.CreateChannel();
@@ -637,7 +646,7 @@ namespace Liquesce
 
       private void globalConfigSettingsToolStripMenuItem_Click(object sender, EventArgs e)
       {
-         AdvancedSettings advancedSettings = new AdvancedSettings { AdvancedConfigDetails = cd };
+         GridAdvancedSettings advancedSettings = new GridAdvancedSettings { AdvancedConfigDetails = cd };
          if (advancedSettings.ShowDialog(this) == DialogResult.OK)
             cd = advancedSettings.AdvancedConfigDetails;
       }
@@ -652,6 +661,7 @@ namespace Liquesce
          new LogDisplay(@"/LiquesceSvc/Logs").ShowDialog(this);
 
       }
+
 
    }
 }

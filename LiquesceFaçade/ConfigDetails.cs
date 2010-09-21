@@ -39,5 +39,6 @@ namespace LiquesceFaçade
       public List<string> SourceLocations;
       // TODO: Extend to include encypted ACL's and things
       public List<ShareDetail> ShareDetails;
+      public string ServiceLogLevel = "Debug";
    }
 }
