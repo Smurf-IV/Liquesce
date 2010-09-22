@@ -142,6 +142,7 @@
          // 
          this.splitContainer2.Panel2.Controls.Add(this.expectedTreeView);
          this.splitContainer2.Panel2.Controls.Add(this.label3);
+         this.splitContainer2.Panel2.Controls.Add(this.progressBar1);
          this.splitContainer2.Size = new System.Drawing.Size(509, 465);
          this.splitContainer2.SplitterDistance = 247;
          this.splitContainer2.SplitterWidth = 5;
@@ -165,9 +166,8 @@
          this.splitContainer3.Panel2.Controls.Add(this.label5);
          this.splitContainer3.Panel2.Controls.Add(this.label4);
          this.splitContainer3.Panel2.Controls.Add(this.DelayCreation);
-         this.splitContainer3.Panel2.Controls.Add(this.progressBar1);
          this.splitContainer3.Size = new System.Drawing.Size(247, 448);
-         this.splitContainer3.SplitterDistance = 318;
+         this.splitContainer3.SplitterDistance = 344;
          this.splitContainer3.TabIndex = 7;
          // 
          // mergeList
@@ -181,7 +181,7 @@
          this.mergeList.Location = new System.Drawing.Point(0, 0);
          this.mergeList.Name = "mergeList";
          this.mergeList.SelectedImageIndex = 0;
-         this.mergeList.Size = new System.Drawing.Size(247, 318);
+         this.mergeList.Size = new System.Drawing.Size(247, 344);
          this.mergeList.TabIndex = 3;
          this.toolTip1.SetToolTip(this.mergeList, "Drop the Entries here");
          this.mergeList.DragDrop += new System.Windows.Forms.DragEventHandler(this.mergeList_DragDrop);
@@ -192,7 +192,7 @@
          // 
          this.groupBox1.Controls.Add(this.VolumeLabel);
          this.groupBox1.Dock = System.Windows.Forms.DockStyle.Bottom;
-         this.groupBox1.Location = new System.Drawing.Point(0, 59);
+         this.groupBox1.Location = new System.Drawing.Point(0, 56);
          this.groupBox1.Margin = new System.Windows.Forms.Padding(0);
          this.groupBox1.Name = "groupBox1";
          this.groupBox1.Size = new System.Drawing.Size(247, 44);
@@ -302,9 +302,9 @@
          // 
          this.progressBar1.Dock = System.Windows.Forms.DockStyle.Bottom;
          this.progressBar1.ForeColor = System.Drawing.Color.LawnGreen;
-         this.progressBar1.Location = new System.Drawing.Point(0, 103);
+         this.progressBar1.Location = new System.Drawing.Point(0, 442);
          this.progressBar1.Name = "progressBar1";
-         this.progressBar1.Size = new System.Drawing.Size(247, 23);
+         this.progressBar1.Size = new System.Drawing.Size(257, 23);
          this.progressBar1.Step = 5;
          this.progressBar1.TabIndex = 4;
          // 
@@ -329,7 +329,7 @@
          this.expectedTreeView.Name = "expectedTreeView";
          this.expectedTreeView.SelectedImageIndex = 0;
          this.expectedTreeView.ShowNodeToolTips = true;
-         this.expectedTreeView.Size = new System.Drawing.Size(257, 448);
+         this.expectedTreeView.Size = new System.Drawing.Size(257, 425);
          this.expectedTreeView.TabIndex = 0;
          this.toolTip1.SetToolTip(this.expectedTreeView, "Expand to see if any duplicates have been found");
          this.expectedTreeView.BeforeExpand += new System.Windows.Forms.TreeViewCancelEventHandler(this.expectedTreeView_BeforeExpand);
@@ -367,12 +367,14 @@
             this.advancedToolStripMenuItem});
          this.menuStrip1.Location = new System.Drawing.Point(0, 0);
          this.menuStrip1.Name = "menuStrip1";
+         this.menuStrip1.ShowItemToolTips = true;
          this.menuStrip1.Size = new System.Drawing.Size(770, 24);
          this.menuStrip1.TabIndex = 5;
          this.menuStrip1.Text = "menuStrip1";
          // 
          // commitToolStripMenuItem
          // 
+         this.commitToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
          this.commitToolStripMenuItem.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.commitToolStripMenuItem.Name = "commitToolStripMenuItem";
          this.commitToolStripMenuItem.Size = new System.Drawing.Size(123, 20);
@@ -382,6 +384,7 @@
          // 
          // logsToolStripMenuItem
          // 
+         this.logsToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
          this.logsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.serviceLogViewToolStripMenuItem,
             this.userLogViewToolStripMenuItem});
@@ -391,28 +394,32 @@
          // 
          // serviceLogViewToolStripMenuItem
          // 
+         this.serviceLogViewToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
          this.serviceLogViewToolStripMenuItem.Name = "serviceLogViewToolStripMenuItem";
          this.serviceLogViewToolStripMenuItem.Size = new System.Drawing.Size(177, 22);
          this.serviceLogViewToolStripMenuItem.Text = "&Service Log View...";
          // 
          // userLogViewToolStripMenuItem
          // 
+         this.userLogViewToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
          this.userLogViewToolStripMenuItem.Name = "userLogViewToolStripMenuItem";
          this.userLogViewToolStripMenuItem.Size = new System.Drawing.Size(177, 22);
          this.userLogViewToolStripMenuItem.Text = "&User Log View...";
          // 
          // advancedToolStripMenuItem
          // 
+         this.advancedToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
          this.advancedToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.globalConfigSettingsToolStripMenuItem});
          this.advancedToolStripMenuItem.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.advancedToolStripMenuItem.Name = "advancedToolStripMenuItem";
          this.advancedToolStripMenuItem.Size = new System.Drawing.Size(73, 20);
          this.advancedToolStripMenuItem.Text = "&Advanced";
-         this.advancedToolStripMenuItem.ToolTipText = "Advanced options to aid in debug and testing";
+         this.advancedToolStripMenuItem.ToolTipText = "Advanced options to aid in fault finding and optimisation";
          // 
          // globalConfigSettingsToolStripMenuItem
          // 
+         this.globalConfigSettingsToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
          this.globalConfigSettingsToolStripMenuItem.Name = "globalConfigSettingsToolStripMenuItem";
          this.globalConfigSettingsToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
          this.globalConfigSettingsToolStripMenuItem.Text = "&Global Config Settings...";
