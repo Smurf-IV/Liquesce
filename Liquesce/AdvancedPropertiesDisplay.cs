@@ -1,16 +1,9 @@
-﻿using System;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using LiquesceFaçade;
+using NLog;
 
 namespace Liquesce
 {
-   //AdvancedConfigDetails.LockTimeout = (int) LockTimeoutmSec.Value;
-   //AdvancedConfigDetails.DebugMode = DokanDebugMode.Checked;
-   //AdvancedConfigDetails.HoldOffBufferBytes = (ulong) (HoldOffMBytes.Value * (1024 * 1024));
-   //AdvancedConfigDetails.BufferReadSize = (uint) (BufferReadSizeKBytes.Value * 1024);
-   //AdvancedConfigDetails.DelayStartMilliSec = (uint) DelayDokanStartmSec.Value;
-
    // ReSharper disable MemberCanBePrivate.Global
    // Needs to be global to allow the propertgrid reflector to the accessors
    public class AdvancedPropertiesDisplay
@@ -122,14 +115,12 @@ namespace Liquesce
 
    public class ServiceLogLevelValues : StringConverter
    {
-      public override bool GetStandardValuesSupported(ITypeDescriptorContext
-      context)
+      public override bool GetStandardValuesSupported(ITypeDescriptorContext context)
       {
          //true means show a combobox
          return true;
       }
-      public override bool GetStandardValuesExclusive(ITypeDescriptorContext
-      context)
+      public override bool GetStandardValuesExclusive(ITypeDescriptorContext context)
       {
          //true will limit to list. false will show the list, but allow free-form entry
          return true;
@@ -137,7 +128,7 @@ namespace Liquesce
 
       public override StandardValuesCollection GetStandardValues( ITypeDescriptorContext context)
       {
-         return new StandardValuesCollection( new string[] { "Info", "Debug", "Trace" });
+         return new StandardValuesCollection( new string[] { LogLevel.Warn.ToString(), LogLevel.Debug.ToString(), LogLevel.Trace.ToString() });
       }
    }
 

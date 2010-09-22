@@ -1094,20 +1094,42 @@ namespace LiquesceSvc
             // A BIGGER BUT - "http://liquesce.codeplex.com/workitem/7106"
 
             ServiceController sc = new ServiceController("Server"); // This name is also used in Win 7
-            //foreach (ServiceController scDepends in sc.DependentServices)
-            //{
-            //   Log.Info("Attempting to stop " + scDepends.ServiceName);
-            //   scDepends.Stop();
-            //   scDepends.WaitForStatus(ServiceControllerStatus.Stopped);
-            //}
-            Log.Info("Attempting to stop " + sc.ServiceName);
-            sc.Stop();
-            sc.WaitForStatus(ServiceControllerStatus.Stopped);
-            Thread.Sleep(250); //Have to keep these tight, as the Computer Browser service can be triggered from the OS as well.
-            Log.Info("Attempting to start " + sc.ServiceName);
-            sc.Start();
-            sc.WaitForStatus(ServiceControllerStatus.Running);
-            Thread.Sleep(250);
+            TimeSpan waitPeriod = new TimeSpan(0,0,0,2);
+            foreach (ServiceController scDepends in sc.DependentServices)
+            {
+               try
+               {
+                  Log.Info("Attempting to stop " + scDepends.ServiceName);
+                  scDepends.Stop();
+                  scDepends.WaitForStatus(ServiceControllerStatus.Stopped, waitPeriod);
+               }
+               catch (Exception ex)
+               {
+                  Log.WarnException("Unable to stop Service", ex);
+               }            
+            }
+            try
+            {
+               Log.Info("Attempting to stop " + sc.ServiceName);
+               sc.Stop();
+               sc.WaitForStatus(ServiceControllerStatus.Stopped, waitPeriod);
+               Thread.Sleep(250); //Have to keep these tight, as the Computer Browser service can be triggered from the OS as well.
+            }
+            catch (Exception ex)
+            {
+               Log.WarnException("Unable to stop Service", ex);
+            }
+            try
+            {
+               Log.Info("Attempting to start " + sc.ServiceName);
+               sc.Start();
+               sc.WaitForStatus(ServiceControllerStatus.Running, waitPeriod);
+               Thread.Sleep(250);
+            }
+            catch (Exception ex)
+            {
+               Log.ErrorException("Unable to start Service", ex);
+            }
             foreach (ServiceController scDepends in sc.DependentServices)
             {
                if ((scDepends.Status != ServiceControllerStatus.Running)
@@ -1118,7 +1140,7 @@ namespace LiquesceSvc
                   {
                      Log.Info("Attempting to start " + scDepends.ServiceName);
                      scDepends.Start();
-                     scDepends.WaitForStatus(ServiceControllerStatus.Running);
+                     scDepends.WaitForStatus(ServiceControllerStatus.Running, waitPeriod);
                   }
                   catch( Exception ex)
                   {

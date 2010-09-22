@@ -5,7 +5,7 @@
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
      >
    <?define UpgradeCode = "f6f94f17-a05f-4824-8dd9-9f5e8267d783" ?>
-   <?define Version = "10.09.19" ?>
+   <?define Version = "10.09.22" ?>
    <?define ProductName = "Liquesce Windows HDD Pooling Suite"?>
 
    <Product Version="$(var.Version)" Id="*" UpgradeCode="$(var.UpgradeCode)"

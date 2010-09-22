@@ -610,9 +610,10 @@ namespace Liquesce
 
                ChannelFactory<ILiquesce> factory = new ChannelFactory<ILiquesce>("LiquesceFaçade");
                ILiquesce remoteIF = factory.CreateChannel();
-               remoteIF.ConfigDetails = cd;
                Log.Info("Didn't go bang so stop");
                remoteIF.Stop();
+               Log.Info("Send the new details");
+               remoteIF.ConfigDetails = cd;
                Log.Info("Now start");
                remoteIF.Start();
             }

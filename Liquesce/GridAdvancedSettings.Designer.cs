@@ -42,7 +42,7 @@
          this.button1.Name = "button1";
          this.button1.Size = new System.Drawing.Size(75, 23);
          this.button1.TabIndex = 15;
-         this.button1.Text = "Commit";
+         this.button1.Text = "Save Changes";
          this.button1.UseVisualStyleBackColor = true;
          this.button1.Click += new System.EventHandler(this.button1_Click);
          // 
@@ -69,7 +69,7 @@
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 14F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-         this.ClientSize = new System.Drawing.Size(357, 334);
+         this.ClientSize = new System.Drawing.Size(365, 334);
          this.Controls.Add(this.propertyGrid1);
          this.Controls.Add(this.button1);
          this.Controls.Add(this.label3);
