@@ -33,6 +33,8 @@ namespace Liquesce
 
       private void MainForm_Shown(object sender, EventArgs e)
       {
+         Enabled = false;
+         UseWaitCursor = true;
          StartTree();
          PopulatePoolSettings();
          ServiceControllerStatus serviceStatus = ServiceControllerStatus.Stopped;
@@ -46,7 +48,7 @@ namespace Liquesce
          }
          if (serviceStatus != ServiceControllerStatus.Running)
          {
-            commitToolStripMenuItem.Text = "Service is not running";
+            commitToolStripMenuItem.ToolTipText = "Service is not running";
             commitToolStripMenuItem.Enabled = false;
          }
          else
@@ -60,11 +62,15 @@ namespace Liquesce
             catch (Exception ex)
             {
                Log.ErrorException("Unable to attach to the service, even tho it is running", ex);
+               UseWaitCursor = false;
+               Enabled = true;
                MessageBox.Show(this, ex.Message, "Has the firewall blocked the communications ?", MessageBoxButtons.OK,
                                MessageBoxIcon.Stop);
             }
          }
          InitialiseWith();
+         UseWaitCursor = false;
+         Enabled = true;
       }
 
       private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
