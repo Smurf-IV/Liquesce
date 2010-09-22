@@ -375,8 +375,8 @@
          // 
          this.commitToolStripMenuItem.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.commitToolStripMenuItem.Name = "commitToolStripMenuItem";
-         this.commitToolStripMenuItem.Size = new System.Drawing.Size(60, 20);
-         this.commitToolStripMenuItem.Text = "&Commit";
+         this.commitToolStripMenuItem.Size = new System.Drawing.Size(123, 20);
+         this.commitToolStripMenuItem.Text = "&Send Configuration";
          this.commitToolStripMenuItem.ToolTipText = "Send the information above to the service";
          this.commitToolStripMenuItem.Click += new System.EventHandler(this.commitToolStripMenuItem_Click);
          // 
@@ -386,19 +386,19 @@
             this.serviceLogViewToolStripMenuItem,
             this.userLogViewToolStripMenuItem});
          this.logsToolStripMenuItem.Name = "logsToolStripMenuItem";
-         this.logsToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
+         this.logsToolStripMenuItem.Size = new System.Drawing.Size(41, 20);
          this.logsToolStripMenuItem.Text = "&Logs";
          // 
          // serviceLogViewToolStripMenuItem
          // 
          this.serviceLogViewToolStripMenuItem.Name = "serviceLogViewToolStripMenuItem";
-         this.serviceLogViewToolStripMenuItem.Size = new System.Drawing.Size(171, 22);
+         this.serviceLogViewToolStripMenuItem.Size = new System.Drawing.Size(177, 22);
          this.serviceLogViewToolStripMenuItem.Text = "&Service Log View...";
          // 
          // userLogViewToolStripMenuItem
          // 
          this.userLogViewToolStripMenuItem.Name = "userLogViewToolStripMenuItem";
-         this.userLogViewToolStripMenuItem.Size = new System.Drawing.Size(171, 22);
+         this.userLogViewToolStripMenuItem.Size = new System.Drawing.Size(177, 22);
          this.userLogViewToolStripMenuItem.Text = "&User Log View...";
          // 
          // advancedToolStripMenuItem
@@ -414,7 +414,7 @@
          // globalConfigSettingsToolStripMenuItem
          // 
          this.globalConfigSettingsToolStripMenuItem.Name = "globalConfigSettingsToolStripMenuItem";
-         this.globalConfigSettingsToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
+         this.globalConfigSettingsToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
          this.globalConfigSettingsToolStripMenuItem.Text = "&Global Config Settings...";
          this.globalConfigSettingsToolStripMenuItem.ToolTipText = "Access to the settings that control access to the OS and the Dokan Driver";
          this.globalConfigSettingsToolStripMenuItem.Click += new System.EventHandler(this.globalConfigSettingsToolStripMenuItem_Click);

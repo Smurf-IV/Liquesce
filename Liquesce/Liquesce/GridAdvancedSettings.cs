@@ -50,7 +50,7 @@ namespace Liquesce
 
             return true;
          }
-         catch (Exception error)
+         catch
          {
             return false;
          }

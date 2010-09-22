@@ -8,6 +8,7 @@ using System.Xml.Serialization;
 using DokanNet;
 using LiquesceFaçade;
 using NLog;
+using NLog.Config;
 
 namespace LiquesceSvc
 {
@@ -102,11 +103,19 @@ namespace LiquesceSvc
       {
          try
          {
+            TimeSpan delayStart = DateTime.UtcNow - startTime;
+            int repeatWait = 0;
+            while (IsRunning
+               && (repeatWait++ < 100)
+               )
+            {
+               Log.Warn("Last Dokan is still running");
+               Thread.Sleep(250);
+            }
             if (!IsRunning)
             {
                if (currentConfigDetails == null)
                   ReadConfigDetails();
-               TimeSpan delayStart = DateTime.UtcNow - startTime;
                FireStateChange(LiquesceSvcState.InError, "Starting up");
                if (currentConfigDetails == null)
                {
@@ -116,6 +125,8 @@ namespace LiquesceSvc
                   return;
                   // ReSharper restore HeuristicUnreachableCode
                }
+               SetNLogLevel(currentConfigDetails.ServiceLogLevel);
+
                FireStateChange(LiquesceSvcState.Running, "Dokan initialised");
                IsRunning = true;
 
@@ -128,8 +139,7 @@ namespace LiquesceSvc
                   Log.Info("Delay Start needs to be obeyed");
                   Thread.Sleep(delayStartMilliseconds);
                }
-               if (State != LiquesceSvcState.Running)
-                  return;  // We have been asked to exit via the stop
+
                DokanOptions options = new DokanOptions
                                          {
                                             DriveLetter = currentConfigDetails.DriveLetter[0],
@@ -147,6 +157,7 @@ namespace LiquesceSvc
 
                mountedDriveLetter = currentConfigDetails.DriveLetter[0];
                int retVal = Dokan.DokanMain(options, dokanOperations);
+               Log.Warn("Dokan.DokanMain has exited");
                IsRunning = false;
                switch (retVal)
                {
@@ -173,11 +184,62 @@ namespace LiquesceSvc
                      break;
                }
             }
+            else
+            {
+               FireStateChange(LiquesceSvcState.InError, "Seems like the last exit request into Dokan did not exit in time");
+            }
          }
          catch (Exception ex)
          {
             Log.ErrorException("Start has failed in an uncontrolled way: ", ex);
          }
+      }
+
+      private void SetNLogLevel(string serviceLogLevel)
+      {
+         LoggingConfiguration currentConfig = LogManager.Configuration;
+         //LogManager.DisableLogging();
+         foreach (LoggingRule rule in currentConfig.LoggingRules)
+         {
+            rule.EnableLoggingForLevel(LogLevel.Fatal);
+            rule.EnableLoggingForLevel(LogLevel.Error);
+            rule.EnableLoggingForLevel(LogLevel.Info);
+            // Turn on in order
+            switch (serviceLogLevel)
+            {
+               case "Trace":
+                  rule.EnableLoggingForLevel(LogLevel.Trace);
+                  goto case "Debug"; // Drop through
+               default:
+               case "Debug":
+                  rule.EnableLoggingForLevel(LogLevel.Debug);
+                  goto case "Warn"; // Drop through
+               case "Warn":
+                  rule.EnableLoggingForLevel(LogLevel.Warn);
+                  break;
+            }
+            // Turn off the rest
+            switch (serviceLogLevel)
+            {
+               case "Warn":
+                  rule.DisableLoggingForLevel(LogLevel.Debug);
+                  goto default; // Drop through
+               default:
+               //case "Debug":
+                  rule.DisableLoggingForLevel(LogLevel.Trace);
+                  break;
+               case "Trace":
+                  // Prevent turning off again !
+                  break;
+            }
+         }
+         //LogManager.EnableLogging();
+         //LogManager.Configuration = null;
+         LogManager.ReconfigExistingLoggers(); 
+         //LogManager.Configuration = currentConfig;
+         Log.Warn("Test @ [{0}]", serviceLogLevel);
+         Log.Debug("Test @ [{0}]", serviceLogLevel);
+         Log.Trace("Test @ [{0}]", serviceLogLevel);
       }
 
       private bool IsRunning { get; set; }
@@ -229,13 +291,10 @@ namespace LiquesceSvc
 
       public void Stop()
       {
-         if (IsRunning
-            && (State != LiquesceSvcState.Unknown)
-            )
+         if (IsRunning)
          {
             FireStateChange(LiquesceSvcState.Unknown, "Stop has been requested");
             int retVal = Dokan.DokanUnmount(mountedDriveLetter);
-            IsRunning = false;
             Log.Info("Stop returned[{0}]", retVal);
          }
       }
