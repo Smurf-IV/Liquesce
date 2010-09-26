@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.ServiceProcess;
 using System.Text;
@@ -20,6 +21,10 @@ namespace LiquesceSvc
       private readonly ConfigDetails configDetails;
       private readonly ReaderWriterLockSlim openFilesSync = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
       private readonly Dictionary<UInt64, FileStream> openFiles = new Dictionary<UInt64, FileStream>();
+
+      private readonly Dictionary<string, List<string>> foundDirectories = new Dictionary<string, List<string>>();
+      private readonly ReaderWriterLockSlim foundDirectoriesSync = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
+
       private UInt64 openFilesLastKey;
       private readonly string root;
       // This would normally be static, but then there should only ever be one of these classes present from the Dokan Lib callback.
@@ -28,7 +33,7 @@ namespace LiquesceSvc
 
       public LiquesceOps(ConfigDetails configDetails)
       {
-         root = Path.GetFullPath(configDetails.SourceLocations[0]).TrimEnd(Path.DirectorySeparatorChar);
+         root = configDetails.SourceLocations[0]; // Already been trimmed in ReadConfigDetails()
          this.configDetails = configDetails;
       }
 
@@ -79,6 +84,8 @@ namespace LiquesceSvc
                   if (!fileExists)
                   {
                      Log.Debug("filename [{0}] ERROR_FILE_NOT_FOUND", filename);
+                     // Probably someone has removed this on the actual drive
+                     RemoveFromLookup(filename);
                      return Dokan.ERROR_FILE_NOT_FOUND;
                   }
                   break;
@@ -152,11 +159,33 @@ namespace LiquesceSvc
          try
          {
             Log.Trace("OpenDirectory IN DokanProcessId[{0}]", info.ProcessId);
-            if (Directory.Exists(GetPath(filename)))
+
+            List<string> currentMatchingDirs = new List<string>(configDetails.SourceLocations.Count);
+            foreach (string newTarget in
+                           configDetails.SourceLocations.Select(sourceLocation => sourceLocation + filename))
+            {
+               Log.Trace("Try and find from [{0}]", newTarget);
+               if (Directory.Exists(newTarget))
+               {
+                  currentMatchingDirs.Add(newTarget);
+               }
+            }
+            if (currentMatchingDirs.Count > 0)
             {
                info.IsDirectory = true;
+               try
+               {
+                  foundDirectoriesSync.TryEnterWriteLock(configDetails.LockTimeout);
+                  foundDirectories[filename] = currentMatchingDirs;
+               }
+               finally
+               {
+                  foundDirectoriesSync.ExitWriteLock();
+               }
                return Dokan.DOKAN_SUCCESS;
             }
+            // Probably someone has removed this fromthe actual mounts
+            RemoveFromLookup(filename);
             return Dokan.ERROR_PATH_NOT_FOUND;
 
          }
@@ -165,6 +194,7 @@ namespace LiquesceSvc
             Log.Trace("OpenDirectory OUT");
          }
       }
+
 
       public int CreateDirectory(string filename, DokanFileInfo info)
       {
@@ -193,6 +223,10 @@ namespace LiquesceSvc
             Log.Trace("CreateDirectory OUT");
          }
       }
+      static bool IsNullOrDefault<T>(T value)
+      {
+         return object.Equals(value, default(T));
+      }
 
       /*
       Cleanup is invoked when the function CloseHandle in Windows API is executed. 
@@ -202,12 +236,7 @@ namespace LiquesceSvc
       before the CreateFile API is called. This may cause sharing violation error. 
       Note: when user uses memory mapped file, WriteFile or ReadFile function may be invoked after Cleanup in order to 
       complete the I/O operations. The file system application should also properly work in this case.
-       * * */
-      static bool IsNullOrDefault<T>(T value)
-      {
-         return object.Equals(value, default(T));
-      }
-
+      */
       /// <summary>
       /// When info->DeleteOnClose is true, you must delete the file in Cleanup.
       /// </summary>
@@ -222,29 +251,35 @@ namespace LiquesceSvc
             CloseAndRemove(info);
             if (info.DeleteOnClose)
             {
-               string path = GetPath(filename);
                if (info.IsDirectory)
                {
                   Log.Trace("DeleteOnClose Directory");
-                  if (Directory.Exists(path))
+                  try
                   {
-                     Directory.Delete(path, false);
+                     foundDirectoriesSync.TryEnterUpgradeableReadLock(configDetails.LockTimeout);
+                     List<string> targetDeletes = foundDirectories[filename];
+                     if (targetDeletes != null)
+                        for (int index = 0; index < targetDeletes.Count; index++)
+                        {
+                           // Use an index for speed (It all counts !)
+                           string fullPath = targetDeletes[index];
+                           Directory.Delete(fullPath, false);
+                        }
+                     foundDirectoriesSync.TryEnterWriteLock(configDetails.LockTimeout);
+                     foundDirectories.Remove(filename);
+                  }
+                  finally
+                  {
+                     foundDirectoriesSync.ExitUpgradeableReadLock();
                   }
                }
                else
                {
                   Log.Trace("DeleteOnClose File");
+                  string path = GetPath(filename);
                   File.Delete(path);
                }
-               try
-               {
-                  rootPathsSync.TryEnterWriteLock(configDetails.LockTimeout);
-                  rootPaths.Remove(filename);
-               }
-               finally
-               {
-                  rootPathsSync.ExitWriteLock();
-               }
+               RemoveFromLookup(filename);
             }
          }
          catch (Exception ex)
@@ -258,6 +293,42 @@ namespace LiquesceSvc
             Log.Trace("Cleanup OUT");
          }
          return Dokan.DOKAN_SUCCESS;
+      }
+
+      private void RemoveTargetFromLookup(string realFilename)
+      {
+         try
+         {
+            rootPathsSync.TryEnterUpgradeableReadLock(configDetails.LockTimeout);
+            string key = string.Empty;
+            foreach (KeyValuePair<string, string> kvp in rootPaths.Where(kvp => kvp.Value == realFilename))
+            {
+               key = kvp.Key;
+               break;
+            }
+            if (!String.IsNullOrEmpty(key))
+            {
+               rootPathsSync.TryEnterWriteLock(configDetails.LockTimeout);
+               rootPaths.Remove(key);
+            }
+         }
+         finally
+         {
+            rootPathsSync.ExitUpgradeableReadLock();
+         }
+      }
+
+      private void RemoveFromLookup(string filename)
+      {
+         try
+         {
+            rootPathsSync.TryEnterWriteLock(configDetails.LockTimeout);
+            rootPaths.Remove(filename);
+         }
+         finally
+         {
+            rootPathsSync.ExitWriteLock();
+         }
       }
 
       public int CloseFile(string filename, DokanFileInfo info)
@@ -496,7 +567,12 @@ namespace LiquesceSvc
                Log.Debug("Will attempt to find share details for [{0}]", filename);
             }
             Dictionary<string, FileInformation> uniqueFiles = new Dictionary<string, FileInformation>();
-            configDetails.SourceLocations.ForEach(location => AddFiles(location + filename, uniqueFiles, pattern));
+            // Do this in reverse, so that the preferred refreences overwrite the older files
+            for (int i = configDetails.SourceLocations.Count - 1; i >= 0 ; i--)
+			   {
+   			   AddFiles(configDetails.SourceLocations[i] + filename, uniqueFiles, pattern);
+			   }
+
             files = new FileInformation[uniqueFiles.Values.Count];
             uniqueFiles.Values.CopyTo(files, 0);
          }
@@ -591,41 +667,130 @@ namespace LiquesceSvc
       /// <returns></returns>
       public int DeleteFile(string filename, DokanFileInfo info)
       {
+         int dokanReturn = Dokan.DOKAN_ERROR;
          try
          {
             Log.Trace("DeleteFile IN DokanProcessId[{0}]", info.ProcessId);
-            return (File.Exists(GetPath(filename)) ? Dokan.DOKAN_SUCCESS : Dokan.ERROR_FILE_NOT_FOUND);
+            dokanReturn = (File.Exists(GetPath(filename)) ? Dokan.DOKAN_SUCCESS : Dokan.ERROR_FILE_NOT_FOUND);
          }
          catch (Exception ex)
          {
             int win32 = ((short)Marshal.GetHRForException(ex) * -1);
             Log.ErrorException("DeleteFile threw: ", ex);
-            return (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            dokanReturn = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
          }
          finally
          {
-            Log.Trace("DeleteFile OUT");
+            Log.Trace("DeleteFile OUT dokanReturn[(0}]", dokanReturn);
          }
+         return dokanReturn;
       }
 
       public int DeleteDirectory(string filename, DokanFileInfo info)
       {
+         int dokanReturn = Dokan.DOKAN_ERROR;
          try
          {
             Log.Trace("DeleteDirectory IN DokanProcessId[{0}]", info.ProcessId);
-            return (Directory.Exists(GetPath(filename)) ? Dokan.DOKAN_SUCCESS : Dokan.ERROR_FILE_NOT_FOUND);
+            try
+            {
+               foundDirectoriesSync.TryEnterReadLock(configDetails.LockTimeout);
+               dokanReturn = ( foundDirectories.ContainsKey(filename) )? Dokan.DOKAN_SUCCESS : Dokan.ERROR_FILE_NOT_FOUND;
+            }
+            finally
+            {
+               foundDirectoriesSync.ExitReadLock();
+            }
          }
          catch (Exception ex)
          {
             int win32 = ((short)Marshal.GetHRForException(ex) * -1);
             Log.ErrorException("DeleteDirectory threw: ", ex);
-            return (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            dokanReturn = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
          }
          finally
          {
-            Log.Trace("DeleteDirectory OUT");
+            Log.Trace("DeleteDirectory OUT dokanReturn[(0}]", dokanReturn);
          }
+         return dokanReturn;
       }
+
+
+      // As this has an order of preference set by the user, and there may be duplicates that will need to be 
+      // removed / ignored. There has to be a way of making sure that the (older) duplicate does not overwrite the shared visible
+      private void XMoveDirectory(string filename, string pathTarget, bool replaceIfExisting)
+      {
+         try
+         {
+            Dictionary<string, int> hasPathBeenUsed = new Dictionary<string, int>();
+            foundDirectoriesSync.TryEnterUpgradeableReadLock(configDetails.LockTimeout);
+            List<string> targetMoves = foundDirectories[filename];
+            if (targetMoves != null)
+               for (int i = targetMoves.Count - 1; i >= 0; i--)
+               {
+                  XMoveDirContents(targetMoves[i], pathTarget, hasPathBeenUsed, replaceIfExisting);
+               }
+            foundDirectoriesSync.TryEnterWriteLock(configDetails.LockTimeout);
+            foundDirectories.Remove(filename);
+         }
+         finally
+         {
+            foundDirectoriesSync.ExitUpgradeableReadLock();
+         }
+
+         //string pathSource = GetPath(filename);
+         //Dictionary<string, int> hasPathBeenUsed = new Dictionary<string, int>();
+         //while (Directory.Exists(pathSource))
+         //{
+         //   XMoveDirContents(pathSource, pathTarget, hasPathBeenUsed, replaceIfExisting);
+         //   // Remove the above so that it is not found in the next try !
+         //   RemoveTargetFromLookup(pathSource);
+         //   pathSource = GetPath(filename);
+         //}
+      }
+
+      private void XMoveDirContents(string pathSource, string pathTarget, Dictionary<string, int> hasPathBeenUsed, bool replaceIfExisting)
+      {
+         Log.Info("XMoveDirContents pathSource: [{0}] pathTarget: [{1}]", pathSource, pathTarget);
+         DirectoryInfo currentDirectory = new DirectoryInfo(pathSource);
+         if (!Directory.Exists(pathTarget))
+            Directory.CreateDirectory(pathTarget);
+         foreach (FileInfo filein in currentDirectory.GetFiles())
+         {
+            string fileTarget = Path.Combine(pathTarget, filein.Name);
+            if (!hasPathBeenUsed.ContainsKey(fileTarget))
+            {
+               XMoveFile(filein.FullName, fileTarget, replaceIfExisting);
+               hasPathBeenUsed[fileTarget] = 1;
+            }
+            else
+            {
+               filein.Delete();
+            }
+         }
+         foreach (DirectoryInfo dr in currentDirectory.GetDirectories())
+         {
+            XMoveDirContents(dr.FullName, Path.Combine(pathTarget, dr.Name), hasPathBeenUsed, replaceIfExisting);
+         }
+         Directory.Delete(pathSource);
+      }
+
+      private void XMoveFile(string pathSource, string pathTarget, bool replaceIfExisting)
+      {
+         // http://msdn.microsoft.com/en-us/library/aa365240%28VS.85%29.aspx
+         UInt32 dwFlags = (uint)(replaceIfExisting ? 1 : 0);
+         // If the file is to be moved to a different volume, the function simulates the move by using the 
+         // CopyFile and DeleteFile functions.
+         dwFlags += 2; // MOVEFILE_COPY_ALLOWED 
+
+         // The function does not return until the file is actually moved on the disk.
+         // Setting this value guarantees that a move performed as a copy and delete operation 
+         // is flushed to disk before the function returns. The flush occurs at the end of the copy operation.
+         dwFlags += 8; // MOVEFILE_WRITE_THROUGH
+
+         MoveFileEx(pathSource, pathTarget, dwFlags);
+      }
+
 
       public int MoveFile(string filename, string newname, bool replaceIfExisting, DokanFileInfo info)
       {
@@ -633,38 +798,20 @@ namespace LiquesceSvc
          {
             Log.Trace("MoveFile IN DokanProcessId[{0}]", info.ProcessId);
             Log.Info("MoveFile replaceIfExisting [{0}] filename: [{1}] newname: [{2}]", replaceIfExisting, filename, newname);
-            string pathSource = GetPath(filename);
             string pathTarget = GetPath(newname, true);
-            Log.Info("MoveFile pathSource: [{0}] pathTarget: [{1}]", pathSource, pathTarget);
 
             CloseAndRemove(info);
 
-            if (info.IsDirectory)
+            if (!info.IsDirectory)
             {
-               try
-               {
-                  Directory.Move(pathSource, pathTarget);
-               }
-               catch (IOException ioex)
-               {
-                  // An attempt was made to move a directory to a different volume.
-                  // The system cannot move the file to a different disk drive.
-                  // define ERROR_NOT_SAME_DEVICE            17L
-                  int win32 = ((short)Marshal.GetHRForException(ioex) * -1);
-                  if (win32 == 17)
-                  {
-                     // TODO: perform the opertion snecessary to get this dir onto the other medium
-                  }
-                  throw;
-               }
+               string pathSource = GetPath(filename);
+               Log.Info("MoveFile pathSource: [{0}] pathTarget: [{1}]", pathSource, pathTarget);
+               XMoveFile(pathSource, pathTarget, replaceIfExisting);
+               RemoveTargetFromLookup(pathSource);
             }
             else
             {
-               // http://msdn.microsoft.com/en-us/library/aa365240%28VS.85%29.aspx
-               UInt32 dwFlags = (uint)(replaceIfExisting ? 1 : 0);
-               dwFlags += 2; // MOVEFILE_COPY_ALLOWED
-               dwFlags += 8; // MOVEFILE_WRITE_THROUGH
-               MoveFileEx(pathSource, pathTarget, dwFlags);
+               XMoveDirectory(filename, pathTarget, replaceIfExisting);
             }
          }
          catch (Exception ex)
@@ -682,11 +829,12 @@ namespace LiquesceSvc
 
       public int SetEndOfFile(string filename, long length, DokanFileInfo info)
       {
+         int dokanReturn = Dokan.DOKAN_ERROR;
          try
          {
             Log.Trace("SetEndOfFile IN DokanProcessId[{0}]", info.ProcessId);
-            int error = SetAllocationSize(filename, length, info);
-            if (error == Dokan.ERROR_FILE_NOT_FOUND)
+            dokanReturn = SetAllocationSize(filename, length, info);
+            if (dokanReturn == Dokan.ERROR_FILE_NOT_FOUND)
             {
                string path = GetPath(filename);
                using (Stream stream = File.Open(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
@@ -694,20 +842,20 @@ namespace LiquesceSvc
                   stream.SetLength(length);
                   stream.Close();
                }
-               error = Dokan.DOKAN_SUCCESS;
+               dokanReturn = Dokan.DOKAN_SUCCESS;
             }
-            return error;
          }
          catch (Exception ex)
          {
             int win32 = ((short)Marshal.GetHRForException(ex) * -1);
             Log.ErrorException("SetEndOfFile threw: ", ex);
-            return (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            dokanReturn = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
          }
          finally
          {
-            Log.Trace("SetEndOfFile OUT");
+            Log.Trace("SetEndOfFile OUT", dokanReturn);
          }
+         return dokanReturn;
       }
 
       public int SetAllocationSize(string filename, long length, DokanFileInfo info)
@@ -894,7 +1042,7 @@ namespace LiquesceSvc
          finally
          {
             openFilesSync.ExitWriteLock();
-         } 
+         }
          Log.Trace("Unmount out");
          return Dokan.DOKAN_SUCCESS;
       }
@@ -905,14 +1053,15 @@ namespace LiquesceSvc
          string foundPath = root;
          try
          {
-            if ( !String.IsNullOrWhiteSpace(filename) // Win 7 (x64) passes in a blank
+            if (!String.IsNullOrWhiteSpace(filename) // Win 7 (x64) passes in a blank
                && (filename != PathDirectorySeparatorChar)
                )
             {
                try
                {
                   // Sometimes the windows share put a slash on the end .. Sometimes !!
-                  filename = filename.TrimEnd(Path.DirectorySeparatorChar);
+                  bool isAShareReference = filename.EndsWith(PathDirectorySeparatorChar);
+                  //filename = filename.TrimEnd(Path.DirectorySeparatorChar);
                   rootPathsSync.TryEnterUpgradeableReadLock(configDetails.LockTimeout);
                   if (!rootPaths.TryGetValue(filename, out foundPath))
                   {
@@ -921,15 +1070,38 @@ namespace LiquesceSvc
                         throw new ArgumentNullException(filename, "Not allowed to pass this length 2");
                      if (filename[0] != Path.DirectorySeparatorChar)
                         filename = PathDirectorySeparatorChar + filename;
-                     if (configDetails.ShareDetails != null)
-                        found = configDetails.ShareDetails.Exists(delegate(ShareDetail shareDetail)
-                                                              {
-                                                                 Log.Trace("Try and find from [{0}][{1}]",
-                                                                           shareDetail.Path, filename);
-                                                                 return
-                                                                    rootPaths.TryGetValue(shareDetail.Path + filename,
-                                                                                          out foundPath);
-                                                              });
+
+                     if (!isAShareReference
+                        && (configDetails.SourceLocations != null)
+                        )
+                     {
+                        foreach (string newTarget in
+                           configDetails.SourceLocations.Select(sourceLocation => sourceLocation + filename))
+                        {
+                           Log.Trace("Try and find from [{0}]", newTarget);
+                           //Now here's a kicker.. The User might have copied a file directly onto one of the drives while
+                           // this has been running, So this ought to try and find if it exists that way.
+                           if (Directory.Exists(newTarget) 
+                              || File.Exists(newTarget)
+                              )
+                           {
+                              TrimAndAddUnique(newTarget);
+                              found = rootPaths.TryGetValue(filename, out foundPath);
+                              break;
+                           }
+                        }
+                     }
+                     else
+                     {
+                        //found = configDetails.SourceLocations.Exists(delegate(ShareDetail shareDetail)
+                        //                                      {
+                        //                                         Log.Trace("Try and find from [{0}][{1}]",
+                        //                                                   shareDetail.Path, filename);
+                        //                                         return
+                        //                                            rootPaths.TryGetValue(sourceLocation + filename,
+                        //                                                                  out foundPath);
+                        //                                      });
+                     }
                      if (!found)
                      {
                         Log.Trace("was this a failed redirect thing from a network share ? [{0}]", filename);
@@ -979,17 +1151,7 @@ namespace LiquesceSvc
                FileSystemInfo[] fileSystemInfos = dirInfo.GetFileSystemInfos(pattern, SearchOption.TopDirectoryOnly);
                foreach (FileSystemInfo info2 in fileSystemInfos)
                {
-                  bool isDirectoy = (info2.Attributes & FileAttributes.Directory) == FileAttributes.Directory;
-                  FileInformation item = new FileInformation
-                                            {
-                                               Attributes = info2.Attributes,
-                                               CreationTime = info2.CreationTime,
-                                               LastAccessTime = info2.LastAccessTime,
-                                               LastWriteTime = info2.LastWriteTime,
-                                               Length = (isDirectoy) ? 0L : ((FileInfo)info2).Length,
-                                               FileName = info2.Name
-                                            };
-                  files[TrimAndAddUnique(info2.FullName)] = item;
+                  AddToUniqueLookup(info2, files);
                }
             }
          }
@@ -997,6 +1159,21 @@ namespace LiquesceSvc
          {
             Log.ErrorException("AddFiles threw: ", ex);
          }
+      }
+
+      private void AddToUniqueLookup(FileSystemInfo info2, Dictionary<string, FileInformation> files)
+      {
+         bool isDirectoy = (info2.Attributes & FileAttributes.Directory) == FileAttributes.Directory;
+         FileInformation item = new FileInformation
+                                   {
+                                      Attributes = info2.Attributes,
+                                      CreationTime = info2.CreationTime,
+                                      LastAccessTime = info2.LastAccessTime,
+                                      LastWriteTime = info2.LastWriteTime,
+                                      Length = (isDirectoy) ? 0L : ((FileInfo)info2).Length,
+                                      FileName = info2.Name
+                                   };
+         files[TrimAndAddUnique(info2.FullName)] = item;
       }
 
       private string TrimAndAddUnique(string fullFilePath)
@@ -1009,6 +1186,7 @@ namespace LiquesceSvc
             {
                Log.Trace("Adding [{0}] to [{1}]", key, fullFilePath);
                rootPathsSync.TryEnterWriteLock(configDetails.LockTimeout);
+               // TODO: Add the collisions / duplicate feedback from here
                rootPaths[key] = fullFilePath;
             }
             finally
@@ -1094,7 +1272,7 @@ namespace LiquesceSvc
             // A BIGGER BUT - "http://liquesce.codeplex.com/workitem/7106"
 
             ServiceController sc = new ServiceController("Server"); // This name is also used in Win 7
-            TimeSpan waitPeriod = new TimeSpan(0,0,0,2);
+            TimeSpan waitPeriod = new TimeSpan(0, 0, 0, 2);
             foreach (ServiceController scDepends in sc.DependentServices)
             {
                try
@@ -1106,7 +1284,7 @@ namespace LiquesceSvc
                catch (Exception ex)
                {
                   Log.WarnException("Unable to stop Service", ex);
-               }            
+               }
             }
             try
             {
@@ -1142,10 +1320,10 @@ namespace LiquesceSvc
                      scDepends.Start();
                      scDepends.WaitForStatus(ServiceControllerStatus.Running, waitPeriod);
                   }
-                  catch( Exception ex)
+                  catch (Exception ex)
                   {
                      Log.WarnException("Above service reported this on start:", ex);
-                     ManagementLayer.Instance.FireStateChange( LiquesceSvcState.InWarning, scDepends.ServiceName + " reports: " + ex.Message);
+                     ManagementLayer.Instance.FireStateChange(LiquesceSvcState.InWarning, scDepends.ServiceName + " reports: " + ex.Message);
                   }
                }
             }
