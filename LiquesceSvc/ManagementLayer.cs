@@ -148,7 +148,7 @@ namespace LiquesceSvc
                                             //      public bool UseStdErr;
                                             //    public bool UseAltStream;
                                             UseKeepAlive = true,  // When you set TRUE on DokanOptions->UseKeepAlive, dokan library automatically unmounts 15 seconds after user-mode file system hanged up
-                                            NetworkDrive = false,
+                                            NetworkDrive = false,  // Set this to true to see if it stops the recycler bin question until [workitem:7253] is sorted
                                             VolumeLabel = currentConfigDetails.VolumeLabel
                                          };
 
@@ -316,7 +316,7 @@ namespace LiquesceSvc
             currentConfigDetails.SourceLocations.Clear();
 
             fileSourceLocations.ForEach(
-               location => currentConfigDetails.SourceLocations.Add(Path.GetFullPath(location)));
+               location => currentConfigDetails.SourceLocations.Add(Path.GetFullPath(location).TrimEnd(Path.DirectorySeparatorChar))); 
          }
          catch (Exception ex)
          {
