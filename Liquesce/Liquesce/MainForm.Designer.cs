@@ -43,12 +43,12 @@
          this.label5 = new System.Windows.Forms.Label();
          this.label4 = new System.Windows.Forms.Label();
          this.DelayCreation = new System.Windows.Forms.NumericUpDown();
-         this.progressBar1 = new System.Windows.Forms.ProgressBar();
          this.label2 = new System.Windows.Forms.Label();
          this.expectedTreeView = new System.Windows.Forms.TreeView();
          this.refreshExpected = new System.Windows.Forms.ContextMenuStrip(this.components);
          this.refreshExpectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.label3 = new System.Windows.Forms.Label();
+         this.progressBar1 = new System.Windows.Forms.ProgressBar();
          this.menuStrip1 = new System.Windows.Forms.MenuStrip();
          this.commitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.logsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -217,9 +217,6 @@
          this.MountPoint.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
          this.MountPoint.FormattingEnabled = true;
          this.MountPoint.Items.AddRange(new object[] {
-            "A",
-            "B",
-            "C",
             "D",
             "E",
             "F",
@@ -298,16 +295,6 @@
             0,
             0});
          // 
-         // progressBar1
-         // 
-         this.progressBar1.Dock = System.Windows.Forms.DockStyle.Bottom;
-         this.progressBar1.ForeColor = System.Drawing.Color.LawnGreen;
-         this.progressBar1.Location = new System.Drawing.Point(0, 442);
-         this.progressBar1.Name = "progressBar1";
-         this.progressBar1.Size = new System.Drawing.Size(257, 23);
-         this.progressBar1.Step = 5;
-         this.progressBar1.TabIndex = 4;
-         // 
          // label2
          // 
          this.label2.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
@@ -358,6 +345,16 @@
          this.label3.Size = new System.Drawing.Size(257, 17);
          this.label3.TabIndex = 2;
          this.label3.Text = "Expected layout :-";
+         // 
+         // progressBar1
+         // 
+         this.progressBar1.Dock = System.Windows.Forms.DockStyle.Bottom;
+         this.progressBar1.ForeColor = System.Drawing.Color.LawnGreen;
+         this.progressBar1.Location = new System.Drawing.Point(0, 442);
+         this.progressBar1.Name = "progressBar1";
+         this.progressBar1.Size = new System.Drawing.Size(257, 23);
+         this.progressBar1.Step = 5;
+         this.progressBar1.TabIndex = 4;
          // 
          // menuStrip1
          // 
