@@ -404,11 +404,10 @@ namespace Liquesce
          }
          TreeNode root = new TreeNode(configDetails.VolumeLabel + " (" + configDetails.DriveLetter + ")");
          AddExpectedNode(null, root);
-         if (worker.CancellationPending)
+         if (worker.CancellationPending
+            || IsClosing)
             return;
          WalkExpectedNextTreeLevel(root, configDetails.SourceLocations);
-         if (worker.CancellationPending)
-            return;
       }
 
 
@@ -543,6 +542,8 @@ namespace Liquesce
          if (allFiles != null)
             foreach (ExpectedDetailResult kvp in allFiles)
             {
+               if (IsClosing)
+                  return;
                if (Directory.Exists(kvp.ActualFileLocation))
                {
                   // This is a Dir, so make a new child

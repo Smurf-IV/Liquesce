@@ -198,30 +198,34 @@ namespace LiquesceSvc
 
       public int CreateDirectory(string filename, DokanFileInfo info)
       {
+         int dokanError = Dokan.DOKAN_ERROR;
          try
          {
             Log.Trace("CreateDirectory IN DokanProcessId[{0}]", info.ProcessId);
             string path = GetPath(filename, true);
-            // TODO : Hunt for the parent and create from there downwards.
             if (Directory.Exists(path))
             {
-               return Dokan.ERROR_ALREADY_EXISTS;
+               info.IsDirectory = true;
+               dokanError = Dokan.ERROR_ALREADY_EXISTS;
             }
-            info.IsDirectory = true;
-            if (Directory.CreateDirectory(path).Exists)
+            else if (Directory.CreateDirectory(path).Exists)
+            {
+               info.IsDirectory = true;
                TrimAndAddUnique(path);
-            return Dokan.DOKAN_SUCCESS;
+               dokanError = Dokan.DOKAN_SUCCESS;
+            }
          }
          catch (Exception ex)
          {
             int win32 = ((short)Marshal.GetHRForException(ex) * -1);
             Log.ErrorException("CreateDirectory threw: ", ex);
-            return (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            dokanError = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
          }
          finally
          {
-            Log.Trace("CreateDirectory OUT");
+            Log.Trace("CreateDirectory OUT dokanError[{0}]", dokanError);
          }
+         return dokanError;
       }
       static bool IsNullOrDefault<T>(T value)
       {
@@ -256,6 +260,8 @@ namespace LiquesceSvc
                   Log.Trace("DeleteOnClose Directory");
                   try
                   {
+                     // Only delete the directories that this knew about before the delet was called 
+                     // (As the user may be moving files into the sources from the mount !!)
                      foundDirectoriesSync.TryEnterUpgradeableReadLock(configDetails.LockTimeout);
                      List<string> targetDeletes = foundDirectories[filename];
                      if (targetDeletes != null)
@@ -568,10 +574,10 @@ namespace LiquesceSvc
             }
             Dictionary<string, FileInformation> uniqueFiles = new Dictionary<string, FileInformation>();
             // Do this in reverse, so that the preferred refreences overwrite the older files
-            for (int i = configDetails.SourceLocations.Count - 1; i >= 0 ; i--)
-			   {
-   			   AddFiles(configDetails.SourceLocations[i] + filename, uniqueFiles, pattern);
-			   }
+            for (int i = configDetails.SourceLocations.Count - 1; i >= 0; i--)
+            {
+               AddFiles(configDetails.SourceLocations[i] + filename, uniqueFiles, pattern);
+            }
 
             files = new FileInformation[uniqueFiles.Values.Count];
             uniqueFiles.Values.CopyTo(files, 0);
@@ -692,15 +698,14 @@ namespace LiquesceSvc
          try
          {
             Log.Trace("DeleteDirectory IN DokanProcessId[{0}]", info.ProcessId);
-            try
+            DirectoryInfo dirInfo = new DirectoryInfo(GetPath(filename));
+            if (dirInfo.Exists)
             {
-               foundDirectoriesSync.TryEnterReadLock(configDetails.LockTimeout);
-               dokanReturn = ( foundDirectories.ContainsKey(filename) )? Dokan.DOKAN_SUCCESS : Dokan.ERROR_FILE_NOT_FOUND;
+               FileSystemInfo[] fileInfos = dirInfo.GetFileSystemInfos();
+               dokanReturn = (fileInfos.Length > 0) ? Dokan.ERROR_DIR_NOT_EMPTY : Dokan.DOKAN_SUCCESS;
             }
-            finally
-            {
-               foundDirectoriesSync.ExitReadLock();
-            }
+            else
+               dokanReturn = Dokan.ERROR_FILE_NOT_FOUND;
          }
          catch (Exception ex)
          {
@@ -788,7 +793,8 @@ namespace LiquesceSvc
          // is flushed to disk before the function returns. The flush occurs at the end of the copy operation.
          dwFlags += 8; // MOVEFILE_WRITE_THROUGH
 
-         MoveFileEx(pathSource, pathTarget, dwFlags);
+         if (!MoveFileEx(pathSource, pathTarget, dwFlags))
+            Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
       }
 
 
@@ -1081,7 +1087,7 @@ namespace LiquesceSvc
                            Log.Trace("Try and find from [{0}]", newTarget);
                            //Now here's a kicker.. The User might have copied a file directly onto one of the drives while
                            // this has been running, So this ought to try and find if it exists that way.
-                           if (Directory.Exists(newTarget) 
+                           if (Directory.Exists(newTarget)
                               || File.Exists(newTarget)
                               )
                            {
@@ -1228,7 +1234,7 @@ namespace LiquesceSvc
       private static extern bool GetDiskFreeSpaceEx(string lpDirectoryName, out ulong lpFreeBytesAvailable, out ulong lpTotalNumberOfBytes, out ulong lpTotalNumberOfFreeBytes);
 
       [DllImport("kernel32.dll", SetLastError = true)]
-      static extern int MoveFileEx(string lpExistingFileName, string lpNewFileName, UInt32 dwFlags);
+      private static extern bool MoveFileEx(string lpExistingFileName, string lpNewFileName, UInt32 dwFlags);
 
       #endregion
 
