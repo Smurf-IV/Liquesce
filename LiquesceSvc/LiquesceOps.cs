@@ -98,7 +98,9 @@ namespace LiquesceSvc
             //   }
             //}
 
-            if (fileAccess != FileAccess.Read)
+            if (!fileExists
+               && (fileAccess != FileAccess.Read)
+               )
             {
                // Find Quota
                string newDir = Path.GetDirectoryName(path);
@@ -113,7 +115,7 @@ namespace LiquesceSvc
                  );
                   if (!String.IsNullOrEmpty(newDirLocation))
                   {
-                     path = Path.Combine(newDirLocation, filename);
+                     path = newDirLocation + filename;
                      newDir = Path.GetDirectoryName(path);
                   }
                   else
@@ -762,7 +764,7 @@ namespace LiquesceSvc
             Directory.CreateDirectory(pathTarget);
          foreach (FileInfo filein in currentDirectory.GetFiles())
          {
-            string fileTarget = Path.Combine(pathTarget, filein.Name);
+            string fileTarget = pathTarget + filein.Name;
             if (!hasPathBeenUsed.ContainsKey(fileTarget))
             {
                XMoveFile(filein.FullName, fileTarget, replaceIfExisting);
@@ -775,7 +777,7 @@ namespace LiquesceSvc
          }
          foreach (DirectoryInfo dr in currentDirectory.GetDirectories())
          {
-            XMoveDirContents(dr.FullName, Path.Combine(pathTarget, dr.Name), hasPathBeenUsed, replaceIfExisting);
+            XMoveDirContents(dr.FullName, pathTarget + dr.Name, hasPathBeenUsed, replaceIfExisting);
          }
          Directory.Delete(pathSource);
       }
