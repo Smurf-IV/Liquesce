@@ -191,6 +191,7 @@ namespace LiquesceSvc
          }
          catch (Exception ex)
          {
+            IsRunning = false;
             Log.ErrorException("Start has failed in an uncontrolled way: ", ex);
          }
       }
