@@ -122,9 +122,8 @@ namespace LiquesceSvc
                   {
                      // MessageText: Not enough quota is available to process this command.
                      // #define ERROR_NOT_ENOUGH_QUOTA           1816L
-                     Marshal.ThrowExceptionForHR(-1816);
-
-                     //                     return -1816;
+                     // unchecked stolen from Microsoft.Win32.Win32Native.MakeHRFromErrorCode
+                     Marshal.ThrowExceptionForHR(unchecked(((int)2147942400u) | 1816) );
                   }
                }
                if (!String.IsNullOrWhiteSpace(newDir))
@@ -554,10 +553,10 @@ namespace LiquesceSvc
             {
                // Win 7 uses this to denote a remote connection over the share
                filename = filename.TrimEnd(Path.DirectorySeparatorChar);
-               if (!configDetails.ShareDetails.Exists(share => share.Path == filename))
+               if (!configDetails.KnownSharePaths.Contains(filename))
                {
                   Log.Debug("Adding a new share for path: {0}", filename);
-                  configDetails.ShareDetails.Add(new ShareDetail { Path = filename });
+                  configDetails.KnownSharePaths.Add(filename);
                   if (!Directory.Exists(GetPath(filename)))
                   {
                      Log.Info("Share has not been traversed (Might be command line add");
@@ -1265,76 +1264,19 @@ namespace LiquesceSvc
                Thread.Sleep(100);
             } while (ManagementLayer.Instance.State == LiquesceSvcState.Running);
 
-            if (configDetails.ShareDetails == null)
-               configDetails.ShareDetails = new List<ShareDetail>();
-            Log.Info("Now pretension the searches ready for the direct share attach");
-            List<RegistryLanManShare> matchedShares = LanManShares.MatchDriveLanManShares(configDetails.DriveLetter + Path.VolumeSeparatorChar);
-            foreach (RegistryLanManShare share in matchedShares)
+            foreach (LanManShareDetails shareDetails in LanManShareHandler.MatchDriveLanManShares(configDetails.DriveLetter))
             {
-               FileInformation[] files;
-               FindFiles(share.Path.Substring(2) + Path.DirectorySeparatorChar, out files);
-            }
-            // I could do this: "Restart LanmanServer after the drive is mounted",
-            // But then that would be painful on the OS and if the Service is just being restarted !
-            // BUT - this way means that I do not have to work out what security each of the shares is supposed to have ;-)
-            // A BIGGER BUT - "http://liquesce.codeplex.com/workitem/7106"
-
-            ServiceController sc = new ServiceController("Server"); // This name is also used in Win 7
-            TimeSpan waitPeriod = new TimeSpan(0, 0, 0, 2);
-            foreach (ServiceController scDepends in sc.DependentServices)
-            {
+               configDetails.KnownSharePaths.Add(shareDetails.Path.TrimEnd(Path.DirectorySeparatorChar));
                try
                {
-                  Log.Info("Attempting to stop " + scDepends.ServiceName);
-                  scDepends.Stop();
-                  scDepends.WaitForStatus(ServiceControllerStatus.Stopped, waitPeriod);
+                  LanManShareHandler.SetLanManShare(shareDetails);
                }
                catch (Exception ex)
                {
-                  Log.WarnException("Unable to stop Service", ex);
+                  Log.ErrorException("Unable to restore share for : " + shareDetails.Path, ex);
                }
             }
-            try
-            {
-               Log.Info("Attempting to stop " + sc.ServiceName);
-               sc.Stop();
-               sc.WaitForStatus(ServiceControllerStatus.Stopped, waitPeriod);
-               Thread.Sleep(250); //Have to keep these tight, as the Computer Browser service can be triggered from the OS as well.
-            }
-            catch (Exception ex)
-            {
-               Log.WarnException("Unable to stop Service", ex);
-            }
-            try
-            {
-               Log.Info("Attempting to start " + sc.ServiceName);
-               sc.Start();
-               sc.WaitForStatus(ServiceControllerStatus.Running, waitPeriod);
-               Thread.Sleep(250);
-            }
-            catch (Exception ex)
-            {
-               Log.ErrorException("Unable to start Service", ex);
-            }
-            foreach (ServiceController scDepends in sc.DependentServices)
-            {
-               if ((scDepends.Status != ServiceControllerStatus.Running)
-                  && (scDepends.Status != ServiceControllerStatus.StartPending)
-                  )
-               {
-                  try
-                  {
-                     Log.Info("Attempting to start " + scDepends.ServiceName);
-                     scDepends.Start();
-                     scDepends.WaitForStatus(ServiceControllerStatus.Running, waitPeriod);
-                  }
-                  catch (Exception ex)
-                  {
-                     Log.WarnException("Above service reported this on start:", ex);
-                     ManagementLayer.Instance.FireStateChange(LiquesceSvcState.InWarning, scDepends.ServiceName + " reports: " + ex.Message);
-                  }
-               }
-            }
+
          }
          catch (Exception ex)
          {

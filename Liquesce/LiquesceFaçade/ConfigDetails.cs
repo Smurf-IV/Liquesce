@@ -4,13 +4,6 @@ using System.Runtime.Serialization;
 
 namespace LiquesceFaçade
 {
-   public class ShareDetail
-   {
-      public string Name;
-      public string Description;
-      public string Path;
-   }
-
    /// <summary>
    /// This is the class that will dump out the details to the XML File.
    /// </summary>
@@ -49,8 +42,6 @@ namespace LiquesceFaçade
       [DataMember]
       public string ServiceLogLevel = "Debug"; // NLog's LogLevel.Debug.ToString()
 
-      // TODO: Extend to include encypted ACL's and things
-      public List<ShareDetail> ShareDetails;
-
+      public List<string> KnownSharePaths; // Not exported
    }
 }

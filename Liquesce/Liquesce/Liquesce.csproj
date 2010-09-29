@@ -74,6 +74,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AdvancedPropertiesDisplay.cs" />
+    <Compile Include="CurrentShares.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CurrentShares.Designer.cs">
+      <DependentUpon>CurrentShares.cs</DependentUpon>
+    </Compile>
     <Compile Include="GridAdvancedSettings.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -103,6 +109,9 @@
     <None Include="ChangeLog.rtf" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="CurrentShares.resx">
+      <DependentUpon>CurrentShares.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="GridAdvancedSettings.resx">
       <DependentUpon>GridAdvancedSettings.cs</DependentUpon>
     </EmbeddedResource>
@@ -150,7 +159,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_UseGlobalSettings="True" />
+      <UserProperties BuildVersion_UseGlobalSettings="True" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

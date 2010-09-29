@@ -73,7 +73,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="LanManShares.cs" />
     <Compile Include="LiquesceCallBackFaçade.cs" />
     <Compile Include="LiquesceFaçade.cs" />
     <Compile Include="LiquesceOps.cs" />
