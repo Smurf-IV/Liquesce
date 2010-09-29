@@ -59,6 +59,7 @@
          this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
          this.FillExpectedLayoutWorker = new System.ComponentModel.BackgroundWorker();
          this.serviceController1 = new System.ServiceProcess.ServiceController();
+         this.currentSharesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
          this.splitContainer1.Panel1.SuspendLayout();
          this.splitContainer1.Panel2.SuspendLayout();
@@ -407,7 +408,8 @@
          // 
          this.advancedToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
          this.advancedToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.globalConfigSettingsToolStripMenuItem});
+            this.globalConfigSettingsToolStripMenuItem,
+            this.currentSharesToolStripMenuItem});
          this.advancedToolStripMenuItem.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.advancedToolStripMenuItem.Name = "advancedToolStripMenuItem";
          this.advancedToolStripMenuItem.Size = new System.Drawing.Size(73, 20);
@@ -434,6 +436,13 @@
          // 
          this.serviceController1.MachineName = "127.0.0.1";
          this.serviceController1.ServiceName = "LiquesceSvc";
+         // 
+         // currentSharesToolStripMenuItem
+         // 
+         this.currentSharesToolStripMenuItem.Name = "currentSharesToolStripMenuItem";
+         this.currentSharesToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
+         this.currentSharesToolStripMenuItem.Text = "&Current Shares...";
+         this.currentSharesToolStripMenuItem.Click += new System.EventHandler(this.currentSharesToolStripMenuItem_Click);
          // 
          // MainForm
          // 
@@ -505,5 +514,6 @@
       private System.Windows.Forms.ToolStripMenuItem logsToolStripMenuItem;
       private System.Windows.Forms.ToolStripMenuItem serviceLogViewToolStripMenuItem;
       private System.Windows.Forms.ToolStripMenuItem userLogViewToolStripMenuItem;
+      private System.Windows.Forms.ToolStripMenuItem currentSharesToolStripMenuItem;
    }
 }

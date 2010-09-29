@@ -652,13 +652,6 @@ namespace Liquesce
          RestartExpectedOutput();
       }
 
-      private void globalConfigSettingsToolStripMenuItem_Click(object sender, EventArgs e)
-      {
-         GridAdvancedSettings advancedSettings = new GridAdvancedSettings { AdvancedConfigDetails = cd };
-         if (advancedSettings.ShowDialog(this) == DialogResult.OK)
-            cd = advancedSettings.AdvancedConfigDetails;
-      }
-
       private void userLogViewToolStripMenuItem_Click(object sender, EventArgs e)
       {
          new LogDisplay(@"/Liquesce/Logs").ShowDialog(this);
@@ -668,6 +661,20 @@ namespace Liquesce
       {
          new LogDisplay(@"/LiquesceSvc/Logs").ShowDialog(this);
 
+      }
+
+      private void globalConfigSettingsToolStripMenuItem_Click(object sender, EventArgs e)
+      {
+         GridAdvancedSettings advancedSettings = new GridAdvancedSettings { AdvancedConfigDetails = cd };
+         if (advancedSettings.ShowDialog(this) == DialogResult.OK)
+            cd = advancedSettings.AdvancedConfigDetails;
+      }
+
+      private void currentSharesToolStripMenuItem_Click(object sender, EventArgs e)
+      {
+         CurrentShares shareSettings = new CurrentShares { ShareDetails = cd };
+         if (shareSettings.ShowDialog(this) == DialogResult.OK)
+            cd = shareSettings.ShareDetails;
       }
 
 
