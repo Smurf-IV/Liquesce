@@ -5,7 +5,7 @@
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
      >
    <?define UpgradeCode = "f6f94f17-a05f-4824-8dd9-9f5e8267d783" ?>
-   <?define Version = "10.09.28" ?>
+   <?define Version = "10.09.30" ?>
    <?define ProductName = "Liquesce Windows HDD Pooling Suite"?>
 
    <Product Version="$(var.Version)" Id="*" UpgradeCode="$(var.UpgradeCode)"
@@ -124,8 +124,7 @@
                <netfx:NativeImage Id="ngen_LiquesceSvc.exe" Platform="all" Priority="3" AppBaseDirectory="ServiceDIR"/>
             </File>
             <File Id="LiquesceSvc.exe.config.File" Name="LiquesceSvc.exe.config" Source="Z:\Liquesce\LiquesceSvc\bin\Release\LiquesceSvc.exe.config"/>
-            <ServiceControl Id='MyServiceControl' Name='LiquesceSvc'
-                Start='install' Stop='uninstall' Remove='uninstall' />
+            <ServiceControl Id='LiquesceSvcControl' Name='LiquesceSvc' Start='install' Stop='both' Remove='uninstall' Wait='yes' />
          </Component>
          <Component Id="DokanNet.dll.Component" >
             <File Source="Z:\Liquesce\LiquesceSvc\bin\Release\DokanNet.dll" KeyPath="yes" />
