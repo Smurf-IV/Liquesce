@@ -121,9 +121,13 @@ namespace LiquesceSvc
                   else
                   {
                      // MessageText: Not enough quota is available to process this command.
-                     // #define ERROR_NOT_ENOUGH_QUOTA           1816L
+                     // #define ERROR_NOT_ENOUGH_QUOTA           1816L 
+
                      // unchecked stolen from Microsoft.Win32.Win32Native.MakeHRFromErrorCode
-                     Marshal.ThrowExceptionForHR(unchecked(((int)2147942400u) | 1816) );
+                     Marshal.ThrowExceptionForHR(unchecked(((int)2147942400u) | 1816), new IntPtr(-1));
+                     // The above function justs make the whole exception stack dissappear up it's own pipe !!
+                     // _BUT_ Sticking the new IntPtr(-1) forces a new IErrorInfo and stops it reusing the
+                     // last one it auto-created !
                   }
                }
                if (!String.IsNullOrWhiteSpace(newDir))
@@ -1269,6 +1273,7 @@ namespace LiquesceSvc
                configDetails.KnownSharePaths.Add(shareDetails.Path.TrimEnd(Path.DirectorySeparatorChar));
                try
                {
+                  Log.Info("Restore share for : [{0}] [{1} : {2}]", shareDetails.Path, shareDetails.Name, shareDetails.Description);
                   LanManShareHandler.SetLanManShare(shareDetails);
                }
                catch (Exception ex)
