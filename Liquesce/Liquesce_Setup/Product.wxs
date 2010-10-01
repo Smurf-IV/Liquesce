@@ -5,7 +5,7 @@
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
      >
    <?define UpgradeCode = "f6f94f17-a05f-4824-8dd9-9f5e8267d783" ?>
-   <?define Version = "10.09.30" ?>
+   <?define Version = "10.10.01" ?>
    <?define ProductName = "Liquesce Windows HDD Pooling Suite"?>
 
    <Product Version="$(var.Version)" Id="*" UpgradeCode="$(var.UpgradeCode)"
@@ -26,9 +26,10 @@
       <Property Id="ARPCOMMENTS" Value="http://liquesce.codeplex.com/discussions"/>
       <Property Id="ARPCONTACT" Value="Smurf-IV" />
       <Property Id="ARPURLINFOABOUT" Value="http://liquesce.codeplex.com/" />
-      <Icon Id="client.ico" SourceFile="Z:\Liquesce\Liquesce\Resources\Liquesce.ico" />
-      <Property Id="ARPPRODUCTICON" Value="client.ico" />
-
+      <Icon Id="client.exe" SourceFile="Z:\Liquesce\Liquesce\Resources\Liquesce.ico" />
+      <Property Id="ARPPRODUCTICON" Value="client.exe" />
+      <Property Id="ALLUSERS" Value="1" /> <!-- This forces the above icon into the uninstall even for single user install -->
+      
       <!-- Properties to allow detection of .Net installation -->
       <PropertyRef Id="NETFRAMEWORK40FULL"/>
       <PropertyRef Id="NETFRAMEWORK40FULLINSTALLROOTDIR" />
@@ -96,7 +97,7 @@
 
       <DirectoryRef Id="ClientDIR">
          <Component Id="Client.Component" Guid="5ebf3f29-9cf1-44fe-a94c-cc1b4fe09367">
-            <File Id="client.ico" Name="Liquesce.ico" Source="Z:\Liquesce\Liquesce\Resources\Liquesce.ico" />
+            <File Id="client.exe" Name="Liquesce.ico" Source="Z:\Liquesce\Liquesce\Resources\Liquesce.ico" />
             <File Id="Liquesce.exe" Name="Liquesce.exe" Source="Z:\Liquesce\Liquesce\bin\Release\Liquesce.exe" KeyPath="yes">
                <fire:FirewallException Id="LiquesceFWX1" Name="Liquesce Mount Management" Scope="localSubnet" IgnoreFailure="yes" />
             </File>
@@ -138,9 +139,9 @@
       </DirectoryRef>
       <DirectoryRef Id="ProgramMenuDir">
          <Component Id="ProgramMenuDir2" Guid="11234567-7E98-44CE-B049-C477CC0A2B01">
-            <Shortcut Id="Liquesce_Shortcut" Name="Liquesce MGT" Description="Liquesce Management Application" Target="[ClientDIR]Liquesce.exe" WorkingDirectory="ClientDIR" Icon="client.ico" IconIndex="0" />
-            <Shortcut Id="LiquesceTray_Shortcut" Name="Liquesce Tray" Description="Liquesce Tray Application" Target="[ClientDIR]LiquesceTray.exe" WorkingDirectory="ClientDIR" Icon="client.ico" IconIndex="0" />
-            <Shortcut Id="LiquesceTray_Start" Name="Liquesce Tray" Directory="StartupFolder" Description="Liquesce Tray Application" Target="[ClientDIR]LiquesceTray.exe" WorkingDirectory="ClientDIR" Icon="client.ico" IconIndex="0" />
+            <Shortcut Id="Liquesce_Shortcut" Name="Liquesce MGT" Description="Liquesce Management Application" Target="[ClientDIR]Liquesce.exe" WorkingDirectory="ClientDIR" Icon="client.exe" IconIndex="0" />
+            <Shortcut Id="LiquesceTray_Shortcut" Name="Liquesce Tray" Description="Liquesce Tray Application" Target="[ClientDIR]LiquesceTray.exe" WorkingDirectory="ClientDIR" Icon="client.exe" IconIndex="0" />
+            <Shortcut Id="LiquesceTray_Start" Name="Liquesce Tray" Directory="StartupFolder" Description="Liquesce Tray Application" Target="[ClientDIR]LiquesceTray.exe" WorkingDirectory="ClientDIR" Icon="client.exe" IconIndex="0" />
             <util:InternetShortcut Type="url" Id="Home" Name="Liquesce Forum" Target="[ARPHELPLINK]" />
             <util:InternetShortcut Type="link" Id="Change" Name="Change Log" Target="[ClientDIR]ChangeLog.rtf"/>
             <RemoveFolder Id="ProgramMenuDir" On="uninstall"/>
@@ -193,6 +194,8 @@
       <!--Custom Actions to start stop Application tray-->
       <CustomAction Id="StartTrayApp" FileKey="LiquesceTray.exe" ExeCommand="" Return="asyncNoWait" />
       <util:CloseApplication CloseMessage="yes" Id="CloseServerTray" Target="LiquesceTray.exe" RebootPrompt="no"/>
+      <CustomAction Id="MgtApp" FileKey="Liquesce.exe" ExeCommand="" Return="asyncNoWait" />
+      <util:CloseApplication CloseMessage="yes" Id="CloseMgtAppTray" Target="Liquesce.exe" RebootPrompt="no"/>
 
       <InstallUISequence>
          <Custom Action="WixCloseApplications" Before="LaunchConditions" />
@@ -214,6 +217,7 @@
          <Custom Action="LiquesceSvc.uninstall.SetProperty" After="MsiUnpublishAssemblies"><![CDATA[ $LiquesceSvc.Component = 2 ]]></Custom>
          <Custom Action="LiquesceSvc.uninstall" After="LiquesceSvc.uninstall.SetProperty"><![CDATA[ $LiquesceSvc.Component = 2 ]]></Custom>
          <Custom Action="StartTrayApp" After="InstallFinalize">Not Installed</Custom>
+         <Custom Action="MgtApp" After="StartTrayApp">Not Installed</Custom>
       </InstallExecuteSequence>
 
    </Product>

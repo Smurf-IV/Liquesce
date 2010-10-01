@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.ServiceModel;
+using System.ServiceProcess;
 using System.Threading;
 using System.Xml.Serialization;
 using DokanNet;
@@ -156,6 +157,17 @@ namespace LiquesceSvc
                ThreadPool.QueueUserWorkItem(dokanOperations.InitialiseShares, dokanOperations);
 
                mountedDriveLetter = currentConfigDetails.DriveLetter[0];
+
+
+               try
+               {
+                  Log.Info("DokanVersion:[{0}], DokanDriverVersion[{1}]", Dokan.DokanVersion(), Dokan.DokanDriverVersion());
+                  Dokan.DokanUnmount(mountedDriveLetter);
+               }
+               catch (Exception ex)
+               {
+                  Log.InfoException("Make sure it's unmounted threw:", ex );
+               }
                int retVal = Dokan.DokanMain(options, dokanOperations);
                Log.Warn("Dokan.DokanMain has exited");
                IsRunning = false;
@@ -193,6 +205,7 @@ namespace LiquesceSvc
          {
             IsRunning = false;
             Log.ErrorException("Start has failed in an uncontrolled way: ", ex);
+            Environment.Exit(-1);
          }
       }
 
