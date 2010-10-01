@@ -56,10 +56,10 @@
          this.userLogViewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.advancedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.globalConfigSettingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+         this.currentSharesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
          this.FillExpectedLayoutWorker = new System.ComponentModel.BackgroundWorker();
          this.serviceController1 = new System.ServiceProcess.ServiceController();
-         this.currentSharesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
          this.splitContainer1.Panel1.SuspendLayout();
          this.splitContainer1.Panel2.SuspendLayout();
@@ -425,6 +425,13 @@
          this.globalConfigSettingsToolStripMenuItem.ToolTipText = "Access to the settings that control access to the OS and the Dokan Driver";
          this.globalConfigSettingsToolStripMenuItem.Click += new System.EventHandler(this.globalConfigSettingsToolStripMenuItem_Click);
          // 
+         // currentSharesToolStripMenuItem
+         // 
+         this.currentSharesToolStripMenuItem.Name = "currentSharesToolStripMenuItem";
+         this.currentSharesToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
+         this.currentSharesToolStripMenuItem.Text = "&Current Shares...";
+         this.currentSharesToolStripMenuItem.Click += new System.EventHandler(this.currentSharesToolStripMenuItem_Click);
+         // 
          // FillExpectedLayoutWorker
          // 
          this.FillExpectedLayoutWorker.WorkerReportsProgress = true;
@@ -436,13 +443,6 @@
          // 
          this.serviceController1.MachineName = "127.0.0.1";
          this.serviceController1.ServiceName = "LiquesceSvc";
-         // 
-         // currentSharesToolStripMenuItem
-         // 
-         this.currentSharesToolStripMenuItem.Name = "currentSharesToolStripMenuItem";
-         this.currentSharesToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
-         this.currentSharesToolStripMenuItem.Text = "&Current Shares...";
-         this.currentSharesToolStripMenuItem.Click += new System.EventHandler(this.currentSharesToolStripMenuItem_Click);
          // 
          // MainForm
          // 
