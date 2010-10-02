@@ -128,7 +128,7 @@ namespace LiquesceSvc
                }
                SetNLogLevel(currentConfigDetails.ServiceLogLevel);
 
-               FireStateChange(LiquesceSvcState.Running, "Dokan initialised");
+               FireStateChange(LiquesceSvcState.Unknown, "Dokan initialised");
                IsRunning = true;
 
                // Sometimes the math gets all confused due to the casting !!
@@ -166,7 +166,7 @@ namespace LiquesceSvc
                }
                catch (Exception ex)
                {
-                  Log.InfoException("Make sure it's unmounted threw:", ex );
+                  Log.InfoException("Make sure it's unmounted threw:", ex);
                }
                int retVal = Dokan.DokanMain(options, dokanOperations);
                Log.Warn("Dokan.DokanMain has exited");
@@ -177,22 +177,25 @@ namespace LiquesceSvc
                      FireStateChange(LiquesceSvcState.Stopped, "Dokan is not mounted");
                      break;
                   case Dokan.DOKAN_ERROR:// = -1; // General Error
-                     FireStateChange(LiquesceSvcState.InError, "Dokan is not mounted [DOKAN_ERROR]");
+                     FireStateChange(LiquesceSvcState.InError, "Dokan is not mounted [DOKAN_ERROR] - General Error");
                      break;
                   case Dokan.DOKAN_DRIVE_LETTER_ERROR: // = -2; // Bad Drive letter
-                     FireStateChange(LiquesceSvcState.InError, "Dokan is not mounted [DOKAN_DRIVE_LETTER_ERROR]");
+                     FireStateChange(LiquesceSvcState.InError, "Dokan is not mounted [DOKAN_DRIVE_LETTER_ERROR] - Bad drive letter");
                      break;
                   case Dokan.DOKAN_DRIVER_INSTALL_ERROR: // = -3; // Can't install driver
                      FireStateChange(LiquesceSvcState.InError, "Dokan is not mounted [DOKAN_DRIVER_INSTALL_ERROR]");
+                     Environment.Exit(-1);
                      break;
                   case Dokan.DOKAN_START_ERROR: // = -4; // Driver something wrong
-                     FireStateChange(LiquesceSvcState.InError, "Dokan is not mounted [DOKAN_START_ERROR]");
+                     FireStateChange(LiquesceSvcState.InError, "Dokan is not mounted [DOKAN_START_ERROR] - Driver Something is wrong");
+                     Environment.Exit(-1);
                      break;
                   case Dokan.DOKAN_MOUNT_ERROR: // = -5; // Can't assign drive letter
-                     FireStateChange(LiquesceSvcState.InError, "Dokan is not mounted [DOKAN_MOUNT_ERROR]");
+                     FireStateChange(LiquesceSvcState.InError, "Dokan is not mounted [DOKAN_MOUNT_ERROR] - Can't assign drive letter");
                      break;
                   default:
                      FireStateChange(LiquesceSvcState.InError, String.Format("Dokan is not mounted [Uknown Error: {0}]", retVal));
+                     Environment.Exit(-1);
                      break;
                }
             }
@@ -203,9 +206,12 @@ namespace LiquesceSvc
          }
          catch (Exception ex)
          {
-            IsRunning = false;
             Log.ErrorException("Start has failed in an uncontrolled way: ", ex);
             Environment.Exit(-1);
+         }
+         finally
+         {
+            IsRunning = false;
          }
       }
 

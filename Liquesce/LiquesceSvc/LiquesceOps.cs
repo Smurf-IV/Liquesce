@@ -5,11 +5,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.ServiceProcess;
 using System.Text;
 using System.Threading;
 using DokanNet;
 using LiquesceFaçade;
+using Microsoft.Win32.SafeHandles;
 using NLog;
 
 namespace LiquesceSvc
@@ -45,20 +45,22 @@ namespace LiquesceSvc
       /// So.. Everything succeeds but the Return code is ERROR_ALREADY_EXISTS
       /// </summary>
       /// <param name="filename"></param>
-      /// <param name="fileMode"></param>
-      /// <param name="fileAccess"></param>
-      /// <param name="fileShare"></param>
-      /// <param name="fileOptions"></param>
+      /// <param name="rawFlagsAndAttributes"></param>
       /// <param name="info"></param>
+      /// <param name="rawAccessMode"></param>
+      /// <param name="rawShare"></param>
+      /// <param name="rawCreationDisposition"></param>
       /// <returns></returns>
-      public int CreateFile(string filename, FileMode fileMode, FileAccess fileAccess, FileShare fileShare, FileOptions fileOptions, DokanFileInfo info)
+      public int CreateFile(string filename, uint rawAccessMode, uint rawShare, uint rawCreationDisposition, uint rawFlagsAndAttributes, DokanFileInfo info)
       {
          int actualErrorCode = Dokan.DOKAN_SUCCESS;
          try
          {
-            Log.Debug("CreateFile IN filename [{0}], fileMode[{1}], fileAccess[{2}], fileShare[{3}], fileOptions[{4}] DokanProcessId[{5}]",
-                        filename, fileMode, fileAccess, fileShare, fileOptions, info.ProcessId);
-            string path = GetPath(filename, (fileMode == FileMode.CreateNew) || (fileMode == FileMode.Create));
+            Log.Debug(
+               "CreateFile IN filename [{0}], rawAccessMode[{1}], rawShare[{2}], rawCreationDisposition[{3}], rawFlagsAndAttributes[{4}], ProcessId[{5}]",
+               filename, rawAccessMode, rawShare, rawCreationDisposition, rawFlagsAndAttributes, info.ProcessId);
+            string path = GetPath(filename, (rawCreationDisposition == Proxy.CREATE_NEW) || (rawCreationDisposition == Proxy.CREATE_ALWAYS));
+
             if (Directory.Exists(path))
             {
                actualErrorCode = OpenDirectory(filename, info);
@@ -67,7 +69,7 @@ namespace LiquesceSvc
 
             // Stop using exceptions to throw ERROR_FILE_NOT_FOUND
             bool fileExists = File.Exists(path);
-            switch (fileMode)
+            switch (rawCreationDisposition)
             {
                //case FileMode.Create:
                //case FileMode.OpenOrCreate:
@@ -78,9 +80,9 @@ namespace LiquesceSvc
                //   if (fileExists)
                //      return Dokan.ERROR_FILE_EXISTS;
                //   break;
-               case FileMode.Open:
-               case FileMode.Append:
-               case FileMode.Truncate:
+               case Proxy.OPEN_EXISTING:
+               //case FileMode.Append:
+               case Proxy.TRUNCATE_EXISTING:
                   if (!fileExists)
                   {
                      Log.Debug("filename [{0}] ERROR_FILE_NOT_FOUND", filename);
@@ -98,8 +100,9 @@ namespace LiquesceSvc
             //   }
             //}
 
+            bool writeable = (((rawAccessMode & Proxy.FILE_WRITE_DATA) == Proxy.FILE_WRITE_DATA));
             if (!fileExists
-               && (fileAccess != FileAccess.Read)
+               && writeable
                )
             {
                // Find Quota
@@ -134,7 +137,13 @@ namespace LiquesceSvc
                   Directory.CreateDirectory(newDir);
             }
 
-            FileStream fs = new FileStream(path, fileMode, fileAccess, fileShare, (int)configDetails.BufferReadSize, fileOptions);
+            SafeFileHandle handle = CreateFile(path, rawAccessMode, rawShare, IntPtr.Zero, rawCreationDisposition, rawFlagsAndAttributes, IntPtr.Zero);
+            if (handle.IsInvalid)
+            {
+               Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error(), new IntPtr(-1));
+            }
+            FileStream fs = new FileStream(handle, writeable ? FileAccess.ReadWrite : FileAccess.Read, (int)configDetails.BufferReadSize);
+            
             info.Context = ++openFilesLastKey; // never be Zero !
             try
             {
@@ -502,37 +511,45 @@ namespace LiquesceSvc
 
       public int GetFileInformation(string filename, FileInformation fileinfo, DokanFileInfo info)
       {
+         int dokanReturn = Dokan.DOKAN_ERROR;
          try
          {
             Log.Trace("GetFileInformation IN DokanProcessId[{0}]", info.ProcessId);
             string path = GetPath(filename);
+            FileSystemInfo fsi = null;
             if (File.Exists(path))
             {
                FileInfo info2 = new FileInfo(path);
-               fileinfo.Attributes = info2.Attributes;
-               fileinfo.CreationTime = info2.CreationTime;
-               fileinfo.LastAccessTime = info2.LastAccessTime;
-               fileinfo.LastWriteTime = info2.LastWriteTime;
                fileinfo.Length = info2.Length;
-               return Dokan.DOKAN_SUCCESS;
+               fsi = info2;
             }
-            if (Directory.Exists(path))
+            else if (Directory.Exists(path))
             {
-               DirectoryInfo info3 = new DirectoryInfo(path);
-               fileinfo.Attributes = info3.Attributes;
-               fileinfo.CreationTime = info3.CreationTime;
-               fileinfo.LastAccessTime = info3.LastAccessTime;
-               fileinfo.LastWriteTime = info3.LastWriteTime;
+               fsi = new DirectoryInfo(path);
                fileinfo.Length = 0L;
-               return Dokan.DOKAN_SUCCESS;
+            }
+            if (fsi != null)
+            {
+               fileinfo.Attributes = fsi.Attributes | FileAttributes.NotContentIndexed;
+               fileinfo.CreationTime = fsi.CreationTime;
+               fileinfo.LastAccessTime = fsi.LastAccessTime;
+               fileinfo.LastWriteTime = fsi.LastWriteTime;
+               fileinfo.FileName = fsi.Name;
+               dokanReturn = Dokan.DOKAN_SUCCESS;
             }
 
          }
+         catch (Exception ex)
+         {
+            int win32 = ((short)Marshal.GetHRForException(ex) * -1);
+            Log.ErrorException("FlushFileBuffers threw: ", ex);
+            dokanReturn = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+         }
          finally
          {
-            Log.Trace("GetFileInformation OUT Attributes[{0}] Length[{1}]", fileinfo.Attributes, fileinfo.Length);
+            Log.Trace("GetFileInformation OUT Attributes[{0}] Length[{1}] dokanReturn[{2}]", fileinfo.Attributes, fileinfo.Length, dokanReturn);
          }
-         return Dokan.DOKAN_ERROR;
+         return dokanReturn;
       }
 
       public int FindFilesWithPattern(string filename, string pattern, out FileInformation[] files, DokanFileInfo info)
@@ -568,7 +585,6 @@ namespace LiquesceSvc
                      if (lastDir > 0)
                      {
                         Log.Trace("Perform search for path: {0}", filename);
-                        string newPart = filename.Substring(lastDir);
                         filename = filename.Substring(0, lastDir);
                      }
                      else
@@ -1177,7 +1193,7 @@ namespace LiquesceSvc
          bool isDirectoy = (info2.Attributes & FileAttributes.Directory) == FileAttributes.Directory;
          FileInformation item = new FileInformation
                                    {
-                                      Attributes = info2.Attributes,
+                                      Attributes = info2.Attributes | FileAttributes.NotContentIndexed,
                                       CreationTime = info2.CreationTime,
                                       LastAccessTime = info2.LastAccessTime,
                                       LastWriteTime = info2.LastWriteTime,
@@ -1235,6 +1251,35 @@ namespace LiquesceSvc
       }
 
       #region DLL Imports
+      /// <summary>
+      /// The CreateFile function creates or opens a file, file stream, directory, physical disk, volume, console buffer, tape drive,
+      /// communications resource, mailslot, or named pipe. The function returns a handle that can be used to access an object.
+      /// </summary>
+      /// <param name="lpFileName"></param>
+      /// <param name="dwDesiredAccess"> access to the object, which can be read, write, or both</param>
+      /// <param name="dwShareMode">The sharing mode of an object, which can be read, write, both, or none</param>
+      /// <param name="SecurityAttributes">A pointer to a SECURITY_ATTRIBUTES structure that determines whether or not the returned handle can
+      /// be inherited by child processes. Can be null</param>
+      /// <param name="dwCreationDisposition">An action to take on files that exist and do not exist</param>
+      /// <param name="dwFlagsAndAttributes">The file attributes and flags. </param>
+      /// <param name="hTemplateFile">A handle to a template file with the GENERIC_READ access right. The template file supplies file attributes
+      /// and extended attributes for the file that is being created. This parameter can be null</param>
+      /// <returns>If the function succeeds, the return value is an open handle to a specified file. If a specified file exists before the function
+      /// all and dwCreationDisposition is CREATE_ALWAYS or OPEN_ALWAYS, a call to GetLastError returns ERROR_ALREADY_EXISTS, even when the function
+      /// succeeds. If a file does not exist before the call, GetLastError returns 0 (zero).
+      /// If the function fails, the return value is INVALID_HANDLE_VALUE. To get extended error information, call GetLastError.
+      /// </returns>
+      [DllImport("kernel32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall, SetLastError = true)]
+      private static extern SafeFileHandle CreateFile(
+              string lpFileName,
+              uint dwDesiredAccess,
+              uint dwShareMode,
+              IntPtr SecurityAttributes,
+              uint dwCreationDisposition,
+              uint dwFlagsAndAttributes,
+              IntPtr hTemplateFile
+              );
+
       [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
       private static extern bool GetDiskFreeSpaceEx(string lpDirectoryName, out ulong lpFreeBytesAvailable, out ulong lpTotalNumberOfBytes, out ulong lpTotalNumberOfFreeBytes);
 
@@ -1281,7 +1326,7 @@ namespace LiquesceSvc
                   Log.ErrorException("Unable to restore share for : " + shareDetails.Path, ex);
                }
             }
-
+            ManagementLayer.Instance.FireStateChange(LiquesceSvcState.Running, "Shares restored - good to go");
          }
          catch (Exception ex)
          {
