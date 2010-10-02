@@ -9,7 +9,7 @@ using ComTypes = System.Runtime.InteropServices.ComTypes;
 namespace DokanNet
 {
    [StructLayout( LayoutKind.Sequential, Pack = 4 )]
-   struct BY_HANDLE_FILE_INFORMATION
+   public struct BY_HANDLE_FILE_INFORMATION
    {
       public uint dwFileAttributes;
       public ComTypes.FILETIME ftCreationTime;
@@ -24,7 +24,7 @@ namespace DokanNet
    }
 
    [StructLayout( LayoutKind.Sequential, Pack = 4 )]
-   struct DOKAN_FILE_INFO
+   public struct DOKAN_FILE_INFO
    {
       public ulong Context;
       public ulong DokanContext;
@@ -39,7 +39,7 @@ namespace DokanNet
    }
 
 
-   class Proxy
+   public class Proxy
    {
       static private readonly Logger Log = LogManager.GetCurrentClassLogger();
       private readonly IDokanOperations operations;
@@ -118,7 +118,7 @@ namespace DokanNet
       private const uint GENERIC_EXECUTE = 0x20000000;
 
       private const uint FILE_READ_DATA = 0x00000001;
-      private const uint FILE_WRITE_DATA = 0x00000002;
+      public const uint FILE_WRITE_DATA = 0x00000002;
       private const uint FILE_APPEND_DATA = 0x00000004;
       private const uint FILE_READ_EA = 0x00000008;
       private const uint FILE_WRITE_EA = 0x00000010;
@@ -141,11 +141,11 @@ namespace DokanNet
       private const uint FILE_SHARE_WRITE = 0x00000002;
       private const uint FILE_SHARE_DELETE = 0x00000004;
 
-      private const uint CREATE_NEW = 1;
-      private const uint CREATE_ALWAYS = 2;
-      private const uint OPEN_EXISTING = 3;
+      public const uint CREATE_NEW = 1;
+      public const uint CREATE_ALWAYS = 2;
+      public const uint OPEN_EXISTING = 3;
       private const uint OPEN_ALWAYS = 4;
-      private const uint TRUNCATE_EXISTING = 5;
+      public const uint TRUNCATE_EXISTING = 5;
 
       private const uint FILE_ATTRIBUTE_ARCHIVE = 0x00000020;
       private const uint FILE_ATTRIBUTE_ENCRYPTED = 0x00004000;
@@ -177,7 +177,7 @@ namespace DokanNet
       // ReSharper restore InconsistentNaming
       #endregion
 
-      public delegate int CreateFileDelegate( IntPtr rawFilName, uint rawAccessMode, uint rawShare, uint rawCreationDisposition, uint rawFlagsAndAttributes, ref DOKAN_FILE_INFO dokanFileInfo );
+      public delegate int CreateFileDelegate(IntPtr rawFilName, uint rawAccessMode, uint rawShare, uint rawCreationDisposition, uint rawFlagsAndAttributes, ref DOKAN_FILE_INFO dokanFileInfo);
 
       public int CreateFileProxy( IntPtr rawFileName, uint rawAccessMode, uint rawShare, uint rawCreationDisposition, uint rawFlagsAndAttributes, ref DOKAN_FILE_INFO rawFileInfo )
       {
@@ -189,99 +189,7 @@ namespace DokanNet
 
             DokanFileInfo info = GetNewFileInfo( ref rawFileInfo );
 
-            //rawAccessMode, DELETE ) ?? ;
-
-            bool readRequired = (((rawAccessMode & FILE_READ_DATA) == FILE_READ_DATA)
-                 || ((rawAccessMode & FILE_READ_ATTRIBUTES) == FILE_READ_ATTRIBUTES)
-                 || ((rawAccessMode & FILE_READ_EA) == FILE_READ_EA)
-                 || ((rawAccessMode & READ_CONTROL) == READ_CONTROL)
-                 || ((rawAccessMode & FILE_EXECUTE) == FILE_EXECUTE)
-                 || ((rawAccessMode & STANDARD_RIGHTS_READ) == STANDARD_RIGHTS_READ)
-                 || ((rawAccessMode & STANDARD_RIGHTS_EXECUTE) == STANDARD_RIGHTS_EXECUTE)
-               );
-            bool writeRequired = (((rawAccessMode & FILE_WRITE_DATA) == FILE_WRITE_DATA)
-                 || ((rawAccessMode & FILE_WRITE_ATTRIBUTES) == FILE_WRITE_ATTRIBUTES)
-                 || ((rawAccessMode & FILE_WRITE_EA) == FILE_WRITE_EA)
-                 || ((rawAccessMode & FILE_APPEND_DATA) == FILE_APPEND_DATA)
-                 || ((rawAccessMode & WRITE_DAC) == WRITE_DAC)
-                 || ((rawAccessMode & WRITE_OWNER) == WRITE_OWNER)
-                 || ((rawAccessMode & STANDARD_RIGHTS_WRITE) == STANDARD_RIGHTS_WRITE)
-               );
-
-            /* If the file is opened with FileAccess.Read, System.Security.Permissions.FileIOPermissionAccess.Read is required. 
-             * If the file access is FileAccess.Write then System.Security.Permissions.FileIOPermissionAccess.Write is required. 
-             * If the file is opened with FileAccess.ReadWrite, both System.Security.Permissions.FileIOPermissionAccess.Read and System.Security.Permissions.FileIOPermissionAccess.Write are required. 
-             * If the file access is FileAccess.Append, then System.Security.Permissions.FileIOPermissionAccess.Append is required.
-             * */
-            FileAccess fileAccess = FileAccess.Read;
-            if (readRequired
-               && writeRequired
-               )
-            {
-               fileAccess = FileAccess.ReadWrite;
-            }
-            else if (writeRequired)
-            {
-               fileAccess = FileAccess.Write;
-            }
-
-            FileMode fileMode;
-            switch (rawCreationDisposition)
-            {
-               case CREATE_NEW:
-                  fileMode = FileMode.CreateNew;
-                  break;
-               case CREATE_ALWAYS:
-                  fileMode = FileMode.Create;
-                  break;
-               case OPEN_EXISTING:
-                  fileMode = FileMode.Open;
-                  break;
-               case OPEN_ALWAYS:
-                  fileMode = FileMode.OpenOrCreate;
-                  break;
-               case TRUNCATE_EXISTING:
-                  fileMode = FileMode.Truncate;
-                  break;
-               default:
-                  throw new ArgumentOutOfRangeException( String.Format( "rawCreationDisposition has strange value[{0}]", rawCreationDisposition ) );
-            }
-
-            //if (((rawAccessMode & FILE_APPEND_DATA) == FILE_APPEND_DATA)
-            //   && (fileAccess == FileAccess.Write)
-            //   )
-            //{
-            //   // Append is only applicable if "Only" write access is requested
-            //   fileMode = FileMode.Append;
-            //}
-
-            FileShare fileShare = FileShare.None;
-            if ((rawShare & FILE_SHARE_READ) == FILE_SHARE_READ)
-               fileShare |= FileShare.Read;
-            if ((rawShare & FILE_SHARE_WRITE) == FILE_SHARE_WRITE)
-               fileShare |= FileShare.Write;
-            if ((rawShare & FILE_SHARE_DELETE) == FILE_SHARE_DELETE)
-               fileShare |= FileShare.Delete;
-            if ((rawShare & 0x10) == 0x10)
-               fileShare |= FileShare.Inheritable; // Not currently a Win32 option
-
-
-            FileOptions fileOptions = FileOptions.None;
-            if ((rawFlagsAndAttributes & FILE_FLAG_WRITE_THROUGH) == FILE_FLAG_WRITE_THROUGH)
-               fileOptions |= FileOptions.WriteThrough;
-            else if ((rawFlagsAndAttributes & FILE_FLAG_OVERLAPPED) == FILE_FLAG_OVERLAPPED)
-               fileOptions |= FileOptions.Asynchronous;
-            else if ((rawFlagsAndAttributes & FILE_FLAG_RANDOM_ACCESS) == FILE_FLAG_RANDOM_ACCESS)
-               fileOptions |= FileOptions.RandomAccess;
-            else if ((rawFlagsAndAttributes & FILE_FLAG_DELETE_ON_CLOSE) == FILE_FLAG_DELETE_ON_CLOSE)
-               fileOptions |= FileOptions.DeleteOnClose;
-            else if ((rawFlagsAndAttributes & FILE_FLAG_SEQUENTIAL_SCAN) == FILE_FLAG_SEQUENTIAL_SCAN)
-               fileOptions |= FileOptions.SequentialScan;
-
-            // TODO: Sort / Test out this option
-            //  case FileOptions.Encrypted:
-
-            int ret = operations.CreateFile( file, fileMode, fileAccess, fileShare, fileOptions, info );
+            int ret = operations.CreateFile( file, rawAccessMode, rawShare, rawCreationDisposition, rawFlagsAndAttributes, info );
 
             if (info.IsDirectory)
                rawFileInfo.IsDirectory = 1;

@@ -5,7 +5,7 @@
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
      >
    <?define UpgradeCode = "f6f94f17-a05f-4824-8dd9-9f5e8267d783" ?>
-   <?define Version = "10.10.01" ?>
+   <?define Version = "10.10.02" ?>
    <?define ProductName = "Liquesce Windows HDD Pooling Suite"?>
 
    <Product Version="$(var.Version)" Id="*" UpgradeCode="$(var.UpgradeCode)"
@@ -28,7 +28,6 @@
       <Property Id="ARPURLINFOABOUT" Value="http://liquesce.codeplex.com/" />
       <Icon Id="client.exe" SourceFile="Z:\Liquesce\Liquesce\Resources\Liquesce.ico" />
       <Property Id="ARPPRODUCTICON" Value="client.exe" />
-      <Property Id="ALLUSERS" Value="1" /> <!-- This forces the above icon into the uninstall even for single user install -->
       
       <!-- Properties to allow detection of .Net installation -->
       <PropertyRef Id="NETFRAMEWORK40FULL"/>
@@ -56,7 +55,7 @@
       </Condition>
 
       <!--Some test conditions to allow the installer to run-->
-      <Condition Message="Dokan Driver Is Not Installed">
+      <Condition Message="Dokan.sys Driver Is Not Installed in the SYSTEM\CurrentControlSet\services registry correctly!">
          <![CDATA[Installed OR DOKANINSTALLED]]>
       </Condition>
       <Condition Message="[ProductName] Requires .NET Framework 4.0 Main profile to be installed">

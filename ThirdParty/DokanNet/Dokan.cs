@@ -1,3 +1,4 @@
+using System;
 using NLog;
 
 namespace DokanNet
@@ -56,7 +57,7 @@ namespace DokanNet
       public static int DokanMain(DokanOptions options, IDokanOperations operations)
       {
          Log.Info("Start DokanMain");
-         if (options.VolumeLabel == null)
+         if (String.IsNullOrEmpty(options.VolumeLabel) )
          {
             options.VolumeLabel = "DOKAN";
          }
@@ -119,7 +120,9 @@ namespace DokanNet
 
       public static uint DokanDriverVersion()
       {
-         return DokanDll.DokanDriveVersion();
+         // TODO why does this not work
+         return 1;
+         // return DokanDll.DokanDriveVersion();
       }
 
       public static bool DokanResetTimeout(uint timeout, DokanFileInfo fileinfo)
