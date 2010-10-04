@@ -783,7 +783,7 @@ namespace LiquesceSvc
             Directory.CreateDirectory(pathTarget);
          foreach (FileInfo filein in currentDirectory.GetFiles())
          {
-            string fileTarget = pathTarget + filein.Name;
+            string fileTarget = pathTarget + "\\" + filein.Name;
             if (!hasPathBeenUsed.ContainsKey(fileTarget))
             {
                XMoveFile(filein.FullName, fileTarget, replaceIfExisting);
@@ -796,7 +796,7 @@ namespace LiquesceSvc
          }
          foreach (DirectoryInfo dr in currentDirectory.GetDirectories())
          {
-            XMoveDirContents(dr.FullName, pathTarget + dr.Name, hasPathBeenUsed, replaceIfExisting);
+             XMoveDirContents(dr.FullName, pathTarget + "\\" + dr.Name, hasPathBeenUsed, replaceIfExisting);
          }
          Directory.Delete(pathSource);
       }
