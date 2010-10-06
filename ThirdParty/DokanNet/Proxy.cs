@@ -18,9 +18,9 @@ namespace DokanNet
       private readonly uint dwVolumeSerialNumber;
       public uint nFileSizeHigh;
       public uint nFileSizeLow;
-      private readonly uint dwNumberOfLinks;
-      private readonly uint nFileIndexHigh;
-      private readonly uint nFileIndexLow;
+      internal uint dwNumberOfLinks;
+      internal uint nFileIndexHigh;
+      internal uint nFileIndexLow;
    }
 
    [StructLayout( LayoutKind.Sequential, Pack = 4 )]
@@ -113,6 +113,7 @@ namespace DokanNet
       #region Win32 Constants fro file controls
       // ReSharper disable InconsistentNaming
 #pragma warning disable 169
+      private const uint FILE_ATTRIBUTE_VIRTUAL = 0x00010000;
       private const uint GENERIC_READ = 0x80000000;
       private const uint GENERIC_WRITE = 0x40000000;
       private const uint GENERIC_EXECUTE = 0x20000000;
@@ -215,7 +216,10 @@ namespace DokanNet
             string file = GetFileName( rawFileName );
 
             DokanFileInfo info = GetNewFileInfo( ref rawFileInfo );
-            return operations.OpenDirectory( file, info );
+            int ret = operations.OpenDirectory(file, info);
+            if (info.IsDirectory)
+               rawFileInfo.IsDirectory = 1;
+            return ret;
          }
          catch (Exception ex)
          {
@@ -235,7 +239,10 @@ namespace DokanNet
             string file = GetFileName( rawFileName );
 
             DokanFileInfo info = GetNewFileInfo( ref rawFileInfo );
-            return operations.CreateDirectory( file, info );
+            int ret = operations.CreateDirectory( file, info );
+            if (info.IsDirectory)
+               rawFileInfo.IsDirectory = 1;
+            return ret;
          }
          catch (Exception ex)
          {
@@ -381,7 +388,7 @@ namespace DokanNet
 
             if (ret == 0)
             {
-               rawHandleFileInformation.dwFileAttributes = (uint)fi.Attributes;
+               rawHandleFileInformation.dwFileAttributes = (uint)fi.Attributes + FILE_ATTRIBUTE_VIRTUAL;
 
                rawHandleFileInformation.ftCreationTime.dwHighDateTime = (int)(fi.CreationTime.ToFileTime() >> 32);
                rawHandleFileInformation.ftCreationTime.dwLowDateTime = (int)(fi.CreationTime.ToFileTime() & 0xffffffff);
@@ -394,6 +401,9 @@ namespace DokanNet
 
                rawHandleFileInformation.nFileSizeLow = (uint)(fi.Length & 0xffffffff);
                rawHandleFileInformation.nFileSizeHigh = (uint)(fi.Length >> 32);
+               rawHandleFileInformation.dwNumberOfLinks = 0;
+               rawHandleFileInformation.nFileIndexHigh = 0;
+               rawHandleFileInformation.nFileIndexLow = 0;
             }
 
             return ret;
@@ -759,7 +769,7 @@ namespace DokanNet
          {
             byte[] volume = System.Text.Encoding.Unicode.GetBytes( options.VolumeLabel );
             Marshal.Copy( volume, 0, rawVolumeNameBuffer, Math.Min( (int)rawVolumeNameSize, volume.Length ) );
-            rawVolumeSerialNumber = 0x19831116;
+            rawVolumeSerialNumber = 0x20101112;
             rawMaximumComponentLength = 256;
 
 //#define FILE_CASE_SENSITIVE_SEARCH      0x00000001  

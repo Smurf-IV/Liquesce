@@ -88,7 +88,8 @@ namespace LiquesceSvc
                      Log.Debug("filename [{0}] ERROR_FILE_NOT_FOUND", filename);
                      // Probably someone has removed this on the actual drive
                      RemoveFromLookup(filename);
-                     return Dokan.ERROR_FILE_NOT_FOUND;
+                     actualErrorCode = Dokan.ERROR_FILE_NOT_FOUND;
+                     return actualErrorCode;
                   }
                   break;
             }
@@ -170,17 +171,22 @@ namespace LiquesceSvc
 
       public int OpenDirectory(string filename, DokanFileInfo info)
       {
+         int dokanError = Dokan.DOKAN_ERROR;
          try
          {
             Log.Trace("OpenDirectory IN DokanProcessId[{0}]", info.ProcessId);
+            string path = GetPath(filename);
+            int start = path.IndexOf(Path.DirectorySeparatorChar );
+            path = start > 0 ? path.Substring(start) : PathDirectorySeparatorChar;
 
             List<string> currentMatchingDirs = new List<string>(configDetails.SourceLocations.Count);
             foreach (string newTarget in
-                           configDetails.SourceLocations.Select(sourceLocation => sourceLocation + filename))
+                           configDetails.SourceLocations.Select(sourceLocation => sourceLocation + path))
             {
-               Log.Trace("Try and find from [{0}]", newTarget);
+               Log.Trace("Try and OpenDirectory from [{0}]", newTarget);
                if (Directory.Exists(newTarget))
                {
+                  Log.Trace("Directory.Exists[{0}] Adding details", newTarget);
                   currentMatchingDirs.Add(newTarget);
                }
             }
@@ -196,17 +202,21 @@ namespace LiquesceSvc
                {
                   foundDirectoriesSync.ExitWriteLock();
                }
-               return Dokan.DOKAN_SUCCESS;
+               dokanError = Dokan.DOKAN_SUCCESS;
             }
-            // Probably someone has removed this fromthe actual mounts
-            RemoveFromLookup(filename);
-            return Dokan.ERROR_PATH_NOT_FOUND;
+            else
+            {
+               Log.Warn("Probably someone has removed this from the actual mounts.");
+               RemoveFromLookup(filename);
+               dokanError = Dokan.ERROR_PATH_NOT_FOUND;
+            }
 
          }
          finally
          {
-            Log.Trace("OpenDirectory OUT");
+            Log.Trace("OpenDirectory OUT. dokanError[{0}]", dokanError);
          }
+         return dokanError;
       }
 
 
@@ -283,6 +293,7 @@ namespace LiquesceSvc
                         {
                            // Use an index for speed (It all counts !)
                            string fullPath = targetDeletes[index];
+                           Log.Trace("Deleting matched dir [{0}]", fullPath);
                            Directory.Delete(fullPath, false);
                         }
                      foundDirectoriesSync.TryEnterWriteLock(configDetails.LockTimeout);
@@ -530,7 +541,11 @@ namespace LiquesceSvc
             }
             if (fsi != null)
             {
+               // Prevent expensive time spent allowing indexing == FileAttributes.NotContentIndexed
+               // Prevent the system from timing out due to slow access through the driver == FileAttributes.Offline
                fileinfo.Attributes = fsi.Attributes | FileAttributes.NotContentIndexed;
+               if ( Log.IsTraceEnabled )
+                  fileinfo.Attributes |= FileAttributes.Offline;
                fileinfo.CreationTime = fsi.CreationTime;
                fileinfo.LastAccessTime = fsi.LastAccessTime;
                fileinfo.LastWriteTime = fsi.LastWriteTime;
@@ -783,7 +798,7 @@ namespace LiquesceSvc
             Directory.CreateDirectory(pathTarget);
          foreach (FileInfo filein in currentDirectory.GetFiles())
          {
-            string fileTarget = pathTarget + "\\" + filein.Name;
+            string fileTarget = pathTarget + Path.DirectorySeparatorChar + filein.Name;
             if (!hasPathBeenUsed.ContainsKey(fileTarget))
             {
                XMoveFile(filein.FullName, fileTarget, replaceIfExisting);
@@ -796,7 +811,7 @@ namespace LiquesceSvc
          }
          foreach (DirectoryInfo dr in currentDirectory.GetDirectories())
          {
-             XMoveDirContents(dr.FullName, pathTarget + "\\" + dr.Name, hasPathBeenUsed, replaceIfExisting);
+             XMoveDirContents(dr.FullName, pathTarget + Path.DirectorySeparatorChar + dr.Name, hasPathBeenUsed, replaceIfExisting);
          }
          Directory.Delete(pathSource);
       }
@@ -1086,9 +1101,16 @@ namespace LiquesceSvc
             {
                try
                {
-                  // Sometimes the windows share put a slash on the end .. Sometimes !!
-                  bool isAShareReference = filename.EndsWith(PathDirectorySeparatorChar);
-                  //filename = filename.TrimEnd(Path.DirectorySeparatorChar);
+                  bool isAShare = false;
+                  if (!filename.StartsWith(PathDirectorySeparatorChar))
+                  {
+                     isAShare = true;
+                     filename = Path.DirectorySeparatorChar + filename;
+                  }
+                  if (filename.EndsWith(PathDirectorySeparatorChar))
+                     isAShare = true;
+                     
+                  filename = filename.TrimEnd(Path.DirectorySeparatorChar);
                   rootPathsSync.TryEnterUpgradeableReadLock(configDetails.LockTimeout);
                   if (!rootPaths.TryGetValue(filename, out foundPath))
                   {
@@ -1098,14 +1120,14 @@ namespace LiquesceSvc
                      if (filename[0] != Path.DirectorySeparatorChar)
                         filename = PathDirectorySeparatorChar + filename;
 
-                     if (!isAShareReference
+                     if (!isAShare
                         && (configDetails.SourceLocations != null)
                         )
                      {
                         foreach (string newTarget in
                            configDetails.SourceLocations.Select(sourceLocation => sourceLocation + filename))
                         {
-                           Log.Trace("Try and find from [{0}]", newTarget);
+                           Log.Trace("Try and GetPath from [{0}]", newTarget);
                            //Now here's a kicker.. The User might have copied a file directly onto one of the drives while
                            // this has been running, So this ought to try and find if it exists that way.
                            if (Directory.Exists(newTarget)
@@ -1118,16 +1140,16 @@ namespace LiquesceSvc
                            }
                         }
                      }
-                     else
+                     else if ( isAShare
+                        && (configDetails.KnownSharePaths != null)
+                        )
                      {
-                        //found = configDetails.SourceLocations.Exists(delegate(ShareDetail shareDetail)
-                        //                                      {
-                        //                                         Log.Trace("Try and find from [{0}][{1}]",
-                        //                                                   shareDetail.Path, filename);
-                        //                                         return
-                        //                                            rootPaths.TryGetValue(sourceLocation + filename,
-                        //                                                                  out foundPath);
-                        //                                      });
+                        found = configDetails.KnownSharePaths.Exists(delegate(string sharePath)
+                                                              {
+                                                                 Log.Trace("Try and find from [{0}][{1}]", sharePath, filename);
+                                                                 return rootPaths.TryGetValue(sharePath + filename, out foundPath);
+                                                              });
+
                      }
                      if (!found)
                      {
@@ -1193,6 +1215,8 @@ namespace LiquesceSvc
          bool isDirectoy = (info2.Attributes & FileAttributes.Directory) == FileAttributes.Directory;
          FileInformation item = new FileInformation
                                    {
+                                      // Prevent expensive time spent allowing indexing == FileAttributes.NotContentIndexed
+                                      // Prevent the system from timing out due to slow access through the driver == FileAttributes.Offline
                                       Attributes = info2.Attributes | FileAttributes.NotContentIndexed,
                                       CreationTime = info2.CreationTime,
                                       LastAccessTime = info2.LastAccessTime,
@@ -1200,6 +1224,8 @@ namespace LiquesceSvc
                                       Length = (isDirectoy) ? 0L : ((FileInfo)info2).Length,
                                       FileName = info2.Name
                                    };
+         if (Log.IsTraceEnabled)
+            item.Attributes |= FileAttributes.Offline;
          files[TrimAndAddUnique(info2.FullName)] = item;
       }
 
@@ -1294,8 +1320,6 @@ namespace LiquesceSvc
          try
          {
             Thread.Sleep(250); // Give the driver some time to mount
-            if (ManagementLayer.Instance.State != LiquesceSvcState.Running)
-               return; // A request to exit has occurred
             // Now check (in 2 phases) the existence of the drive
             string path = configDetails.DriveLetter + ":" + PathDirectorySeparatorChar;
             while (!Directory.Exists(path))
@@ -1313,9 +1337,10 @@ namespace LiquesceSvc
                Thread.Sleep(100);
             } while (ManagementLayer.Instance.State == LiquesceSvcState.Running);
 
-            foreach (LanManShareDetails shareDetails in LanManShareHandler.MatchDriveLanManShares(configDetails.DriveLetter))
+            configDetails.KnownSharePaths = new List<string>(configDetails.SharesToRestore.Count);
+            foreach (LanManShareDetails shareDetails in configDetails.SharesToRestore)
             {
-               configDetails.KnownSharePaths.Add(shareDetails.Path.TrimEnd(Path.DirectorySeparatorChar));
+               configDetails.KnownSharePaths.Add(shareDetails.Path);
                try
                {
                   Log.Info("Restore share for : [{0}] [{1} : {2}]", shareDetails.Path, shareDetails.Name, shareDetails.Description);

@@ -106,6 +106,7 @@
     <Compile Include="ILiquesce.cs" />
     <Compile Include="ILiquesceCallBack.cs" />
     <Compile Include="LanManShareHandler.cs" />
+    <Compile Include="NetApi32.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

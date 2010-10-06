@@ -6,18 +6,6 @@ using System.Security.AccessControl;
 
 namespace LiquesceFaçade
 {
-   /// <summary>
-   /// struct to hold the details required be the WMI objects to recreate the share
-   /// </summary>
-   public class LanManShareDetails
-   {
-      public string Name;
-      public string Path;
-      public string Description;
-      public UInt32 Type;
-      public UInt32 MaxConnectionsNum;
-      public DirectorySecurity DirSec;
-   }
 
    public class LanManShareHandler
    {
@@ -29,12 +17,15 @@ namespace LiquesceFaçade
          {
             try
             {
-               LanManShareDetails shareDetails = new LanManShareDetails();
-               shareDetails.Name = Convert.ToString(objShare.Properties["Name"].Value);
-               shareDetails.MaxConnectionsNum = Convert.ToUInt32(objShare.Properties["MaximumAllowed"].Value);
-               shareDetails.Path = Convert.ToString(objShare.Properties["Path"].Value);
-               shareDetails.Description = Convert.ToString(objShare.Properties["Description"].Value);
-               shareDetails.Type = Convert.ToUInt32(objShare.Properties["Type"].Value);
+               PropertyData ong = objShare.Properties["MaximumAllowed"];
+               LanManShareDetails shareDetails = new LanManShareDetails
+                                                    {
+                                                       MaxConnectionsNum = (ong.Value == null) ? UInt32.MaxValue : Convert.ToUInt32(ong.Value),
+                                                       Name = Convert.ToString(objShare.Properties["Name"].Value),
+                                                       Path = Convert.ToString(objShare.Properties["Path"].Value),
+                                                       Description =
+                                                          Convert.ToString(objShare.Properties["Description"].Value)
+                                                    };
                shares.Add(shareDetails);
             }
             catch
@@ -49,7 +40,19 @@ namespace LiquesceFaçade
          List<LanManShareDetails> lmsd = GetLanManShares().FindAll(share => share.Path.StartsWith(DriveLetter));
          foreach (LanManShareDetails details in lmsd)
          {
-            details.DirSec = new DirectorySecurity(details.Path, AccessControlSections.All);
+            DirectorySecurity dirSec = new DirectorySecurity(details.Path, AccessControlSections.All);
+            details.ExportedRules = new List<FileSystemAccessRuleExport>();
+            foreach (FileSystemAccessRule fsar in dirSec.GetAccessRules(true, false, typeof (System.Security.Principal.NTAccount)) )
+            {
+               details.ExportedRules.Add(new FileSystemAccessRuleExport
+               {
+                  Identity = fsar.IdentityReference.Value,
+                  fileSystemRights = ((int)fsar.FileSystemRights == -1) ? FileSystemRights.FullControl : fsar.FileSystemRights,
+                  inheritanceFlags = fsar.InheritanceFlags,
+                  propagationFlags = fsar.PropagationFlags,
+                  Type = fsar.AccessControlType
+               } );
+            } 
          }
          return lmsd;
       }
@@ -68,7 +71,7 @@ namespace LiquesceFaçade
          inParams["Name"] = share.Name;
          inParams["Path"] = share.Path;
          inParams["MaximumAllowed"] = share.MaxConnectionsNum;
-         inParams["Type"] = share.Type; // Disk Drive
+         inParams["Type"] = 0; // Disk Drive
 
 
          // Invoke the method on the ManagementClass object
@@ -120,8 +123,20 @@ namespace LiquesceFaçade
 
          if (!String.IsNullOrEmpty(exceptionText))
             throw new Exception(exceptionText);
+         // It appears that trying to use dirInfo.GetAccessControl and then AddAccessRule et al. work okay on NTFS but as this
+         // is a DOKAN FS, it goes and cries (Well actually does not report a failure !!!!)
+
+
          DirectoryInfo dirInfo = new DirectoryInfo(share.Path);
-         dirInfo.SetAccessControl(share.DirSec);
+         DirectorySecurity security = dirInfo.GetAccessControl(AccessControlSections.Access);
+         foreach (FileSystemAccessRuleExport fsare in share.ExportedRules)
+         {
+            // Add Access rule for the inheritance
+            FileSystemAccessRule fsar = new FileSystemAccessRule(fsare.Identity, fsare.fileSystemRights,
+               fsare.inheritanceFlags, fsare.propagationFlags, fsare.Type);
+            security.AddAccessRule(fsar);
+         }
+         dirInfo.SetAccessControl(security);
       }
    }
 }

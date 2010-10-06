@@ -53,7 +53,6 @@ namespace Liquesce
       private void CurrentShares_FormClosing(object sender, FormClosingEventArgs e)
       {
          findSharesWorker.CancelAsync();
-
       }
 
       #region Thread Stuff
@@ -69,16 +68,14 @@ namespace Liquesce
 
       private void findSharesWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
       {
-         foreach (string[] row in
-            lmsd.SelectMany(share => (share.DirSec.GetAccessRules(true, false,
-                                                                  typeof (System.Security.Principal.NTAccount)).Cast
-                                        <FileSystemAccessRule>().Select(fsar => new[]
-                                                                                   {
-                                                                                      share.Path,
-                                                                                      share.Name + " : " +
-                                                                                      share.Description,
-                                                                                      GetAceInformation(fsar)
-                                                                                   }))))
+
+         foreach (string[] row in lmsd.SelectMany(share => 
+            share.ExportedRules.Select(fsare => new string[]
+                                                {
+                                                   share.Path, 
+                                                   share.Name + " : " + share.Description, 
+                                                   GetAceInformation(fsare)
+                                                })))
          {
             dataGridView1.Rows.Add(row);
          }
@@ -88,14 +85,19 @@ namespace Liquesce
          progressBar1.Value = 0;
       }
 
-      private string GetAceInformation(FileSystemAccessRule ace)
+      private string GetAceInformation(FileSystemAccessRuleExport fsare)
       {
-         StringBuilder info = new StringBuilder(ace.IdentityReference.Value);
-         info.Append(" : ").Append(ace.FileSystemRights.ToString());
+         StringBuilder info = new StringBuilder(fsare.Identity);
+         info.Append(" : ").Append(fsare.fileSystemRights.ToString());
          return info.ToString();
       }
 
       #endregion
+
+      private void button1_Click(object sender, EventArgs e)
+      {
+         shareDetails.SharesToRestore = lmsd;
+      }
 
    }
 }
