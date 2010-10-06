@@ -1,9 +1,43 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
+using System.Security.AccessControl;
 
 namespace LiquesceFaçade
 {
+
+   [DataContract]
+   public class FileSystemAccessRuleExport
+   {
+      [DataMember(IsRequired = true)]
+      public string Identity;
+      [DataMember(IsRequired = true)]
+      public FileSystemRights fileSystemRights;
+      [DataMember(IsRequired = true)]
+      public InheritanceFlags inheritanceFlags;
+      [DataMember(IsRequired = true)]
+      public PropagationFlags propagationFlags;
+      [DataMember(IsRequired = true)]
+      public AccessControlType Type;
+   }
+   /// <summary>
+   /// struct to hold the details required be the WMI objects to recreate the share
+   /// </summary>
+   [DataContract]
+   public class LanManShareDetails
+   {
+      [DataMember(IsRequired = true)]
+      public string Name;
+      [DataMember(IsRequired = true)]
+      public string Path; // *** Strip off trailing backslash - it isn't supported
+      [DataMember]
+      public string Description;
+      [DataMember]
+      public UInt32 MaxConnectionsNum;
+      [DataMember]
+      public List<FileSystemAccessRuleExport> ExportedRules;
+   }
+
    /// <summary>
    /// This is the class that will dump out the details to the XML File.
    /// </summary>
@@ -42,6 +76,9 @@ namespace LiquesceFaçade
       [DataMember]
       public string ServiceLogLevel = "Debug"; // NLog's LogLevel.Debug.ToString()
 
-      public List<string> KnownSharePaths; // Not exported
+      [DataMember]
+      public List<LanManShareDetails> SharesToRestore;
+
+      public List<string> KnownSharePaths;
    }
 }

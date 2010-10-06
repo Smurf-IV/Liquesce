@@ -602,7 +602,7 @@ namespace Liquesce
       {
          try
          {
-            if (DialogResult.Yes == MessageBox.Show(this, "Performing this action will \"Interupt All Shares\" on this machine.\nDo you wish to continue ?", "Caution..", MessageBoxButtons.YesNo, MessageBoxIcon.Question))
+            if (DialogResult.Yes == MessageBox.Show(this, "Performing this action will \"Remove the Mounted drive(s)\" on this machine.\n All open files will be forceably closed by this.\nDo you wish to continue ?", "Caution..", MessageBoxButtons.YesNo, MessageBoxIcon.Question))
             {
                SetProgressBarStyle(ProgressBarStyle.Marquee);
                cd.DelayStartMilliSec = (uint)DelayCreation.Value;

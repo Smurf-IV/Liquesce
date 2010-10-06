@@ -377,7 +377,7 @@
          this.commitToolStripMenuItem.Name = "commitToolStripMenuItem";
          this.commitToolStripMenuItem.Size = new System.Drawing.Size(123, 20);
          this.commitToolStripMenuItem.Text = "&Send Configuration";
-         this.commitToolStripMenuItem.ToolTipText = "Send the information above to the service";
+         this.commitToolStripMenuItem.ToolTipText = "Send / Commit the stored information to the service";
          this.commitToolStripMenuItem.Click += new System.EventHandler(this.commitToolStripMenuItem_Click);
          // 
          // logsToolStripMenuItem
@@ -430,6 +430,7 @@
          this.currentSharesToolStripMenuItem.Name = "currentSharesToolStripMenuItem";
          this.currentSharesToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
          this.currentSharesToolStripMenuItem.Text = "&Current Shares...";
+         this.currentSharesToolStripMenuItem.ToolTipText = "Requires this to be running at the administrator level";
          this.currentSharesToolStripMenuItem.Click += new System.EventHandler(this.currentSharesToolStripMenuItem_Click);
          // 
          // FillExpectedLayoutWorker
