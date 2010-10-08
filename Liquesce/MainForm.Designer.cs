@@ -37,6 +37,7 @@
          this.splitContainer2 = new System.Windows.Forms.SplitContainer();
          this.splitContainer3 = new System.Windows.Forms.SplitContainer();
          this.mergeList = new System.Windows.Forms.TreeView();
+         this.mergeListContext = new System.Windows.Forms.ContextMenuStrip(this.components);
          this.groupBox1 = new System.Windows.Forms.GroupBox();
          this.VolumeLabel = new System.Windows.Forms.TextBox();
          this.MountPoint = new System.Windows.Forms.ComboBox();
@@ -49,6 +50,7 @@
          this.refreshExpectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.label3 = new System.Windows.Forms.Label();
          this.progressBar1 = new System.Windows.Forms.ProgressBar();
+         this.mergeListContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.menuStrip1 = new System.Windows.Forms.MenuStrip();
          this.commitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.logsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -60,6 +62,7 @@
          this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
          this.FillExpectedLayoutWorker = new System.ComponentModel.BackgroundWorker();
          this.serviceController1 = new System.ServiceProcess.ServiceController();
+         this.deleteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
          this.splitContainer1.Panel1.SuspendLayout();
          this.splitContainer1.Panel2.SuspendLayout();
@@ -72,6 +75,7 @@
          this.splitContainer3.Panel1.SuspendLayout();
          this.splitContainer3.Panel2.SuspendLayout();
          this.splitContainer3.SuspendLayout();
+         this.mergeListContext.SuspendLayout();
          this.groupBox1.SuspendLayout();
          ((System.ComponentModel.ISupportInitialize)(this.DelayCreation)).BeginInit();
          this.refreshExpected.SuspendLayout();
@@ -174,6 +178,7 @@
          // mergeList
          // 
          this.mergeList.AllowDrop = true;
+         this.mergeList.ContextMenuStrip = this.mergeListContext;
          this.mergeList.Dock = System.Windows.Forms.DockStyle.Fill;
          this.mergeList.FullRowSelect = true;
          this.mergeList.ImageIndex = 0;
@@ -185,9 +190,19 @@
          this.mergeList.Size = new System.Drawing.Size(247, 344);
          this.mergeList.TabIndex = 3;
          this.toolTip1.SetToolTip(this.mergeList, "Drop the Entries here");
+         this.mergeList.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.mergeList_NodeMouseClick);
          this.mergeList.DragDrop += new System.Windows.Forms.DragEventHandler(this.mergeList_DragDrop);
          this.mergeList.DragOver += new System.Windows.Forms.DragEventHandler(this.mergeList_DragOver);
          this.mergeList.KeyUp += new System.Windows.Forms.KeyEventHandler(this.mergeList_KeyUp);
+         this.mergeList.MouseDown += new System.Windows.Forms.MouseEventHandler(this.mergeList_MouseDown);
+         // 
+         // mergeListContext
+         // 
+         this.mergeListContext.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+         this.mergeListContext.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.deleteToolStripMenuItem});
+         this.mergeListContext.Name = "mergeListContext";
+         this.mergeListContext.Size = new System.Drawing.Size(147, 26);
          // 
          // groupBox1
          // 
@@ -324,16 +339,17 @@
          // 
          // refreshExpected
          // 
+         this.refreshExpected.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.refreshExpected.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.refreshExpectedToolStripMenuItem});
          this.refreshExpected.Name = "refreshExpected";
-         this.refreshExpected.Size = new System.Drawing.Size(183, 26);
+         this.refreshExpected.Size = new System.Drawing.Size(204, 26);
          // 
          // refreshExpectedToolStripMenuItem
          // 
          this.refreshExpectedToolStripMenuItem.Name = "refreshExpectedToolStripMenuItem";
          this.refreshExpectedToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F5;
-         this.refreshExpectedToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
+         this.refreshExpectedToolStripMenuItem.Size = new System.Drawing.Size(203, 22);
          this.refreshExpectedToolStripMenuItem.Text = "&Refresh Expected";
          this.refreshExpectedToolStripMenuItem.Click += new System.EventHandler(this.refreshExpectedToolStripMenuItem_Click);
          // 
@@ -357,8 +373,14 @@
          this.progressBar1.Step = 5;
          this.progressBar1.TabIndex = 4;
          // 
+         // mergeListContextMenuItem
+         // 
+         this.mergeListContextMenuItem.Name = "mergeListContextMenuItem";
+         this.mergeListContextMenuItem.Size = new System.Drawing.Size(32, 19);
+         // 
          // menuStrip1
          // 
+         this.menuStrip1.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.commitToolStripMenuItem,
             this.logsToolStripMenuItem,
@@ -387,21 +409,21 @@
             this.serviceLogViewToolStripMenuItem,
             this.userLogViewToolStripMenuItem});
          this.logsToolStripMenuItem.Name = "logsToolStripMenuItem";
-         this.logsToolStripMenuItem.Size = new System.Drawing.Size(41, 20);
+         this.logsToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
          this.logsToolStripMenuItem.Text = "&Logs";
          // 
          // serviceLogViewToolStripMenuItem
          // 
          this.serviceLogViewToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
          this.serviceLogViewToolStripMenuItem.Name = "serviceLogViewToolStripMenuItem";
-         this.serviceLogViewToolStripMenuItem.Size = new System.Drawing.Size(177, 22);
+         this.serviceLogViewToolStripMenuItem.Size = new System.Drawing.Size(192, 22);
          this.serviceLogViewToolStripMenuItem.Text = "&Service Log View...";
          // 
          // userLogViewToolStripMenuItem
          // 
          this.userLogViewToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
          this.userLogViewToolStripMenuItem.Name = "userLogViewToolStripMenuItem";
-         this.userLogViewToolStripMenuItem.Size = new System.Drawing.Size(177, 22);
+         this.userLogViewToolStripMenuItem.Size = new System.Drawing.Size(192, 22);
          this.userLogViewToolStripMenuItem.Text = "&User Log View...";
          // 
          // advancedToolStripMenuItem
@@ -445,6 +467,14 @@
          this.serviceController1.MachineName = "127.0.0.1";
          this.serviceController1.ServiceName = "LiquesceSvc";
          // 
+         // deleteToolStripMenuItem
+         // 
+         this.deleteToolStripMenuItem.Name = "deleteToolStripMenuItem";
+         this.deleteToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.Delete;
+         this.deleteToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
+         this.deleteToolStripMenuItem.Text = "&Delete";
+         this.deleteToolStripMenuItem.ToolTipText = "Delete the current selected item.";
+         // 
          // MainForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
@@ -473,6 +503,7 @@
          this.splitContainer3.Panel2.PerformLayout();
          ((System.ComponentModel.ISupportInitialize)(this.splitContainer3)).EndInit();
          this.splitContainer3.ResumeLayout(false);
+         this.mergeListContext.ResumeLayout(false);
          this.groupBox1.ResumeLayout(false);
          this.groupBox1.PerformLayout();
          ((System.ComponentModel.ISupportInitialize)(this.DelayCreation)).EndInit();
@@ -508,6 +539,8 @@
       private System.Windows.Forms.ToolStripMenuItem advancedToolStripMenuItem;
       private System.Windows.Forms.ImageList imageListUnits;
       private System.ServiceProcess.ServiceController serviceController1;
+      private System.Windows.Forms.ContextMenuStrip mergeListContext;
+      private System.Windows.Forms.ToolStripMenuItem mergeListContextMenuItem;
       private System.Windows.Forms.ContextMenuStrip refreshExpected;
       private System.Windows.Forms.ToolStripMenuItem refreshExpectedToolStripMenuItem;
       private System.Windows.Forms.SplitContainer splitContainer3;
@@ -516,5 +549,6 @@
       private System.Windows.Forms.ToolStripMenuItem serviceLogViewToolStripMenuItem;
       private System.Windows.Forms.ToolStripMenuItem userLogViewToolStripMenuItem;
       private System.Windows.Forms.ToolStripMenuItem currentSharesToolStripMenuItem;
+      private System.Windows.Forms.ToolStripMenuItem deleteToolStripMenuItem;
    }
 }
