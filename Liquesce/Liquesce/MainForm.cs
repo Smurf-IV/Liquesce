@@ -96,8 +96,8 @@ namespace Liquesce
                                                                                       {
                                                                                          Text = sourceLocation,
                                                                                          ImageKey = sourceLocation,
-                                                                                         SelectedImageKey =
-                                                                                            sourceLocation
+                                                                                         SelectedImageKey = sourceLocation,
+                                                                                         Name = sourceLocation
                                                                                       }))
                {
                   mergeList.Nodes.Add(tn);
@@ -311,11 +311,14 @@ namespace Liquesce
       {
          // Is it a valid format?
          DragDropItem ud = e.Data.GetData(typeof(DragDropItem)) as DragDropItem;
+         Point newPoint = mergeList.PointToClient(new Point(e.X, e.Y));
+         TreeNode selected = mergeList.GetNodeAt(newPoint.X, newPoint.Y);
          if (ud != null)
          {
-            CheckAndAddNewPath(mergeList, ud);
+            CheckDrop(mergeList, ud, selected);
          }
       }
+
       private string GetSelectedNodesPath(TreeNode selected)
       {
          DirectoryInfo shNode = selected.Tag as DirectoryInfo;
@@ -324,23 +327,78 @@ namespace Liquesce
          return newPath;
       }
 
-      private void CheckAndAddNewPath(TreeView targetTree, DragDropItem newPath)
+      private void CheckDrop(TreeView targetTree, DragDropItem newPath, TreeNode selected)
       {
          // TODO: On Add check to make sure that the root (Or this) node have not already been covered.
          if (!String.IsNullOrEmpty(newPath.Name))
          {
             TreeNode tn = new TreeNode
-                             {
-                                Text = newPath.Name,
-                                ImageKey = newPath.Name,
-                                SelectedImageKey = newPath.Name
-                             };
-            targetTree.Nodes.Add(tn);
+            {
+               Text = newPath.Name,
+               ImageKey = newPath.Name,
+               SelectedImageKey = newPath.Name,
+               Name = newPath.Name
+            };
+
+            //we only ever want an entry in 1x in the list.  Remove any duplicates, so you can reorder from the filesystem treeview
+            TreeNode[] nodes = targetTree.Nodes.Find(newPath.Name, false);
+            if (nodes.Length > 0)
+            {
+               nodes[0].Remove();
+            }
+
+            //no node below?  stick this at the bottom of the list, else put in before the one your over.
+            if (selected == null)
+            {
+               targetTree.Nodes.Add(tn);
+
+            }
+            else
+            {
+               targetTree.Nodes.Insert(selected.Index, tn);
+            }
+
             RestartExpectedOutput();
          }
       }
 
-      #endregion
+      private void mergeListContextMenuItem_Click(object sender, EventArgs e)
+      {
+         mergeList.SelectedNode.Remove();
+         RestartExpectedOutput();
+      }
+
+      //right click menu for deleting items from mergelist
+      private void mergeList_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
+      {
+         if (e.Button == MouseButtons.Right)
+         {
+            mergeList.SelectedNode = e.Node;
+
+            if (mergeList.SelectedNode != null)
+            {
+               mergeList.ContextMenuStrip.Show(mergeList, e.Location);
+            }
+         }
+      }
+
+      //enable dragging for mergelist
+      private void mergeList_MouseDown(object sender, MouseEventArgs e)
+      {
+         if (e.Button == MouseButtons.Left)
+         {
+            // Get the node underneath the mouse.
+            TreeNode selected = mergeList.GetNodeAt(e.X, e.Y);
+            mergeList.SelectedNode = selected;
+
+            // Start the drag-and-drop operation with a cloned copy of the node.
+            if (selected != null)
+            {
+               DragDropItem ud = new DragDropItem(selected.Text);
+               mergeList.DoDragDrop(ud, DragDropEffects.All);
+            }
+         }
+      }
 
       private void mergeList_KeyUp(object sender, KeyEventArgs e)
       {
@@ -357,6 +415,8 @@ namespace Liquesce
             RestartExpectedOutput();
          }
       }
+
+      #endregion
 
       private void RestartExpectedOutput()
       {
@@ -676,7 +736,6 @@ namespace Liquesce
          if (shareSettings.ShowDialog(this) == DialogResult.OK)
             cd = shareSettings.ShareDetails;
       }
-
 
    }
 }
