@@ -180,7 +180,7 @@ namespace Liquesce
             string label;
             try
             {
-               label = !String.IsNullOrWhiteSpace(di.VolumeLabel) ? di.VolumeLabel : di.DriveType.ToString();
+               label = (di.IsReady && !String.IsNullOrWhiteSpace(di.VolumeLabel)) ? di.VolumeLabel : di.DriveType.ToString();
             }
             catch
             {
