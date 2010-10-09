@@ -48,13 +48,14 @@ namespace Liquesce
          }
          if (serviceStatus != ServiceControllerStatus.Running)
          {
-            commitToolStripMenuItem.ToolTipText = "Service is not running";
-            commitToolStripMenuItem.Enabled = false;
+            currentSharesToolStripMenuItem.ToolTipText = commitToolStripMenuItem.ToolTipText = "Service is not running";
+            currentSharesToolStripMenuItem.Enabled = commitToolStripMenuItem.Enabled = false;
          }
          else
          {
             try
             {
+               currentSharesToolStripMenuItem.Enabled = commitToolStripMenuItem.Enabled = true;
                ChannelFactory<ILiquesce> factory = new ChannelFactory<ILiquesce>("LiquesceFaçade");
                ILiquesce remoteIF = factory.CreateChannel();
                cd = remoteIF.ConfigDetails;

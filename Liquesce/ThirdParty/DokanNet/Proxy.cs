@@ -169,7 +169,7 @@ namespace DokanNet
       private const uint FILE_FLAG_RANDOM_ACCESS = 0x10000000;
       private const uint FILE_FLAG_SEQUENTIAL_SCAN = 0x08000000;
       private const uint FILE_FLAG_DELETE_ON_CLOSE = 0x04000000;
-      private const uint FILE_FLAG_BACKUP_SEMANTICS = 0x02000000;
+      public const uint FILE_FLAG_BACKUP_SEMANTICS = 0x02000000;
       private const uint FILE_FLAG_POSIX_SEMANTICS = 0x01000000;
       private const uint FILE_FLAG_OPEN_REPARSE_POINT = 0x00200000;
       private const uint FILE_FLAG_OPEN_NO_RECALL = 0x00100000;
@@ -768,7 +768,10 @@ namespace DokanNet
          try
          {
             byte[] volume = System.Text.Encoding.Unicode.GetBytes( options.VolumeLabel );
-            Marshal.Copy( volume, 0, rawVolumeNameBuffer, Math.Min( (int)rawVolumeNameSize, volume.Length ) );
+            int length = volume.Length;
+            byte[] volumeNull = new byte[length+2];
+            Array.Copy(volume, volumeNull, length);
+            Marshal.Copy(volumeNull, 0, rawVolumeNameBuffer, Math.Min((int)rawVolumeNameSize, length + 2));
             rawVolumeSerialNumber = 0x20101112;
             rawMaximumComponentLength = 256;
 
@@ -779,7 +782,11 @@ namespace DokanNet
             rawFileSystemFlags = 7;
             
             byte[] sys = System.Text.Encoding.Unicode.GetBytes( "DOKAN" );
-            Marshal.Copy( sys, 0, rawFileSystemNameBuffer, Math.Min( (int)rawFileSystemNameSize, sys.Length ) );
+            length = sys.Length;
+            byte[] sysNull = new byte[length + 2];
+            Array.Copy(sys, sysNull, length);
+
+            Marshal.Copy( sysNull, 0, rawFileSystemNameBuffer, Math.Min( (int)rawFileSystemNameSize, length+2 ) );
             return 0;
          }
          catch (Exception ex)

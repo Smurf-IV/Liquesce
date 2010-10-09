@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ServiceModel;
 
 namespace LiquesceFaçade
@@ -27,6 +28,9 @@ namespace LiquesceFaçade
          [OperationContract]
          get;
       }
+
+      [OperationContract]
+      List<LanManShareDetails> GetPossibleShares();
 
       ConfigDetails ConfigDetails
       {

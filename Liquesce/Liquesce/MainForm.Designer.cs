@@ -38,6 +38,7 @@
          this.splitContainer3 = new System.Windows.Forms.SplitContainer();
          this.mergeList = new System.Windows.Forms.TreeView();
          this.mergeListContext = new System.Windows.Forms.ContextMenuStrip(this.components);
+         this.deleteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.groupBox1 = new System.Windows.Forms.GroupBox();
          this.VolumeLabel = new System.Windows.Forms.TextBox();
          this.MountPoint = new System.Windows.Forms.ComboBox();
@@ -62,7 +63,6 @@
          this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
          this.FillExpectedLayoutWorker = new System.ComponentModel.BackgroundWorker();
          this.serviceController1 = new System.ServiceProcess.ServiceController();
-         this.deleteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
          this.splitContainer1.Panel1.SuspendLayout();
          this.splitContainer1.Panel2.SuspendLayout();
@@ -203,6 +203,14 @@
             this.deleteToolStripMenuItem});
          this.mergeListContext.Name = "mergeListContext";
          this.mergeListContext.Size = new System.Drawing.Size(147, 26);
+         // 
+         // deleteToolStripMenuItem
+         // 
+         this.deleteToolStripMenuItem.Name = "deleteToolStripMenuItem";
+         this.deleteToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.Delete;
+         this.deleteToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
+         this.deleteToolStripMenuItem.Text = "&Delete";
+         this.deleteToolStripMenuItem.ToolTipText = "Delete the current selected item.";
          // 
          // groupBox1
          // 
@@ -395,6 +403,7 @@
          // commitToolStripMenuItem
          // 
          this.commitToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+         this.commitToolStripMenuItem.Enabled = false;
          this.commitToolStripMenuItem.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.commitToolStripMenuItem.Name = "commitToolStripMenuItem";
          this.commitToolStripMenuItem.Size = new System.Drawing.Size(123, 20);
@@ -449,6 +458,7 @@
          // 
          // currentSharesToolStripMenuItem
          // 
+         this.currentSharesToolStripMenuItem.Enabled = false;
          this.currentSharesToolStripMenuItem.Name = "currentSharesToolStripMenuItem";
          this.currentSharesToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
          this.currentSharesToolStripMenuItem.Text = "&Current Shares...";
@@ -466,14 +476,6 @@
          // 
          this.serviceController1.MachineName = "127.0.0.1";
          this.serviceController1.ServiceName = "LiquesceSvc";
-         // 
-         // deleteToolStripMenuItem
-         // 
-         this.deleteToolStripMenuItem.Name = "deleteToolStripMenuItem";
-         this.deleteToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.Delete;
-         this.deleteToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
-         this.deleteToolStripMenuItem.Text = "&Delete";
-         this.deleteToolStripMenuItem.ToolTipText = "Delete the current selected item.";
          // 
          // MainForm
          // 
