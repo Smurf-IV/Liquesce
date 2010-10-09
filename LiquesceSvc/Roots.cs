@@ -10,12 +10,10 @@ namespace LiquesceSvc
     class Roots
     {
 
-        private List<string> rootslist;
         private ConfigDetails configDetails;
 
         public Roots(ConfigDetails configDetails)
         {
-            this.rootslist = configDetails.SourceLocations;
             this.configDetails = configDetails;
         }
 
@@ -37,16 +35,16 @@ namespace LiquesceSvc
 
         private string getHighestPriority()
         {
-            for (int i = 0; i < rootslist.Count; i++)
+            for (int i = 0; i < configDetails.SourceLocations.Count; i++)
             {
                 ulong num;
                 ulong num2;
                 ulong num3;
-                if (GetDiskFreeSpaceEx(rootslist[i], out num, out num2, out num3))
+                if (GetDiskFreeSpaceEx(configDetails.SourceLocations[i], out num, out num2, out num3))
                 {
                     if (num > configDetails.HoldOffBufferBytes)
                     {
-                        return rootslist[i];
+                        return configDetails.SourceLocations[i];
                     }
                 }
             }
@@ -59,7 +57,7 @@ namespace LiquesceSvc
             ulong HighestFreeSpace = 0;
             string PathWithMostFreeSpace = "";
 
-            rootslist.ForEach(str =>
+            configDetails.SourceLocations.ForEach(str =>
             {
                 ulong num;
                 ulong num2;
