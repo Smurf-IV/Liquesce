@@ -118,7 +118,7 @@ namespace Liquesce
         public string ServiceLogLevel { get; set; }
 
 
-        [DescriptionAttribute("The allocation stratigy how new files or folders are placed on the storage disks (priority = classic one disk after the other; ballanced = ballance the availabel space on all storage disks)."),
+        [DescriptionAttribute("The allocation stratigy how new files or folders are placed on the storage disks (priority = classic one disk after the other; balanced = balance the availabel space on all storage disks)."),
         DisplayName("Disk Allocation Mode"),
         TypeConverter(typeof(AllocationModeValues))
         , CategoryAttribute("File")
@@ -161,7 +161,7 @@ namespace Liquesce
 
         public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
         {
-            return new StandardValuesCollection(new[] { "priority", "ballanced" });
+            return new StandardValuesCollection(new[] { "priority", "balanced" });
         }
     }
 
