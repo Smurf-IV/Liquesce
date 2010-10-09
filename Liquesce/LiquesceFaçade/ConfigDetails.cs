@@ -60,10 +60,13 @@ namespace LiquesceFaçade
       
       [DataMember]
       public bool DebugMode = false;
-      
+
       [DataMember(IsRequired = true)]
       public string VolumeLabel = "Demo";
-      
+
+      [DataMember]
+      public string AllocationMode = "priority";
+
       [DataMember]
       public UInt64 HoldOffBufferBytes = 1L << 10 << 10 << 10; // ==1GB;
       
