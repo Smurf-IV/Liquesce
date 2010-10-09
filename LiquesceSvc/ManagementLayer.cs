@@ -319,6 +319,12 @@ namespace LiquesceSvc
          }
       }
 
+      public List<LanManShareDetails> GetPossibleShares()
+      {
+         List<LanManShareDetails> lmsd = new List<LanManShareDetails>();
+         // TODO: Phase 2 will have a foreach onthe drive letter
+         return (LanManShareHandler.MatchDriveLanManShares(currentConfigDetails.DriveLetter));
+      }
 
       private void ReadConfigDetails()
       {
@@ -393,5 +399,6 @@ namespace LiquesceSvc
                Log.ErrorException("Cannot save configDetails: ", ex);
             }
       }
+
    }
 }

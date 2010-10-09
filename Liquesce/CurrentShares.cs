@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Security.AccessControl;
+using System.ServiceModel;
 using System.Text;
 using System.Windows.Forms;
 using LiquesceFaçade;
@@ -12,7 +13,7 @@ namespace Liquesce
    public partial class CurrentShares : Form
    {
       private ConfigDetails shareDetails;
-      readonly List<LanManShareDetails> lmsd = new List<LanManShareDetails>();
+      List<LanManShareDetails> lmsd;
 
       public CurrentShares()
       {
@@ -31,51 +32,32 @@ namespace Liquesce
             Close();
          else
          {
-            StartShareLookup();
+            FindShares();
          }
-      }
-
-      private void StartShareLookup()
-      {
-         dataGridView1.Rows.Clear();
-         lmsd.Clear();
-         Enabled = false;
-         UseWaitCursor = true;
-         mountedPoints.Text = shareDetails.VolumeLabel + " (" + shareDetails.DriveLetter + ")";
-         findSharesWorker.RunWorkerAsync();
       }
 
       private void Store_Click(object sender, EventArgs e)
       {
-         StartShareLookup();
+         FindShares();
       }
 
-      private void CurrentShares_FormClosing(object sender, FormClosingEventArgs e)
+      private void FindShares()
       {
-         findSharesWorker.CancelAsync();
-      }
+         dataGridView1.Rows.Clear();
+         Enabled = false;
+         UseWaitCursor = true;
+         mountedPoints.Text = shareDetails.VolumeLabel + " (" + shareDetails.DriveLetter + ")";
+         ChannelFactory<ILiquesce> factory = new ChannelFactory<ILiquesce>("LiquesceFaçade");
+         ILiquesce remoteIF = factory.CreateChannel();
+         lmsd = remoteIF.GetPossibleShares();
 
-      #region Thread Stuff
-      private void findSharesWorker_DoWork(object sender, DoWorkEventArgs e)
-      {
-         BackgroundWorker worker = sender as BackgroundWorker;
-         if (worker == null)
-            return;
-
-         // TODO: Phase 2 will have a foreach onthe drive letter
-         lmsd.AddRange(LanManShareHandler.MatchDriveLanManShares(shareDetails.DriveLetter));
-      }
-
-      private void findSharesWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-      {
-
-         foreach (string[] row in lmsd.SelectMany(share => 
-            share.ExportedRules.Select(fsare => new string[]
-                                                {
-                                                   share.Path, 
-                                                   share.Name + " : " + share.Description, 
-                                                   GetAceInformation(fsare)
-                                                })))
+         foreach (string[] row in lmsd.SelectMany(share =>
+                                                  share.UserAccessRules.Select(fsare => new string[]
+                                                                                         {
+                                                                                            share.Path, 
+                                                                                            share.Name + " : " + share.Description, 
+                                                                                            GetAceInformation(fsare)
+                                                                                         })))
          {
             dataGridView1.Rows.Add(row);
          }
@@ -85,16 +67,26 @@ namespace Liquesce
          progressBar1.Value = 0;
       }
 
-      private string GetAceInformation(FileSystemAccessRuleExport fsare)
+      #region Thread Stuff
+      private void findSharesWorker_DoWork(object sender, DoWorkEventArgs e)
       {
-         StringBuilder info = new StringBuilder(fsare.Identity);
-         info.Append(" : ").Append(fsare.fileSystemRights.ToString());
+         BackgroundWorker worker = sender as BackgroundWorker;
+         if (worker == null)
+            return;
+
+      }
+
+
+      private string GetAceInformation(UserAccessRuleExport fsare)
+      {
+         StringBuilder info = new StringBuilder(fsare.DomainUserIdentity);
+         info.Append(" : ").Append(fsare.AccessMask.ToString());
          return info.ToString();
       }
 
       #endregion
 
-      private void button1_Click(object sender, EventArgs e)
+      private void buttonSave_Click(object sender, EventArgs e)
       {
          shareDetails.SharesToRestore = lmsd;
       }

@@ -44,6 +44,12 @@ namespace LiquesceSvc
          }
       }
 
+      public List<LanManShareDetails> GetPossibleShares()
+      {
+         Log.Debug("Calling GetPossibleShares");
+         return ManagementLayer.Instance.GetPossibleShares();
+      }
+
       public ConfigDetails ConfigDetails
       {
          get
