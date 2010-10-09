@@ -25,7 +25,7 @@ namespace LiquesceSvc
             {
                 return getHighestPriority();
             }
-            else if (configDetails.AllocationMode == "ballanced")
+            else if (configDetails.AllocationMode == "balanced")
             {
                 return getWithMostFreeSpace();
             }
