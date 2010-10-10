@@ -92,7 +92,7 @@ namespace LiquesceFaçade
    public class ConfigDetails 
    {
       [DataMember(IsRequired = true)]
-      public uint DelayStartMilliSec = (uint) short.MaxValue;
+      public uint DelayStartMilliSec = 5000;
       
       // Make this is a string so that the XML looks better (Rather than exporting 72 for 'N')
       // Also the V 0.6 of Dokan is supposed to be able to use Mount points so this can then be reused for that..
@@ -109,7 +109,7 @@ namespace LiquesceFaçade
       public bool DebugMode = false;
 
       [DataMember(IsRequired = true)]
-      public string VolumeLabel = "Demo";
+      public string VolumeLabel = "Mirror of C";
 
       [DataMember]
       public string AllocationMode = "priority";

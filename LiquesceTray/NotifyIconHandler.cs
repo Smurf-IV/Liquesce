@@ -41,6 +41,11 @@ namespace LiquesceTray
          process.Start();
       }
 
+      private void notifyIcon1_DoubleClick(object sender, EventArgs e)
+      {
+         managementApp_Click(sender, e);
+      }
+
       private void repeatLastMessage_Click(object sender, EventArgs e)
       {
          notifyIcon1.ShowBalloonTip(5000);
@@ -52,19 +57,27 @@ namespace LiquesceTray
          switch (state)
          {
             case LiquesceSvcState.InWarning:
+               notifyIcon1.Text = "Liquesce State Warning";
+               notifyIcon1.BalloonTipIcon = ToolTipIcon.Warning;
+               break;
             case LiquesceSvcState.Unknown:
+               notifyIcon1.Text = "Liquesce State Unknown";
                notifyIcon1.BalloonTipIcon = ToolTipIcon.Warning;
                break;
             case LiquesceSvcState.Running:
+               notifyIcon1.Text = "Liquesce State Running";
                notifyIcon1.BalloonTipIcon = ToolTipIcon.None;
                break;
             case LiquesceSvcState.Stopped:
+               notifyIcon1.Text = "Liquesce State Stopped";
                notifyIcon1.BalloonTipIcon = ToolTipIcon.Info;
                break;
             case LiquesceSvcState.InError:
+               notifyIcon1.Text = "Liquesce State In Error";
                notifyIcon1.BalloonTipIcon = ToolTipIcon.Error;
                break;
             default:
+               notifyIcon1.Text = "Liquesce State Unknown";
                Log.Error("SetState has an unknown state value [{0}]", state);
                notifyIcon1.BalloonTipIcon = ToolTipIcon.None;
                break;
@@ -116,6 +129,41 @@ namespace LiquesceTray
             }
          }
       }
+
+      private void rightClickContextMenu_Opening(object sender, System.ComponentModel.CancelEventArgs e)
+      {
+         bool visible = ((ModifierKeys & Keys.Control) == Keys.Control);
+         {
+            stopServiceToolStripMenuItem.Visible = visible;
+            startServiceToolStripMenuItem.Visible = visible;
+         }
+      }
+
+      private void stopServiceToolStripMenuItem_Click(object sender, EventArgs e)
+      {
+         try
+         {
+            serviceController1.Stop();
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException("stopServiceToolStripMenuItem_Click", ex);
+         }
+      }
+
+      private void startServiceToolStripMenuItem_Click(object sender, EventArgs e)
+      {
+         try
+         {
+            serviceController1.Start();
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException("stopServiceToolStripMenuItem_Click", ex);
+         }
+      }
+
+
 
    }
 }
