@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Management;
 using System.Security.AccessControl;
+using System.Security.Principal;
 using NLog;
 
 // using System.Security.Principal;
@@ -211,8 +212,14 @@ namespace LiquesceFaçade
             }
             else
             {
-               Log.Warn("The user with Domain-'" + domainName + "' and Name-'" + userName
-                            + "' could not be found. No permissions set for the user");
+               Log.Warn("The user with Domain-'" + domainName + "' and Name-'" + userName + "' could not be found. Will Attempt well known lookup");
+               ManagementObject trusteeObject = new ManagementClass(new ManagementPath("Win32_Trustee"), null);
+               trusteeObject["SID"] = GetWellKnownSid(userName);
+               // Creating Access Control Entry
+               ManagementObject accessControlEntry = CreateAccessControlEntry(trusteeObject, user.InheritanceFlags, user.Type, user.AccessMask);
+
+               // Adding entry to access control list
+               accessControlList.Add(accessControlEntry);
             }
          }
 
@@ -231,6 +238,24 @@ namespace LiquesceFaçade
             Log.Warn("No valid usernames given. Default permissions set.");
          }
 
+      }
+
+      private static byte[] GetWellKnownSid(string userName)
+      {
+         WellKnownSidType sidType;
+         switch (userName)
+         {
+            default:
+               sidType = WellKnownSidType.WorldSid;
+               break;
+            case "Administrator":
+               sidType = WellKnownSidType.BuiltinAdministratorsSid;
+               break;
+         }
+         SecurityIdentifier Result = new SecurityIdentifier(sidType, null);
+         byte[] sidArray = new byte[Result.BinaryLength];
+         Result.GetBinaryForm(sidArray, 0);
+         return sidArray;
       }
 
       private static ManagementObject GetSharedFolder(string shareName, out ManagementBaseObject securityDescriptor)

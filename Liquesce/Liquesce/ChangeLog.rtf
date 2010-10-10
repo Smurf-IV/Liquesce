@@ -1,5 +1,5 @@
 {\rtf1\ansi\ansicpg1252\deff0{\fonttbl{\f0\fswiss\fprq2\fcharset0 Tahoma;}{\f1\fnil\fcharset0 Courier New;}{\f2\fmodern\fprq1\fcharset0 Courier New;}{\f3\fnil Courier New;}}
-{\colortbl ;\red0\green0\blue0;\red0\green0\blue255;\red255\green0\blue0;}
+{\colortbl ;\red0\green0\blue0;\red0\green0\blue255;\red43\green145\blue175;\red255\green0\blue0;}
 {\*\generator Msftedit 5.41.15.1515;}\viewkind4\uc1\pard\cf1\lang2057\ul\b\f0\fs20 Welcome to the \i Liquesce \i0 Changelog\cf0\ulnone\b0\f1\par
 \cf1\f0\par
 Currently this is just a place holder for all the cool stuff that will be happening to this project :-)\par
@@ -31,8 +31,10 @@ Keep an open eye on the \cf2\ul\b http://liquesce.codeplex.com/\cf1\ulnone\b0  s
 \ulnone - Merged changed to allow the order of the mount points via the mouse\par
 - Tidy up the exception being thrown (And caught) when a ROM Drive does not contain a disc\par
 - Move the "Get Shares" functionality into a call in the service so that the uuser does not need to run the Management application with administrative user mode\par
-- Changed the re-creatin and retrieval of the shares over to the WMI functions rather than trying to use the .Net Directory ACL\par
+- Changed the re-creating and retrieval of the shares over to the WMI functions rather than trying to use the .Net Directory ACL\par
 - 2 modes of space allocation are now implemented, Priority(Use space in the order of points) - Balanced (use space evenly across points)\par
+- Fix the usage of the "Builtin" SIDS, so that the share restore uses \cf3\f3\fs19 WellKnownSidType\par
+\cf0\f0\fs20 - \par
 \ul\par
 2010-10-06\par
 \ulnone - Force 32 bit in 64 bit OS's (Have to wait for Dokan dll to be really 64 bit)\par
@@ -72,7 +74,7 @@ Keep an open eye on the \cf2\ul\b http://liquesce.codeplex.com/\cf1\ulnone\b0  s
 2010-09-19\par
 \ulnone - Start to add in the information the Application tray will need\par
 - Addition of the \f3\fs19 NotifyIcon \f1 without a winform\f3\par
-\f0\fs20 - Use the correct namespaces for NLog in the app.config files and \cf3\f3\fs19 autoReload\cf2 =\cf0 "\cf2 true\cf0 "\par
+\f0\fs20 - Use the correct namespaces for NLog in the app.config files and \cf4\f3\fs19 autoReload\cf2 =\cf0 "\cf2 true\cf0 "\par
 \f0\fs20 - Potential fix for the startup forgetting settings issue\par
 - Make sure uninstall stops the application tray\par
 \ul\par
