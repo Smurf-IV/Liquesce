@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using LiquesceFaçade;
 using NLog;
 
@@ -15,7 +16,7 @@ namespace Liquesce
                 ThreadCount = cd.ThreadCount;
                 LockTimeoutmSec = cd.LockTimeout;
                 DokanDebugMode = cd.DebugMode;
-                AllocationMode = cd.AllocationMode;
+                eAllocationMode = cd.eAllocationMode;
                 HoldOffMBytes = cd.HoldOffBufferBytes / (1024 * 1024);
                 BufferReadSizeKBytes = cd.BufferReadSize / 1024;
                 DelayDokanStartmSec = cd.DelayStartMilliSec;
@@ -118,12 +119,18 @@ namespace Liquesce
         public string ServiceLogLevel { get; set; }
 
 
+        public ConfigDetails.AllocationModes eAllocationMode = ConfigDetails.AllocationModes.priority;
+
         [DescriptionAttribute("The allocation stratigy how new files or folders are placed on the storage disks (priority = classic one disk after the other; balanced = balance the availabel space on all storage disks)."),
         DisplayName("Disk Allocation Mode"),
         TypeConverter(typeof(AllocationModeValues))
         , CategoryAttribute("File")
         ]
-        public string AllocationMode { get; set; }
+        public string AllocationMode
+        {
+            get { return Enum.GetName(typeof(ConfigDetails.AllocationModes), eAllocationMode); }
+            set { eAllocationMode = (ConfigDetails.AllocationModes)Enum.Parse(typeof(ConfigDetails.AllocationModes), value, true); }
+        }
     }
     // ReSharper restore MemberCanBePrivate.Global
 

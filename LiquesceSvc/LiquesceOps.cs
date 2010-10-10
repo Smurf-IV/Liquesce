@@ -111,7 +111,7 @@ namespace LiquesceSvc
                     ulong lpFreeBytesAvailable, lpTotalNumberOfBytes, lpTotalNumberOfFreeBytes;
                     // Check to see if the location has enough space 
                     UInt64 buffersize = 0;
-                    if (configDetails.AllocationMode == "balanced")
+                    if (configDetails.eAllocationMode == ConfigDetails.AllocationModes.balanced)
                     {
                         buffersize = 0;
                     }
