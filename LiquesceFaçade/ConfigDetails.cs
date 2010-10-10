@@ -91,7 +91,7 @@ namespace LiquesceFaçade
    [DataContract]
    public class ConfigDetails 
    {
-       public enum AllocationModes { priority = 0, balanced = 1 };
+       public enum AllocationModes { priority = 0, balanced = 1, mirror = 2 };
 
       [DataMember(IsRequired = true)]
       public uint DelayStartMilliSec = 5000;
