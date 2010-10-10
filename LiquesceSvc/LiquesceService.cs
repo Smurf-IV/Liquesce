@@ -117,7 +117,7 @@ namespace LiquesceSvc
             Log.Info("Running Assembly Information.");
 
             ManagementLayer.Instance.Start(null);
-            Log.Info("LiquesceService started.");
+            Log.Info("Blocking thread ManagementLayer.Instance.Start has exited.");
          }
          catch (Exception ex)
          {

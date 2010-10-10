@@ -38,11 +38,11 @@
          this.mountedPoints = new System.Windows.Forms.TextBox();
          this.progressBar1 = new System.Windows.Forms.ProgressBar();
          this.dataGridView1 = new System.Windows.Forms.DataGridView();
+         this.buttonSave = new System.Windows.Forms.Button();
+         this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
          this.Source = new System.Windows.Forms.DataGridViewTextBoxColumn();
          this.Description = new System.Windows.Forms.DataGridViewTextBoxColumn();
          this.Credentials = new System.Windows.Forms.DataGridViewTextBoxColumn();
-         this.buttonSave = new System.Windows.Forms.Button();
-         this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
          this.groupBox1.SuspendLayout();
          this.groupBox2.SuspendLayout();
          ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
@@ -140,27 +140,6 @@
          this.dataGridView1.TabIndex = 5;
          this.toolTip1.SetToolTip(this.dataGridView1, "Any settings seen here will be the one used in the share restore operation");
          // 
-         // Source
-         // 
-         this.Source.Frozen = true;
-         this.Source.HeaderText = "Source";
-         this.Source.Name = "Source";
-         this.Source.ReadOnly = true;
-         // 
-         // Description
-         // 
-         this.Description.HeaderText = "Description";
-         this.Description.Name = "Description";
-         this.Description.ReadOnly = true;
-         // 
-         // Credentials
-         // 
-         this.Credentials.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-         this.Credentials.HeaderText = "Credentials";
-         this.Credentials.MinimumWidth = 50;
-         this.Credentials.Name = "Credentials";
-         this.Credentials.ReadOnly = true;
-         // 
          // buttonSave
          // 
          this.buttonSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
@@ -173,6 +152,27 @@
          this.toolTip1.SetToolTip(this.buttonSave, "The Settings above will be stored - ready to be sent to the server");
          this.buttonSave.UseVisualStyleBackColor = true;
          this.buttonSave.Click += new System.EventHandler(this.buttonSave_Click);
+         // 
+         // Source
+         // 
+         this.Source.Frozen = true;
+         this.Source.HeaderText = "Source Path";
+         this.Source.Name = "Source";
+         this.Source.ReadOnly = true;
+         // 
+         // Description
+         // 
+         this.Description.HeaderText = "Name : Description";
+         this.Description.Name = "Description";
+         this.Description.ReadOnly = true;
+         // 
+         // Credentials
+         // 
+         this.Credentials.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+         this.Credentials.HeaderText = "User : Credentials";
+         this.Credentials.MinimumWidth = 50;
+         this.Credentials.Name = "Credentials";
+         this.Credentials.ReadOnly = true;
          // 
          // CurrentShares
          // 
@@ -211,10 +211,10 @@
       private System.Windows.Forms.TextBox mountedPoints;
       private System.Windows.Forms.ProgressBar progressBar1;
       private System.Windows.Forms.DataGridView dataGridView1;
+      private System.Windows.Forms.Button buttonSave;
+      private System.Windows.Forms.ToolTip toolTip1;
       private System.Windows.Forms.DataGridViewTextBoxColumn Source;
       private System.Windows.Forms.DataGridViewTextBoxColumn Description;
       private System.Windows.Forms.DataGridViewTextBoxColumn Credentials;
-      private System.Windows.Forms.Button buttonSave;
-      private System.Windows.Forms.ToolTip toolTip1;
    }
 }
