@@ -19,11 +19,11 @@ namespace LiquesceSvc
 
         public string get()
         {
-            if (configDetails.AllocationMode == "priority")
+            if (configDetails.eAllocationMode == ConfigDetails.AllocationModes.priority)
             {
                 return getHighestPriority();
             }
-            else if (configDetails.AllocationMode == "balanced")
+            else if (configDetails.eAllocationMode == ConfigDetails.AllocationModes.balanced)
             {
                 return getWithMostFreeSpace();
             }

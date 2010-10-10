@@ -91,6 +91,8 @@ namespace LiquesceFaçade
    [DataContract]
    public class ConfigDetails 
    {
+       public enum AllocationModes { priority = 0, balanced = 1 };
+
       [DataMember(IsRequired = true)]
       public uint DelayStartMilliSec = 5000;
       
@@ -111,8 +113,13 @@ namespace LiquesceFaçade
       [DataMember(IsRequired = true)]
       public string VolumeLabel = "Mirror of C";
 
+       public AllocationModes eAllocationMode = AllocationModes.priority;
       [DataMember]
-      public string AllocationMode = "priority";
+      private string AllocationMode 
+      {
+          get { return Enum.GetName(typeof(AllocationModes), eAllocationMode); }
+          set { eAllocationMode = (AllocationModes)Enum.Parse(typeof(AllocationModes), value, true); }
+      }
 
       [DataMember]
       public UInt64 HoldOffBufferBytes = 1L << 10 << 10 << 10; // ==1GB;

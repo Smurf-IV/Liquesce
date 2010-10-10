@@ -76,7 +76,7 @@ namespace Liquesce
             cd.ThreadCount = apd.ThreadCount;
             cd.LockTimeout = apd.LockTimeoutmSec;
             cd.DebugMode = apd.DokanDebugMode;
-            cd.AllocationMode = apd.AllocationMode;
+            cd.eAllocationMode = apd.eAllocationMode;
             cd.HoldOffBufferBytes = (apd.HoldOffMBytes * (1024 * 1024));
             cd.BufferReadSize = (apd.BufferReadSizeKBytes * 1024);
             cd.DelayStartMilliSec = apd.DelayDokanStartmSec;
