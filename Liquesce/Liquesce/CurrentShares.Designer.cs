@@ -131,7 +131,9 @@
             this.Source,
             this.Description,
             this.Credentials});
+         this.dataGridView1.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
          this.dataGridView1.Location = new System.Drawing.Point(13, 148);
+         this.dataGridView1.MultiSelect = false;
          this.dataGridView1.Name = "dataGridView1";
          this.dataGridView1.ReadOnly = true;
          this.dataGridView1.RowHeadersVisible = false;
@@ -162,17 +164,21 @@
          // 
          // Description
          // 
+         this.Description.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
          this.Description.HeaderText = "Name : Description";
+         this.Description.MinimumWidth = 124;
          this.Description.Name = "Description";
          this.Description.ReadOnly = true;
+         this.Description.Width = 124;
          // 
          // Credentials
          // 
-         this.Credentials.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+         this.Credentials.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
          this.Credentials.HeaderText = "User : Credentials";
-         this.Credentials.MinimumWidth = 50;
+         this.Credentials.MinimumWidth = 116;
          this.Credentials.Name = "Credentials";
          this.Credentials.ReadOnly = true;
+         this.Credentials.Width = 116;
          // 
          // CurrentShares
          // 

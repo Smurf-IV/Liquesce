@@ -249,6 +249,9 @@ namespace LiquesceFaçade
                sidType = WellKnownSidType.WorldSid;
                break;
             case "Administrator":
+               sidType = WellKnownSidType.AccountAdministratorSid;
+               break;
+            case "Administrators":
                sidType = WellKnownSidType.BuiltinAdministratorsSid;
                break;
          }
