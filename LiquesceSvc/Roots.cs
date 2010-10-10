@@ -4,11 +4,13 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using LiquesceFaçade;
+using NLog;
 
 namespace LiquesceSvc
 {
     class Roots
     {
+        static private readonly Logger Log = LogManager.GetCurrentClassLogger();
 
         private ConfigDetails configDetails;
 
@@ -25,6 +27,10 @@ namespace LiquesceSvc
             }
             else if (configDetails.eAllocationMode == ConfigDetails.AllocationModes.balanced)
             {
+                if (Log.IsTraceEnabled == true)
+                {
+                    LogToString();
+                }
                 return getWithMostFreeSpace();
             }
             else
@@ -73,6 +79,21 @@ namespace LiquesceSvc
             });
 
             return PathWithMostFreeSpace;
+        }
+
+        private void LogToString()
+        {
+            Log.Trace("Printing all disks:");
+            for (int i = 0; i < configDetails.SourceLocations.Count; i++)
+            {
+                ulong num;
+                ulong num2;
+                ulong num3;
+                if (GetDiskFreeSpaceEx(configDetails.SourceLocations[i], out num, out num2, out num3))
+                {
+                    Log.Trace("root[{0}], space[{1}]", configDetails.SourceLocations[i], num);
+               }
+            }
         }
 
 
