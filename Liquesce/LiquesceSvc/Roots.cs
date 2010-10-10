@@ -8,72 +8,100 @@ using NLog;
 
 namespace LiquesceSvc
 {
+    // this class delivers the current physical root of the disk which should be used next
+    // for file/folder creation.
     class Roots
     {
         static private readonly Logger Log = LogManager.GetCurrentClassLogger();
 
         private ConfigDetails configDetails;
 
+        // constructor
         public Roots(ConfigDetails configDetails)
         {
             this.configDetails = configDetails;
         }
 
+        // this method returns a path (real physical path) of a place where the next folder/file root can be.
         public string get()
+        {
+            if (Log.IsTraceEnabled == true)
+            {
+                LogToString();
+            }
+            // ? is a character which is not allowed for paths so this is a good dummy filter if nothing should be filtered
+            return get("?");
+        }
+
+        // this method returns a path (real physical path) of a place where the next folder/file root can be.
+        // FilterThisPath can be used to not use a specific location (for mirror feature)
+        public string get(string FilterThisPath)
         {
             if (configDetails.eAllocationMode == ConfigDetails.AllocationModes.priority)
             {
-                return getHighestPriority();
+                return getHighestPriority(FilterThisPath);
             }
             else if (configDetails.eAllocationMode == ConfigDetails.AllocationModes.balanced)
             {
-                if (Log.IsTraceEnabled == true)
-                {
-                    LogToString();
-                }
-                return getWithMostFreeSpace();
+                return getWithMostFreeSpace(FilterThisPath);
+            }
+            else if (configDetails.eAllocationMode == ConfigDetails.AllocationModes.mirror)
+            {
+                return getWithMostFreeSpace(FilterThisPath);
             }
             else
             {
-                return getHighestPriority();
+                return getHighestPriority(FilterThisPath);
             }
         }
 
-        private string getHighestPriority()
+
+        // returns the next root with the highest priority
+        private string getHighestPriority(string FilterThisPath)
         {
             for (int i = 0; i < configDetails.SourceLocations.Count; i++)
             {
-                ulong num;
-                ulong num2;
-                ulong num3;
-                if (GetDiskFreeSpaceEx(configDetails.SourceLocations[i], out num, out num2, out num3))
+                // if the path shouldn't be filtered or there is no filter
+                if (! configDetails.SourceLocations[i].Contains(FilterThisPath))
                 {
-                    if (num > configDetails.HoldOffBufferBytes)
+                    ulong num;
+                    ulong num2;
+                    ulong num3;
+                    if (GetDiskFreeSpaceEx(configDetails.SourceLocations[i], out num, out num2, out num3))
                     {
-                        return configDetails.SourceLocations[i];
+                        if (num > configDetails.HoldOffBufferBytes)
+                        {
+                            return configDetails.SourceLocations[i];
+                        }
                     }
                 }
             }
 
-            return getWithMostFreeSpace();
+            return getWithMostFreeSpace(null);
         }
 
-        private string getWithMostFreeSpace()
+
+        // returns the root with the most free space
+        private string getWithMostFreeSpace(string FilterThisPath)
         {
             ulong HighestFreeSpace = 0;
             string PathWithMostFreeSpace = "";
 
             configDetails.SourceLocations.ForEach(str =>
             {
-                ulong num;
-                ulong num2;
-                ulong num3;
-                if (GetDiskFreeSpaceEx(str, out num, out num2, out num3))
+                // if the path shouldn't be filtered or there is no filter
+                if (! str.Contains(FilterThisPath))
                 {
-                    if (HighestFreeSpace < num)
+                    ulong num;
+                    ulong num2;
+                    ulong num3;
+                    if (GetDiskFreeSpaceEx(str, out num, out num2, out num3))
                     {
-                        HighestFreeSpace = num;
-                        PathWithMostFreeSpace = str;
+                        if (HighestFreeSpace < num)
+                        {
+                            HighestFreeSpace = num;
+                            PathWithMostFreeSpace = str;
+                        }
                     }
                 }
             });
@@ -81,6 +109,8 @@ namespace LiquesceSvc
             return PathWithMostFreeSpace;
         }
 
+
+        // for debugging to print all disks and it's availabel space
         private void LogToString()
         {
             Log.Trace("Printing all disks:");
