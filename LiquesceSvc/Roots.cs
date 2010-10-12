@@ -56,21 +56,19 @@ namespace LiquesceSvc
         // FilterThisPath can be used to not use a specific location (for mirror feature)
         public string getNewRoot(string FilterThisPath)
         {
-            if (configDetails.eAllocationMode == ConfigDetails.AllocationModes.priority)
+            switch (configDetails.eAllocationMode) 
             {
-                return getHighestPriority(FilterThisPath);
-            }
-            else if (configDetails.eAllocationMode == ConfigDetails.AllocationModes.balanced)
-            {
-                return getWithMostFreeSpace(FilterThisPath);
-            }
-            else if (configDetails.eAllocationMode == ConfigDetails.AllocationModes.mirror)
-            {
-                return getWithMostFreeSpace(FilterThisPath);
-            }
-            else
-            {
-                return getHighestPriority(FilterThisPath);
+                case ConfigDetails.AllocationModes.priority:
+                    return getHighestPriority(FilterThisPath);
+
+                case ConfigDetails.AllocationModes.balanced:
+                    return getWithMostFreeSpace(FilterThisPath);
+
+                case ConfigDetails.AllocationModes.mirror:
+                    return getWithMostFreeSpace(FilterThisPath);
+
+                default:
+                    return getHighestPriority(FilterThisPath);
             }
         }
 
