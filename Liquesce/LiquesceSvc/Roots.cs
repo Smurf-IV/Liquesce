@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using LiquesceFaçade;
+using DokanNet;
 using NLog;
 
 namespace LiquesceSvc
@@ -12,6 +14,10 @@ namespace LiquesceSvc
     // for file/folder creation.
     class Roots
     {
+        public const string NO_PATH_TO_FILTER = "?";
+        public const string HIDDEN_MIRROR_FOLDER = ".mirror";
+
+        static private readonly string PathDirectorySeparatorChar = Path.DirectorySeparatorChar.ToString();
         static private readonly Logger Log = LogManager.GetCurrentClassLogger();
 
         private ConfigDetails configDetails;
@@ -22,20 +28,33 @@ namespace LiquesceSvc
             this.configDetails = configDetails;
         }
 
-        // this method returns a path (real physical path) of a place where the next folder/file root can be.
-        public string get()
+        public string getRoot(string path)
         {
-            if (Log.IsTraceEnabled == true)
+            for (int i = 0; i < configDetails.SourceLocations.Count; i++)
             {
-                LogToString();
+                if (path.Contains(configDetails.SourceLocations[i]))
+                {
+                    return configDetails.SourceLocations[i];
+                }
             }
-            // ? is a character which is not allowed for paths so this is a good dummy filter if nothing should be filtered
-            return get("?");
+
+            return "";
+        }
+
+        // this method returns a path (real physical path) of a place where the next folder/file root can be.
+        public string getNewRoot()
+        {
+            //if (Log.IsTraceEnabled == true)
+            //{
+            //    LogToString();
+            //}
+
+            return getNewRoot(NO_PATH_TO_FILTER);
         }
 
         // this method returns a path (real physical path) of a place where the next folder/file root can be.
         // FilterThisPath can be used to not use a specific location (for mirror feature)
-        public string get(string FilterThisPath)
+        public string getNewRoot(string FilterThisPath)
         {
             if (configDetails.eAllocationMode == ConfigDetails.AllocationModes.priority)
             {
@@ -124,6 +143,24 @@ namespace LiquesceSvc
                     Log.Trace("root[{0}], space[{1}]", configDetails.SourceLocations[i], num);
                }
             }
+        }
+
+
+
+        public static DokanFileInfo copyDokanFileInfo(DokanFileInfo indfi)
+        {
+            DokanFileInfo newdfi = new DokanFileInfo(0); // no need for internal context
+            newdfi.Context = indfi.Context;
+            newdfi.IsDirectory = indfi.IsDirectory;
+            newdfi.DeleteOnClose = indfi.DeleteOnClose;
+            newdfi.PagingIo = indfi.PagingIo;
+            newdfi.SynchronousIo = indfi.SynchronousIo;
+            newdfi.Nocache = indfi.Nocache;
+            newdfi.WriteToEndOfFile = indfi.WriteToEndOfFile;
+            newdfi.InfoId = indfi.InfoId;
+            newdfi.ProcessId = indfi.ProcessId;
+
+            return newdfi;
         }
 
 
