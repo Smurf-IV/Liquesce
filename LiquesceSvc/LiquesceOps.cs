@@ -246,6 +246,10 @@ namespace LiquesceSvc
                 {
                     info.IsDirectory = true;
                     TrimAndAddUnique(path);
+                    if (configDetails.eAllocationMode == ConfigDetails.AllocationModes.mirror)
+                    {
+                        CreateDirectoryMirror(filename, info, roots.getRoot(path));
+                    }
                     dokanError = Dokan.DOKAN_SUCCESS;
                 }
             }
@@ -261,6 +265,39 @@ namespace LiquesceSvc
             }
             return dokanError;
         }
+
+        public int CreateDirectoryMirror(string filename, DokanFileInfo info, string FilterThisPath)
+        {
+            int dokanError = Dokan.DOKAN_ERROR;
+            try
+            {
+                Log.Trace("CreateDirectoryMirror IN DokanProcessId[{0}]", info.ProcessId);
+                string path = roots.getNewRoot(FilterThisPath) + "\\" + Roots.HIDDEN_MIRROR_FOLDER + filename;
+                if (Directory.Exists(path))
+                {
+                    info.IsDirectory = true;
+                    dokanError = Dokan.ERROR_ALREADY_EXISTS;
+                }
+                else if (Directory.CreateDirectory(path).Exists)
+                {
+                    info.IsDirectory = true;
+                    TrimAndAddUnique(path);
+                    dokanError = Dokan.DOKAN_SUCCESS;
+                }
+            }
+            catch (Exception ex)
+            {
+                int win32 = ((short)Marshal.GetHRForException(ex) * -1);
+                Log.ErrorException("CreateDirectoryMirror threw: ", ex);
+                dokanError = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            }
+            finally
+            {
+                Log.Trace("CreateDirectoryMirror OUT dokanError[{0}]", dokanError);
+            }
+            return dokanError;
+        }
+
         static bool IsNullOrDefault<T>(T value)
         {
             return object.Equals(value, default(T));
@@ -285,7 +322,7 @@ namespace LiquesceSvc
         {
             try
             {
-                Log.Trace("Cleanup IN DokanProcessId[{0}]", info.ProcessId);
+                Log.Trace("Cleanup IN DokanProcessId[{0}] with filename [{1}]", info.ProcessId, filename);
                 CloseAndRemove(info);
                 if (info.DeleteOnClose)
                 {
@@ -741,10 +778,12 @@ namespace LiquesceSvc
         public int DeleteDirectory(string filename, DokanFileInfo info)
         {
             int dokanReturn = Dokan.DOKAN_ERROR;
+            string path = GetPath(filename);
+            DokanFileInfo mirrorinfo = Roots.copyDokanFileInfo(info);
             try
             {
                 Log.Trace("DeleteDirectory IN DokanProcessId[{0}]", info.ProcessId);
-                DirectoryInfo dirInfo = new DirectoryInfo(GetPath(filename));
+                DirectoryInfo dirInfo = new DirectoryInfo(path);
                 if (dirInfo.Exists)
                 {
                     FileSystemInfo[] fileInfos = dirInfo.GetFileSystemInfos();
@@ -763,8 +802,54 @@ namespace LiquesceSvc
             {
                 Log.Trace("DeleteDirectory OUT dokanReturn[(0}]", dokanReturn);
             }
+
+            if (configDetails.eAllocationMode == ConfigDetails.AllocationModes.mirror && (!path.Contains(Roots.HIDDEN_MIRROR_FOLDER)))
+            {
+                Log.Trace("DeleteDirectoryMirror...");
+                DeleteDirectory("\\" + Roots.HIDDEN_MIRROR_FOLDER + filename, mirrorinfo);
+                mirrorinfo.IsDirectory = true;
+                mirrorinfo.DeleteOnClose = true;
+                Cleanup("\\" + Roots.HIDDEN_MIRROR_FOLDER + filename, mirrorinfo);
+                Directory.Delete(GetPath("\\" + Roots.HIDDEN_MIRROR_FOLDER + filename), true);
+            }
+
             return dokanReturn;
         }
+
+
+        //public int DeleteDirectoryMirror(string filename, DokanFileInfo info, string FilterThisPath)
+        //{
+        //    int dokanReturn = Dokan.DOKAN_ERROR;
+        //    filename = roots.getNewRoot(FilterThisPath) + "\\" + Roots.HIDDEN_MIRROR_FOLDER + filename;
+        //    string path = GetPath(Roots.HIDDEN_MIRROR_FOLDER + filename);
+        //    try
+        //    {
+        //        Log.Trace("DeleteDirectoryMirror IN DokanProcessId[{0}]", info.ProcessId);
+        //        DirectoryInfo dirInfo = new DirectoryInfo(path);
+        //        if (dirInfo.Exists)
+        //        {
+        //            FileSystemInfo[] fileInfos = dirInfo.GetFileSystemInfos();
+        //            dokanReturn = (fileInfos.Length > 0) ? Dokan.ERROR_DIR_NOT_EMPTY : Dokan.DOKAN_SUCCESS;
+        //        }
+        //        else
+        //            dokanReturn = Dokan.ERROR_FILE_NOT_FOUND;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        int win32 = ((short)Marshal.GetHRForException(ex) * -1);
+        //        Log.ErrorException("DeleteDirectoryMirror threw: ", ex);
+        //        dokanReturn = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+        //    }
+        //    finally
+        //    {
+        //        if (configDetails.eAllocationMode == ConfigDetails.AllocationModes.mirror)
+        //        {
+        //            CreateDirectoryMirror(filename, info, roots.getRoot(path));
+        //        }
+        //        Log.Trace("DeleteDirectoryMirror OUT dokanReturn[(0}]", dokanReturn);
+        //    }
+        //    return dokanReturn;
+        //}
 
 
         // As this has an order of preference set by the user, and there may be duplicates that will need to be 
@@ -1100,9 +1185,9 @@ namespace LiquesceSvc
         }
 
         #endregion
-        private string GetPath(string filename, bool isCreate = false)
+        private string GetPath(string filename, bool isCreate = false, bool isMirror = false)
         {
-            string foundPath = roots.get();
+            string foundPath = roots.getNewRoot();
             try
             {
                 if (!String.IsNullOrWhiteSpace(filename) // Win 7 (x64) passes in a blank
@@ -1176,10 +1261,10 @@ namespace LiquesceSvc
                                         TrimAndAddUnique(foundPath);
                                     }
                                     else
-                                        foundPath = roots.get() + filename; // This is used when creating new directory / file
+                                        foundPath = roots.getNewRoot() + filename; // This is used when creating new directory / file
                                 }
                                 else
-                                    foundPath = roots.get() + filename; // This is used when creating new directory / file
+                                    foundPath = roots.getNewRoot() + filename; // This is used when creating new directory / file
                             }
                         }
                     }
