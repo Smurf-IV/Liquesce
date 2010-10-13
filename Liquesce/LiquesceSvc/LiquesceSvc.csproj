@@ -107,6 +107,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FileManager.cs" />
     <Compile Include="Roots.cs" />
     <Compile Include="LiquesceCallBackFaçade.cs" />
     <Compile Include="LiquesceFaçade.cs" />
