@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Runtime.InteropServices;
 using System.Text;
 using LiquesceFaçade;
@@ -17,18 +18,126 @@ namespace LiquesceSvc
         public const string NO_PATH_TO_FILTER = "?";
         public const string HIDDEN_MIRROR_FOLDER = ".mirror";
 
-        static private readonly string PathDirectorySeparatorChar = Path.DirectorySeparatorChar.ToString();
-        static private readonly Logger Log = LogManager.GetCurrentClassLogger();
+        private static readonly string PathDirectorySeparatorChar = Path.DirectorySeparatorChar.ToString();
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
-        private ConfigDetails configDetails;
+        // This would normally be static, but then there should only ever be one of these classes present from the Dokan Lib callback.
+        private static readonly ReaderWriterLockSlim rootPathsSync = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
+        private static readonly Dictionary<string, string> rootPaths = new Dictionary<string, string>();
+
+
+        private static ConfigDetails configDetails;
 
         // constructor
-        public Roots(ConfigDetails configDetails)
+        public Roots(ConfigDetails configDetailsTemp)
         {
-            this.configDetails = configDetails;
+            configDetails = configDetailsTemp;
         }
 
-        public string getRoot(string path)
+
+        public static string GetPath(string filename, bool isCreate = false, bool isMirror = false)
+        {
+            string foundPath = getNewRoot();
+            try
+            {
+                if (!String.IsNullOrWhiteSpace(filename) // Win 7 (x64) passes in a blank
+                   && (filename != PathDirectorySeparatorChar)
+                   )
+                {
+                    try
+                    {
+                        bool isAShare = false;
+                        if (!filename.StartsWith(PathDirectorySeparatorChar))
+                        {
+                            isAShare = true;
+                            filename = Path.DirectorySeparatorChar + filename;
+                        }
+                        if (filename.EndsWith(PathDirectorySeparatorChar))
+                            isAShare = true;
+
+                        filename = filename.TrimEnd(Path.DirectorySeparatorChar);
+                        rootPathsSync.TryEnterUpgradeableReadLock(configDetails.LockTimeout);
+                        if (!rootPaths.TryGetValue(filename, out foundPath))
+                        {
+                            bool found = false;
+                            if (String.IsNullOrWhiteSpace(filename))
+                                throw new ArgumentNullException(filename, "Not allowed to pass this length 2");
+                            if (filename[0] != Path.DirectorySeparatorChar)
+                                filename = PathDirectorySeparatorChar + filename;
+
+                            if (!isAShare
+                                      && (configDetails.SourceLocations != null)
+                                      )
+                            {
+                                foreach (string newTarget in
+                                   configDetails.SourceLocations.Select(sourceLocation => sourceLocation + filename))
+                                {
+                                    Log.Trace("Try and GetPath from [{0}]", newTarget);
+                                    //Now here's a kicker.. The User might have copied a file directly onto one of the drives while
+                                    // this has been running, So this ought to try and find if it exists that way.
+                                    if (Directory.Exists(newTarget)
+                                       || File.Exists(newTarget)
+                                       )
+                                    {
+                                        TrimAndAddUnique(newTarget);
+                                        found = rootPaths.TryGetValue(filename, out foundPath);
+                                        break;
+                                    }
+                                }
+                            }
+                            else if (isAShare
+                               && (configDetails.KnownSharePaths != null)
+                               )
+                            {
+                                found = configDetails.KnownSharePaths.Exists(delegate(string sharePath)
+                                {
+                                    Log.Trace("Try and find from [{0}][{1}]", sharePath, filename);
+                                    return rootPaths.TryGetValue(sharePath + filename, out foundPath);
+                                });
+
+                            }
+                            if (!found)
+                            {
+                                Log.Trace("was this a failed redirect thing from a network share ? [{0}]", filename);
+                                if (isCreate)
+                                {
+                                    int lastDir = filename.LastIndexOf(Path.DirectorySeparatorChar);
+                                    if (lastDir > -1)
+                                    {
+                                        Log.Trace("Perform search for path: {0}", filename);
+                                        string newPart = filename.Substring(lastDir);
+                                        foundPath = GetPath(filename.Substring(0, lastDir), false) + newPart;
+                                        Log.Trace("Now make sure it can be found when it tries to repopen via the share");
+                                        TrimAndAddUnique(foundPath);
+                                    }
+                                    else
+                                        foundPath = getNewRoot() + filename; // This is used when creating new directory / file
+                                }
+                                else
+                                    foundPath = getNewRoot() + filename; // This is used when creating new directory / file
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        rootPathsSync.ExitUpgradeableReadLock();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.ErrorException("GetPath threw: ", ex);
+            }
+            finally
+            {
+                Log.Debug("GetPath from [{0}] found [{1}]", filename, foundPath);
+            }
+            return foundPath;
+        }
+
+
+
+        public static string getRoot(string path)
         {
             for (int i = 0; i < configDetails.SourceLocations.Count; i++)
             {
@@ -41,8 +150,10 @@ namespace LiquesceSvc
             return "";
         }
 
+
+
         // this method returns a path (real physical path) of a place where the next folder/file root can be.
-        public string getNewRoot()
+        public static string getNewRoot()
         {
             //if (Log.IsTraceEnabled == true)
             //{
@@ -52,9 +163,11 @@ namespace LiquesceSvc
             return getNewRoot(NO_PATH_TO_FILTER);
         }
 
+
+
         // this method returns a path (real physical path) of a place where the next folder/file root can be.
         // FilterThisPath can be used to not use a specific location (for mirror feature)
-        public string getNewRoot(string FilterThisPath)
+        public static string getNewRoot(string FilterThisPath)
         {
             switch (configDetails.eAllocationMode) 
             {
@@ -73,8 +186,9 @@ namespace LiquesceSvc
         }
 
 
+
         // returns the next root with the highest priority
-        private string getHighestPriority(string FilterThisPath)
+        private static string getHighestPriority(string FilterThisPath)
         {
             for (int i = 0; i < configDetails.SourceLocations.Count; i++)
             {
@@ -98,8 +212,9 @@ namespace LiquesceSvc
         }
 
 
+
         // returns the root with the most free space
-        private string getWithMostFreeSpace(string FilterThisPath)
+        private static string getWithMostFreeSpace(string FilterThisPath)
         {
             ulong HighestFreeSpace = 0;
             string PathWithMostFreeSpace = "";
@@ -127,8 +242,9 @@ namespace LiquesceSvc
         }
 
 
+
         // for debugging to print all disks and it's availabel space
-        private void LogToString()
+        private static void LogToString()
         {
             Log.Trace("Printing all disks:");
             for (int i = 0; i < configDetails.SourceLocations.Count; i++)
@@ -159,6 +275,73 @@ namespace LiquesceSvc
             newdfi.ProcessId = indfi.ProcessId;
 
             return newdfi;
+        }
+
+
+
+        // adds the root path to rootPaths dicionary for a specific file
+        public static string TrimAndAddUnique(string fullFilePath)
+        {
+            int index = configDetails.SourceLocations.FindIndex(fullFilePath.StartsWith);
+            if (index >= 0)
+            {
+                string key = fullFilePath.Remove(0, configDetails.SourceLocations[index].Length);
+                try
+                {
+                    Log.Trace("Adding [{0}] to [{1}]", key, fullFilePath);
+                    rootPathsSync.TryEnterWriteLock(configDetails.LockTimeout);
+                    // TODO: Add the collisions / duplicate feedback from here
+                    rootPaths[key] = fullFilePath;
+                }
+                finally
+                {
+                    rootPathsSync.ExitWriteLock();
+                }
+                return key;
+            }
+            throw new ArgumentException("Unable to find BelongTo Path: " + fullFilePath, fullFilePath);
+        }
+
+
+
+        // removes a root from root lookup
+        public static void RemoveTargetFromLookup(string realFilename)
+        {
+            try
+            {
+                rootPathsSync.TryEnterUpgradeableReadLock(configDetails.LockTimeout);
+                string key = string.Empty;
+                foreach (KeyValuePair<string, string> kvp in rootPaths.Where(kvp => kvp.Value == realFilename))
+                {
+                    key = kvp.Key;
+                    break;
+                }
+                if (!String.IsNullOrEmpty(key))
+                {
+                    rootPathsSync.TryEnterWriteLock(configDetails.LockTimeout);
+                    rootPaths.Remove(key);
+                }
+            }
+            finally
+            {
+                rootPathsSync.ExitUpgradeableReadLock();
+            }
+        }
+
+
+
+        // removes a path from root lookup
+        public static void RemoveFromLookup(string filename)
+        {
+            try
+            {
+                rootPathsSync.TryEnterWriteLock(configDetails.LockTimeout);
+                rootPaths.Remove(filename);
+            }
+            finally
+            {
+                rootPathsSync.ExitWriteLock();
+            }
         }
 
 
