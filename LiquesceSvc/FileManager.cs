@@ -8,6 +8,7 @@ namespace LiquesceSvc
 {
     class FileManager
     {
+        public static List<string> MirrorDeleteToDo = new List<string>();
 
 
         public static void DeleteDirectory(string directory) 

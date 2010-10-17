@@ -766,7 +766,10 @@ namespace LiquesceSvc
             if (configDetails.eAllocationMode == ConfigDetails.AllocationModes.mirror && (!path.Contains(Roots.HIDDEN_MIRROR_FOLDER)))
             {
                 Log.Trace("DeleteDirectoryMirror...");
-                FileManager.DeleteDirectory(Roots.GetPath("\\" + Roots.HIDDEN_MIRROR_FOLDER + filename));
+                string mirrorpath = Roots.GetPath("\\" + Roots.HIDDEN_MIRROR_FOLDER + filename);
+                FileManager.DeleteDirectory(mirrorpath);
+                // for tray app:
+                FileManager.MirrorDeleteToDo.Add(mirrorpath);
             }
 
             return dokanReturn;
@@ -1266,5 +1269,12 @@ namespace LiquesceSvc
                 Log.Debug("InitialiseShares OUT");
             }
         }
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        private static extern int SendNotifyMessage(IntPtr hwnd, int wMsg, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32.dll")]
+        public static extern int RegisterWindowMessage(string lpString); 
+
     }
 }
