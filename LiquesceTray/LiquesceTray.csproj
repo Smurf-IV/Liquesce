@@ -172,6 +172,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Icons\base.ico" />
     <Content Include="Icons\Config.ico" />
     <Content Include="Icons\Error.ico" />
     <Content Include="Icons\info.ico" />
