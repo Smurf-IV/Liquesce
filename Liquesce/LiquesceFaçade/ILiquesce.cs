@@ -32,6 +32,9 @@ namespace LiquesceFaçade
       [OperationContract]
       List<LanManShareDetails> GetPossibleShares();
 
+      [OperationContract]
+      List<string> GetMirrorDeleteToDo();
+
       ConfigDetails ConfigDetails
       {
          [OperationContract]

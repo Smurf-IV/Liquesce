@@ -46,8 +46,14 @@ namespace LiquesceSvc
 
       public List<LanManShareDetails> GetPossibleShares()
       {
-         Log.Debug("Calling GetPossibleShares");
-         return ManagementLayer.Instance.GetPossibleShares();
+          Log.Debug("Calling GetPossibleShares");
+          return ManagementLayer.Instance.GetPossibleShares();
+      }
+
+      public List<string> GetMirrorDeleteToDo()
+      {
+          Log.Debug("Calling GetMirrorDeleteToDo");
+          return ManagementLayer.Instance.GetMirrorDeleteToDo();
       }
 
       public ConfigDetails ConfigDetails
