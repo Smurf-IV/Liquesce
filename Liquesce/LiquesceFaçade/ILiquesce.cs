@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ServiceModel;
+using LiquesceMirrorToDo;
 
 namespace LiquesceFaçade
 {
@@ -32,8 +33,14 @@ namespace LiquesceFaçade
       [OperationContract]
       List<LanManShareDetails> GetPossibleShares();
 
-      [OperationContract]
-      List<string> GetMirrorDeleteToDo();
+      //[OperationContract]
+      //MirrorToDoList ConsumeMirrorToDo();
+
+      MirrorToDoList MirrorToDo
+      {
+          [OperationContract]
+          get;
+      }
 
       ConfigDetails ConfigDetails
       {

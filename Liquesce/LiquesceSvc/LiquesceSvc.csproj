@@ -179,6 +179,10 @@
       <Project>{CFE5DC7B-25FB-45C4-AF18-1963853375E1}</Project>
       <Name>LiquesceFaçade</Name>
     </ProjectReference>
+    <ProjectReference Include="..\LiquesceMirrorTray\LiquesceMirrorTray.csproj">
+      <Project>{2F0DA99A-D331-4C5E-9B26-3227FBE783CD}</Project>
+      <Name>LiquesceMirrorTray</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ThirdParty\DokanNet\DokanNet.csproj">
       <Project>{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C}</Project>
       <Name>DokanNet</Name>

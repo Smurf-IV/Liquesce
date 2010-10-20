@@ -11,6 +11,7 @@ using DokanNet;
 using LiquesceFaçade;
 using Microsoft.Win32.SafeHandles;
 using NLog;
+using LiquesceMirrorToDo;
 
 namespace LiquesceSvc
 {
@@ -245,7 +246,10 @@ namespace LiquesceSvc
                     Roots.TrimAndAddUnique(path);
                     if (configDetails.eAllocationMode == ConfigDetails.AllocationModes.mirror)
                     {
-                        CreateDirectoryMirror(filename, info, Roots.getRoot(path));
+                        string mirrorpath = Roots.GetNewRoot(Roots.GetRoot(path)) + "\\" + Roots.HIDDEN_MIRROR_FOLDER + filename;
+                        MirrorToDo todo = new MirrorToDo();
+                        FileManager.AddMirrorToDo(todo.CreateFolderCreate(filename, path, mirrorpath));
+                        //CreateDirectoryMirror(filename, info, Roots.getRoot(path));
                     }
                     dokanError = Dokan.DOKAN_SUCCESS;
                 }
@@ -269,7 +273,7 @@ namespace LiquesceSvc
             try
             {
                 Log.Trace("CreateDirectoryMirror IN DokanProcessId[{0}]", info.ProcessId);
-                string path = Roots.getNewRoot(FilterThisPath) + "\\" + Roots.HIDDEN_MIRROR_FOLDER + filename;
+                string path = Roots.GetNewRoot(FilterThisPath) + "\\" + Roots.HIDDEN_MIRROR_FOLDER + filename;
                 if (Directory.Exists(path))
                 {
                     info.IsDirectory = true;
@@ -767,9 +771,9 @@ namespace LiquesceSvc
             {
                 Log.Trace("DeleteDirectoryMirror...");
                 string mirrorpath = Roots.GetPath("\\" + Roots.HIDDEN_MIRROR_FOLDER + filename);
-                FileManager.DeleteDirectory(mirrorpath);
-                // for tray app:
-                FileManager.MirrorDeleteToDo.Add(mirrorpath);
+                // send to tray app:
+                MirrorToDo todo = new MirrorToDo();
+                FileManager.AddMirrorToDo(todo.CreateFolderDelete(filename, path, mirrorpath));
             }
 
             return dokanReturn;
@@ -802,10 +806,16 @@ namespace LiquesceSvc
             if (configDetails.eAllocationMode == ConfigDetails.AllocationModes.mirror && (!filename.Contains(Roots.HIDDEN_MIRROR_FOLDER)))
             {
                 string pathin = Roots.GetPath("\\" + Roots.HIDDEN_MIRROR_FOLDER + filename);
-                string pathout = Roots.getRoot(pathin) + "\\" + Roots.HIDDEN_MIRROR_FOLDER + Roots.TrimAndAddUnique(pathTarget);
+                string pathout = Roots.GetRoot(pathin) + "\\" + Roots.HIDDEN_MIRROR_FOLDER + Roots.TrimAndAddUnique(pathTarget);
 
                 Log.Trace("XMoveDirectoryMirror... in[{0}], out[{1}]", pathin, pathout);
-                FileManager.XMoveDirectory(pathin, pathout, replaceIfExisting);
+                //FileManager.XMoveDirectory(pathin, pathout, replaceIfExisting);
+
+
+                MirrorToDo temp = new MirrorToDo();
+                temp.CreateFolderRename(Roots.GetRelative(filename), Roots.GetRelative(pathTarget), filename, pathTarget, pathin, pathout, replaceIfExisting);
+
+                FileManager.AddMirrorToDo(temp);
             }
 
             //string pathSource = GetPath(filename);

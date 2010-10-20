@@ -37,7 +37,7 @@ namespace LiquesceSvc
 
         public static string GetPath(string filename, bool isCreate = false, bool isMirror = false)
         {
-            string foundPath = getNewRoot();
+            string foundPath = GetNewRoot();
             try
             {
                 if (!String.IsNullOrWhiteSpace(filename) // Win 7 (x64) passes in a blank
@@ -111,10 +111,10 @@ namespace LiquesceSvc
                                         TrimAndAddUnique(foundPath);
                                     }
                                     else
-                                        foundPath = getNewRoot() + filename; // This is used when creating new directory / file
+                                        foundPath = GetNewRoot() + filename; // This is used when creating new directory / file
                                 }
                                 else
-                                    foundPath = getNewRoot() + filename; // This is used when creating new directory / file
+                                    foundPath = GetNewRoot() + filename; // This is used when creating new directory / file
                             }
                         }
                     }
@@ -137,7 +137,7 @@ namespace LiquesceSvc
 
 
 
-        public static string getRoot(string path)
+        public static string GetRoot(string path)
         {
             for (int i = 0; i < configDetails.SourceLocations.Count; i++)
             {
@@ -153,42 +153,50 @@ namespace LiquesceSvc
 
 
         // this method returns a path (real physical path) of a place where the next folder/file root can be.
-        public static string getNewRoot()
+        public static string GetNewRoot()
         {
             //if (Log.IsTraceEnabled == true)
             //{
             //    LogToString();
             //}
 
-            return getNewRoot(NO_PATH_TO_FILTER);
+            return GetNewRoot(NO_PATH_TO_FILTER);
+        }
+
+
+
+        // return the path from a inputpath seen relative from the root
+        public static string GetRelative(string path)
+        {
+            return path.Replace(GetRoot(path),"");
         }
 
 
 
         // this method returns a path (real physical path) of a place where the next folder/file root can be.
         // FilterThisPath can be used to not use a specific location (for mirror feature)
-        public static string getNewRoot(string FilterThisPath)
+        public static string GetNewRoot(string FilterThisPath)
         {
             switch (configDetails.eAllocationMode) 
             {
                 case ConfigDetails.AllocationModes.priority:
-                    return getHighestPriority(FilterThisPath);
+                    return GetHighestPriority(FilterThisPath);
 
                 case ConfigDetails.AllocationModes.balanced:
-                    return getWithMostFreeSpace(FilterThisPath);
+                    return GetWithMostFreeSpace(FilterThisPath);
 
                 case ConfigDetails.AllocationModes.mirror:
-                    return getWithMostFreeSpace(FilterThisPath);
+                    return GetWithMostFreeSpace(FilterThisPath);
 
                 default:
-                    return getHighestPriority(FilterThisPath);
+                    return GetHighestPriority(FilterThisPath);
             }
         }
 
 
 
         // returns the next root with the highest priority
-        private static string getHighestPriority(string FilterThisPath)
+        private static string GetHighestPriority(string FilterThisPath)
         {
             for (int i = 0; i < configDetails.SourceLocations.Count; i++)
             {
@@ -208,13 +216,13 @@ namespace LiquesceSvc
                 }
             }
 
-            return getWithMostFreeSpace(null);
+            return GetWithMostFreeSpace(null);
         }
 
 
 
         // returns the root with the most free space
-        private static string getWithMostFreeSpace(string FilterThisPath)
+        private static string GetWithMostFreeSpace(string FilterThisPath)
         {
             ulong HighestFreeSpace = 0;
             string PathWithMostFreeSpace = "";
@@ -257,24 +265,6 @@ namespace LiquesceSvc
                     Log.Trace("root[{0}], space[{1}]", configDetails.SourceLocations[i], num);
                }
             }
-        }
-
-
-
-        public static DokanFileInfo copyDokanFileInfo(DokanFileInfo indfi)
-        {
-            DokanFileInfo newdfi = new DokanFileInfo(0); // no need for internal context
-            newdfi.Context = indfi.Context;
-            newdfi.IsDirectory = indfi.IsDirectory;
-            newdfi.DeleteOnClose = indfi.DeleteOnClose;
-            newdfi.PagingIo = indfi.PagingIo;
-            newdfi.SynchronousIo = indfi.SynchronousIo;
-            newdfi.Nocache = indfi.Nocache;
-            newdfi.WriteToEndOfFile = indfi.WriteToEndOfFile;
-            newdfi.InfoId = indfi.InfoId;
-            newdfi.ProcessId = indfi.ProcessId;
-
-            return newdfi;
         }
 
 

@@ -4,6 +4,7 @@ using System.ServiceModel;
 using System.Threading;
 using LiquesceFaçade;
 using NLog;
+using LiquesceMirrorToDo;
 
 namespace LiquesceSvc
 {
@@ -50,11 +51,23 @@ namespace LiquesceSvc
           return ManagementLayer.Instance.GetPossibleShares();
       }
 
-      public List<string> GetMirrorDeleteToDo()
+       
+      //public MirrorToDoList ConsumeMirrorToDo()
+      //{
+      //    Log.Debug("Calling ConsumeMirrorToDo");
+      //    return ManagementLayer.Instance.ConsumeMirrorToDo();
+      //}
+
+      public MirrorToDoList MirrorToDo
       {
-          Log.Debug("Calling GetMirrorDeleteToDo");
-          return ManagementLayer.Instance.GetMirrorDeleteToDo();
+          get
+          {
+              Log.Debug("Calling State");
+              return ManagementLayer.Instance.MirrorToDo;
+          }
       }
+
+
 
       public ConfigDetails ConfigDetails
       {

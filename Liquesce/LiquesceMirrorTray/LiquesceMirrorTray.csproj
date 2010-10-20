@@ -97,6 +97,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MirrorFileManager.cs" />
     <Compile Include="MirrorWorker.cs" />
     <Compile Include="MirrorTrayForm.cs">
       <SubType>Form</SubType>
@@ -131,16 +132,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Icons\Config.ico" />
-    <Content Include="Icons\Error.ico" />
-    <Content Include="Icons\info.ico" />
-    <Content Include="Icons\Liquesce.ico" />
-    <Content Include="Icons\OK.ico" />
-    <Content Include="Icons\Question.ico" />
-    <Content Include="Icons\Stop.ico" />
-    <Content Include="Icons\Warning.ico" />
-  </ItemGroup>
-  <ItemGroup>
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <ItemGroup>
@@ -170,6 +161,27 @@
       <Project>{CFE5DC7B-25FB-45C4-AF18-1963853375E1}</Project>
       <Name>LiquesceFaçade</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Icons\two_folder_flat_error.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Icons\two_folder_flat_ok.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Icons\two_folder_flat_process1.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Icons\two_folder_flat_process2.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Icons\two_folder_flat_rad.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Icons\two_folder_flat_warning.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Icons\two_folder_flat_disable.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
