@@ -60,58 +60,51 @@ namespace LiquesceMirrorTray.Properties {
             }
         }
         
-        internal static System.Drawing.Icon Config {
+        internal static System.Drawing.Icon two_folder_flat_disable {
             get {
-                object obj = ResourceManager.GetObject("Config", resourceCulture);
+                object obj = ResourceManager.GetObject("two_folder_flat_disable", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
             }
         }
         
-        internal static System.Drawing.Icon Error {
+        internal static System.Drawing.Icon two_folder_flat_error {
             get {
-                object obj = ResourceManager.GetObject("Error", resourceCulture);
+                object obj = ResourceManager.GetObject("two_folder_flat_error", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
             }
         }
         
-        internal static System.Drawing.Icon info {
+        internal static System.Drawing.Icon two_folder_flat_ok {
             get {
-                object obj = ResourceManager.GetObject("info", resourceCulture);
+                object obj = ResourceManager.GetObject("two_folder_flat_ok", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
             }
         }
         
-        internal static System.Drawing.Icon Liquesce {
+        internal static System.Drawing.Icon two_folder_flat_process1 {
             get {
-                object obj = ResourceManager.GetObject("Liquesce", resourceCulture);
+                object obj = ResourceManager.GetObject("two_folder_flat_process1", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
             }
         }
         
-        internal static System.Drawing.Icon OK {
+        internal static System.Drawing.Icon two_folder_flat_process2 {
             get {
-                object obj = ResourceManager.GetObject("OK", resourceCulture);
+                object obj = ResourceManager.GetObject("two_folder_flat_process2", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
             }
         }
         
-        internal static System.Drawing.Icon Question {
+        internal static System.Drawing.Icon two_folder_flat_rad {
             get {
-                object obj = ResourceManager.GetObject("Question", resourceCulture);
+                object obj = ResourceManager.GetObject("two_folder_flat_rad", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
             }
         }
         
-        internal static System.Drawing.Icon Stop {
+        internal static System.Drawing.Icon two_folder_flat_warning {
             get {
-                object obj = ResourceManager.GetObject("Stop", resourceCulture);
-                return ((System.Drawing.Icon)(obj));
-            }
-        }
-        
-        internal static System.Drawing.Icon Warning {
-            get {
-                object obj = ResourceManager.GetObject("Warning", resourceCulture);
+                object obj = ResourceManager.GetObject("two_folder_flat_warning", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
             }
         }

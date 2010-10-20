@@ -35,9 +35,9 @@
             this.button1 = new System.Windows.Forms.Button();
             this.ToDoList = new System.Windows.Forms.ListBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.serviceController1 = new System.ServiceProcess.ServiceController();
             this.timerToDoListRefresh = new System.Windows.Forms.Timer(this.components);
             this.progressBar = new System.Windows.Forms.ProgressBar();
+            this.timerReconnector = new System.Windows.Forms.Timer(this.components);
             this.SuspendLayout();
             // 
             // notifyIcon1
@@ -66,10 +66,6 @@
             // ToDoList
             // 
             this.ToDoList.FormattingEnabled = true;
-            this.ToDoList.Items.AddRange(new object[] {
-            "Eins",
-            "Zwei",
-            "Drei"});
             this.ToDoList.Location = new System.Drawing.Point(12, 46);
             this.ToDoList.Name = "ToDoList";
             this.ToDoList.Size = new System.Drawing.Size(463, 186);
@@ -84,14 +80,9 @@
             this.label1.TabIndex = 2;
             this.label1.Text = "adsfasdfas";
             // 
-            // serviceController1
-            // 
-            this.serviceController1.MachineName = "127.0.0.1";
-            this.serviceController1.ServiceName = "LiquesceSvc";
-            // 
             // timerToDoListRefresh
             // 
-            this.timerToDoListRefresh.Interval = 2000;
+            this.timerToDoListRefresh.Interval = 1000;
             this.timerToDoListRefresh.Tick += new System.EventHandler(this.timerToDoListRefresh_Tick);
             // 
             // progressBar
@@ -100,6 +91,12 @@
             this.progressBar.Name = "progressBar";
             this.progressBar.Size = new System.Drawing.Size(100, 23);
             this.progressBar.TabIndex = 3;
+            // 
+            // timerReconnector
+            // 
+            this.timerReconnector.Enabled = true;
+            this.timerReconnector.Interval = 5000;
+            this.timerReconnector.Tick += new System.EventHandler(this.timerReconnector_Tick);
             // 
             // MirrorTrayForm
             // 
@@ -111,8 +108,9 @@
             this.Controls.Add(this.ToDoList);
             this.Controls.Add(this.button1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MaximizeBox = false;
             this.Name = "MirrorTrayForm";
-            this.Text = "Form1";
+            this.Text = "Liquesce Mirror Info";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.TrayForm_FormClosing);
             this.Load += new System.EventHandler(this.TrayForm_Load);
             this.ResumeLayout(false);
@@ -127,9 +125,9 @@
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.ListBox ToDoList;
         private System.Windows.Forms.Label label1;
-        private System.ServiceProcess.ServiceController serviceController1;
         private System.Windows.Forms.Timer timerToDoListRefresh;
         private System.Windows.Forms.ProgressBar progressBar;
+        private System.Windows.Forms.Timer timerReconnector;
     }
 }
 

@@ -10,6 +10,7 @@ using DokanNet;
 using LiquesceFaçade;
 using NLog;
 using NLog.Config;
+using LiquesceMirrorToDo;
 
 namespace LiquesceSvc
 {
@@ -325,10 +326,15 @@ namespace LiquesceSvc
             // TODO: Phase 2 will have a foreach onthe drive letter
             return (LanManShareHandler.MatchDriveLanManShares(currentConfigDetails.DriveLetter));
         }
+        
+        //public MirrorToDoList ConsumeMirrorToDo()
+        //{
+        //    return FileManager.ConsumeMirrorToDo();
+        //}
 
-        public List<string> GetMirrorDeleteToDo()
+        public MirrorToDoList MirrorToDo
         {
-            return FileManager.MirrorDeleteToDo;
+            get { return FileManager.ConsumeMirrorToDo(); }
         }
 
         private void ReadConfigDetails()
