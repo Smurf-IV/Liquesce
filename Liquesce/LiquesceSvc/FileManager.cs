@@ -10,11 +10,6 @@ namespace LiquesceSvc
 {
     class FileManager
     {
-        public const string TO_DO_PRE__DELETE_DIR = "DeleteDir|";
-        public const string TO_DO_PRE__DELETE_FILE = "DeleteFile|";
-        public const string TO_DO_PRE__COPY_DIR = "CopyDir|";
-        public const string TO_DO_PRE__COPY_FILE = "CopyFile|";
-
         private static Object lockvarMirrorToDo = "";
         //private static List<string> MirrorToDo = new List<string>();
         private static MirrorToDoList MirrorToDo = new MirrorToDoList();
@@ -69,5 +64,7 @@ namespace LiquesceSvc
                 MirrorToDo.Add(entry);
             }
         }
+
+
     }
 }
