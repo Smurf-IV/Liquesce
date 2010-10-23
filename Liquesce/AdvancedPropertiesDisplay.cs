@@ -121,7 +121,11 @@ namespace Liquesce
 
         public ConfigDetails.AllocationModes eAllocationMode = ConfigDetails.AllocationModes.priority;
 
-        [DescriptionAttribute("The allocation stratigy how new files or folders are placed on the storage disks (priority = classic one disk after the other; balanced = balance the availabel space on all storage disks)."),
+        [DescriptionAttribute("The allocation strategy how new files or folders are placed on the storage disks:\n" +
+            "priority = classic one disk after the other method\n" + 
+            "balanced = balance the availabel space on all storage disks\n" + 
+            "backup = balanced with a \".backup\" folder to get a secure allocated backup"
+            ),
         DisplayName("Disk Allocation Mode"),
         TypeConverter(typeof(AllocationModeValues))
         , CategoryAttribute("File")
@@ -168,7 +172,7 @@ namespace Liquesce
 
         public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
         {
-            return new StandardValuesCollection(new[] { "priority", "balanced" });
+            return new StandardValuesCollection(new[] { "priority", "balanced", "backup" });
         }
     }
 

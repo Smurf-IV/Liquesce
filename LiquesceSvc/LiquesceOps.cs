@@ -100,68 +100,73 @@ namespace LiquesceSvc
                 //}
 
                 bool writeable = (((rawAccessMode & Proxy.FILE_WRITE_DATA) == Proxy.FILE_WRITE_DATA));
-                if (!fileExists
-                   && writeable
-                   )
+                if (!fileExists && writeable)
                 {
-                    // Find Quota
-                    string newDir = Path.GetDirectoryName(path);
-                    ulong lpFreeBytesAvailable, lpTotalNumberOfBytes, lpTotalNumberOfFreeBytes;
-                    // Check to see if the location has enough space 
-                    UInt64 buffersize = 0;
-                    if (configDetails.eAllocationMode == ConfigDetails.AllocationModes.balanced)
+                    //    //// Find Quota
+                    //    //string newDir = Path.GetDirectoryName(path);
+                    //    //ulong lpFreeBytesAvailable, lpTotalNumberOfBytes, lpTotalNumberOfFreeBytes;
+                    //    //// Check to see if the location has enough space 
+                    //    //UInt64 buffersize = 0;
+                    //    //if (configDetails.eAllocationMode == ConfigDetails.AllocationModes.priority)
+                    //    //{
+                    //    //    buffersize = configDetails.HoldOffBufferBytes;
+                    //    //}
+
+                    //    //if (GetDiskFreeSpaceEx(newDir, out lpFreeBytesAvailable, out lpTotalNumberOfBytes, out lpTotalNumberOfFreeBytes)
+                    //    //   && (lpFreeBytesAvailable < buffersize))
+                    //    //{
+                    //    //    string newDirLocation = configDetails.SourceLocations.Find(str =>
+                    //    //        (GetDiskFreeSpaceEx(str, out lpFreeBytesAvailable, out lpTotalNumberOfBytes, out lpTotalNumberOfFreeBytes)
+                    //    //        && (lpFreeBytesAvailable > buffersize))
+                    //    //    );
+                    //    string newDir = "";
+                    //    //string path = Roots.GetPath(filename, true);
+
+                    //    if (!String.IsNullOrEmpty(newDirLocation))
+                    //    {
+                    //        path = newDirLocation + filename;
+                    //        newDir = Path.GetDirectoryName(path);
+                    //    }
+                    //    else
+                    //    {
+                    //        // MessageText: Not enough quota is available to process this command.
+                    //        // #define ERROR_NOT_ENOUGH_QUOTA           1816L 
+
+                    //        // unchecked stolen from Microsoft.Win32.Win32Native.MakeHRFromErrorCode
+                    //        Marshal.ThrowExceptionForHR(unchecked(((int)2147942400u) | 1816), new IntPtr(-1));
+                    //        // The above function justs make the whole exception stack dissappear up it's own pipe !!
+                    //        // _BUT_ Sticking the new IntPtr(-1) forces a new IErrorInfo and stops it reusing the
+                    //        // last one it auto-created !
+                    //    }
+
+                    //    if (!String.IsNullOrWhiteSpace(newDir))
+                    //        Directory.CreateDirectory(newDir);
+                    //}
+
+                    if (String.IsNullOrWhiteSpace(path))
                     {
-                        buffersize = 0;
+                        actualErrorCode = Dokan.ERROR_ACCESS_DENIED;
+                        Log.Trace("Got no path!!!");
+                        return actualErrorCode;
                     }
-                    else
+
+                    SafeFileHandle handle = CreateFile(path, rawAccessMode, rawShare, IntPtr.Zero, rawCreationDisposition, rawFlagsAndAttributes, IntPtr.Zero);
+                    if (handle.IsInvalid)
                     {
-                        buffersize = configDetails.HoldOffBufferBytes;
+                        Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error(), new IntPtr(-1));
                     }
+                    FileStream fs = new FileStream(handle, writeable ? FileAccess.ReadWrite : FileAccess.Read, (int)configDetails.BufferReadSize);
 
-                    if (GetDiskFreeSpaceEx(newDir, out lpFreeBytesAvailable, out lpTotalNumberOfBytes, out lpTotalNumberOfFreeBytes)
-                       && (lpFreeBytesAvailable < buffersize))
+                    info.Context = ++openFilesLastKey; // never be Zero !
+                    try
                     {
-                        string newDirLocation = configDetails.SourceLocations.Find(str =>
-                          (GetDiskFreeSpaceEx(str, out lpFreeBytesAvailable, out lpTotalNumberOfBytes, out lpTotalNumberOfFreeBytes)
-                                 && (lpFreeBytesAvailable > buffersize))
-                       );
-                        if (!String.IsNullOrEmpty(newDirLocation))
-                        {
-                            path = newDirLocation + filename;
-                            newDir = Path.GetDirectoryName(path);
-                        }
-                        else
-                        {
-                            // MessageText: Not enough quota is available to process this command.
-                            // #define ERROR_NOT_ENOUGH_QUOTA           1816L 
-
-                            // unchecked stolen from Microsoft.Win32.Win32Native.MakeHRFromErrorCode
-                            Marshal.ThrowExceptionForHR(unchecked(((int)2147942400u) | 1816), new IntPtr(-1));
-                            // The above function justs make the whole exception stack dissappear up it's own pipe !!
-                            // _BUT_ Sticking the new IntPtr(-1) forces a new IErrorInfo and stops it reusing the
-                            // last one it auto-created !
-                        }
+                        openFilesSync.EnterWriteLock();
+                        openFiles.Add(openFilesLastKey, fs);
                     }
-                    if (!String.IsNullOrWhiteSpace(newDir))
-                        Directory.CreateDirectory(newDir);
-                }
-
-                SafeFileHandle handle = CreateFile(path, rawAccessMode, rawShare, IntPtr.Zero, rawCreationDisposition, rawFlagsAndAttributes, IntPtr.Zero);
-                if (handle.IsInvalid)
-                {
-                    Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error(), new IntPtr(-1));
-                }
-                FileStream fs = new FileStream(handle, writeable ? FileAccess.ReadWrite : FileAccess.Read, (int)configDetails.BufferReadSize);
-
-                info.Context = ++openFilesLastKey; // never be Zero !
-                try
-                {
-                    openFilesSync.EnterWriteLock();
-                    openFiles.Add(openFilesLastKey, fs);
-                }
-                finally
-                {
-                    openFilesSync.ExitWriteLock();
+                    finally
+                    {
+                        openFilesSync.ExitWriteLock();
+                    }
                 }
             }
             catch (Exception ex)
@@ -231,10 +236,37 @@ namespace LiquesceSvc
         public int CreateDirectory(string filename, DokanFileInfo info)
         {
             int dokanError = Dokan.DOKAN_ERROR;
+            string path;
+
             try
             {
+                // BACKUP mode
+                if (configDetails.eAllocationMode == ConfigDetails.AllocationModes.backup && Roots.IsBackup(filename))
+                {
+                    Log.Trace("Detected Backup CreateDirectory [{0}]", filename);
+
+                    string originalrelative = Roots.FilterDirFromPath(filename, Roots.HIDDEN_BACKUP_FOLDER);
+                    string originalpath = Roots.GetPath(originalrelative);
+                    // if folder backup not found in the original directory then stop this!
+                    if (!Directory.Exists(originalpath))
+                    {
+                        return Dokan.ERROR_ACCESS_DENIED;
+                    }
+                    else
+                    {
+                        path = Roots.GetNewRoot(Roots.GetRoot(originalpath)) + filename;
+                        if (Directory.CreateDirectory(path).Exists)
+                        {
+                            info.IsDirectory = true;
+                            Roots.TrimAndAddUnique(path);
+                            return dokanError = Dokan.DOKAN_SUCCESS;
+                        }
+                    }
+                }
+
+                // NORMAL mode
                 Log.Trace("CreateDirectory IN DokanProcessId[{0}]", info.ProcessId);
-                string path = Roots.GetPath(filename, true);
+                path = Roots.GetPath(filename, true);
                 if (Directory.Exists(path))
                 {
                     info.IsDirectory = true;
@@ -249,7 +281,6 @@ namespace LiquesceSvc
                         string mirrorpath = Roots.GetNewRoot(Roots.GetRoot(path)) + "\\" + Roots.HIDDEN_MIRROR_FOLDER + filename;
                         MirrorToDo todo = new MirrorToDo();
                         FileManager.AddMirrorToDo(todo.CreateFolderCreate(filename, path, mirrorpath));
-                        //CreateDirectoryMirror(filename, info, Roots.getRoot(path));
                     }
                     dokanError = Dokan.DOKAN_SUCCESS;
                 }
@@ -263,38 +294,6 @@ namespace LiquesceSvc
             finally
             {
                 Log.Trace("CreateDirectory OUT dokanError[{0}]", dokanError);
-            }
-            return dokanError;
-        }
-
-        public int CreateDirectoryMirror(string filename, DokanFileInfo info, string FilterThisPath)
-        {
-            int dokanError = Dokan.DOKAN_ERROR;
-            try
-            {
-                Log.Trace("CreateDirectoryMirror IN DokanProcessId[{0}]", info.ProcessId);
-                string path = Roots.GetNewRoot(FilterThisPath) + "\\" + Roots.HIDDEN_MIRROR_FOLDER + filename;
-                if (Directory.Exists(path))
-                {
-                    info.IsDirectory = true;
-                    dokanError = Dokan.ERROR_ALREADY_EXISTS;
-                }
-                else if (Directory.CreateDirectory(path).Exists)
-                {
-                    info.IsDirectory = true;
-                    Roots.TrimAndAddUnique(path);
-                    dokanError = Dokan.DOKAN_SUCCESS;
-                }
-            }
-            catch (Exception ex)
-            {
-                int win32 = ((short)Marshal.GetHRForException(ex) * -1);
-                Log.ErrorException("CreateDirectoryMirror threw: ", ex);
-                dokanError = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
-            }
-            finally
-            {
-                Log.Trace("CreateDirectoryMirror OUT dokanError[{0}]", dokanError);
             }
             return dokanError;
         }
@@ -877,6 +876,32 @@ namespace LiquesceSvc
         {
             try
             {
+                // BACKUP mode
+                if (configDetails.eAllocationMode == ConfigDetails.AllocationModes.backup && Roots.IsBackup(filename))
+                {
+                    Log.Trace("Detected Backup MoveFile [{0}] [{1}]", filename, newname);
+
+                    string neworiginalrelative = Roots.FilterDirFromPath(newname, Roots.HIDDEN_BACKUP_FOLDER);
+                    string neworiginalpath = Roots.GetPath(neworiginalrelative);
+                    if (info.IsDirectory)
+                    {
+                        // if folder backup not found in the original directory then stop this!
+                        if (!Directory.Exists(neworiginalpath))
+                        {
+                            return Dokan.ERROR_ACCESS_DENIED;
+                        }
+                    }
+                    else
+                    {
+                        // if file backup not found in the original directory then stop this!
+                        if (!File.Exists(neworiginalpath))
+                        {
+                            return Dokan.ERROR_ACCESS_DENIED;
+                        }
+                    }
+                }
+
+                // NORMAL mode
                 Log.Trace("MoveFile IN DokanProcessId[{0}]", info.ProcessId);
                 Log.Info("MoveFile replaceIfExisting [{0}] filename: [{1}] newname: [{2}]", replaceIfExisting, filename, newname);
                 string pathTarget = Roots.GetPath(newname, true);
@@ -1284,7 +1309,7 @@ namespace LiquesceSvc
         private static extern int SendNotifyMessage(IntPtr hwnd, int wMsg, IntPtr wParam, IntPtr lParam);
 
         [DllImport("user32.dll")]
-        public static extern int RegisterWindowMessage(string lpString); 
+        public static extern int RegisterWindowMessage(string lpString);
 
     }
 }

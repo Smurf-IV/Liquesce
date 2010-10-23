@@ -17,6 +17,7 @@ namespace LiquesceSvc
     {
         public const string NO_PATH_TO_FILTER = "?";
         public const string HIDDEN_MIRROR_FOLDER = ".mirror";
+        public const string HIDDEN_BACKUP_FOLDER = ".backup";
 
         private static readonly string PathDirectorySeparatorChar = Path.DirectorySeparatorChar.ToString();
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
@@ -35,9 +36,28 @@ namespace LiquesceSvc
         }
 
 
-        public static string GetPath(string filename, bool isCreate = false, bool isMirror = false)
+        public static string GetPath(string filename, bool isCreate = false)
         {
-            string foundPath = GetNewRoot();
+            string foundPath;
+
+            if (configDetails.eAllocationMode == ConfigDetails.AllocationModes.backup && Roots.IsBackup(filename))
+            {
+                string originalrelative = Roots.FilterDirFromPath(filename, Roots.HIDDEN_BACKUP_FOLDER);
+                string originalpath = Roots.GetPath(originalrelative);
+                // if folder backup found in the original directory then stop this!
+                if (Directory.Exists(originalpath))
+                {
+                    foundPath = GetNewRoot(GetRoot(originalpath));
+                }
+                else
+                {
+                    foundPath = GetNewRoot();
+                }
+            }
+            else
+                foundPath = GetNewRoot();
+
+
             try
             {
                 if (!String.IsNullOrWhiteSpace(filename) // Win 7 (x64) passes in a blank
@@ -65,9 +85,7 @@ namespace LiquesceSvc
                             if (filename[0] != Path.DirectorySeparatorChar)
                                 filename = PathDirectorySeparatorChar + filename;
 
-                            if (!isAShare
-                                      && (configDetails.SourceLocations != null)
-                                      )
+                            if ( !isAShare && (configDetails.SourceLocations != null) )
                             {
                                 foreach (string newTarget in
                                    configDetails.SourceLocations.Select(sourceLocation => sourceLocation + filename))
@@ -75,9 +93,7 @@ namespace LiquesceSvc
                                     Log.Trace("Try and GetPath from [{0}]", newTarget);
                                     //Now here's a kicker.. The User might have copied a file directly onto one of the drives while
                                     // this has been running, So this ought to try and find if it exists that way.
-                                    if (Directory.Exists(newTarget)
-                                       || File.Exists(newTarget)
-                                       )
+                                    if (Directory.Exists(newTarget) || File.Exists(newTarget))
                                     {
                                         TrimAndAddUnique(newTarget);
                                         found = rootPaths.TryGetValue(filename, out foundPath);
@@ -85,24 +101,27 @@ namespace LiquesceSvc
                                     }
                                 }
                             }
-                            else if (isAShare
-                               && (configDetails.KnownSharePaths != null)
-                               )
+                            else if (isAShare && (configDetails.KnownSharePaths != null))
                             {
                                 found = configDetails.KnownSharePaths.Exists(delegate(string sharePath)
                                 {
                                     Log.Trace("Try and find from [{0}][{1}]", sharePath, filename);
                                     return rootPaths.TryGetValue(sharePath + filename, out foundPath);
                                 });
-
                             }
+
+                            //-------------------------------------
+                            // file/folder not found!!!
+                            // let's see if we should create a new one...
                             if (!found)
                             {
                                 Log.Trace("was this a failed redirect thing from a network share ? [{0}]", filename);
                                 if (isCreate)
                                 {
                                     int lastDir = filename.LastIndexOf(Path.DirectorySeparatorChar);
-                                    if (lastDir > -1)
+                                    // check where the mother directory is placed (only in priority mode)
+                                    if (configDetails.eAllocationMode == ConfigDetails.AllocationModes.priority &&
+                                        lastDir > -1)
                                     {
                                         Log.Trace("Perform search for path: {0}", filename);
                                         string newPart = filename.Substring(lastDir);
@@ -111,10 +130,31 @@ namespace LiquesceSvc
                                         TrimAndAddUnique(foundPath);
                                     }
                                     else
-                                        foundPath = GetNewRoot() + filename; // This is used when creating new directory / file
+                                    {
+                                        // This is used when creating new directory / file
+                                        if (configDetails.eAllocationMode == ConfigDetails.AllocationModes.backup && Roots.IsBackup(filename))
+                                        {
+                                            Log.Trace("Seems that we got a backup relative path to create [{0}]", filename);
+
+                                            string originalrelative = Roots.FilterDirFromPath(filename, Roots.HIDDEN_BACKUP_FOLDER);
+                                            string originalpath = Roots.GetPath(originalrelative);
+                                            // if folder backup found in the original directory then stop this!
+                                            if (Directory.Exists(originalpath) || File.Exists(originalpath))
+                                            {
+                                                foundPath = GetNewRoot(GetRoot(originalpath)) + filename;
+                                                Log.Trace("Seems that we got a backup path [{0}]", foundPath);
+                                            }
+                                            else
+                                            {
+                                                foundPath = "";
+                                            }
+                                        }
+                                        else
+                                            foundPath = GetNewRoot() + filename;
+                                    }
                                 }
                                 else
-                                    foundPath = GetNewRoot() + filename; // This is used when creating new directory / file
+                                    foundPath = ""; // This is used when not creating new directory / file
                             }
                         }
                     }
@@ -177,26 +217,54 @@ namespace LiquesceSvc
         // FilterThisPath can be used to not use a specific location (for mirror feature)
         public static string GetNewRoot(string FilterThisPath)
         {
-            switch (configDetails.eAllocationMode) 
+            switch (configDetails.eAllocationMode)
             {
                 case ConfigDetails.AllocationModes.priority:
-                    return GetHighestPriority(FilterThisPath);
+                    return GetHighestPriority(FilterThisPath, 0);
 
                 case ConfigDetails.AllocationModes.balanced:
-                    return GetWithMostFreeSpace(FilterThisPath);
+                    return GetWithMostFreeSpace(FilterThisPath, 0);
 
                 case ConfigDetails.AllocationModes.mirror:
-                    return GetWithMostFreeSpace(FilterThisPath);
+                    return GetWithMostFreeSpace(FilterThisPath, 0);
+
+                case ConfigDetails.AllocationModes.backup:
+                    return GetWithMostFreeSpace(FilterThisPath, 0);
 
                 default:
-                    return GetHighestPriority(FilterThisPath);
+                    return GetHighestPriority(FilterThisPath, 0);
+            }
+        }
+
+
+
+        // this method returns a path (real physical path) of a place where the next folder/file root can be.
+        // filesize should be the size of the file which one wans to create on the disk
+        public static string GetNewRoot(UInt64 filesize)
+        {
+            switch (configDetails.eAllocationMode)
+            {
+                case ConfigDetails.AllocationModes.priority:
+                    return GetHighestPriority(NO_PATH_TO_FILTER, filesize);
+
+                case ConfigDetails.AllocationModes.balanced:
+                    return GetWithMostFreeSpace(NO_PATH_TO_FILTER, filesize);
+
+                case ConfigDetails.AllocationModes.mirror:
+                    return GetWithMostFreeSpace(NO_PATH_TO_FILTER, filesize);
+
+                case ConfigDetails.AllocationModes.backup:
+                    return GetWithMostFreeSpace(NO_PATH_TO_FILTER, filesize);
+
+                default:
+                    return GetHighestPriority(NO_PATH_TO_FILTER, filesize);
             }
         }
 
 
 
         // returns the next root with the highest priority
-        private static string GetHighestPriority(string FilterThisPath)
+        private static string GetHighestPriority(string FilterThisPath, UInt64 filesize)
         {
             for (int i = 0; i < configDetails.SourceLocations.Count; i++)
             {
@@ -208,7 +276,7 @@ namespace LiquesceSvc
                     ulong num3;
                     if (GetDiskFreeSpaceEx(configDetails.SourceLocations[i], out num, out num2, out num3))
                     {
-                        if (num > configDetails.HoldOffBufferBytes)
+                        if (num > configDetails.HoldOffBufferBytes && num > filesize)
                         {
                             return configDetails.SourceLocations[i];
                         }
@@ -216,13 +284,14 @@ namespace LiquesceSvc
                 }
             }
 
-            return GetWithMostFreeSpace(null);
+            // if all drives are full (exepting the HoldOffBuffers) choose that one with the most free space
+            return GetWithMostFreeSpace(FilterThisPath, filesize);
         }
 
 
 
         // returns the root with the most free space
-        private static string GetWithMostFreeSpace(string FilterThisPath)
+        private static string GetWithMostFreeSpace(string FilterThisPath, UInt64 filesize)
         {
             ulong HighestFreeSpace = 0;
             string PathWithMostFreeSpace = "";
@@ -246,7 +315,27 @@ namespace LiquesceSvc
                 }
             });
 
-            return PathWithMostFreeSpace;
+            // if the file fits on the disk
+            if (HighestFreeSpace > filesize)
+                return PathWithMostFreeSpace;
+            else
+                return "";
+        }
+
+
+
+        public static bool IsBackup(string path)
+        {
+            if (path.Contains(HIDDEN_BACKUP_FOLDER))
+                return true;
+            else
+                return false;
+        }
+
+
+        public static string FilterDirFromPath(string path, string filterdir)
+        {
+            return path.Replace("\\" + filterdir, "");
         }
 
 
