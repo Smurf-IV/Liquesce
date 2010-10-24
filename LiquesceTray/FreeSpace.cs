@@ -22,10 +22,16 @@ namespace LiquesceTray
 
         private ConfigDetails config;
 
+        // bar variables + constants
+        private const int BAR_SIZE = 300;
+        private int barControlOffsetLeft = 0;
+        private ulong maxDiskSize = 0;
+
         private System.Windows.Forms.TextBox[] diskNames;
         private System.Windows.Forms.TextBox[] totalSpace;
         private System.Windows.Forms.TextBox[] freeSpace;
         private System.Windows.Forms.ProgressBar[] bars;
+        private System.Windows.Forms.CheckBox compareDisks;
 
 
 
@@ -107,14 +113,18 @@ namespace LiquesceTray
             leftSpace += 83;
 
             // 
-            // labelBars
+            // compareDisks
             // 
-            //System.Windows.Forms.Label labelBars = new System.Windows.Forms.Label();
-            //labelBars.Location = new System.Drawing.Point(CONTROL_OFFSET_LEFT + leftSpace, CONTROL_OFFSET_TOP + 2);
-            //labelBars.Name = "labelBars";
-            //labelBars.Size = new System.Drawing.Size(200, CONTROL_OFFSET_TOP_LABEL-2);
-            //labelBars.Text = "Free Space:";
-            //this.Controls.Add(labelBars);
+            compareDisks = new System.Windows.Forms.CheckBox();
+            compareDisks.AutoSize = true;
+            compareDisks.Location = new System.Drawing.Point(CONTROL_OFFSET_LEFT + leftSpace, CONTROL_OFFSET_TOP);
+            compareDisks.Name = "realPropation";
+            compareDisks.Size = new System.Drawing.Size(123, CONTROL_OFFSET_TOP_LABEL);
+            compareDisks.TabIndex = 0;
+            compareDisks.Text = "Compare Disks";
+            compareDisks.UseVisualStyleBackColor = true;
+            compareDisks.Checked = true;
+            this.Controls.Add(compareDisks);
             leftSpace += 123;
 
 
@@ -145,6 +155,9 @@ namespace LiquesceTray
 
                 if (GetDiskFreeSpaceEx(config.SourceLocations[i], out availabel, out total, out freebytes))
                 {
+                    if (total > maxDiskSize)
+                        maxDiskSize = total;
+
                     // 
                     // textBox freeSpace
                     // 
@@ -178,9 +191,10 @@ namespace LiquesceTray
                     // progress bar
                     //
                     bars[i] = new System.Windows.Forms.ProgressBar();
-                    bars[i].Location = new System.Drawing.Point(CONTROL_OFFSET_LEFT + leftSpace, CONTROL_OFFSET_TOP + CONTROL_SPACE * i + CONTROL_OFFSET_TOP_LABEL);
+                    barControlOffsetLeft = CONTROL_OFFSET_LEFT + leftSpace;
+                    bars[i].Location = new System.Drawing.Point(barControlOffsetLeft, CONTROL_OFFSET_TOP + CONTROL_SPACE * i + CONTROL_OFFSET_TOP_LABEL);
                     bars[i].Name = "progressBar" + i.ToString();
-                    bars[i].Size = new System.Drawing.Size(200, 23);
+                    bars[i].Size = new System.Drawing.Size(BAR_SIZE, 23);
                     bars[i].TabIndex = 200 + i;
                     this.Controls.Add(bars[i]);
                 }
@@ -211,9 +225,20 @@ namespace LiquesceTray
                     //
                     // progress bar
                     //
+                    if (compareDisks.Checked == true)
+                    {
+                        bars[i].Left = barControlOffsetLeft + (int)(BAR_SIZE - ((total * BAR_SIZE) / maxDiskSize));
+                        bars[i].Width = (int)((total * BAR_SIZE) / maxDiskSize);
+                    }
+                    else
+                    {
+                        bars[i].Left = barControlOffsetLeft;
+                        bars[i].Width = BAR_SIZE;
+                    }
                     const int BAR_SCALE = 1000;
                     bars[i].Maximum = BAR_SCALE;
                     bars[i].Value = (int)(((total - availabel) * BAR_SCALE) / total);
+
                 }
             }
         }
