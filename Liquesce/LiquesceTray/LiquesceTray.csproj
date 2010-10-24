@@ -102,8 +102,15 @@
     <Reference Include="System.ServiceProcess" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FreeSpace.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FreeSpace.Designer.cs">
+      <DependentUpon>FreeSpace.cs</DependentUpon>
+    </Compile>
     <Compile Include="HiddenFormToAcceptCloseMessage.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -124,6 +131,9 @@
       <DependentUpon>Reference.svcmap</DependentUpon>
     </Compile>
     <Compile Include="StateChangeHandler.cs" />
+    <EmbeddedResource Include="FreeSpace.resx">
+      <DependentUpon>FreeSpace.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="HiddenFormToAcceptCloseMessage.resx">
       <DependentUpon>HiddenFormToAcceptCloseMessage.cs</DependentUpon>
     </EmbeddedResource>
@@ -175,6 +185,7 @@
     <Content Include="Icons\base.ico" />
     <Content Include="Icons\Config.ico" />
     <Content Include="Icons\Error.ico" />
+    <None Include="Icons\free_space.ico" />
     <Content Include="Icons\info.ico" />
     <Content Include="Icons\Liquesce.ico" />
     <Content Include="Icons\OK.ico" />
