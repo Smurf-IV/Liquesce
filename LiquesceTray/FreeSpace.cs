@@ -20,6 +20,8 @@ namespace LiquesceTray
         private const int CONTROL_OFFSET_LEFT = 3;
         private const int CONTROL_SPACE = 30;
 
+        private const int BAR_SCALE = 1000;
+
         private ConfigDetails config;
 
         // bar variables + constants
@@ -28,9 +30,13 @@ namespace LiquesceTray
         private ulong maxDiskSize = 0;
 
         private System.Windows.Forms.TextBox[] diskNames;
+        private System.Windows.Forms.TextBox diskLiquesce;
         private System.Windows.Forms.TextBox[] totalSpace;
+        private System.Windows.Forms.TextBox totalSpaceLiquesce;
         private System.Windows.Forms.TextBox[] freeSpace;
+        private System.Windows.Forms.TextBox freeSpaceLiquesce;
         private System.Windows.Forms.ProgressBar[] bars;
+        private System.Windows.Forms.ProgressBar barLiquesce;
         private System.Windows.Forms.CheckBox compareDisks;
 
 
@@ -72,6 +78,11 @@ namespace LiquesceTray
 
         private void InitializeControls()
         {
+            ulong availabel;
+            ulong total;
+            ulong freebytes;
+
+
             diskNames = new System.Windows.Forms.TextBox[config.SourceLocations.Count()];
             totalSpace = new System.Windows.Forms.TextBox[config.SourceLocations.Count()];
             freeSpace = new System.Windows.Forms.TextBox[config.SourceLocations.Count()];
@@ -129,16 +140,75 @@ namespace LiquesceTray
 
 
 
+            leftSpace = 0;
+            // 
+            // textBox diskLiquesce
+            // 
+            System.Windows.Forms.TextBox diskLiquesce = new System.Windows.Forms.TextBox();
+            diskLiquesce.Location = new System.Drawing.Point(CONTROL_OFFSET_LEFT + leftSpace, CONTROL_OFFSET_TOP + 2 + CONTROL_OFFSET_TOP_LABEL);
+            diskLiquesce.Name = "diskLiquesce";
+            diskLiquesce.ReadOnly = true;
+            diskLiquesce.Size = new System.Drawing.Size(120, 20);
+            diskLiquesce.TabIndex = 0;
+            diskLiquesce.Text = config.DriveLetter + ": (Virtual Drive)";
+            this.Controls.Add(diskLiquesce);
+
+            leftSpace += 123;
+
+            // 
+            // textBox totalSpaceLiquesce
+            // 
+            totalSpaceLiquesce = new System.Windows.Forms.TextBox();
+            totalSpaceLiquesce.Location = new System.Drawing.Point(CONTROL_OFFSET_LEFT + leftSpace, CONTROL_OFFSET_TOP + 2 + CONTROL_OFFSET_TOP_LABEL);
+            totalSpaceLiquesce.Name = "totalSpaceLiquesce";
+            totalSpaceLiquesce.ReadOnly = true;
+            totalSpaceLiquesce.Size = new System.Drawing.Size(80, 20);
+            totalSpaceLiquesce.TabIndex = 0;
+            totalSpaceLiquesce.TextAlign = System.Windows.Forms.HorizontalAlignment.Right; ;
+            this.Controls.Add(totalSpaceLiquesce);
+
+            leftSpace += 83;
+
+            // 
+            // textBox freeSpaceLiquesce
+            // 
+            freeSpaceLiquesce = new System.Windows.Forms.TextBox();
+            freeSpaceLiquesce.Location = new System.Drawing.Point(CONTROL_OFFSET_LEFT + leftSpace, CONTROL_OFFSET_TOP + 2 + CONTROL_OFFSET_TOP_LABEL);
+            freeSpaceLiquesce.Name = "freeSpaceLiquesce";
+            freeSpaceLiquesce.ReadOnly = true;
+            freeSpaceLiquesce.Size = new System.Drawing.Size(80, 20);
+            freeSpaceLiquesce.TabIndex = 0;
+            freeSpaceLiquesce.TextAlign = System.Windows.Forms.HorizontalAlignment.Right; ;
+            this.Controls.Add(freeSpaceLiquesce);
+
+            leftSpace += 83;
+
+            
+            //
+            // progress barLiquesce
+            //
+            barLiquesce = new System.Windows.Forms.ProgressBar();
+            barControlOffsetLeft = CONTROL_OFFSET_LEFT + leftSpace;
+            barLiquesce.Location = new System.Drawing.Point(barControlOffsetLeft, CONTROL_OFFSET_TOP+ CONTROL_OFFSET_TOP_LABEL);
+            barLiquesce.Name = "barLiquesce";
+            barLiquesce.Size = new System.Drawing.Size(BAR_SIZE, 23);
+            barLiquesce.TabIndex = 0;
+            this.Controls.Add(barLiquesce);
+
+
+
+
 
             for (int i = 0; i < config.SourceLocations.Count(); i++)
             {
+                int ii = i + 1;
                 leftSpace = 0;
 
                 // 
                 // textBox diskName
                 // 
                 diskNames[i] = new System.Windows.Forms.TextBox();
-                diskNames[i].Location = new System.Drawing.Point(CONTROL_OFFSET_LEFT + leftSpace, CONTROL_OFFSET_TOP + CONTROL_SPACE * i + 2 + CONTROL_OFFSET_TOP_LABEL);
+                diskNames[i].Location = new System.Drawing.Point(CONTROL_OFFSET_LEFT + leftSpace, CONTROL_OFFSET_TOP + CONTROL_SPACE * ii + 2 + CONTROL_OFFSET_TOP_LABEL);
                 diskNames[i].Name = "diskName" + i.ToString();
                 diskNames[i].ReadOnly = true;
                 diskNames[i].Size = new System.Drawing.Size(120, 20);
@@ -149,20 +219,16 @@ namespace LiquesceTray
                 leftSpace += 123;
 
 
-                ulong availabel;
-                ulong total;
-                ulong freebytes;
-
                 if (GetDiskFreeSpaceEx(config.SourceLocations[i], out availabel, out total, out freebytes))
                 {
                     if (total > maxDiskSize)
                         maxDiskSize = total;
 
                     // 
-                    // textBox freeSpace
+                    // textBox totalSpace
                     // 
                     totalSpace[i] = new System.Windows.Forms.TextBox();
-                    totalSpace[i].Location = new System.Drawing.Point(CONTROL_OFFSET_LEFT + leftSpace, CONTROL_OFFSET_TOP + CONTROL_SPACE * i + 2 + CONTROL_OFFSET_TOP_LABEL);
+                    totalSpace[i].Location = new System.Drawing.Point(CONTROL_OFFSET_LEFT + leftSpace, CONTROL_OFFSET_TOP + CONTROL_SPACE * ii + 2 + CONTROL_OFFSET_TOP_LABEL);
                     totalSpace[i].Name = "totalSpace" + i.ToString();
                     totalSpace[i].ReadOnly = true;
                     totalSpace[i].Size = new System.Drawing.Size(80, 20);
@@ -176,7 +242,7 @@ namespace LiquesceTray
                     // textBox freeSpace
                     // 
                     freeSpace[i] = new System.Windows.Forms.TextBox();
-                    freeSpace[i].Location = new System.Drawing.Point(CONTROL_OFFSET_LEFT + leftSpace, CONTROL_OFFSET_TOP + CONTROL_SPACE * i + 2 + CONTROL_OFFSET_TOP_LABEL);
+                    freeSpace[i].Location = new System.Drawing.Point(CONTROL_OFFSET_LEFT + leftSpace, CONTROL_OFFSET_TOP + CONTROL_SPACE * ii + 2 + CONTROL_OFFSET_TOP_LABEL);
                     freeSpace[i].Name = "freeSpace" + i.ToString();
                     freeSpace[i].ReadOnly = true;
                     freeSpace[i].Size = new System.Drawing.Size(80, 20);
@@ -192,7 +258,7 @@ namespace LiquesceTray
                     //
                     bars[i] = new System.Windows.Forms.ProgressBar();
                     barControlOffsetLeft = CONTROL_OFFSET_LEFT + leftSpace;
-                    bars[i].Location = new System.Drawing.Point(barControlOffsetLeft, CONTROL_OFFSET_TOP + CONTROL_SPACE * i + CONTROL_OFFSET_TOP_LABEL);
+                    bars[i].Location = new System.Drawing.Point(barControlOffsetLeft, CONTROL_OFFSET_TOP + CONTROL_SPACE * ii + CONTROL_OFFSET_TOP_LABEL);
                     bars[i].Name = "progressBar" + i.ToString();
                     bars[i].Size = new System.Drawing.Size(BAR_SIZE, 23);
                     bars[i].TabIndex = 200 + i;
@@ -204,6 +270,9 @@ namespace LiquesceTray
 
         private void RefreshControls()
         {
+            ulong allAvailabel = 0;
+            ulong allTotal = 0;
+
             for (int i = 0; i < config.SourceLocations.Count(); i++)
             {
                 ulong availabel;
@@ -212,6 +281,9 @@ namespace LiquesceTray
 
                 if (GetDiskFreeSpaceEx(config.SourceLocations[i], out availabel, out total, out freebytes))
                 {
+                    allAvailabel += availabel;
+                    allTotal += total;
+
                     // 
                     // textBox freeSpace
                     // 
@@ -235,12 +307,16 @@ namespace LiquesceTray
                         bars[i].Left = barControlOffsetLeft;
                         bars[i].Width = BAR_SIZE;
                     }
-                    const int BAR_SCALE = 1000;
                     bars[i].Maximum = BAR_SCALE;
                     bars[i].Value = (int)(((total - availabel) * BAR_SCALE) / total);
 
                 }
             }
+
+            totalSpaceLiquesce.Text = FormatBytes((long)allTotal);
+            freeSpaceLiquesce.Text = FormatBytes((long)allAvailabel);
+            barLiquesce.Maximum = BAR_SCALE;
+            barLiquesce.Value = (int)(((allTotal - allAvailabel) * BAR_SCALE) / allTotal);
         }
 
 
