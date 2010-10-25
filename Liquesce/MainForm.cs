@@ -343,22 +343,33 @@ namespace Liquesce
 
             //we only ever want an entry in 1x in the list.  Remove any duplicates, so you can reorder from the filesystem treeview
             TreeNode[] nodes = targetTree.Nodes.Find(newPath.Name, false);
-            if (nodes.Length > 0)
-            {
-               nodes[0].Remove();
-            }
 
-            //no node below?  stick this at the bottom of the list, else put in before the one your over.
+             //no node below?  stick this at the bottom of the list, else put in before the one your over.
             if (selected == null)
             {
                targetTree.Nodes.Add(tn);
-
             }
             else
             {
-               targetTree.Nodes.Insert(selected.Index, tn);
+                if (nodes.Length > 0)
+                {
+                    if (nodes[0].Index < selected.Index)
+                    {
+                        targetTree.Nodes.Insert(selected.Index+1, tn);
+                        nodes[0].Remove();
+                    }
+                    else if (nodes[0].Index > selected.Index)
+                    {
+                        targetTree.Nodes.Insert(selected.Index, tn);
+                        nodes[0].Remove();
+                    }
+                }
+                else
+                {
+                    targetTree.Nodes.Insert(selected.Index, tn);
+                }
             }
-
+            targetTree.SelectedNode = tn;
             RestartExpectedOutput();
          }
       }
@@ -402,7 +413,7 @@ namespace Liquesce
       }
 
       private void mergeList_KeyUp(object sender, KeyEventArgs e)
-      {
+        {
          if (e.KeyCode != Keys.Delete)
             return;
          // Get the node underneath the mouse.

@@ -200,9 +200,10 @@
          // 
          this.mergeListContext.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.mergeListContext.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.deleteToolStripMenuItem});
+         this.deleteToolStripMenuItem});
          this.mergeListContext.Name = "mergeListContext";
          this.mergeListContext.Size = new System.Drawing.Size(147, 26);
+         this.mergeListContext.Click += new System.EventHandler(this.mergeListContextMenuItem_Click);
          // 
          // deleteToolStripMenuItem
          // 
