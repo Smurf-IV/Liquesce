@@ -9,9 +9,9 @@ using System.Text;
 
 namespace ClientLiquesceSvc
 {
-   public partial class Service1 : ServiceBase
+   public partial class ClientLiquesceService : ServiceBase
    {
-      public Service1()
+      public ClientLiquesceService()
       {
          InitializeComponent();
       }

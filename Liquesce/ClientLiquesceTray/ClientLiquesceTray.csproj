@@ -43,11 +43,8 @@
     <Reference Include="System.Core" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.ServiceProcess" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
-    <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
@@ -95,9 +92,9 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ClientLiquesceFaçade\ClientLiquesceFaçade.csproj">
-      <Project>{4FA86747-4F7E-4A07-9D7D-712B678A477F}</Project>
-      <Name>ClientLiquesceFaçade</Name>
+    <ProjectReference Include="..\LiquesceFaçade\LiquesceFaçade.csproj">
+      <Project>{CFE5DC7B-25FB-45C4-AF18-1963853375E1}</Project>
+      <Name>LiquesceFaçade</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

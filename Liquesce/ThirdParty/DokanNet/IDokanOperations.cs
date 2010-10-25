@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Runtime.Serialization;
 using System.IO;
 
 namespace DokanNet
@@ -33,14 +33,21 @@ namespace DokanNet
       }
    }
 
-
+   // Now used by the client service via WCF
+   [DataContract]
    public class FileInformation
    {
+      [DataMember]
       public FileAttributes Attributes;
+      [DataMember]
       public DateTime CreationTime;
+      [DataMember]
       public DateTime LastAccessTime;
+      [DataMember]
       public DateTime LastWriteTime;
+      [DataMember]
       public long Length;
+      [DataMember]
       public string FileName;
    }
 

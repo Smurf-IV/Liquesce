@@ -103,8 +103,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConfigDetails.cs" />
+    <Compile Include="IClientLiquesceCallBack.cs" />
+    <Compile Include="IClientLiquesceSvc.cs" />
     <Compile Include="ILiquesce.cs" />
     <Compile Include="ILiquesceCallBack.cs" />
+    <Compile Include="IShareEnabler.cs" />
     <Compile Include="LanManShareHandler.cs" />
     <Compile Include="MirrorToDo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -136,6 +139,12 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Liquesce.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ThirdParty\DokanNet\DokanNet.csproj">
+      <Project>{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C}</Project>
+      <Name>DokanNet</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
