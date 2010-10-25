@@ -34,11 +34,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientManagement", "ClientM
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientLiquesceSvc", "ClientLiquesceSvc\ClientLiquesceSvc.csproj", "{196DE348-A13A-48FD-9E64-930D79042D18}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientLiquesceFaçade", "ClientLiquesceFaçade\ClientLiquesceFaçade.csproj", "{4FA86747-4F7E-4A07-9D7D-712B678A477F}"
-EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 12
+		SccNumberOfProjects = 11
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs08
 		SccLocalPath0 = .
@@ -73,9 +71,6 @@ Global
 		SccProjectUniqueName10 = ClientLiquesceSvc\\ClientLiquesceSvc.csproj
 		SccProjectName10 = ClientLiquesceSvc
 		SccLocalPath10 = ClientLiquesceSvc
-		SccProjectUniqueName11 = ClientLiquesceFaçade\\ClientLiquesceFaçade.csproj
-		SccProjectName11 = ClientLiquesceFaçade
-		SccLocalPath11 = ClientLiquesceFaçade
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -121,10 +116,6 @@ Global
 		{196DE348-A13A-48FD-9E64-930D79042D18}.Debug|x86.Build.0 = Debug|x86
 		{196DE348-A13A-48FD-9E64-930D79042D18}.Release|x86.ActiveCfg = Release|x86
 		{196DE348-A13A-48FD-9E64-930D79042D18}.Release|x86.Build.0 = Release|x86
-		{4FA86747-4F7E-4A07-9D7D-712B678A477F}.Debug|x86.ActiveCfg = Debug|x86
-		{4FA86747-4F7E-4A07-9D7D-712B678A477F}.Debug|x86.Build.0 = Debug|x86
-		{4FA86747-4F7E-4A07-9D7D-712B678A477F}.Release|x86.ActiveCfg = Release|x86
-		{4FA86747-4F7E-4A07-9D7D-712B678A477F}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

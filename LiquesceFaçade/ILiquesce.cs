@@ -49,5 +49,6 @@ namespace LiquesceFaçade
          [OperationContract(IsOneWay = true)]
          set;
       }
+
    }
 }

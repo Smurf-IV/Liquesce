@@ -1,6 +1,6 @@
 ﻿namespace ClientLiquesceSvc
 {
-   partial class Service1
+   partial class ClientLiquesceService
    {
       /// <summary> 
       /// Required designer variable.
