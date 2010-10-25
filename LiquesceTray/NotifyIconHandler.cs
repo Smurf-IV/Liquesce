@@ -137,6 +137,11 @@ namespace LiquesceTray
             stopServiceToolStripMenuItem.Visible = visible;
             startServiceToolStripMenuItem.Visible = visible;
          }
+
+          if (LiquesceSvcState.Running == lastState)
+              showFreeDiskSpaceToolStripMenuItem.Enabled = true;
+          else
+              showFreeDiskSpaceToolStripMenuItem.Enabled = false;
       }
 
       private void stopServiceToolStripMenuItem_Click(object sender, EventArgs e)
@@ -161,6 +166,22 @@ namespace LiquesceTray
          {
             Log.ErrorException("stopServiceToolStripMenuItem_Click", ex);
          }
+      }
+
+
+      private FreeSpace fsform = null;
+      private void showFreeDiskSpaceToolStripMenuItem_Click(object sender, EventArgs e)
+      {
+          if (fsform != null)
+          {
+              fsform.Dispose();
+          }
+          fsform = new FreeSpace();
+          fsform.Activate();
+          fsform.Show();
+          fsform.Focus();
+          fsform.BringToFront();
+
       }
 
 
