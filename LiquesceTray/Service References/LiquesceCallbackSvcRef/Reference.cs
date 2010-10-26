@@ -8,11 +8,11 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace LiquesceTray.LiquesceCallbackReference {
+namespace LiquesceTray.LiquesceCallbackSvcRef {
     
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("System.ServiceModel", "4.0.0.0")]
-    [System.ServiceModel.ServiceContractAttribute(ConfigurationName="LiquesceCallbackReference.ILiquesceCallBack", CallbackContract=typeof(LiquesceTray.LiquesceCallbackReference.ILiquesceCallBackCallback), SessionMode=System.ServiceModel.SessionMode.Required)]
+    [System.ServiceModel.ServiceContractAttribute(ConfigurationName="LiquesceCallbackSvcRef.ILiquesceCallBack", CallbackContract=typeof(LiquesceTray.LiquesceCallbackSvcRef.ILiquesceCallBackCallback), SessionMode=System.ServiceModel.SessionMode.Required)]
     public interface ILiquesceCallBack {
         
         [System.ServiceModel.OperationContractAttribute(IsOneWay=true, Action="http://tempuri.org/ILiquesceCallBack/Subscribe")]
@@ -26,16 +26,16 @@ namespace LiquesceTray.LiquesceCallbackReference {
     public interface ILiquesceCallBackCallback {
         
         [System.ServiceModel.OperationContractAttribute(IsOneWay=true, Action="http://tempuri.org/ILiquesceCallBack/Update")]
-        void Update(LiquesceFaçade.LiquesceSvcState state, string message);
+        void Update(LiquesceFacade.LiquesceSvcState state, string message);
     }
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("System.ServiceModel", "4.0.0.0")]
-    public interface ILiquesceCallBackChannel : LiquesceTray.LiquesceCallbackReference.ILiquesceCallBack, System.ServiceModel.IClientChannel {
+    public interface ILiquesceCallBackChannel : LiquesceTray.LiquesceCallbackSvcRef.ILiquesceCallBack, System.ServiceModel.IClientChannel {
     }
     
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.CodeDom.Compiler.GeneratedCodeAttribute("System.ServiceModel", "4.0.0.0")]
-    public partial class LiquesceCallBackClient : System.ServiceModel.DuplexClientBase<LiquesceTray.LiquesceCallbackReference.ILiquesceCallBack>, LiquesceTray.LiquesceCallbackReference.ILiquesceCallBack {
+    public partial class LiquesceCallBackClient : System.ServiceModel.DuplexClientBase<LiquesceTray.LiquesceCallbackSvcRef.ILiquesceCallBack>, LiquesceTray.LiquesceCallbackSvcRef.ILiquesceCallBack {
         
         public LiquesceCallBackClient(System.ServiceModel.InstanceContext callbackInstance) : 
                 base(callbackInstance) {

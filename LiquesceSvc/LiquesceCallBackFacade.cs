@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.ServiceModel;
-using System.Text;
-using LiquesceFaçade;
+using LiquesceFacade;
 using NLog;
 
 namespace LiquesceSvc
@@ -14,11 +11,11 @@ namespace LiquesceSvc
            IncludeExceptionDetailInFaults = true
            )
    ]
-   class LiquesceCallBackFaçade : ILiquesceCallBack
+   class LiquesceCallBackFacade : ILiquesceCallBack
    {
       static private readonly Logger Log = LogManager.GetCurrentClassLogger();
 
-      public LiquesceCallBackFaçade()
+      public LiquesceCallBackFacade()
       {
          Log.Debug("Object Created");
       }

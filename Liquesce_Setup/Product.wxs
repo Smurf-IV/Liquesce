@@ -111,7 +111,7 @@
             <File Id="C_NLog.dll" Source="Z:\Liquesce\Liquesce\bin\Release\NLog.dll" KeyPath="yes" />
          </Component>
          <Component Id="C_LiquesceFacade.dll.Component" >
-            <File Id="C_LiquesceFacade.dll" Source="Z:\Liquesce\Liquesce\bin\Release\LiquesceFaçade.dll" KeyPath="yes" />
+            <File Id="C_LiquesceFacade.dll" Source="Z:\Liquesce\Liquesce\bin\Release\LiquesceFacade.dll" KeyPath="yes" />
          </Component>
          <Component Id="LiquesceTray.exe.Component" >
             <File Id="LiquesceTray.exe" Source="Z:\Liquesce\LiquesceTray\bin\Release\LiquesceTray.exe" KeyPath="yes" />
@@ -130,7 +130,7 @@
             <File Source="Z:\Liquesce\LiquesceSvc\bin\Release\DokanNet.dll" KeyPath="yes" />
          </Component>
          <Component Id="LiquesceFacade.dll.Component" >
-            <File Source="Z:\Liquesce\LiquesceSvc\bin\Release\LiquesceFaçade.dll" KeyPath="yes" />
+            <File Source="Z:\Liquesce\LiquesceSvc\bin\Release\LiquesceFacade.dll" KeyPath="yes" />
          </Component>
          <Component Id="NLog.dll.Component" >
             <File Source="Z:\Liquesce\LiquesceSvc\bin\Release\NLog.dll" KeyPath="yes" />

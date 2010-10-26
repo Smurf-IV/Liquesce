@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using DokanNet;
-using LiquesceFaçade;
+using LiquesceFacade;
 using Microsoft.Win32.SafeHandles;
 using NLog;
 using LiquesceMirrorToDo;

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 
-namespace LiquesceFaçade
+namespace LiquesceFacade
 {
     [Flags]
     public enum Mask : uint

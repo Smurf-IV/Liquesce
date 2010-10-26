@@ -8,7 +8,7 @@ using System.ServiceModel;
 using System.ServiceProcess;
 using System.Threading;
 using System.Windows.Forms;
-using LiquesceFaçade;
+using LiquesceFacade;
 using NLog;
 
 namespace Liquesce
@@ -56,7 +56,7 @@ namespace Liquesce
             try
             {
                currentSharesToolStripMenuItem.Enabled = commitToolStripMenuItem.Enabled = true;
-               ChannelFactory<ILiquesce> factory = new ChannelFactory<ILiquesce>("LiquesceFaçade");
+               ChannelFactory<ILiquesce> factory = new ChannelFactory<ILiquesce>("LiquesceFacade");
                ILiquesce remoteIF = factory.CreateChannel();
                cd = remoteIF.ConfigDetails;
             }
@@ -687,7 +687,7 @@ namespace Liquesce
                   cd.SourceLocations.Add(node.Text);
                }
 
-               ChannelFactory<ILiquesce> factory = new ChannelFactory<ILiquesce>("LiquesceFaçade");
+               ChannelFactory<ILiquesce> factory = new ChannelFactory<ILiquesce>("LiquesceFacade");
                ILiquesce remoteIF = factory.CreateChannel();
                Log.Info("Didn't go bang so stop");
                remoteIF.Stop();

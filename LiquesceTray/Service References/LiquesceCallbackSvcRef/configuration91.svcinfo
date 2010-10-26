@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<SavedWcfConfigurationInformation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="9.1" CheckSum="Ot/uYHMivvCKk/TrphgbgHlBp14=">
+<SavedWcfConfigurationInformation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="9.1" CheckSum="aH15zvi9uIse2GCDdVJimuQtUew=">
   <bindingConfigurations>
     <bindingConfiguration bindingType="netTcpBinding" name="NetTcpBinding_ILiquesceCallBack">
       <properties>
@@ -118,10 +118,10 @@
     </bindingConfiguration>
   </bindingConfigurations>
   <endpoints>
-    <endpoint name="NetTcpBinding_ILiquesceCallBack" contract="LiquesceCallbackReference.ILiquesceCallBack" bindingType="netTcpBinding" address="net.tcp://localhost:41015/LiquesceCallBackFaçade" bindingConfiguration="NetTcpBinding_ILiquesceCallBack">
+    <endpoint name="NetTcpBinding_ILiquesceCallBack" contract="LiquesceCallbackSvcRef.ILiquesceCallBack" bindingType="netTcpBinding" address="net.tcp://localhost:41015/LiquesceCallBackFacade" bindingConfiguration="NetTcpBinding_ILiquesceCallBack">
       <properties>
         <property path="/address" isComplexType="false" isExplicitlyDefined="true" clrType="System.Uri, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-          <serializedValue>net.tcp://localhost:41015/LiquesceCallBackFa%C3%A7ade</serializedValue>
+          <serializedValue>net.tcp://localhost:41015/LiquesceCallBackFacade</serializedValue>
         </property>
         <property path="/behaviorConfiguration" isComplexType="false" isExplicitlyDefined="false" clrType="System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
           <serializedValue />
@@ -133,7 +133,7 @@
           <serializedValue>NetTcpBinding_ILiquesceCallBack</serializedValue>
         </property>
         <property path="/contract" isComplexType="false" isExplicitlyDefined="true" clrType="System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-          <serializedValue>LiquesceCallbackReference.ILiquesceCallBack</serializedValue>
+          <serializedValue>LiquesceCallbackSvcRef.ILiquesceCallBack</serializedValue>
         </property>
         <property path="/headers" isComplexType="true" isExplicitlyDefined="false" clrType="System.ServiceModel.Configuration.AddressHeaderCollectionElement, System.ServiceModel, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
           <serializedValue>System.ServiceModel.Configuration.AddressHeaderCollectionElement</serializedValue>

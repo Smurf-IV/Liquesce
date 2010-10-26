@@ -125,7 +125,7 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Service References\LiquesceCallbackReference\Reference.cs">
+    <Compile Include="Service References\LiquesceCallbackSvcRef\Reference.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Reference.svcmap</DependentUpon>
@@ -160,21 +160,21 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <None Include="Service References\LiquesceCallbackReference\item.xsd">
+    <None Include="Service References\LiquesceCallbackSvcRef\item.xsd">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Service References\LiquesceCallbackReference\item1.xsd">
+    <None Include="Service References\LiquesceCallbackSvcRef\item1.xsd">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Service References\LiquesceCallbackReference\item2.xsd">
+    <None Include="Service References\LiquesceCallbackSvcRef\item2.xsd">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Service References\LiquesceCallbackReference\LiquesceCallBackFaçade.wsdl" />
+    <None Include="Service References\LiquesceCallbackSvcRef\LiquesceCallBackFacade.wsdl" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\LiquesceFaçade\LiquesceFaçade.csproj">
+    <ProjectReference Include="..\LiquesceFaçade\LiquesceFacade.csproj">
       <Project>{CFE5DC7B-25FB-45C4-AF18-1963853375E1}</Project>
-      <Name>LiquesceFaçade</Name>
+      <Name>LiquesceFacade</Name>
     </ProjectReference>
     <ProjectReference Include="..\Liquesce\Liquesce.csproj">
       <Project>{74447D1D-F52F-485C-BDEE-66B114A45460}</Project>
@@ -185,6 +185,13 @@
     <Content Include="Icons\base.ico" />
     <Content Include="Icons\Config.ico" />
     <Content Include="Icons\Error.ico" />
+    <None Include="Service References\LiquesceCallbackSvcRef\Reference.svcmap">
+      <Generator>WCF Proxy Generator</Generator>
+      <LastGenOutput>Reference.cs</LastGenOutput>
+    </None>
+    <None Include="Service References\LiquesceCallbackSvcRef\configuration.svcinfo" />
+    <None Include="Service References\LiquesceCallbackSvcRef\configuration91.svcinfo" />
+    <None Include="Service References\LiquesceCallbackSvcRef\item.disco" />
     <None Include="Icons\free_space.ico" />
     <Content Include="Icons\info.ico" />
     <Content Include="Icons\Liquesce.ico" />
@@ -192,22 +199,12 @@
     <Content Include="Icons\Question.ico" />
     <Content Include="Icons\Stop.ico" />
     <Content Include="Icons\Warning.ico" />
-    <None Include="Service References\LiquesceCallbackReference\Reference.svcmap">
-      <Generator>WCF Proxy Generator</Generator>
-      <LastGenOutput>Reference.cs</LastGenOutput>
-    </None>
-    <None Include="Service References\LiquesceCallbackReference\configuration.svcinfo" />
-    <None Include="Service References\LiquesceCallbackReference\configuration91.svcinfo" />
-    <None Include="Service References\LiquesceCallbackReference\item.disco" />
     <None Include="Resources\Question.ico" />
     <None Include="Resources\Liquesce.ico" />
     <None Include="Resources\Stop.ico" />
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Service References\" />
-  </ItemGroup>
-  <ItemGroup>
-    <WCFMetadataStorage Include="Service References\LiquesceCallbackReference\" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0,Profile=Client">
@@ -230,6 +227,9 @@
       <ProductName>Windows Installer 3.1</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadataStorage Include="Service References\LiquesceCallbackSvcRef\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

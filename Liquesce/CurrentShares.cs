@@ -2,11 +2,10 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Security.AccessControl;
 using System.ServiceModel;
 using System.Text;
 using System.Windows.Forms;
-using LiquesceFaçade;
+using LiquesceFacade;
 
 namespace Liquesce
 {
@@ -47,7 +46,7 @@ namespace Liquesce
          Enabled = false;
          UseWaitCursor = true;
          mountedPoints.Text = shareDetails.VolumeLabel + " (" + shareDetails.DriveLetter + ")";
-         ChannelFactory<ILiquesce> factory = new ChannelFactory<ILiquesce>("LiquesceFaçade");
+         ChannelFactory<ILiquesce> factory = new ChannelFactory<ILiquesce>("LiquesceFacade");
          ILiquesce remoteIF = factory.CreateChannel();
          lmsd = remoteIF.GetPossibleShares();
 

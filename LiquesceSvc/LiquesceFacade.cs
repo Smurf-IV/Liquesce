@@ -1,8 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ServiceModel;
 using System.Threading;
-using LiquesceFaçade;
+using LiquesceFacade;
 using NLog;
 using LiquesceMirrorToDo;
 
@@ -14,11 +13,11 @@ namespace LiquesceSvc
            IncludeExceptionDetailInFaults = true
            )
    ]
-   public class LiquesceFaçade : ILiquesce
+   public class LiquesceFacade : ILiquesce
    {
       static private readonly Logger Log = LogManager.GetCurrentClassLogger();
 
-      public LiquesceFaçade()
+      public LiquesceFacade()
       {
          Log.Debug("Object Created");
       }

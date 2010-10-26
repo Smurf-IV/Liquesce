@@ -1,14 +1,14 @@
 ﻿using System;
 using System.ServiceModel;
-using LiquesceFaçade;
+using LiquesceFacade;
 using NLog;
 
 namespace LiquesceTray
 {
-   public class StateChangeHandler : LiquesceCallbackReference.ILiquesceCallBackCallback
+   public class StateChangeHandler : LiquesceCallbackSvcRef.ILiquesceCallBackCallback
    {
       private static readonly Logger Log = LogManager.GetCurrentClassLogger();
-      private LiquesceCallbackReference.LiquesceCallBackClient client;
+      private LiquesceCallbackSvcRef.LiquesceCallBackClient client;
       private readonly Guid guid = Guid.NewGuid();
 
       public delegate void SetStateDelegate(LiquesceSvcState state, string text);
@@ -19,7 +19,7 @@ namespace LiquesceTray
          try
          {
             InstanceContext context = new InstanceContext(this);
-            client = new LiquesceCallbackReference.LiquesceCallBackClient(context);
+            client = new LiquesceCallbackSvcRef.LiquesceCallBackClient(context);
             client.Subscribe(guid);
             setStateDelegate = newDelegate;
          }

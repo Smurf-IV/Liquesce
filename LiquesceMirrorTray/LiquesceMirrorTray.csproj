@@ -157,7 +157,7 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\LiquesceFaçade\LiquesceFaçade.csproj">
+    <ProjectReference Include="..\LiquesceFaçade\LiquesceFacade.csproj">
       <Project>{CFE5DC7B-25FB-45C4-AF18-1963853375E1}</Project>
       <Name>LiquesceFaçade</Name>
     </ProjectReference>
