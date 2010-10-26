@@ -113,6 +113,9 @@
          <Component Id="C_LiquesceFacade.dll.Component" >
             <File Id="C_LiquesceFacade.dll" Source="Z:\Liquesce\Liquesce\bin\Release\LiquesceFacade.dll" KeyPath="yes" />
          </Component>
+         <Component Id="LiquesceTray.exe.config.Component" >
+            <File Source="Z:\Liquesce\LiquesceTray\bin\Release\LiquesceTray.exe.config" KeyPath="yes" />
+         </Component>
          <Component Id="LiquesceTray.exe.Component" >
             <File Id="LiquesceTray.exe" Source="Z:\Liquesce\LiquesceTray\bin\Release\LiquesceTray.exe" KeyPath="yes" />
          </Component>
@@ -163,6 +166,7 @@
          <ComponentRef Id='ProgramMenuDir2'/>
 
          <ComponentRef Id="LiquesceTray.exe.Component" />
+         <ComponentRef Id="LiquesceTray.exe.config.Component" />
       </Feature>
 
 
