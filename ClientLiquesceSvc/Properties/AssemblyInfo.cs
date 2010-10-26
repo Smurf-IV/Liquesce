@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("ClientLiquesceSvc")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("TTV")]
+[assembly: AssemblyCompany("Smurf-IV")]
 [assembly: AssemblyProduct("ClientLiquesceSvc")]
-[assembly: AssemblyCopyright("Copyright © TTV 2010")]
+[assembly: AssemblyCopyright("Copyright © Smurf-IV 2010")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("2010.10.25.1")]
-[assembly: AssemblyFileVersion("2010.10.25.1")]
+[assembly: AssemblyVersion("2010.10.26.5")]
+[assembly: AssemblyFileVersion("2010.10.26.5")]

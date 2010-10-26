@@ -102,6 +102,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ClientConfigDetails.cs" />
     <Compile Include="ConfigDetails.cs" />
     <Compile Include="IClientLiquesceCallBack.cs" />
     <Compile Include="IClientLiquesceSvc.cs" />
