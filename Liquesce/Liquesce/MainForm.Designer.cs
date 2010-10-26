@@ -200,7 +200,7 @@
          // 
          this.mergeListContext.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.mergeListContext.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-         this.deleteToolStripMenuItem});
+            this.deleteToolStripMenuItem});
          this.mergeListContext.Name = "mergeListContext";
          this.mergeListContext.Size = new System.Drawing.Size(147, 26);
          this.mergeListContext.Click += new System.EventHandler(this.mergeListContextMenuItem_Click);
@@ -428,6 +428,7 @@
          this.serviceLogViewToolStripMenuItem.Name = "serviceLogViewToolStripMenuItem";
          this.serviceLogViewToolStripMenuItem.Size = new System.Drawing.Size(192, 22);
          this.serviceLogViewToolStripMenuItem.Text = "&Service Log View...";
+         this.serviceLogViewToolStripMenuItem.Click += new System.EventHandler(this.serviceLogViewToolStripMenuItem_Click);
          // 
          // userLogViewToolStripMenuItem
          // 
@@ -435,6 +436,7 @@
          this.userLogViewToolStripMenuItem.Name = "userLogViewToolStripMenuItem";
          this.userLogViewToolStripMenuItem.Size = new System.Drawing.Size(192, 22);
          this.userLogViewToolStripMenuItem.Text = "&User Log View...";
+         this.userLogViewToolStripMenuItem.Click += new System.EventHandler(this.userLogViewToolStripMenuItem_Click);
          // 
          // advancedToolStripMenuItem
          // 
