@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("LiquesceFaçade")]
+[assembly: AssemblyTitle("LiquesceFacade")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("TTV")]
-[assembly: AssemblyProduct("LiquesceFaçade")]
+[assembly: AssemblyProduct("LiquesceFacade")]
 [assembly: AssemblyCopyright("Copyright © TTV 2010")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("2010.10.25.312")]
-[assembly: AssemblyFileVersion("2010.10.25.312")]
+[assembly: AssemblyVersion("2010.10.26.314")]
+[assembly: AssemblyFileVersion("2010.10.26.314")]

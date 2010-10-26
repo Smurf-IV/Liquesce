@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.ServiceProcess;
 using System.Windows.Forms;
-using LiquesceFaçade;
+using LiquesceFacade;
 using NLog;
 
 namespace LiquesceTray

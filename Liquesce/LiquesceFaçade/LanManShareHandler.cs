@@ -2,13 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Management;
-using System.Security.AccessControl;
 using System.Security.Principal;
 using NLog;
 
 // using System.Security.Principal;
 
-namespace LiquesceFaçade
+namespace LiquesceFacade
 {
 
    public class LanManShareHandler

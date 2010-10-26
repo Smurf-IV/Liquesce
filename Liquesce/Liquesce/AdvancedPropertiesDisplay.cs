@@ -1,6 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
-using LiquesceFaçade;
+using LiquesceFacade;
 using NLog;
 
 namespace Liquesce

@@ -7,7 +7,7 @@ using System.ServiceProcess;
 using System.Threading;
 using System.Xml.Serialization;
 using DokanNet;
-using LiquesceFaçade;
+using LiquesceFacade;
 using NLog;
 using NLog.Config;
 using LiquesceMirrorToDo;

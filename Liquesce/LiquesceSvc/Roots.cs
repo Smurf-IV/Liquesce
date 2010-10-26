@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Runtime.InteropServices;
 using System.Text;
-using LiquesceFaçade;
+using LiquesceFacade;
 using DokanNet;
 using NLog;
 

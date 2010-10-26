@@ -8,8 +8,8 @@
     <ProjectGuid>{CFE5DC7B-25FB-45C4-AF18-1963853375E1}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>LiquesceFaçade</RootNamespace>
-    <AssemblyName>LiquesceFaçade</AssemblyName>
+    <RootNamespace>LiquesceFacade</RootNamespace>
+    <AssemblyName>LiquesceFacade</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SccProjectName>SAK</SccProjectName>

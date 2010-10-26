@@ -73,8 +73,8 @@ namespace LiquesceSvc
                      break;
                }
             }
-            _ILiquesceHost = new ServiceHost(typeof(LiquesceFaçade));
-            _ILiquesceHostCallBack = new ServiceHost(typeof(LiquesceCallBackFaçade));
+            _ILiquesceHost = new ServiceHost(typeof(LiquesceFacade));
+            _ILiquesceHostCallBack = new ServiceHost(typeof(LiquesceCallBackFacade));
             _ILiquesceHost.Open();
             _ILiquesceHostCallBack.Open();
 

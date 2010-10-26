@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ServiceModel;
 using LiquesceMirrorToDo;
 
-namespace LiquesceFaçade
+namespace LiquesceFacade
 {
    [Serializable]
    public enum LiquesceSvcState

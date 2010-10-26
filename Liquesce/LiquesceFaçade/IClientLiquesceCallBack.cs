@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ServiceModel;
 
-namespace LiquesceFaçade
+namespace LiquesceFacade
 {
    public interface IClientStateChange
    {

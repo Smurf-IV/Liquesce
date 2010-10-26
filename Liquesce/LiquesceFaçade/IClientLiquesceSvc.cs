@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.ServiceModel;
 
-namespace LiquesceFaçade
+namespace LiquesceFacade
 {
    [ServiceContract]
    public interface IClientLiquesceSvc

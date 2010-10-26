@@ -3,7 +3,7 @@ using System.IO;
 using System.ServiceModel;
 using DokanNet;
 
-namespace LiquesceFaçade
+namespace LiquesceFacade
 {
    // Interface used as the redirect target from the client to the actual share
    [ServiceContract]

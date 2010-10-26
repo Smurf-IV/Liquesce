@@ -2,7 +2,7 @@
 using System.Runtime.Serialization;
 using System.ServiceModel;
 
-namespace LiquesceFaçade
+namespace LiquesceFacade
 {
    public interface IStateChange
    {
