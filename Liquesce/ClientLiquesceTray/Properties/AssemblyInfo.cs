@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("ClientLiquesceTray")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("TTV")]
+[assembly: AssemblyCompany("Smurf-IV")]
 [assembly: AssemblyProduct("ClientLiquesceTray")]
-[assembly: AssemblyCopyright("Copyright © TTV 2010")]
+[assembly: AssemblyCopyright("Copyright © Smurf-IV 2010")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
