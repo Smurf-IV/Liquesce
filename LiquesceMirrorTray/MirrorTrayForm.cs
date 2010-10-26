@@ -16,7 +16,7 @@ using System.Windows.Forms;
 using System.Diagnostics;
 using System.ServiceModel;
 using System.ServiceProcess;
-using LiquesceFaçade;
+using LiquesceFacade;
 using LiquesceMirrorToDo;
 
 namespace LiquesceMirrorTray
