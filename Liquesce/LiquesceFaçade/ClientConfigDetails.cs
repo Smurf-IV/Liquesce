@@ -4,12 +4,12 @@ using System.Runtime.Serialization;
 namespace LiquesceFacade
 {
    [DataContract]
-   public class ClientShareDetails
+   public class ClientShareDetail
    {
       [DataMember(IsRequired = true)]
       public string DomainUserIdentity;
       [DataMember(IsRequired = true)]
-      public string TargetPath; // *** Strip off trailing backslash - it isn't supported
+      public string TargetShareName;
 
       // Make this is a string so that the XML looks better (Rather than exporting 72 for 'N')
       // Also the V 0.6 of Dokan is supposed to be able to use Mount points so this can then be reused for that..
@@ -27,7 +27,7 @@ namespace LiquesceFacade
    public class ClientConfigDetails
    {
       [DataMember]
-      public List<ClientShareDetails> SharesToRestore = new List<ClientShareDetails>();
+      public List<ClientShareDetail> SharesToRestore = new List<ClientShareDetail>();
 
       #region Dokan Specific
       [DataMember]

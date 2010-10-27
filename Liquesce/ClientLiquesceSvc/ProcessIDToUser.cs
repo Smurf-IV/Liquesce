@@ -1,6 +1,9 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
+using System.Security.Principal;
+using System.Text;
 using NLog;
 
 // Forward declarations
@@ -84,7 +87,7 @@ namespace ClientLiquesceSvc
       /// </summary>
       /// <param name="pToken">Process Handle</param>
       /// <param name="SID"></param>
-      private static bool DumpUserInfo(HANDLE pToken, out IntPtr SID)
+      private static bool GetUserSidPtr(HANDLE pToken, out IntPtr SID)
       {
          const int Access = TOKEN_QUERY;
          HANDLE procToken = IntPtr.Zero;
@@ -101,7 +104,7 @@ namespace ClientLiquesceSvc
          }
          catch (Exception ex)
          {
-            Log.WarnException("DumpUserInfo", ex);
+            Log.WarnException("GetUserSidPtr", ex);
             return false;
          }
       }
@@ -134,23 +137,49 @@ namespace ClientLiquesceSvc
          }
       }
 
-      public static string ExGetProcessInfoByPID(int PID, out string SID)//, out string OwnerSID)
+
+      /// <summary>
+      /// From the ProcessID, this will attempt to get the Domain and UserName that currently owns it
+      /// </summary>
+      /// <param name="PID">Process ID</param>
+      /// <returns>Domain then User</returns>
+      public static string GetDomainUserFromPID(uint PID)
       {
-         SID = String.Empty;
+         string domainUser = "Unknown";
+         string processName = String.Empty;
          try
          {
-            Process process = Process.GetProcessById(PID);
-            IntPtr _SID;
-            if (DumpUserInfo(process.Handle, out _SID))
+            Process process = Process.GetProcessById((int)PID);
+            // Having had a go at trying to work out how to do this with out having to use the 
+            // wieght of the internal calls to get the processName, it appears that you still need a process.Handle to the Win32 API's
+            // The idea was to make a Map of process ID / App name to the user for quick lookup, as the ProcessID's can be recycled
+            // Also the internal Get### calls all use a processManager which seems to handle a lot of this in the cache;
+            // So speed will be the same unless this is forked out to a C++ / Win32 DLL to make the calls directly !
+            processName = process.ProcessName;
+            ProcessStartInfo startInfo = process.StartInfo;
+            if (!String.IsNullOrEmpty(startInfo.Domain)
+               && !String.IsNullOrEmpty(startInfo.UserName)
+               )
             {
-               ConvertSidToStringSid(_SID, ref SID);
+               domainUser = String.Format(@"{0}\{1}", startInfo.Domain, startInfo.UserName);
             }
-            return process.ProcessName;
+            else
+            {
+               IntPtr pSid;
+               if (GetUserSidPtr(process.Handle, out pSid))
+               {
+                  // convert the user sid to a domain\name
+                  domainUser = new SecurityIdentifier(pSid).Translate(typeof (NTAccount)).ToString();
+               }
+            }
          }
          catch
          {
-            return "Unknown";
+            if (String.IsNullOrEmpty(processName))
+               processName = PID.ToString();
          }
+         Log.Trace("domainUser[{0}] found for PID[{1}] = {2}", domainUser, PID, processName);
+         return domainUser;
       }
    }
 }

@@ -54,7 +54,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="LiquesceOps.cs" />
+    <Compile Include="ClientLiquesceOps.cs" />
     <Compile Include="ClientLiquesceService.cs">
       <SubType>Component</SubType>
     </Compile>

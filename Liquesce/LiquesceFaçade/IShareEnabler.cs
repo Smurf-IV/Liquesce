@@ -14,22 +14,23 @@ namespace LiquesceFacade
       /// This will then be used to enable a cache lookup for Process ID Token with user name to allow access for the intended share
       /// </summary>
       /// <param name="DomainUserIdentity">{0}\{1}</param>
-      /// <param name="Path">The path returned from the service when it states what shares are enabled</param>
-      /// <returns></returns>
+      /// <param name="sharePath">The path returned from the service when it states what shares are enabled</param>
+      /// <param name="writeable">Does the user have write acces to the this share</param>
+      /// <returns>true for valid user access</returns>
       [OperationContract]
-      bool CanIdentityUseThis(string DomainUserIdentity, string Path );
+      bool CanIdentityUseThis(string DomainUserIdentity, string sharePath, out bool writeable);
 
       [OperationContract]
-      int CreateFile(string filename, uint rawAccessMode, uint rawShare, uint rawCreationDisposition, uint rawFlagsAndAttributes, ref Object DokanContext);
+      int CreateFile(string filename, uint rawAccessMode, uint rawShare, uint rawCreationDisposition, uint rawFlagsAndAttributes, ref Object DokanContext, ref bool isDirectory);
 
       [OperationContract]
-      int OpenDirectory(string filename, ref Object DokanContext);
+      int OpenDirectory(string filename, ref Object DokanContext, ref bool isDirectory);
 
       [OperationContract]
-      int CreateDirectory(string filename, ref Object DokanContext);
+      int CreateDirectory(string filename, ref Object DokanContext, ref bool isDirectory);
 
       [OperationContract]
-      int Cleanup(string filename, ref Object DokanContext);
+      int Cleanup(string filename, ref Object DokanContext, bool isDirectory);
 
       [OperationContract]
       int CloseFile(string filename, ref Object DokanContext);
@@ -62,10 +63,10 @@ namespace LiquesceFacade
       int DeleteFile(string filename, ref Object DokanContext);
 
       [OperationContract]
-      int DeleteDirectory(string filename, ref Object DokanContext);
+      int DeleteDirectory(string filename, ref Object DokanContext, ref bool isDirectory);
 
       [OperationContract]
-      int MoveFile(string filename, string newname, bool replace, ref Object DokanContext);
+      int MoveFile(string filename, string newname, bool replace, ref Object DokanContext, ref bool isDirectory);
 
       [OperationContract]
       int SetEndOfFile(string filename, long length, ref Object DokanContext);

@@ -3,34 +3,28 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using DokanNet;
 using LiquesceFacade;
-using Microsoft.Win32.SafeHandles;
 using NLog;
-using LiquesceMirrorToDo;
 
 namespace ClientLiquesceSvc
 {
-   internal class LiquesceOps : IDokanOperations
+   internal class ClientLiquesceOps : IDokanOperations
    {
       static private readonly Logger Log = LogManager.GetCurrentClassLogger();
-      private readonly ClientConfigDetails configDetails;
+      private readonly ClientShareDetail configDetail;
 
-      public LiquesceOps(ClientConfigDetails configDetails)
+      public ClientLiquesceOps(ClientShareDetail configDetail)
       {
-         this.configDetails = configDetails;
+         this.configDetail = configDetail;
       }
 
       #region IDokanOperations Implementation
 
       /// <summary>
-      /// The information given in the Dokan info is a bit misleading about the return codes
-      /// This is what the Win OS suystem is expecting http://msdn.microsoft.com/en-us/library/aa363858%28VS.85%29.aspx
-      /// So.. Everything succeeds but the Return code is ERROR_ALREADY_EXISTS
       /// </summary>
       /// <param name="filename"></param>
       /// <param name="rawFlagsAndAttributes"></param>
@@ -47,6 +41,25 @@ namespace ClientLiquesceSvc
             Log.Debug(
                "CreateFile IN filename [{0}], rawAccessMode[{1}], rawShare[{2}], rawCreationDisposition[{3}], rawFlagsAndAttributes[{4}], ProcessId[{5}]",
                filename, rawAccessMode, rawShare, rawCreationDisposition, rawFlagsAndAttributes, info.ProcessId);
+            bool writeable;
+            if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
+            {
+               if (!writeable
+                  && (((rawAccessMode & Proxy.FILE_WRITE_DATA) == Proxy.FILE_WRITE_DATA))
+                  )
+               {
+                  actualErrorCode = Dokan.ERROR_ACCESS_DENIED;
+               }
+               else
+               {
+                  // TODO call the accessor
+                  actualErrorCode = Dokan.DOKAN_SUCCESS;
+               }
+            }
+            else
+            {
+               actualErrorCode = Dokan.ERROR_ACCESS_DENIED;
+            }
 
          }
          catch (Exception ex)
@@ -60,6 +73,32 @@ namespace ClientLiquesceSvc
             Log.Trace("CreateFile OUT actualErrorCode=[{0}]", actualErrorCode);
          }
          return actualErrorCode;
+      }
+
+      private static readonly Dictionary<string, bool> validatedDomainUsers = new Dictionary<string, bool>();
+      private static readonly ReaderWriterLockSlim validatedDomainUsersLock = new ReaderWriterLockSlim();
+
+      private bool IsValidatedUser(string getDomainUserFromPid, out bool writeable)
+      {
+         bool isValidUser;
+         writeable = false;
+         try
+         {
+            validatedDomainUsersLock.EnterUpgradeableReadLock();
+            isValidUser = validatedDomainUsers.ContainsKey(getDomainUserFromPid);
+            if ( !isValidUser )
+            {
+               // TODO Go and call       bool CanIdentityUseThis(string DomainUserIdentity, string sharePath, out bool writeable);
+
+            }
+            if (isValidUser)
+               writeable = validatedDomainUsers[getDomainUserFromPid];
+         }
+         finally
+         {
+            validatedDomainUsersLock.ExitUpgradeableReadLock();
+         }
+         return isValidUser;
       }
 
       public int OpenDirectory(string filename, DokanFileInfo info)
