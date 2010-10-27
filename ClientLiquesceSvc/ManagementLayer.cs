@@ -3,14 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.ServiceModel;
-using System.ServiceProcess;
 using System.Threading;
 using System.Xml.Serialization;
 using DokanNet;
 using LiquesceFacade;
 using NLog;
 using NLog.Config;
-using LiquesceMirrorToDo;
 
 namespace ClientLiquesceSvc
 {
@@ -21,7 +19,6 @@ namespace ClientLiquesceSvc
       private ClientConfigDetails currentConfigDetails;
       private readonly DateTime startTime;
       private readonly string configFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "LiquesceSvc", Settings1.Default.ConfigFileName);
-      private char mountedDriveLetter;
       private LiquesceSvcState state = LiquesceSvcState.Stopped;
       private static readonly Dictionary<Client, IStateChange> subscribers = new Dictionary<Client, IStateChange>();
       private static readonly ReaderWriterLockSlim subscribersLock = new ReaderWriterLockSlim();
@@ -94,114 +91,109 @@ namespace ClientLiquesceSvc
             Log.ErrorException("Unsubscribe", ex);
          }
       }
+
       /// <summary>
       /// Invokes DokanNet.DokanMain function to mount a drive. 
       /// The function blocks until the file system is unmounted.
       /// Administrator privilege is needed to communicate with Dokan driver. 
       /// You need a manifest file for .NET application.
       /// </summary>
-      /// <returns></returns>
-      public void Start(object obj)
+      public void Start()
       {
+         foreach (ClientShareDetail clientShareDetails in currentConfigDetails.SharesToRestore)
+         {
+            Thread t = new Thread(new ParameterizedThreadStart(AddNewDrive));
+            // Start the thread
+            t.Start(clientShareDetails);
+         }
+      }
+
+      private readonly Dictionary<string, List<string>> DrivetoDomainUsers = new Dictionary<string, List<string>>();
+      private readonly ReaderWriterLockSlim DrivetoDomainUsersSync = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
+
+      private void AddNewDrive(object obj)
+      {
+         ClientShareDetail clientShareDetail = obj as ClientShareDetail;
+         if (clientShareDetail == null)
+         {
+            Log.Fatal("Parameter passed into thread is null");
+            return;
+         }
+         Log.Info("Find existing drive");
+         List<string> existingUsers;
+         bool needToCreateDrive = false;
          try
          {
-            int repeatWait = 0;
-            while (IsRunning
-               && (repeatWait++ < 100)
-               )
+            DrivetoDomainUsersSync.EnterUpgradeableReadLock();
+            if (!DrivetoDomainUsers.TryGetValue(clientShareDetail.DriveLetter, out existingUsers))
             {
-               Log.Warn("Last Dokan is still running");
-               Thread.Sleep(250);
+               needToCreateDrive = true;
+               existingUsers = new List<string>();
+               DrivetoDomainUsersSync.EnterWriteLock();
+               DrivetoDomainUsers[clientShareDetail.DriveLetter] = existingUsers;
             }
-            if (!IsRunning)
+            Log.Info("Now see if the user exists");
+            if (!existingUsers.Contains(clientShareDetail.DomainUserIdentity))
             {
-               if (currentConfigDetails == null)
-                  ReadConfigDetails();
-               FireStateChange(LiquesceSvcState.InError, "Starting up");
-               if (currentConfigDetails == null)
-               {
-                  Log.Fatal("Unable to read the config details to allow this service to run. Will now exit");
-                  Environment.Exit(-1);
-                  // ReSharper disable HeuristicUnreachableCode
-                  return;
-                  // ReSharper restore HeuristicUnreachableCode
-               }
-               SetNLogLevel(currentConfigDetails.ServiceLogLevel);
-
-               FireStateChange(LiquesceSvcState.Unknown, "Dokan initialised");
-               IsRunning = true;
-
-
-               DokanOptions options = new DokanOptions
-                                         {
-                                            //DriveLetter = currentConfigDetails.DriveLetter[0],
-                                            ThreadCount = currentConfigDetails.ThreadCount,
-                                            DebugMode = currentConfigDetails.DebugMode,
-                                            //      public bool UseStdErr;
-                                            //    public bool UseAltStream;
-                                            UseKeepAlive = true,  // When you set TRUE on DokanOptions->UseKeepAlive, dokan library automatically unmounts 15 seconds after user-mode file system hanged up
-                                            NetworkDrive = false,  // Set this to true to see if it stops the recycler bin question until [workitem:7253] is sorted
-                                            //VolumeLabel = currentConfigDetails.VolumeLabel
-                                         };
-
-               LiquesceOps dokanOperations = new LiquesceOps(currentConfigDetails);
-
-               //mountedDriveLetter = currentConfigDetails.DriveLetter[0];
-
-
-               try
-               {
-                  Log.Info("DokanVersion:[{0}], DokanDriverVersion[{1}]", Dokan.DokanVersion(), Dokan.DokanDriverVersion());
-                  Dokan.DokanUnmount(mountedDriveLetter);
-               }
-               catch (Exception ex)
-               {
-                  Log.InfoException("Make sure it's unmounted threw:", ex);
-               }
-               int retVal = Dokan.DokanMain(options, dokanOperations);
-               Log.Warn("Dokan.DokanMain has exited");
-               IsRunning = false;
-               switch (retVal)
-               {
-                  case Dokan.DOKAN_SUCCESS: // = 0;
-                     FireStateChange(LiquesceSvcState.Stopped, "Dokan is not mounted");
-                     break;
-                  case Dokan.DOKAN_ERROR:// = -1; // General Error
-                     FireStateChange(LiquesceSvcState.InError, "Dokan is not mounted [DOKAN_ERROR] - General Error");
-                     break;
-                  case Dokan.DOKAN_DRIVE_LETTER_ERROR: // = -2; // Bad Drive letter
-                     FireStateChange(LiquesceSvcState.InError, "Dokan is not mounted [DOKAN_DRIVE_LETTER_ERROR] - Bad drive letter");
-                     break;
-                  case Dokan.DOKAN_DRIVER_INSTALL_ERROR: // = -3; // Can't install driver
-                     FireStateChange(LiquesceSvcState.InError, "Dokan is not mounted [DOKAN_DRIVER_INSTALL_ERROR]");
-                     Environment.Exit(-1);
-                     break;
-                  case Dokan.DOKAN_START_ERROR: // = -4; // Driver something wrong
-                     FireStateChange(LiquesceSvcState.InError, "Dokan is not mounted [DOKAN_START_ERROR] - Driver Something is wrong");
-                     Environment.Exit(-1);
-                     break;
-                  case Dokan.DOKAN_MOUNT_ERROR: // = -5; // Can't assign drive letter
-                     FireStateChange(LiquesceSvcState.InError, "Dokan is not mounted [DOKAN_MOUNT_ERROR] - Can't assign drive letter");
-                     break;
-                  default:
-                     FireStateChange(LiquesceSvcState.InError, String.Format("Dokan is not mounted [Uknown Error: {0}]", retVal));
-                     Environment.Exit(-1);
-                     break;
-               }
+               DrivetoDomainUsersSync.EnterWriteLock();
+               existingUsers.Add(clientShareDetail.DomainUserIdentity);
             }
-            else
-            {
-               FireStateChange(LiquesceSvcState.InError, "Seems like the last exit request into Dokan did not exit in time");
-            }
-         }
-         catch (Exception ex)
-         {
-            Log.ErrorException("Start has failed in an uncontrolled way: ", ex);
-            Environment.Exit(-1);
          }
          finally
          {
+            DrivetoDomainUsersSync.ExitUpgradeableReadLock();
+         }
+         if (needToCreateDrive)
+         {
+            DokanOptions options = new DokanOptions
+                                      {
+                                         DriveLetter = clientShareDetail.DriveLetter[0],
+                                         ThreadCount = currentConfigDetails.ThreadCount,
+                                         DebugMode = currentConfigDetails.DebugMode,
+                                         //      public bool UseStdErr;
+                                         //    public bool UseAltStream;
+                                         UseKeepAlive = true,
+                                         NetworkDrive = true,
+                                         VolumeLabel = clientShareDetail.VolumeLabel
+                                      };
+
+            ClientLiquesceOps dokanOperations = new ClientLiquesceOps(clientShareDetail);
+
+            char mountedDriveLetter = clientShareDetail.DriveLetter[0];
+            int retVal = Dokan.DokanMain(options, dokanOperations);
+            Log.Warn("Dokan.DokanMain has exited");
             IsRunning = false;
+            switch (retVal)
+            {
+               case Dokan.DOKAN_SUCCESS: // = 0;
+                  FireStateChange(LiquesceSvcState.Stopped, "Dokan is not mounted");
+                  break;
+               case Dokan.DOKAN_ERROR: // = -1; // General Error
+                  FireStateChange(LiquesceSvcState.InError, "Dokan is not mounted [DOKAN_ERROR] - General Error");
+                  break;
+               case Dokan.DOKAN_DRIVE_LETTER_ERROR: // = -2; // Bad Drive letter
+                  FireStateChange(LiquesceSvcState.InError,
+                                  "Dokan is not mounted [DOKAN_DRIVE_LETTER_ERROR] - Bad drive letter");
+                  break;
+               case Dokan.DOKAN_DRIVER_INSTALL_ERROR: // = -3; // Can't install driver
+                  FireStateChange(LiquesceSvcState.InError, "Dokan is not mounted [DOKAN_DRIVER_INSTALL_ERROR]");
+                  Environment.Exit(-1);
+                  break;
+               case Dokan.DOKAN_START_ERROR: // = -4; // Driver something wrong
+                  FireStateChange(LiquesceSvcState.InError,
+                                  "Dokan is not mounted [DOKAN_START_ERROR] - Driver Something is wrong");
+                  Environment.Exit(-1);
+                  break;
+               case Dokan.DOKAN_MOUNT_ERROR: // = -5; // Can't assign drive letter
+                  FireStateChange(LiquesceSvcState.InError,
+                                  "Dokan is not mounted [DOKAN_MOUNT_ERROR] - Can't assign drive letter");
+                  break;
+               default:
+                  FireStateChange(LiquesceSvcState.InError,
+                                  String.Format("Dokan is not mounted [Uknown Error: {0}]", retVal));
+                  Environment.Exit(-1);
+                  break;
+            }
          }
       }
 
@@ -301,12 +293,20 @@ namespace ClientLiquesceSvc
 
       public void Stop()
       {
-         if (IsRunning)
+         try
          {
-            FireStateChange(LiquesceSvcState.Unknown, "Stop has been requested");
-            int retVal = Dokan.DokanUnmount(mountedDriveLetter);
-            Log.Info("Stop returned[{0}]", retVal);
+            DrivetoDomainUsersSync.EnterReadLock();
+            foreach (string mountedDriveLetter in DrivetoDomainUsers.Keys)
+            {
+               int retVal = Dokan.DokanUnmount(mountedDriveLetter[0]);
+               Log.Info("Dokan.DokanUnmount({0}) returned[{1}]", mountedDriveLetter, retVal);
+            }
          }
+         finally
+         {
+            DrivetoDomainUsersSync.ExitReadLock();
+         }
+         FireStateChange(LiquesceSvcState.Unknown, "Stop has been requested");
       }
 
 
