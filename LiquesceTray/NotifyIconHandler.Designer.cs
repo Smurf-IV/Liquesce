@@ -30,13 +30,14 @@
       {
           this.components = new System.ComponentModel.Container();
           this.rightClickContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
-          this.showFreeDiskSpaceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
           this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
           this.serviceController1 = new System.ServiceProcess.ServiceController();
           this.timer1 = new System.Windows.Forms.Timer(this.components);
           this.stopServiceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
           this.startServiceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
           this.managementApp = new System.Windows.Forms.ToolStripMenuItem();
+          this.showFreeDiskSpaceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+          this.backupConsistencyCheckerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
           this.repeatLastMessage = new System.Windows.Forms.ToolStripMenuItem();
           this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
           this.notifyIcon1 = new System.Windows.Forms.NotifyIcon(this.components);
@@ -52,25 +53,18 @@
             this.startServiceToolStripMenuItem,
             this.managementApp,
             this.showFreeDiskSpaceToolStripMenuItem,
+            this.backupConsistencyCheckerToolStripMenuItem,
             this.repeatLastMessage,
             this.toolStripSeparator1,
             this.exitToolStripMenuItem});
           this.rightClickContextMenu.Name = "rightClickContextMenu";
-          this.rightClickContextMenu.Size = new System.Drawing.Size(211, 212);
+          this.rightClickContextMenu.Size = new System.Drawing.Size(238, 242);
           this.rightClickContextMenu.Opening += new System.ComponentModel.CancelEventHandler(this.rightClickContextMenu_Opening);
-          // 
-          // showFreeDiskSpaceToolStripMenuItem
-          // 
-          this.showFreeDiskSpaceToolStripMenuItem.Image = global::LiquesceTray.Properties.Resources.free_space;
-          this.showFreeDiskSpaceToolStripMenuItem.Name = "showFreeDiskSpaceToolStripMenuItem";
-          this.showFreeDiskSpaceToolStripMenuItem.Size = new System.Drawing.Size(210, 30);
-          this.showFreeDiskSpaceToolStripMenuItem.Text = "Show Free Disk Space";
-          this.showFreeDiskSpaceToolStripMenuItem.Click += new System.EventHandler(this.showFreeDiskSpaceToolStripMenuItem_Click);
           // 
           // toolStripSeparator1
           // 
           this.toolStripSeparator1.Name = "toolStripSeparator1";
-          this.toolStripSeparator1.Size = new System.Drawing.Size(207, 6);
+          this.toolStripSeparator1.Size = new System.Drawing.Size(234, 6);
           // 
           // serviceController1
           // 
@@ -85,7 +79,7 @@
           // 
           this.stopServiceToolStripMenuItem.Image = global::LiquesceTray.Properties.Resources.Warning;
           this.stopServiceToolStripMenuItem.Name = "stopServiceToolStripMenuItem";
-          this.stopServiceToolStripMenuItem.Size = new System.Drawing.Size(210, 30);
+          this.stopServiceToolStripMenuItem.Size = new System.Drawing.Size(237, 30);
           this.stopServiceToolStripMenuItem.Text = "Stop Service";
           this.stopServiceToolStripMenuItem.ToolTipText = "This will send a \"Stop\" signal to the service";
           this.stopServiceToolStripMenuItem.Click += new System.EventHandler(this.stopServiceToolStripMenuItem_Click);
@@ -94,7 +88,7 @@
           // 
           this.startServiceToolStripMenuItem.Image = global::LiquesceTray.Properties.Resources.Config;
           this.startServiceToolStripMenuItem.Name = "startServiceToolStripMenuItem";
-          this.startServiceToolStripMenuItem.Size = new System.Drawing.Size(210, 30);
+          this.startServiceToolStripMenuItem.Size = new System.Drawing.Size(237, 30);
           this.startServiceToolStripMenuItem.Text = "Start Service";
           this.startServiceToolStripMenuItem.ToolTipText = "This will send a \"Start\" signal to the service";
           this.startServiceToolStripMenuItem.Click += new System.EventHandler(this.startServiceToolStripMenuItem_Click);
@@ -104,15 +98,31 @@
           this.managementApp.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
           this.managementApp.Image = global::LiquesceTray.Properties.Resources.Liquesce;
           this.managementApp.Name = "managementApp";
-          this.managementApp.Size = new System.Drawing.Size(210, 30);
+          this.managementApp.Size = new System.Drawing.Size(237, 30);
           this.managementApp.Text = "&Management App..";
           this.managementApp.Click += new System.EventHandler(this.managementApp_Click);
+          // 
+          // showFreeDiskSpaceToolStripMenuItem
+          // 
+          this.showFreeDiskSpaceToolStripMenuItem.Image = global::LiquesceTray.Properties.Resources.free_space;
+          this.showFreeDiskSpaceToolStripMenuItem.Name = "showFreeDiskSpaceToolStripMenuItem";
+          this.showFreeDiskSpaceToolStripMenuItem.Size = new System.Drawing.Size(237, 30);
+          this.showFreeDiskSpaceToolStripMenuItem.Text = "Show Free Disk Space";
+          this.showFreeDiskSpaceToolStripMenuItem.Click += new System.EventHandler(this.showFreeDiskSpaceToolStripMenuItem_Click);
+          // 
+          // backupConsistencyCheckerToolStripMenuItem
+          // 
+          this.backupConsistencyCheckerToolStripMenuItem.Image = global::LiquesceTray.Properties.Resources.backup;
+          this.backupConsistencyCheckerToolStripMenuItem.Name = "backupConsistencyCheckerToolStripMenuItem";
+          this.backupConsistencyCheckerToolStripMenuItem.Size = new System.Drawing.Size(237, 30);
+          this.backupConsistencyCheckerToolStripMenuItem.Text = "Backup Consistency Checker";
+          this.backupConsistencyCheckerToolStripMenuItem.Click += new System.EventHandler(this.backupConsistencyCheckerToolStripMenuItem_Click);
           // 
           // repeatLastMessage
           // 
           this.repeatLastMessage.Image = global::LiquesceTray.Properties.Resources.Question;
           this.repeatLastMessage.Name = "repeatLastMessage";
-          this.repeatLastMessage.Size = new System.Drawing.Size(210, 30);
+          this.repeatLastMessage.Size = new System.Drawing.Size(237, 30);
           this.repeatLastMessage.Text = "&Repeat Last message...";
           this.repeatLastMessage.Click += new System.EventHandler(this.repeatLastMessage_Click);
           // 
@@ -120,7 +130,7 @@
           // 
           this.exitToolStripMenuItem.Image = global::LiquesceTray.Properties.Resources.Stop;
           this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-          this.exitToolStripMenuItem.Size = new System.Drawing.Size(210, 30);
+          this.exitToolStripMenuItem.Size = new System.Drawing.Size(237, 30);
           this.exitToolStripMenuItem.Text = "&Exit";
           this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
           // 
@@ -157,5 +167,6 @@
       private System.Windows.Forms.ToolStripMenuItem stopServiceToolStripMenuItem;
       private System.Windows.Forms.ToolStripMenuItem startServiceToolStripMenuItem;
       private System.Windows.Forms.ToolStripMenuItem showFreeDiskSpaceToolStripMenuItem;
+      private System.Windows.Forms.ToolStripMenuItem backupConsistencyCheckerToolStripMenuItem;
    }
 }
