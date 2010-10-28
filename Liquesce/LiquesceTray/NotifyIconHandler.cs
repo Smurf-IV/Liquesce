@@ -138,10 +138,16 @@ namespace LiquesceTray
             startServiceToolStripMenuItem.Visible = visible;
          }
 
-          if (LiquesceSvcState.Running == lastState)
-              showFreeDiskSpaceToolStripMenuItem.Enabled = true;
-          else
-              showFreeDiskSpaceToolStripMenuItem.Enabled = false;
+         if (LiquesceSvcState.Running == lastState)
+         {
+             showFreeDiskSpaceToolStripMenuItem.Enabled = true;
+             backupConsistencyCheckerToolStripMenuItem.Enabled = true;
+         }
+         else
+         {
+             showFreeDiskSpaceToolStripMenuItem.Enabled = false;
+             backupConsistencyCheckerToolStripMenuItem.Enabled = false;
+         }
       }
 
       private void stopServiceToolStripMenuItem_Click(object sender, EventArgs e)
@@ -181,6 +187,21 @@ namespace LiquesceTray
           fsform.Show();
           fsform.Focus();
           fsform.BringToFront();
+
+      }
+
+      private Backup backupForm = null;
+      private void backupConsistencyCheckerToolStripMenuItem_Click(object sender, EventArgs e)
+      {
+          if (backupForm != null)
+          {
+              backupForm.Dispose();
+          }
+          backupForm = new Backup();
+          backupForm.Activate();
+          backupForm.Show();
+          backupForm.Focus();
+          backupForm.BringToFront();
 
       }
 

@@ -107,6 +107,13 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Backup.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Backup.Designer.cs">
+      <DependentUpon>Backup.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BackupFileManager.cs" />
     <Compile Include="FreeSpace.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -133,6 +140,9 @@
       <DependentUpon>Reference.svcmap</DependentUpon>
     </Compile>
     <Compile Include="StateChangeHandler.cs" />
+    <EmbeddedResource Include="Backup.resx">
+      <DependentUpon>Backup.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FreeSpace.resx">
       <DependentUpon>FreeSpace.cs</DependentUpon>
     </EmbeddedResource>
@@ -186,6 +196,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Icons\backup.ico" />
     <Content Include="Icons\base.ico" />
     <Content Include="Icons\Config.ico" />
     <Content Include="Icons\Error.ico" />
