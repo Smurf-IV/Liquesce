@@ -203,7 +203,7 @@ namespace LiquesceTray
         {
             backupform.Invoke(new MethodInvoker(delegate
             {
-                backupform.progress.Maximum = missingFi.Count + missingFo.Count - 1;
+                backupform.progress.Maximum = missingFi.Count + missingFo.Count;
             }));
 
             for (int i = 0; i < missingFi.Count && cancel == false; i++)
@@ -257,7 +257,7 @@ namespace LiquesceTray
         {
             backupform.Invoke(new MethodInvoker(delegate
             {
-                backupform.progress.Maximum = inconsistentFi.Count + inconsistentFo.Count - 1;
+                backupform.progress.Maximum = inconsistentFi.Count + inconsistentFo.Count;
             }));
 
             for (int i = 0; i < inconsistentFi.Count && cancel == false; i++)

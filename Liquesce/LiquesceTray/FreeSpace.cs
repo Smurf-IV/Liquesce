@@ -466,7 +466,7 @@ namespace LiquesceTray
         private string FormatBytes(long bytes)
         {
             const int scale = 1024;
-            string[] orders = new[] { "GB", "MB", "KB", "Bytes" };
+            string[] orders = new[] { "TB", "GB", "MB", "KB", "Bytes" };
             long max = (long)Math.Pow(scale, orders.Length - 1);
 
             foreach (string order in orders)
