@@ -9,6 +9,7 @@ using System.Windows.Forms;
 using LiquesceFacade;
 using System.ServiceModel;
 using System.IO;
+using System.Threading;
 
 namespace LiquesceTray
 {
@@ -30,15 +31,13 @@ namespace LiquesceTray
             buttonRemoveInconsistent.Enabled = false;
             buttonRemoveMissing.Enabled = false;
             buttonConsistency.Enabled = false;
+            buttonCancel.Enabled = true;
 
             // work
-            string searchpath = config.DriveLetter + ":\\" + BackupFileManager.HIDDEN_BACKUP_FOLDER;
+            BackupFileManager.searchpath = config.DriveLetter + ":\\" + BackupFileManager.HIDDEN_BACKUP_FOLDER;
             BackupFileManager.Clear();
-            BackupFileManager.FindFoldersAndFiles(searchpath);
-
-            // controls stuff out
-            ResetControls();
-
+            Thread th = new Thread(new ThreadStart(BackupFileManager.FindFoldersAndFiles));
+            th.Start();
         }
 
         private bool GetConfig()
@@ -73,17 +72,13 @@ namespace LiquesceTray
             progress.Enabled = true;
 
 
-            BackupFileManager.RemoveMissing();
-            BackupFileManager.missingFi.Clear();
-            BackupFileManager.missingFo.Clear();
-            listMissing.Items.Clear();
-
-
-            ResetControls();
+            // work
+            Thread th = new Thread(new ThreadStart(BackupFileManager.RemoveMissing));
+            th.Start();
         }
 
 
-        private void ResetControls()
+        public void ResetControls()
         {
             progress.Style = ProgressBarStyle.Continuous;
             progress.Value = 0;
@@ -93,12 +88,39 @@ namespace LiquesceTray
                 buttonRemoveMissing.Enabled = false;
             else
                 buttonRemoveMissing.Enabled = true;
-            if (listInconsistent.Items.Count == 0)
-                buttonRemoveInconsistent.Enabled = false;
-            else
-                buttonRemoveInconsistent.Enabled = true;
+
+            //if (listInconsistent.Items.Count == 0)
+            //    buttonRemoveInconsistent.Enabled = false;
+            //else
+            //    buttonRemoveInconsistent.Enabled = true;
+
             buttonConsistency.Enabled = true;
+
+            buttonCancel.Enabled = false;
         }
 
+        private void buttonCancel_Click(object sender, EventArgs e)
+        {
+            BackupFileManager.cancel = true;
+            while (BackupFileManager.cancel == true)
+            {
+                Thread.Sleep(100);
+            }
+            ResetControls();
+        }
+
+        private void buttonRemoveInconsistent_Click(object sender, EventArgs e)
+        {
+            buttonRemoveMissing.Enabled = false;
+            buttonRemoveInconsistent.Enabled = false;
+            buttonConsistency.Enabled = false;
+
+            progress.Enabled = true;
+
+
+            // work
+            Thread th = new Thread(new ThreadStart(BackupFileManager.RemoveInconsistent));
+            th.Start();
+        }
     }
 }

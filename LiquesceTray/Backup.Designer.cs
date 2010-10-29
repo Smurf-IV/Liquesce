@@ -39,11 +39,12 @@
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.buttonRemoveMissing = new System.Windows.Forms.Button();
+            this.buttonCancel = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // buttonConsistency
             // 
-            this.buttonConsistency.Location = new System.Drawing.Point(653, 480);
+            this.buttonConsistency.Location = new System.Drawing.Point(577, 480);
             this.buttonConsistency.Name = "buttonConsistency";
             this.buttonConsistency.Size = new System.Drawing.Size(162, 23);
             this.buttonConsistency.TabIndex = 1;
@@ -53,10 +54,11 @@
             // 
             // progress
             // 
+            this.progress.Enabled = false;
             this.progress.Location = new System.Drawing.Point(11, 481);
             this.progress.Name = "progress";
-            this.progress.Size = new System.Drawing.Size(636, 22);
-            this.progress.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
+            this.progress.Size = new System.Drawing.Size(560, 22);
+            this.progress.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
             this.progress.TabIndex = 2;
             // 
             // textCurrent
@@ -76,6 +78,7 @@
             this.buttonRemoveInconsistent.TabIndex = 4;
             this.buttonRemoveInconsistent.Text = "Remove Inconsistent Backup Files";
             this.buttonRemoveInconsistent.UseVisualStyleBackColor = true;
+            this.buttonRemoveInconsistent.Click += new System.EventHandler(this.buttonRemoveInconsistent_Click);
             // 
             // label1
             // 
@@ -133,6 +136,17 @@
             this.buttonRemoveMissing.UseVisualStyleBackColor = true;
             this.buttonRemoveMissing.Click += new System.EventHandler(this.buttonRemoveMissing_Click);
             // 
+            // buttonCancel
+            // 
+            this.buttonCancel.Enabled = false;
+            this.buttonCancel.Location = new System.Drawing.Point(745, 480);
+            this.buttonCancel.Name = "buttonCancel";
+            this.buttonCancel.Size = new System.Drawing.Size(70, 23);
+            this.buttonCancel.TabIndex = 1;
+            this.buttonCancel.Text = "Cancel";
+            this.buttonCancel.UseVisualStyleBackColor = true;
+            this.buttonCancel.Click += new System.EventHandler(this.buttonCancel_Click);
+            // 
             // Backup
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -147,6 +161,7 @@
             this.Controls.Add(this.buttonRemoveInconsistent);
             this.Controls.Add(this.textCurrent);
             this.Controls.Add(this.progress);
+            this.Controls.Add(this.buttonCancel);
             this.Controls.Add(this.buttonConsistency);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -161,8 +176,6 @@
 
         #endregion
 
-        private System.Windows.Forms.Button buttonConsistency;
-        private System.Windows.Forms.Button buttonRemoveInconsistent;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
         public System.Windows.Forms.TextBox textCurrent;
@@ -170,6 +183,9 @@
         public System.Windows.Forms.ListBox listMissing;
         public System.Windows.Forms.ListBox listInconsistent;
         public System.Windows.Forms.ProgressBar progress;
-        private System.Windows.Forms.Button buttonRemoveMissing;
+        public System.Windows.Forms.Button buttonConsistency;
+        public System.Windows.Forms.Button buttonRemoveInconsistent;
+        public System.Windows.Forms.Button buttonRemoveMissing;
+        public System.Windows.Forms.Button buttonCancel;
     }
 }
