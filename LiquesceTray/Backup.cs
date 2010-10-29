@@ -61,6 +61,13 @@ namespace LiquesceTray
         {
             GetConfig();
             BackupFileManager.Init(this);
+            if ( config.eAllocationMode != ConfigDetails.AllocationModes.backup )
+                MessageBox.Show(
+                    "Warning:\n" + 
+                    "Backup Mode is not configured for the Liquesce Service. If you don't switch to \".backup\", your saved " + 
+                    "files can become inconsistent. Use the Liquesce Configuration App to reconfigure the Service. The Backup " + 
+                    "Consistency Checker can work without the backup mode enabled but use it with care and switch to backup Mode.", 
+                    "Backup Mode is not configured", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
         }
 
         private void buttonRemoveMissing_Click(object sender, EventArgs e)
@@ -68,6 +75,7 @@ namespace LiquesceTray
             buttonRemoveMissing.Enabled = false;
             buttonRemoveInconsistent.Enabled = false;
             buttonConsistency.Enabled = false;
+            buttonCancel.Enabled = true;
 
             progress.Enabled = true;
 
@@ -89,10 +97,10 @@ namespace LiquesceTray
             else
                 buttonRemoveMissing.Enabled = true;
 
-            //if (listInconsistent.Items.Count == 0)
-            //    buttonRemoveInconsistent.Enabled = false;
-            //else
-            //    buttonRemoveInconsistent.Enabled = true;
+            if (listInconsistent.Items.Count == 0)
+                buttonRemoveInconsistent.Enabled = false;
+            else
+                buttonRemoveInconsistent.Enabled = true;
 
             buttonConsistency.Enabled = true;
 
@@ -114,6 +122,7 @@ namespace LiquesceTray
             buttonRemoveMissing.Enabled = false;
             buttonRemoveInconsistent.Enabled = false;
             buttonConsistency.Enabled = false;
+            buttonCancel.Enabled = true;
 
             progress.Enabled = true;
 
