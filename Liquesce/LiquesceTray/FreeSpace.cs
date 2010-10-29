@@ -286,6 +286,7 @@ namespace LiquesceTray
             barLiquesce.Name = "barLiquesce";
             barLiquesce.Size = new System.Drawing.Size(BAR_SIZE, 23);
             barLiquesce.TabIndex = 0;
+            barLiquesce.Style = ProgressBarStyle.Continuous;
             tableLayout.Controls.Add(barLiquesce, 3, 0);
 
 
@@ -391,6 +392,7 @@ namespace LiquesceTray
                     bars[i].Name = "progressBar" + i;
                     bars[i].Size = new System.Drawing.Size(BAR_SIZE, 23);
                     bars[i].TabIndex = 200 + i;
+                    barLiquesce.Style = ProgressBarStyle.Continuous;
                     tableLayouts[i].Controls.Add(bars[i], 3, 0);
                 }
             }
