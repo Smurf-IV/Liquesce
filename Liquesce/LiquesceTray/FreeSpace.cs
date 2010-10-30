@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using LiquesceFacade;
 using System.ServiceModel;
 using System.Runtime.InteropServices;
+using System.Collections.Generic;
 
 
 namespace LiquesceTray
@@ -15,13 +16,14 @@ namespace LiquesceTray
         private const int CONTROL_OFFSET_LEFT = 3;
         private const int CONTROL_SPACE = 30;
 
-        private const int COLUMN_0 = 120;
-        private const int COLUMN_1 = 80;
-        private const int COLUMN_2 = 80;
-        private const int COLUMN_3 = BAR_SIZE;
+        private const int COLUMN_NAME = 120;
+        private const int COLUMN_TOTAL = 80;
+        private const int COLUMN_FREE = 80;
+        private const int COLUMN_RATE = 80;
+        private const int COLUMN_BAR = BAR_SIZE;
         private const int COLUMN_CHECK_1 = 100;
         private const int COLUMN_CHECK_2 = 200;
-        private const int TABLE_SIZE = COLUMN_0 + COLUMN_1 + COLUMN_2 + COLUMN_3 + 12;
+        private const int TABLE_SIZE = COLUMN_NAME + COLUMN_TOTAL + COLUMN_FREE + COLUMN_RATE  + COLUMN_BAR + 18;
 
         private const int BAR_SCALE = 1000;
 
@@ -33,16 +35,21 @@ namespace LiquesceTray
         private ulong maxDiskSize;
 
         private TextBox[] diskNames;
-        // private System.Windows.Forms.TextBox diskLiquesce;
         private TextBox[] totalSpace;
         private TextBox totalSpaceLiquesce;
         private TextBox[] freeSpace;
         private TextBox freeSpaceLiquesce;
+        private TextBox[] rate;
+        private TextBox rateLiquesce;
         private ProgressBar[] bars;
         private ProgressBar barLiquesce;
         private CheckBox scaledMode;
         private CheckBox rightAligned;
         private TableLayoutPanel[] tableLayouts;
+
+        private ulong[] oldFree;
+
+        private List<long>[] averageRate;
 
 
 
@@ -90,17 +97,27 @@ namespace LiquesceTray
             diskNames = new TextBox[config.SourceLocations.Count()];
             totalSpace = new TextBox[config.SourceLocations.Count()];
             freeSpace = new TextBox[config.SourceLocations.Count()];
+            rate = new TextBox[config.SourceLocations.Count()];
             bars = new ProgressBar[config.SourceLocations.Count()];
+
+            oldFree = new ulong[config.SourceLocations.Count()];
+            averageRate = new List<long>[config.SourceLocations.Count()];
+            for (int i = 0; i < oldFree.Count(); i++)
+            {
+                oldFree[i] = 0;
+                averageRate[i] = new List<long>();
+            }
 
             //------------------------------------------------------------------------------------------------
             // 
             // tableLayout
             // 
             System.Windows.Forms.TableLayoutPanel tableLayout = new System.Windows.Forms.TableLayoutPanel();
-            tableLayout.ColumnCount = 5;
-            tableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, COLUMN_0));
-            tableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, COLUMN_1));
-            tableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.AutoSize, COLUMN_2));
+            tableLayout.ColumnCount = 6;
+            tableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, COLUMN_NAME));
+            tableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, COLUMN_TOTAL));
+            tableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.AutoSize, COLUMN_FREE));
+            tableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.AutoSize, COLUMN_RATE));
             tableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.AutoSize, COLUMN_CHECK_1));
             tableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.AutoSize, COLUMN_CHECK_2));
             tableLayout.Location = new System.Drawing.Point(3, 3);
@@ -149,16 +166,32 @@ namespace LiquesceTray
             // labelFreeSpace
             // 
             Label labelFreeSpace = new Label
-                                      {
-                                          Location =
-                                             new System.Drawing.Point(CONTROL_OFFSET_LEFT + leftSpace,
-                                                                      CONTROL_OFFSET_TOP + 2),
-                                          Name = "labelFreeSpace",
-                                          Size = new System.Drawing.Size(80, CONTROL_OFFSET_TOP_LABEL),
-                                          Text = "Free Space:",
-                                          Anchor = AnchorStyles.Bottom
-                                      };
+            {
+                Location =
+                   new System.Drawing.Point(CONTROL_OFFSET_LEFT + leftSpace,
+                                            CONTROL_OFFSET_TOP + 2),
+                Name = "labelFreeSpace",
+                Size = new System.Drawing.Size(80, CONTROL_OFFSET_TOP_LABEL),
+                Text = "Free Space:",
+                Anchor = AnchorStyles.Bottom
+            };
             tableLayout.Controls.Add(labelFreeSpace, 2, 0);
+            leftSpace += 83;
+
+            // 
+            // labelRate
+            // 
+            Label labelRate = new Label
+            {
+                Location =
+                   new System.Drawing.Point(CONTROL_OFFSET_LEFT + leftSpace,
+                                            CONTROL_OFFSET_TOP + 2),
+                Name = "labelRate",
+                Size = new System.Drawing.Size(80, CONTROL_OFFSET_TOP_LABEL),
+                Text = "Rate:",
+                Anchor = AnchorStyles.Bottom
+            };
+            tableLayout.Controls.Add(labelRate, 3, 0);
             leftSpace += 83;
 
             // 
@@ -177,7 +210,7 @@ namespace LiquesceTray
                 Checked = true,
                 Anchor = AnchorStyles.Bottom
             };
-            tableLayout.Controls.Add(scaledMode, 3, 0);
+            tableLayout.Controls.Add(scaledMode, 4, 0);
 
             // 
             // rightAligned
@@ -195,7 +228,7 @@ namespace LiquesceTray
                 Checked = true,
                 Anchor = (AnchorStyles.Right | AnchorStyles.Bottom)
             };
-            tableLayout.Controls.Add(rightAligned, 4, 0);
+            tableLayout.Controls.Add(rightAligned, 5, 0);
 
             // This is reset below
             //leftSpace += 123;
@@ -207,11 +240,12 @@ namespace LiquesceTray
             // tableLayout
             // 
             tableLayout = new System.Windows.Forms.TableLayoutPanel();
-            tableLayout.ColumnCount = 4;
-            tableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, COLUMN_0));
-            tableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, COLUMN_1));
-            tableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.AutoSize, COLUMN_2));
-            tableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.AutoSize, COLUMN_3));
+            tableLayout.ColumnCount = 5;
+            tableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, COLUMN_NAME));
+            tableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, COLUMN_TOTAL));
+            tableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.AutoSize, COLUMN_FREE));
+            tableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.AutoSize, COLUMN_RATE));
+            tableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.AutoSize, COLUMN_BAR));
             tableLayout.Location = new System.Drawing.Point(3, 3);
             tableLayout.Name = "tableLayout";
             tableLayout.RowCount = 1;
@@ -262,17 +296,36 @@ namespace LiquesceTray
             // textBox freeSpaceLiquesce
             // 
             freeSpaceLiquesce = new TextBox
-                                   {
-                                       Location =
-                                          new System.Drawing.Point(CONTROL_OFFSET_LEFT + leftSpace,
-                                                                   CONTROL_OFFSET_TOP + 2 + CONTROL_OFFSET_TOP_LABEL),
-                                       Name = "freeSpaceLiquesce",
-                                       ReadOnly = true,
-                                       Size = new System.Drawing.Size(80, 20),
-                                       TabIndex = 0,
-                                       TextAlign = HorizontalAlignment.Right
-                                   };
+            {
+                Location =
+                   new System.Drawing.Point(CONTROL_OFFSET_LEFT + leftSpace,
+                                            CONTROL_OFFSET_TOP + 2 + CONTROL_OFFSET_TOP_LABEL),
+                Name = "freeSpaceLiquesce",
+                ReadOnly = true,
+                Size = new System.Drawing.Size(80, 20),
+                TabIndex = 0,
+                TextAlign = HorizontalAlignment.Right
+            };
             tableLayout.Controls.Add(freeSpaceLiquesce, 2, 0);
+
+            leftSpace += 83;
+
+
+            // 
+            // textBox rateLiquesce
+            // 
+            rateLiquesce = new TextBox
+            {
+                Location =
+                   new System.Drawing.Point(CONTROL_OFFSET_LEFT + leftSpace,
+                                            CONTROL_OFFSET_TOP + 2 + CONTROL_OFFSET_TOP_LABEL),
+                Name = "rateLiquesce",
+                ReadOnly = true,
+                Size = new System.Drawing.Size(80, 20),
+                TabIndex = 0,
+                TextAlign = HorizontalAlignment.Right
+            };
+            tableLayout.Controls.Add(rateLiquesce, 3, 0);
 
             leftSpace += 83;
 
@@ -287,7 +340,7 @@ namespace LiquesceTray
             barLiquesce.Size = new System.Drawing.Size(BAR_SIZE, 23);
             barLiquesce.TabIndex = 0;
             barLiquesce.Style = ProgressBarStyle.Continuous;
-            tableLayout.Controls.Add(barLiquesce, 3, 0);
+            tableLayout.Controls.Add(barLiquesce, 4, 0);
 
 
 
@@ -304,11 +357,12 @@ namespace LiquesceTray
                 // tableLayout
                 // 
                 tableLayouts[i] = new System.Windows.Forms.TableLayoutPanel();
-                tableLayouts[i].ColumnCount = 4;
-                tableLayouts[i].ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, COLUMN_0));
-                tableLayouts[i].ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, COLUMN_1));
-                tableLayouts[i].ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.AutoSize, COLUMN_2));
-                tableLayouts[i].ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.AutoSize, COLUMN_3));
+                tableLayouts[i].ColumnCount = 5;
+                tableLayouts[i].ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, COLUMN_NAME));
+                tableLayouts[i].ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, COLUMN_TOTAL));
+                tableLayouts[i].ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.AutoSize, COLUMN_FREE));
+                tableLayouts[i].ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.AutoSize, COLUMN_RATE));
+                tableLayouts[i].ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.AutoSize, COLUMN_BAR));
                 tableLayouts[i].Location = new System.Drawing.Point(3, 3);
                 tableLayouts[i].Name = "tableLayouts" + i.ToString();
                 tableLayouts[i].RowCount = 1;
@@ -368,18 +422,37 @@ namespace LiquesceTray
                     // textBox freeSpace
                     // 
                     freeSpace[i] = new TextBox
-                                      {
-                                          Location =
-                                             new System.Drawing.Point(CONTROL_OFFSET_LEFT + leftSpace,
-                                                                      CONTROL_OFFSET_TOP + CONTROL_SPACE * ii + 2 +
-                                                                      CONTROL_OFFSET_TOP_LABEL),
-                                          Name = "freeSpace" + i,
-                                          ReadOnly = true,
-                                          Size = new System.Drawing.Size(80, 20),
-                                          TabIndex = 0,
-                                          TextAlign = HorizontalAlignment.Right
-                                      };
+                    {
+                        Location =
+                           new System.Drawing.Point(CONTROL_OFFSET_LEFT + leftSpace,
+                                                    CONTROL_OFFSET_TOP + CONTROL_SPACE * ii + 2 +
+                                                    CONTROL_OFFSET_TOP_LABEL),
+                        Name = "freeSpace" + i,
+                        ReadOnly = true,
+                        Size = new System.Drawing.Size(80, 20),
+                        TabIndex = 0,
+                        TextAlign = HorizontalAlignment.Right
+                    };
                     tableLayouts[i].Controls.Add(freeSpace[i], 2, 0);
+                    leftSpace += 83;
+
+
+                    // 
+                    // textBox rate
+                    // 
+                    rate[i] = new TextBox
+                    {
+                        Location =
+                           new System.Drawing.Point(CONTROL_OFFSET_LEFT + leftSpace,
+                                                    CONTROL_OFFSET_TOP + CONTROL_SPACE * ii + 2 +
+                                                    CONTROL_OFFSET_TOP_LABEL),
+                        Name = "freeSpace" + i,
+                        ReadOnly = true,
+                        Size = new System.Drawing.Size(80, 20),
+                        TabIndex = 0,
+                        TextAlign = HorizontalAlignment.Right
+                    };
+                    tableLayouts[i].Controls.Add(rate[i], 3, 0);
                     leftSpace += 83;
 
 
@@ -393,16 +466,18 @@ namespace LiquesceTray
                     bars[i].Size = new System.Drawing.Size(BAR_SIZE, 23);
                     bars[i].TabIndex = 200 + i;
                     barLiquesce.Style = ProgressBarStyle.Continuous;
-                    tableLayouts[i].Controls.Add(bars[i], 3, 0);
+                    tableLayouts[i].Controls.Add(bars[i], 4, 0);
                 }
             }
         }
+
 
 
         private void RefreshControls()
         {
             ulong allAvailabel = 0;
             ulong allTotal = 0;
+            long allRate = 0;
 
             for (int i = 0; i < config.SourceLocations.Count(); i++)
             {
@@ -415,8 +490,31 @@ namespace LiquesceTray
                     allAvailabel += availabel;
                     allTotal += total;
 
+                    long thisRate = 0;
+                    thisRate = ((long)oldFree[i] - (long)availabel) / 4;
+                    if (oldFree[i] == 0)
+                        thisRate = 0;
+                    averageRate[i].Add(thisRate);
+
+                    thisRate = 0;
+                    for (int ii = 0; ii < averageRate[i].Count; ii++)
+                    {
+                        thisRate += averageRate[i][ii];
+                    }
+                    thisRate /= averageRate[i].Count;
+
+                    // remove oldest value
+                    if (averageRate[i].Count >= 5)
+                        averageRate[i].RemoveAt(0);
+
+                    // save the free space for next calculation
+                    oldFree[i] = freebytes;
+
+                    // summ rate for liquesce drive
+                    allRate += thisRate;
+
                     // 
-                    // textBox freeSpace
+                    // textBox totalSpace
                     // 
                     totalSpace[i].Text = FormatBytes((long)total);
 
@@ -424,6 +522,11 @@ namespace LiquesceTray
                     // textBox freeSpace
                     // 
                     freeSpace[i].Text = FormatBytes((long)availabel);
+
+                    // 
+                    // textBox rate
+                    // 
+                    rate[i].Text = FormatBytesRate(thisRate / this.timer1.Interval * 1000);
 
                     //
                     // progress bar
@@ -457,6 +560,7 @@ namespace LiquesceTray
 
             totalSpaceLiquesce.Text = FormatBytes((long)allTotal);
             freeSpaceLiquesce.Text = FormatBytes((long)allAvailabel);
+            rateLiquesce.Text = FormatBytesRate(allRate / this.timer1.Interval * 1000);
             barLiquesce.Maximum = BAR_SCALE;
             barLiquesce.Value = (int)(((allTotal - allAvailabel) * BAR_SCALE) / allTotal);
         }
@@ -479,6 +583,30 @@ namespace LiquesceTray
             return "0 Bytes";
         }
 
+        private string FormatBytesRate(long bytes)
+        {
+            const int scale = 1024;
+            string[] orders = new[] { "TB/s", "GB/s", "MB/s", "KB/s", "Bytes/s" };
+            long max = (long)Math.Pow(scale, orders.Length - 1);
+            string sign = "+";
+
+            if (bytes < 0)
+            {
+                // negative number
+                bytes = bytes * -1;
+                sign = "-";
+            }
+
+            foreach (string order in orders)
+            {
+                if (bytes > max)
+                    return sign + string.Format("{0:##.##} {1}", decimal.Divide(bytes, max), order);
+
+                max /= scale;
+            }
+            return "0 Bytes/s";
+        }
+
 
         #region DLL Imports
 
@@ -498,11 +626,5 @@ namespace LiquesceTray
         {
             RefreshControls();
         }
-
-        private void flowLayout_Paint(object sender, PaintEventArgs e)
-        {
-
-        }
-
     }
 }

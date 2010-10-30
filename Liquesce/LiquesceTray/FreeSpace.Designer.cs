@@ -37,7 +37,7 @@
             // timer1
             // 
             this.timer1.Enabled = true;
-            this.timer1.Interval = 5000;
+            this.timer1.Interval = 3000;
             this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
             // flowLayout
@@ -46,15 +46,14 @@
             this.flowLayout.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayout.Location = new System.Drawing.Point(0, 0);
             this.flowLayout.Name = "flowLayout";
-            this.flowLayout.Size = new System.Drawing.Size(624, 421);
+            this.flowLayout.Size = new System.Drawing.Size(701, 421);
             this.flowLayout.TabIndex = 0;
-            this.flowLayout.Paint += new System.Windows.Forms.PaintEventHandler(this.flowLayout_Paint);
             // 
             // FreeSpace
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(624, 421);
+            this.ClientSize = new System.Drawing.Size(701, 421);
             this.Controls.Add(this.flowLayout);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "FreeSpace";
