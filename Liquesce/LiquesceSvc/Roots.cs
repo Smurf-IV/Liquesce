@@ -170,7 +170,10 @@ namespace LiquesceSvc
             }
             finally
             {
-                Log.Debug("GetPath from [{0}] found [{1}]", filename, foundPath);
+                if (!String.IsNullOrWhiteSpace(foundPath))
+                    Log.Debug("GetPath from [{0}] found [{1}]", filename, foundPath);
+                else
+                    Log.Debug("GetPath found nothing for [{0}]. isCreate=[{1}]", filename, isCreate);
             }
             return foundPath;
         }

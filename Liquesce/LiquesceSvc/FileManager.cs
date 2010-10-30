@@ -66,5 +66,11 @@ namespace LiquesceSvc
         }
 
 
+        public static string GetLocationFromFilePath(string path)
+        {
+            return path.Substring(0, path.LastIndexOf("\\"));
+        }
+
+
     }
 }
