@@ -143,11 +143,20 @@ namespace LiquesceSvc
                     //        Directory.CreateDirectory(newDir);
                     //}
 
+                    Log.Trace("We want to create a new file in: [{0}]", path);
+
                     if (String.IsNullOrWhiteSpace(path))
                     {
                         actualErrorCode = Dokan.ERROR_ACCESS_DENIED;
                         Log.Trace("Got no path!!!");
                         return actualErrorCode;
+                    }
+
+                    Log.Trace("Check if directory exists: [{0}]", FileManager.GetLocationFromFilePath(path));
+                    if (!Directory.Exists(FileManager.GetLocationFromFilePath(path)))
+                    {
+                        Log.Trace("Have to create this directory.");
+                        Directory.CreateDirectory(FileManager.GetLocationFromFilePath(path));
                     }
 
                     SafeFileHandle handle = CreateFile(path, rawAccessMode, rawShare, IntPtr.Zero, rawCreationDisposition, rawFlagsAndAttributes, IntPtr.Zero);
