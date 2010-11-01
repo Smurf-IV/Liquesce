@@ -46,18 +46,19 @@
             this.flowLayout.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayout.Location = new System.Drawing.Point(0, 0);
             this.flowLayout.Name = "flowLayout";
-            this.flowLayout.Size = new System.Drawing.Size(701, 421);
+            this.flowLayout.Size = new System.Drawing.Size(791, 421);
             this.flowLayout.TabIndex = 0;
             // 
             // FreeSpace
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(701, 421);
+            this.ClientSize = new System.Drawing.Size(791, 421);
             this.Controls.Add(this.flowLayout);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "FreeSpace";
             this.Text = "Liquesce Free Space";
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.FreeSpace_FormClosed);
             this.Load += new System.EventHandler(this.Form1_Load);
             this.ResumeLayout(false);
 
