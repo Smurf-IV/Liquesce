@@ -140,8 +140,17 @@
       <DependentUpon>Reference.svcmap</DependentUpon>
     </Compile>
     <Compile Include="StateChangeHandler.cs" />
+    <Compile Include="DoubleProgressBar.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="DoubleProgressBar.Designer.cs">
+      <DependentUpon>DoubleProgressBar.cs</DependentUpon>
+    </Compile>
     <EmbeddedResource Include="Backup.resx">
       <DependentUpon>Backup.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DoubleProgressBar.resx">
+      <DependentUpon>DoubleProgressBar.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FreeSpace.resx">
       <DependentUpon>FreeSpace.cs</DependentUpon>
