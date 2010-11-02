@@ -92,14 +92,14 @@ namespace ClientLiquesceSvc
          }
       }
 
-      /// <summary>
-      /// Invokes DokanNet.DokanMain function to mount a drive. 
-      /// The function blocks until the file system is unmounted.
-      /// Administrator privilege is needed to communicate with Dokan driver. 
-      /// You need a manifest file for .NET application.
-      /// </summary>
       public void Start()
       {
+         ReadConfigDetails();
+         if (currentConfigDetails == null)
+            return;
+         SetNLogLevel(currentConfigDetails.ServiceLogLevel);
+         if (currentConfigDetails.SharesToRestore == null)
+            return;
          foreach (ClientShareDetail clientShareDetails in currentConfigDetails.SharesToRestore)
          {
             Thread t = new Thread(new ParameterizedThreadStart(AddNewDrive));
@@ -111,6 +111,12 @@ namespace ClientLiquesceSvc
       private readonly Dictionary<string, List<string>> DrivetoDomainUsers = new Dictionary<string, List<string>>();
       private readonly ReaderWriterLockSlim DrivetoDomainUsersSync = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
 
+      /// <summary>
+      /// Invokes DokanNet.DokanMain function to mount a drive. 
+      /// The function blocks until the file system is unmounted.
+      /// Administrator privilege is needed to communicate with Dokan driver. 
+      /// You need a manifest file for .NET application.
+      /// </summary>
       private void AddNewDrive(object obj)
       {
          ClientShareDetail clientShareDetail = obj as ClientShareDetail;
@@ -329,7 +335,11 @@ namespace ClientLiquesceSvc
          finally
          {
             if (currentConfigDetails == null)
+            {
                currentConfigDetails = new ClientConfigDetails();
+               if (!File.Exists(configFile))
+                  WriteOutConfigDetails();
+            }
          }
 
       }

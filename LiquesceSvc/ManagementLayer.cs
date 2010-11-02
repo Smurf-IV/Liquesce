@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.ServiceModel;
-using System.ServiceProcess;
 using System.Threading;
 using System.Xml.Serialization;
 using DokanNet;
@@ -321,7 +320,6 @@ namespace LiquesceSvc
 
         public List<LanManShareDetails> GetPossibleShares()
         {
-            List<LanManShareDetails> lmsd = new List<LanManShareDetails>();
             // TODO: Phase 2 will have a foreach onthe drive letter
             return (LanManShareHandler.MatchDriveLanManShares(currentConfigDetails.DriveLetter));
         }
@@ -348,11 +346,14 @@ namespace LiquesceSvc
                     currentConfigDetails = x.Deserialize(textReader) as ConfigDetails;
                 }
                 Log.Info("Now normalise the paths to allow the file finders to work correctly");
-                List<string> fileSourceLocations = new List<string>(currentConfigDetails.SourceLocations);
-                currentConfigDetails.SourceLocations.Clear();
+               if (currentConfigDetails != null)
+               {
+                  List<string> fileSourceLocations = new List<string>(currentConfigDetails.SourceLocations);
+                  currentConfigDetails.SourceLocations.Clear();
 
-                fileSourceLocations.ForEach(
-                   location => currentConfigDetails.SourceLocations.Add(Path.GetFullPath(location).TrimEnd(Path.DirectorySeparatorChar)));
+                  fileSourceLocations.ForEach(
+                     location => currentConfigDetails.SourceLocations.Add(Path.GetFullPath(location).TrimEnd(Path.DirectorySeparatorChar)));
+               }
             }
             catch (Exception ex)
             {
@@ -361,8 +362,12 @@ namespace LiquesceSvc
             }
             finally
             {
-                if (currentConfigDetails == null)
-                    InitialiseToDefault();
+               if (currentConfigDetails == null)
+               {
+                  InitialiseToDefault();
+                  if ( !File.Exists(configFile) )
+                     WriteOutConfigDetails();
+               }
             }
 
         }
