@@ -177,15 +177,10 @@ namespace LiquesceSvc
                     Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error(), new IntPtr(-1));
                 }
                 FileStream fs = new FileStream(handle, writeable ? FileAccess.ReadWrite : FileAccess.Read, (int)configDetails.BufferReadSize);
-                try
-                {
-                    openFilesSync.EnterWriteLock();
+               using (openFilesSync.WriteLock())
+               {
                     info.Context = ++openFilesLastKey; // never be Zero !
                     openFiles.Add(openFilesLastKey, fs);
-                }
-                finally
-                {
-                    openFilesSync.ExitWriteLock();
                 }
             }
             catch (Exception ex)
@@ -196,15 +191,8 @@ namespace LiquesceSvc
             }
             finally
             {
-                try
-                {
-                    openFilesSync.EnterReadLock();
+                using( openFilesSync.ReadLock())
                     Log.Trace("CreateFile OUT actualErrorCode=[{0}] context[{1}]", actualErrorCode, openFilesLastKey);
-                }
-                finally
-                {
-                    openFilesSync.ExitReadLock();
-                }
             }
             return actualErrorCode;
         }
@@ -233,15 +221,8 @@ namespace LiquesceSvc
                 if (currentMatchingDirs.Count > 0)
                 {
                     info.IsDirectory = true;
-                    try
-                    {
-                        foundDirectoriesSync.TryEnterWriteLock(configDetails.LockTimeout);
+                    using (foundDirectoriesSync.WriteLock() )
                         foundDirectories[filename] = currentMatchingDirs;
-                    }
-                    finally
-                    {
-                        foundDirectoriesSync.ExitWriteLock();
-                    }
                     dokanError = Dokan.DOKAN_SUCCESS;
                 }
                 else
@@ -362,11 +343,10 @@ namespace LiquesceSvc
                     if (info.IsDirectory)
                     {
                         Log.Trace("DeleteOnClose Directory");
-                        try
+                        using ( foundDirectoriesSync.UpgradableReadLock() )
                         {
                             // Only delete the directories that this knew about before the delet was called 
                             // (As the user may be moving files into the sources from the mount !!)
-                            foundDirectoriesSync.TryEnterUpgradeableReadLock(configDetails.LockTimeout);
                             List<string> targetDeletes = foundDirectories[filename];
                             if (targetDeletes != null)
                                 for (int index = 0; index < targetDeletes.Count; index++)
@@ -376,14 +356,8 @@ namespace LiquesceSvc
                                     Log.Trace("Deleting matched dir [{0}]", fullPath);
                                     Directory.Delete(fullPath, false);
                                 }
-                            foundDirectoriesSync.TryEnterWriteLock(configDetails.LockTimeout);
-                            foundDirectories.Remove(filename);
-                        }
-                        finally
-                        {
-                           if (foundDirectoriesSync.IsWriteLockHeld)
-                              foundDirectoriesSync.ExitWriteLock();
-                           foundDirectoriesSync.ExitUpgradeableReadLock();
+                            using( foundDirectoriesSync.WriteLock() )
+                              foundDirectories.Remove(filename);
                         }
                     }
                     else
@@ -447,15 +421,8 @@ namespace LiquesceSvc
                 else
                 {
                     Log.Trace("context [{0}]", context);
-                    try
-                    {
-                        openFilesSync.TryEnterReadLock(configDetails.LockTimeout);
-                        fileStream = openFiles[context];
-                    }
-                    finally
-                    {
-                        openFilesSync.ExitReadLock();
-                    }
+                using( openFilesSync.ReadLock())
+                           fileStream = openFiles[context];
                 }
                 if (offset > fileStream.Length)
                 {
@@ -493,15 +460,8 @@ namespace LiquesceSvc
                 {
                     Log.Trace("context [{0}]", context);
                     FileStream fileStream;
-                    try
-                    {
-                        openFilesSync.TryEnterReadLock(configDetails.LockTimeout);
+                using( openFilesSync.ReadLock())
                         fileStream = openFiles[context];
-                    }
-                    finally
-                    {
-                        openFilesSync.ExitReadLock();
-                    }
                     fileStream.Seek(offset, SeekOrigin.Begin);
                     fileStream.Write(buffer, 0, buffer.Length);
                     writtenBytes = (uint)buffer.Length;
@@ -538,15 +498,8 @@ namespace LiquesceSvc
                 if (!IsNullOrDefault(context))
                 {
                     Log.Trace("context [{0}]", context);
-                    try
-                    {
-                        openFilesSync.TryEnterReadLock(configDetails.LockTimeout);
+                using( openFilesSync.ReadLock())
                         openFiles[context].Flush();
-                    }
-                    finally
-                    {
-                        openFilesSync.ExitReadLock();
-                    }
                 }
                 else
                 {
@@ -818,24 +771,17 @@ namespace LiquesceSvc
         // removed / ignored. There has to be a way of making sure that the (older) duplicate does not overwrite the shared visible
         private void XMoveDirectory(string filename, string pathTarget, bool replaceIfExisting)
         {
-            try
+            using ( foundDirectoriesSync.UpgradableReadLock() )
             {
                 Dictionary<string, int> hasPathBeenUsed = new Dictionary<string, int>();
-                foundDirectoriesSync.TryEnterUpgradeableReadLock(configDetails.LockTimeout);
                 List<string> targetMoves = foundDirectories[filename];
                 if (targetMoves != null)
                     for (int i = targetMoves.Count - 1; i >= 0; i--)
                     {
                         XMoveDirContents(targetMoves[i], pathTarget, hasPathBeenUsed, replaceIfExisting);
                     }
-                foundDirectoriesSync.TryEnterWriteLock(configDetails.LockTimeout);
-                foundDirectories.Remove(filename);
-            }
-            finally
-            {
-               if (foundDirectoriesSync.IsWriteLockHeld)
-                  foundDirectoriesSync.ExitWriteLock();
-               foundDirectoriesSync.ExitUpgradeableReadLock();
+                using( foundDirectoriesSync.WriteLock() )
+                  foundDirectories.Remove(filename);
             }
 
 
@@ -1013,15 +959,8 @@ namespace LiquesceSvc
                 if (!IsNullOrDefault(context))
                 {
                     Log.Trace("context [{0}]", context);
-                    try
-                    {
-                        openFilesSync.TryEnterReadLock(configDetails.LockTimeout);
+                using( openFilesSync.ReadLock())
                         openFiles[context].SetLength(length);
-                    }
-                    finally
-                    {
-                        openFilesSync.ExitReadLock();
-                    }
                 }
                 else
                 {
@@ -1056,15 +995,8 @@ namespace LiquesceSvc
                 if (!IsNullOrDefault(context))
                 {
                     Log.Trace("context [{0}]", context);
-                    try
-                    {
-                        openFilesSync.TryEnterReadLock(configDetails.LockTimeout);
+                using( openFilesSync.ReadLock())
                         openFiles[context].Lock(offset, length);
-                    }
-                    finally
-                    {
-                        openFilesSync.ExitReadLock();
-                    }
                 }
                 else
                 {
@@ -1099,15 +1031,8 @@ namespace LiquesceSvc
                 if (!IsNullOrDefault(context))
                 {
                     Log.Trace("context [{0}]", context);
-                    try
-                    {
-                        openFilesSync.TryEnterReadLock(configDetails.LockTimeout);
+                using( openFilesSync.ReadLock())
                         openFiles[context].Unlock(offset, length);
-                    }
-                    finally
-                    {
-                        openFilesSync.ExitReadLock();
-                    }
                 }
                 else
                 {
@@ -1166,9 +1091,8 @@ namespace LiquesceSvc
         public int Unmount(DokanFileInfo info)
         {
             Log.Trace("Unmount IN DokanProcessId[{0}]", info.ProcessId);
-            try
-            {
-                openFilesSync.EnterWriteLock();
+           using (openFilesSync.WriteLock())
+           {
                 foreach (FileStream obj2 in openFiles.Values)
                 {
                     try
@@ -1184,10 +1108,6 @@ namespace LiquesceSvc
                     }
                 }
                 openFiles.Clear();
-            }
-            finally
-            {
-                openFilesSync.ExitWriteLock();
             }
             Log.Trace("Unmount out");
             return Dokan.DOKAN_SUCCESS;
@@ -1240,15 +1160,10 @@ namespace LiquesceSvc
             {
                 Log.Trace("context [{0}]", context);
                 FileStream fileStream;
-                try
-                {
-                    openFilesSync.EnterWriteLock();
+               using (openFilesSync.WriteLock())
+               {
                     fileStream = openFiles[context];
                     openFiles.Remove(context);
-                }
-                finally
-                {
-                    openFilesSync.ExitWriteLock();
                 }
                 Log.Trace("CloseAndRemove [{0}] context[{1}]", fileStream.Name, context);
                 fileStream.Flush();

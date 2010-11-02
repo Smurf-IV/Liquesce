@@ -82,9 +82,9 @@ namespace ClientLiquesceSvc
       {
          bool isValidUser;
          writeable = false;
-         try
+         using (validatedDomainUsersLock.UpgradableReadLock())
          {
-            validatedDomainUsersLock.EnterUpgradeableReadLock();
+            
             isValidUser = validatedDomainUsers.ContainsKey(getDomainUserFromPid);
             if ( !isValidUser )
             {
@@ -93,12 +93,6 @@ namespace ClientLiquesceSvc
             }
             if (isValidUser)
                writeable = validatedDomainUsers[getDomainUserFromPid];
-         }
-         finally
-         {
-            if (validatedDomainUsersLock.IsWriteLockHeld)
-               validatedDomainUsersLock.ExitWriteLock();
-            validatedDomainUsersLock.ExitUpgradeableReadLock();
          }
          return isValidUser;
       }

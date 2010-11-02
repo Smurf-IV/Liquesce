@@ -53,15 +53,8 @@ namespace LiquesceSvc
             try
             {
                 IStateChange callback = OperationContext.Current.GetCallbackChannel<IStateChange>();
-                try
-                {
-                    subscribersLock.EnterWriteLock();
+                using (subscribersLock.WriteLock() )
                     subscribers.Add(new Client { id = guid }, callback);
-                }
-                finally
-                {
-                    subscribersLock.ExitWriteLock();
-                }
             }
             catch (Exception ex)
             {
@@ -74,17 +67,12 @@ namespace LiquesceSvc
             try
             {
                 IStateChange callback = OperationContext.Current.GetCallbackChannel<IStateChange>();
-                try
-                {
-                    subscribersLock.EnterWriteLock();
+               using (subscribersLock.WriteLock())
+               {
                     var query = from c in subscribers.Keys
                                 where c.id == guid
                                 select c;
                     subscribers.Remove(query.First());
-                }
-                finally
-                {
-                    subscribersLock.ExitWriteLock();
                 }
             }
             catch (Exception ex)
@@ -280,9 +268,8 @@ namespace LiquesceSvc
             {
                 state = newState;
                 Log.Info("Changing newState to [{0}]:[{1}]", newState, message);
-                try
+                using( subscribersLock.ReadLock())
                 {
-                    subscribersLock.EnterReadLock();
                     // Get all the clients in dictionary
                     var query = (from c in subscribers
                                  select c.Value).ToList();
@@ -291,10 +278,6 @@ namespace LiquesceSvc
 
                     // For each connected client, invoke the callback
                     query.ForEach(action);
-                }
-                finally
-                {
-                    subscribersLock.ExitReadLock();
                 }
             }
             catch (Exception ex)

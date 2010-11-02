@@ -112,6 +112,7 @@
     <Compile Include="LanManShareHandler.cs" />
     <Compile Include="MirrorToDo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RWLSExtension.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">

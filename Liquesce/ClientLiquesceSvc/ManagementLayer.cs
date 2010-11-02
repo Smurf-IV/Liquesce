@@ -52,15 +52,8 @@ namespace ClientLiquesceSvc
          try
          {
             IStateChange callback = OperationContext.Current.GetCallbackChannel<IStateChange>();
-            try
-            {
-               subscribersLock.EnterWriteLock();
+            using (subscribersLock.WriteLock() )
                subscribers.Add(new Client { id = guid }, callback);
-            }
-            finally
-            {
-               subscribersLock.ExitWriteLock();
-            }
          }
          catch (Exception ex)
          {
@@ -73,17 +66,12 @@ namespace ClientLiquesceSvc
          try
          {
             IStateChange callback = OperationContext.Current.GetCallbackChannel<IStateChange>();
-            try
+            using (subscribersLock.WriteLock() )
             {
-               subscribersLock.EnterWriteLock();
                var query = from c in subscribers.Keys
                            where c.id == guid
                            select c;
                subscribers.Remove(query.First());
-            }
-            finally
-            {
-               subscribersLock.ExitWriteLock();
             }
          }
          catch (Exception ex)
@@ -128,29 +116,21 @@ namespace ClientLiquesceSvc
          Log.Info("Find existing drive");
          List<string> existingUsers;
          bool needToCreateDrive = false;
-         try
+         using (DrivetoDomainUsersSync.UpgradableReadLock())
          {
-            DrivetoDomainUsersSync.EnterUpgradeableReadLock();
             if (!DrivetoDomainUsers.TryGetValue(clientShareDetail.DriveLetter, out existingUsers))
             {
                needToCreateDrive = true;
                existingUsers = new List<string>();
-               DrivetoDomainUsersSync.EnterWriteLock();
-               DrivetoDomainUsers[clientShareDetail.DriveLetter] = existingUsers;
+               using( DrivetoDomainUsersSync.WriteLock() )
+                  DrivetoDomainUsers[clientShareDetail.DriveLetter] = existingUsers;
             }
             Log.Info("Now see if the user exists");
             if (!existingUsers.Contains(clientShareDetail.DomainUserIdentity))
             {
-               if ( !DrivetoDomainUsersSync.IsWriteLockHeld )
-                  DrivetoDomainUsersSync.EnterWriteLock();
-               existingUsers.Add(clientShareDetail.DomainUserIdentity);
+               using( DrivetoDomainUsersSync.WriteLock() )
+                  existingUsers.Add(clientShareDetail.DomainUserIdentity);
             }
-         }
-         finally
-         {
-            if (DrivetoDomainUsersSync.IsWriteLockHeld)
-               DrivetoDomainUsersSync.ExitWriteLock();
-            DrivetoDomainUsersSync.ExitUpgradeableReadLock();
          }
          if (needToCreateDrive)
          {
@@ -272,9 +252,8 @@ namespace ClientLiquesceSvc
          {
             state = newState;
             Log.Info("Changing newState to [{0}]:[{1}]", newState, message);
-            try
+            using (subscribersLock.ReadLock())
             {
-               subscribersLock.EnterReadLock();
                // Get all the clients in dictionary
                var query = (from c in subscribers
                             select c.Value).ToList();
@@ -283,10 +262,6 @@ namespace ClientLiquesceSvc
 
                // For each connected client, invoke the callback
                query.ForEach(action);
-            }
-            finally
-            {
-               subscribersLock.ExitReadLock();
             }
          }
          catch (Exception ex)
@@ -302,19 +277,12 @@ namespace ClientLiquesceSvc
 
       public void Stop()
       {
-         try
-         {
-            DrivetoDomainUsersSync.EnterReadLock();
+         using (DrivetoDomainUsersSync.ReadLock())
             foreach (string mountedDriveLetter in DrivetoDomainUsers.Keys)
             {
                int retVal = Dokan.DokanUnmount(mountedDriveLetter[0]);
                Log.Info("Dokan.DokanUnmount({0}) returned[{1}]", mountedDriveLetter, retVal);
             }
-         }
-         finally
-         {
-            DrivetoDomainUsersSync.ExitReadLock();
-         }
          FireStateChange(LiquesceSvcState.Unknown, "Stop has been requested");
       }
 

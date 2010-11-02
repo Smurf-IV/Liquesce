@@ -64,10 +64,8 @@ namespace LiquesceSvc
                    && (filename != this.PathDirectorySeparatorChar)
                    )
                 {
-                    try
+                    using ( rootPathsSync.UpgradableReadLock() )
                     {
-                        rootPathsSync.TryEnterUpgradeableReadLock(configDetails.LockTimeout);
-
                         bool isAShare = false;
                         if (!filename.StartsWith(PathDirectorySeparatorChar))
                         {
@@ -162,12 +160,6 @@ namespace LiquesceSvc
                                     foundPath = ""; // This is used when not creating new directory / file
                             }
                         }
-                    }
-                    finally
-                    {
-                       if (rootPathsSync.IsWriteLockHeld)
-                          rootPathsSync.ExitWriteLock();
-                       rootPathsSync.ExitUpgradeableReadLock();
                     }
                 }
             }
@@ -375,17 +367,12 @@ namespace LiquesceSvc
             if (index >= 0)
             {
                 string key = fullFilePath.Remove(0, configDetails.SourceLocations[index].Length);
-                try
-                {
                     Log.Trace("Adding [{0}] to [{1}]", key, fullFilePath);
-                    rootPathsSync.TryEnterWriteLock(configDetails.LockTimeout);
-                    // TODO: Add the collisions / duplicate feedback from here
-                    rootPaths[key] = fullFilePath;
-                }
-                finally
-                {
-                    rootPathsSync.ExitWriteLock();
-                }
+                    using (rootPathsSync.WriteLock() )
+                    {
+                       // TODO: Add the collisions / duplicate feedback from here
+                       rootPaths[key] = fullFilePath;
+                    }
                 return key;
             }
             throw new ArgumentException("Unable to find BelongTo Path: " + fullFilePath, fullFilePath);
@@ -396,9 +383,8 @@ namespace LiquesceSvc
         // removes a root from root lookup
         public void RemoveTargetFromLookup(string realFilename)
         {
-            try
-            {
-                rootPathsSync.TryEnterUpgradeableReadLock(configDetails.LockTimeout);
+           using (rootPathsSync.UpgradableReadLock())
+           {
                 string key = string.Empty;
                 foreach (KeyValuePair<string, string> kvp in rootPaths.Where(kvp => kvp.Value == realFilename))
                 {
@@ -407,15 +393,9 @@ namespace LiquesceSvc
                 }
                 if (!String.IsNullOrEmpty(key))
                 {
-                    rootPathsSync.TryEnterWriteLock(configDetails.LockTimeout);
+                    using( rootPathsSync.WriteLock() )
                     rootPaths.Remove(key);
                 }
-            }
-            finally
-            {
-               if (rootPathsSync.IsWriteLockHeld)
-                  rootPathsSync.ExitWriteLock();
-               rootPathsSync.ExitUpgradeableReadLock();
             }
         }
 
@@ -424,15 +404,8 @@ namespace LiquesceSvc
         // removes a path from root lookup
         public void RemoveFromLookup(string filename)
         {
-            try
-            {
-                rootPathsSync.TryEnterWriteLock(configDetails.LockTimeout);
+            using (rootPathsSync.WriteLock() )
                 rootPaths.Remove(filename);
-            }
-            finally
-            {
-                rootPathsSync.ExitWriteLock();
-            }
         }
 
 
