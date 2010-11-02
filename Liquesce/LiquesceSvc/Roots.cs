@@ -165,7 +165,9 @@ namespace LiquesceSvc
                     }
                     finally
                     {
-                        rootPathsSync.ExitUpgradeableReadLock();
+                       if (rootPathsSync.IsWriteLockHeld)
+                          rootPathsSync.ExitWriteLock();
+                       rootPathsSync.ExitUpgradeableReadLock();
                     }
                 }
             }
@@ -411,7 +413,9 @@ namespace LiquesceSvc
             }
             finally
             {
-                rootPathsSync.ExitUpgradeableReadLock();
+               if (rootPathsSync.IsWriteLockHeld)
+                  rootPathsSync.ExitWriteLock();
+               rootPathsSync.ExitUpgradeableReadLock();
             }
         }
 

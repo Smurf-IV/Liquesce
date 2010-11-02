@@ -381,7 +381,9 @@ namespace LiquesceSvc
                         }
                         finally
                         {
-                            foundDirectoriesSync.ExitUpgradeableReadLock();
+                           if (foundDirectoriesSync.IsWriteLockHeld)
+                              foundDirectoriesSync.ExitWriteLock();
+                           foundDirectoriesSync.ExitUpgradeableReadLock();
                         }
                     }
                     else
@@ -831,7 +833,9 @@ namespace LiquesceSvc
             }
             finally
             {
-                foundDirectoriesSync.ExitUpgradeableReadLock();
+               if (foundDirectoriesSync.IsWriteLockHeld)
+                  foundDirectoriesSync.ExitWriteLock();
+               foundDirectoriesSync.ExitUpgradeableReadLock();
             }
 
 

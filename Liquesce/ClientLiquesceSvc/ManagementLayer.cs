@@ -141,12 +141,15 @@ namespace ClientLiquesceSvc
             Log.Info("Now see if the user exists");
             if (!existingUsers.Contains(clientShareDetail.DomainUserIdentity))
             {
-               DrivetoDomainUsersSync.EnterWriteLock();
+               if ( !DrivetoDomainUsersSync.IsWriteLockHeld )
+                  DrivetoDomainUsersSync.EnterWriteLock();
                existingUsers.Add(clientShareDetail.DomainUserIdentity);
             }
          }
          finally
          {
+            if (DrivetoDomainUsersSync.IsWriteLockHeld)
+               DrivetoDomainUsersSync.ExitWriteLock();
             DrivetoDomainUsersSync.ExitUpgradeableReadLock();
          }
          if (needToCreateDrive)
@@ -320,6 +323,8 @@ namespace ClientLiquesceSvc
       {
          try
          {
+            // Initialise a default to allow type get !
+            currentConfigDetails = new ClientConfigDetails();  
             XmlSerializer x = new XmlSerializer(currentConfigDetails.GetType());
             Log.Info("Attempting to read Dokan Drive details from: [{0}]", configFile);
             using (TextReader textReader = new StreamReader(configFile))
@@ -335,11 +340,9 @@ namespace ClientLiquesceSvc
          finally
          {
             if (currentConfigDetails == null)
-            {
                currentConfigDetails = new ClientConfigDetails();
-               if (!File.Exists(configFile))
-                  WriteOutConfigDetails();
-            }
+            if (!File.Exists(configFile))
+               WriteOutConfigDetails();
          }
 
       }

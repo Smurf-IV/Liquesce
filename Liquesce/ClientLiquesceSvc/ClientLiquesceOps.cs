@@ -96,6 +96,8 @@ namespace ClientLiquesceSvc
          }
          finally
          {
+            if (validatedDomainUsersLock.IsWriteLockHeld)
+               validatedDomainUsersLock.ExitWriteLock();
             validatedDomainUsersLock.ExitUpgradeableReadLock();
          }
          return isValidUser;
