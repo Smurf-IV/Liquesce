@@ -17,7 +17,6 @@ using System.Diagnostics;
 using System.ServiceModel;
 using System.ServiceProcess;
 using LiquesceFacade;
-using LiquesceMirrorToDo;
 
 namespace LiquesceMirrorTray
 {

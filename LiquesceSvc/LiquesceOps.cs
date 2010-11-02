@@ -11,7 +11,6 @@ using DokanNet;
 using LiquesceFacade;
 using Microsoft.Win32.SafeHandles;
 using NLog;
-using LiquesceMirrorToDo;
 
 namespace LiquesceSvc
 {

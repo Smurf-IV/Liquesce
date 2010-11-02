@@ -3,7 +3,6 @@ using System.ServiceModel;
 using System.Threading;
 using LiquesceFacade;
 using NLog;
-using LiquesceMirrorToDo;
 
 namespace LiquesceSvc
 {
