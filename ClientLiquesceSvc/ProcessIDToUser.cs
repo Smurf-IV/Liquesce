@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Security;
 using System.Security.Principal;
 using System.Threading;
+using LiquesceFacade;
 using NLog;
 
 // Forward declarations
@@ -38,45 +39,40 @@ namespace ClientLiquesceSvc
             // So speed will be the same unless this is forked out to a C++ / Win32 DLL to make the calls directly !
             processName = process.ProcessName;
             string key = processName + PID;
-            try
+            using (quickLookupSync.UpgradableReadLock())
             {
-               quickLookupSync.EnterUpgradeableReadLock();
                if (!quickLookup.TryGetValue(key, out domainUser))
                {
-                  quickLookupSync.EnterWriteLock();
-                  ProcessStartInfo startInfo = process.StartInfo;
-                  if (!String.IsNullOrEmpty(startInfo.Domain)
-                      && !String.IsNullOrEmpty(startInfo.UserName)
-                     )
+                  using (quickLookupSync.WriteLock())
                   {
-                     domainUser = String.Format(@"{0}\{1}", startInfo.Domain, startInfo.UserName);
-                  }
-                  else
-                  {
-                     HANDLE hToken = new HANDLE();
-                     try
+                     ProcessStartInfo startInfo = process.StartInfo;
+                     if (!String.IsNullOrEmpty(startInfo.Domain)
+                         && !String.IsNullOrEmpty(startInfo.UserName)
+                        )
                      {
-                        if (!OpenProcessToken(process.Handle, (int) TOKEN_READ, ref hToken))
-                           throw new ApplicationException("Could not get process token.  Win32 Error Code: " +
-                                                          Marshal.GetLastWin32Error());
-                        else
+                        domainUser = String.Format(@"{0}\{1}", startInfo.Domain, startInfo.UserName);
+                     }
+                     else
+                     {
+                        HANDLE hToken = new HANDLE();
+                        try
                         {
-                           domainUser = new WindowsIdentity(hToken).Name;
+                           if (!OpenProcessToken(process.Handle, (int) TOKEN_READ, ref hToken))
+                              throw new ApplicationException("Could not get process token.  Win32 Error Code: " +
+                                                             Marshal.GetLastWin32Error());
+                           else
+                           {
+                              domainUser = new WindowsIdentity(hToken).Name;
+                           }
                         }
+                        finally
+                        {
+                           CloseHandle(hToken);
+                        }
+                        quickLookup[key] = domainUser;
                      }
-                     finally
-                     {
-                        CloseHandle(hToken);
-                     }
-                     quickLookup[key] = domainUser;
                   }
                }
-            }
-            finally
-            {
-               if (quickLookupSync.IsWriteLockHeld)
-                  quickLookupSync.ExitWriteLock();
-               quickLookupSync.ExitUpgradeableReadLock();
             }
          }
          catch
