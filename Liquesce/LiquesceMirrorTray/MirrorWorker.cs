@@ -7,7 +7,7 @@ using System.Messaging;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using System.IO;
-using LiquesceMirrorToDo;
+using LiquesceFacade;
 
 
 namespace LiquesceMirrorTray

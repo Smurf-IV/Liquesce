@@ -10,7 +10,6 @@ using DokanNet;
 using LiquesceFacade;
 using NLog;
 using NLog.Config;
-using LiquesceMirrorToDo;
 
 namespace LiquesceSvc
 {
