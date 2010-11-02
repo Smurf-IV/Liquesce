@@ -34,10 +34,19 @@ namespace LiquesceTray
             buttonCancel.Enabled = true;
 
             // work
-            BackupFileManager.searchpath = config.DriveLetter + ":\\" + BackupFileManager.HIDDEN_BACKUP_FOLDER;
-            BackupFileManager.Clear();
-            Thread th = new Thread(new ThreadStart(BackupFileManager.FindFoldersAndFiles));
-            th.Start();
+            string backuppath = config.DriveLetter + ":\\" + BackupFileManager.HIDDEN_BACKUP_FOLDER;
+            if (Directory.Exists(backuppath))
+            {
+                BackupFileManager.searchpath = backuppath;
+                BackupFileManager.Clear();
+                Thread th = new Thread(new ThreadStart(BackupFileManager.FindFoldersAndFiles));
+                th.Start();
+            }
+            else
+            {
+                textCurrent.Text = "[Can't find folder " + backuppath + "]";
+                ResetControls();
+            }
         }
 
         private bool GetConfig()
