@@ -19,12 +19,12 @@ namespace LiquesceSvc
         public const string HIDDEN_MIRROR_FOLDER = ".mirror";
         public const string HIDDEN_BACKUP_FOLDER = ".backup";
 
-        private static readonly string PathDirectorySeparatorChar = Path.DirectorySeparatorChar.ToString();
+        private readonly string PathDirectorySeparatorChar = Path.DirectorySeparatorChar.ToString();
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
         // This would normally be static, but then there should only ever be one of these classes present from the Dokan Lib callback.
-        private static readonly ReaderWriterLockSlim rootPathsSync = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
-        private static readonly Dictionary<string, string> rootPaths = new Dictionary<string, string>();
+        static private readonly ReaderWriterLockSlim rootPathsSync = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
+        static private readonly Dictionary<string, string> rootPaths = new Dictionary<string, string>();
 
 
         private static ConfigDetails configDetails;
@@ -36,14 +36,14 @@ namespace LiquesceSvc
         }
 
 
-        public static string GetPath(string filename, bool isCreate = false)
+        public string GetPath(string filename, bool isCreate = false)
         {
             string foundPath;
 
             if (configDetails.eAllocationMode == ConfigDetails.AllocationModes.backup && Roots.IsBackup(filename))
             {
                 string originalrelative = Roots.FilterDirFromPath(filename, Roots.HIDDEN_BACKUP_FOLDER);
-                string originalpath = Roots.GetPath(originalrelative);
+                string originalpath = GetPath(originalrelative);
                 // if folder backup found in the original directory then stop this!
                 if (Directory.Exists(originalpath))
                 {
@@ -61,11 +61,13 @@ namespace LiquesceSvc
             try
             {
                 if (!String.IsNullOrWhiteSpace(filename) // Win 7 (x64) passes in a blank
-                   && (filename != PathDirectorySeparatorChar)
+                   && (filename != this.PathDirectorySeparatorChar)
                    )
                 {
                     try
                     {
+                        rootPathsSync.TryEnterUpgradeableReadLock(configDetails.LockTimeout);
+
                         bool isAShare = false;
                         if (!filename.StartsWith(PathDirectorySeparatorChar))
                         {
@@ -76,7 +78,7 @@ namespace LiquesceSvc
                             isAShare = true;
 
                         filename = filename.TrimEnd(Path.DirectorySeparatorChar);
-                        rootPathsSync.TryEnterUpgradeableReadLock(configDetails.LockTimeout);
+                        
                         if (!rootPaths.TryGetValue(filename, out foundPath))
                         {
                             bool found = false;
@@ -115,7 +117,7 @@ namespace LiquesceSvc
                             // let's see if we should create a new one...
                             if (!found)
                             {
-                                Log.Trace("was this a failed redirect thing from a network share ? [{0}]", filename);
+                                //Log.Trace("was this a failed redirect thing from a network share ? [{0}]", filename);
                                 if (isCreate)
                                 {
                                     int lastDir = filename.LastIndexOf(Path.DirectorySeparatorChar);
@@ -137,7 +139,7 @@ namespace LiquesceSvc
                                             Log.Trace("Seems that we got a backup relative path to create [{0}]", filename);
 
                                             string originalrelative = Roots.FilterDirFromPath(filename, Roots.HIDDEN_BACKUP_FOLDER);
-                                            string originalpath = Roots.GetPath(originalrelative);
+                                            string originalpath = GetPath(originalrelative);
                                             // if folder backup found in the original directory then stop this!
                                             if (Directory.Exists(originalpath) || File.Exists(originalpath))
                                             {
@@ -146,7 +148,10 @@ namespace LiquesceSvc
                                             }
                                             else
                                             {
-                                                foundPath = "";
+                                                // strict backup
+                                                //foundPath = "";
+
+                                                foundPath = GetNewRoot() + filename;
                                             }
                                         }
                                         else
@@ -362,7 +367,7 @@ namespace LiquesceSvc
 
 
         // adds the root path to rootPaths dicionary for a specific file
-        public static string TrimAndAddUnique(string fullFilePath)
+        public string TrimAndAddUnique(string fullFilePath)
         {
             int index = configDetails.SourceLocations.FindIndex(fullFilePath.StartsWith);
             if (index >= 0)
@@ -387,7 +392,7 @@ namespace LiquesceSvc
 
 
         // removes a root from root lookup
-        public static void RemoveTargetFromLookup(string realFilename)
+        public void RemoveTargetFromLookup(string realFilename)
         {
             try
             {
@@ -413,7 +418,7 @@ namespace LiquesceSvc
 
 
         // removes a path from root lookup
-        public static void RemoveFromLookup(string filename)
+        public void RemoveFromLookup(string filename)
         {
             try
             {
