@@ -724,21 +724,25 @@ namespace LiquesceTray
         public static long FolderSize(string directory, bool deep)
         {
             long sizeInBytes = 0;
-            if (Directory.Exists(directory))
+            try
             {
-                DirectoryInfo dir = new DirectoryInfo(directory);
-                foreach (FileInfo f in dir.GetFiles())
+                if (Directory.Exists(directory))
                 {
-                    sizeInBytes += f.Length;
-                }
-                if (deep)
-                {
-                    foreach (DirectoryInfo d in dir.GetDirectories())
+                    DirectoryInfo dir = new DirectoryInfo(directory);
+                    foreach (FileInfo f in dir.GetFiles())
                     {
-                        sizeInBytes += FolderSize(d.FullName, deep);
+                        sizeInBytes += f.Length;
+                    }
+                    if (deep)
+                    {
+                        foreach (DirectoryInfo d in dir.GetDirectories())
+                        {
+                            sizeInBytes += FolderSize(d.FullName, deep);
+                        }
                     }
                 }
             }
+            catch { }
             return sizeInBytes;
         }
 
