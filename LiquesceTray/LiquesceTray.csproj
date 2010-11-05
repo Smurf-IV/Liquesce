@@ -114,6 +114,12 @@
       <DependentUpon>Backup.cs</DependentUpon>
     </Compile>
     <Compile Include="BackupFileManager.cs" />
+    <Compile Include="DropZone.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DropZone.Designer.cs">
+      <DependentUpon>DropZone.cs</DependentUpon>
+    </Compile>
     <Compile Include="FreeSpace.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -151,6 +157,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="DoubleProgressBar.resx">
       <DependentUpon>DoubleProgressBar.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DropZone.resx">
+      <DependentUpon>DropZone.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FreeSpace.resx">
       <DependentUpon>FreeSpace.cs</DependentUpon>
@@ -208,6 +217,7 @@
     <None Include="Icons\backup.ico" />
     <Content Include="Icons\base.ico" />
     <Content Include="Icons\Config.ico" />
+    <None Include="Icons\drop.ico" />
     <Content Include="Icons\Error.ico" />
     <None Include="Service References\LiquesceCallbackSvcRef\Reference.svcmap">
       <Generator>WCF Proxy Generator</Generator>
