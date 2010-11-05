@@ -74,6 +74,13 @@ namespace LiquesceTray.Properties {
             }
         }
         
+        internal static System.Drawing.Bitmap drop {
+            get {
+                object obj = ResourceManager.GetObject("drop", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         internal static System.Drawing.Icon ErrorIcon {
             get {
                 object obj = ResourceManager.GetObject("ErrorIcon", resourceCulture);

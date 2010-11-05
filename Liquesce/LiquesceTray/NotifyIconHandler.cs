@@ -142,11 +142,13 @@ namespace LiquesceTray
          {
              showFreeDiskSpaceToolStripMenuItem.Enabled = true;
              backupConsistencyCheckerToolStripMenuItem.Enabled = true;
+             dropperToolStripMenuItem.Enabled = true;
          }
          else
          {
              showFreeDiskSpaceToolStripMenuItem.Enabled = false;
              backupConsistencyCheckerToolStripMenuItem.Enabled = false;
+             dropperToolStripMenuItem.Enabled = false;
          }
       }
 
@@ -202,6 +204,21 @@ namespace LiquesceTray
           backupForm.Show();
           backupForm.Focus();
           backupForm.BringToFront();
+
+      }
+
+      private DropZone dropperForm = null;
+      private void dropperToolStripMenuItem_Click(object sender, EventArgs e)
+      {
+          if (dropperForm != null)
+          {
+              dropperForm.Dispose();
+          }
+          dropperForm = new DropZone();
+          dropperForm.Activate();
+          dropperForm.Show();
+          dropperForm.Focus();
+          dropperForm.BringToFront();
 
       }
 
