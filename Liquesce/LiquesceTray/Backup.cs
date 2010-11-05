@@ -1,10 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using LiquesceFacade;
 using System.ServiceModel;
@@ -39,7 +33,7 @@ namespace LiquesceTray
             {
                 BackupFileManager.searchpath = backuppath;
                 BackupFileManager.Clear();
-                Thread th = new Thread(new ThreadStart(BackupFileManager.FindFoldersAndFiles));
+                Thread th = new Thread(BackupFileManager.FindFoldersAndFiles);
                 th.Start();
             }
             else
@@ -90,7 +84,7 @@ namespace LiquesceTray
 
 
             // work
-            Thread th = new Thread(new ThreadStart(BackupFileManager.RemoveMissing));
+            Thread th = new Thread(BackupFileManager.RemoveMissing);
             th.Start();
         }
 
@@ -101,15 +95,9 @@ namespace LiquesceTray
             progress.Value = 0;
             progress.Enabled = false;
 
-            if (listMissing.Items.Count == 0)
-                buttonRemoveMissing.Enabled = false;
-            else
-                buttonRemoveMissing.Enabled = true;
+            buttonRemoveMissing.Enabled = listMissing.Items.Count != 0;
 
-            if (listInconsistent.Items.Count == 0)
-                buttonRemoveInconsistent.Enabled = false;
-            else
-                buttonRemoveInconsistent.Enabled = true;
+            buttonRemoveInconsistent.Enabled = listInconsistent.Items.Count != 0;
 
             buttonConsistency.Enabled = true;
 
@@ -119,7 +107,7 @@ namespace LiquesceTray
         private void buttonCancel_Click(object sender, EventArgs e)
         {
             BackupFileManager.cancel = true;
-            while (BackupFileManager.cancel == true)
+            while (BackupFileManager.cancel)
             {
                 Thread.Sleep(100);
             }
@@ -137,7 +125,7 @@ namespace LiquesceTray
 
 
             // work
-            Thread th = new Thread(new ThreadStart(BackupFileManager.RemoveInconsistent));
+            Thread th = new Thread(BackupFileManager.RemoveInconsistent);
             th.Start();
         }
     }
