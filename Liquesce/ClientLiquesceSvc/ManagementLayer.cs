@@ -52,7 +52,7 @@ namespace ClientLiquesceSvc
          try
          {
             IStateChange callback = OperationContext.Current.GetCallbackChannel<IStateChange>();
-            using (subscribersLock.WriteLock() )
+            using (subscribersLock.WriteLock())
                subscribers.Add(new Client { id = guid }, callback);
          }
          catch (Exception ex)
@@ -66,7 +66,7 @@ namespace ClientLiquesceSvc
          try
          {
             IStateChange callback = OperationContext.Current.GetCallbackChannel<IStateChange>();
-            using (subscribersLock.WriteLock() )
+            using (subscribersLock.WriteLock())
             {
                var query = from c in subscribers.Keys
                            where c.id == guid
@@ -122,13 +122,13 @@ namespace ClientLiquesceSvc
             {
                needToCreateDrive = true;
                existingUsers = new List<string>();
-               using( DrivetoDomainUsersSync.WriteLock() )
+               using (DrivetoDomainUsersSync.WriteLock())
                   DrivetoDomainUsers[clientShareDetail.DriveLetter] = existingUsers;
             }
             Log.Info("Now see if the user exists");
             if (!existingUsers.Contains(clientShareDetail.DomainUserIdentity))
             {
-               using( DrivetoDomainUsersSync.WriteLock() )
+               using (DrivetoDomainUsersSync.WriteLock())
                   existingUsers.Add(clientShareDetail.DomainUserIdentity);
             }
          }
@@ -292,7 +292,7 @@ namespace ClientLiquesceSvc
          try
          {
             // Initialise a default to allow type get !
-            currentConfigDetails = new ClientConfigDetails();  
+            currentConfigDetails = new ClientConfigDetails();
             XmlSerializer x = new XmlSerializer(currentConfigDetails.GetType());
             Log.Info("Attempting to read Dokan Drive details from: [{0}]", configFile);
             using (TextReader textReader = new StreamReader(configFile))
