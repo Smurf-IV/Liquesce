@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.ServiceModel;
 using System.Text;
 using System.Threading;
 using DokanNet;
@@ -52,8 +53,13 @@ namespace ClientLiquesceSvc
                }
                else
                {
-                  // TODO call the accessor
-                  actualErrorCode = Dokan.DOKAN_SUCCESS;
+                  Object DokanContext = info.Context;
+                  bool isDirectory = info.IsDirectory;
+                  ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
+                  IShareEnabler remoteIF = factory.CreateChannel();
+                  actualErrorCode = remoteIF.CreateFile(filename, rawAccessMode, rawShare, rawCreationDisposition, rawFlagsAndAttributes, ref DokanContext, ref isDirectory);
+                  info.Context = DokanContext;
+                  info.IsDirectory = isDirectory;
                }
             }
             else
@@ -75,26 +81,29 @@ namespace ClientLiquesceSvc
          return actualErrorCode;
       }
 
-      private static readonly Dictionary<string, bool> validatedDomainUsers = new Dictionary<string, bool>();
+      private static readonly Dictionary<string, int> validatedDomainUsers = new Dictionary<string, int>();
       private static readonly ReaderWriterLockSlim validatedDomainUsersLock = new ReaderWriterLockSlim();
 
       private bool IsValidatedUser(string getDomainUserFromPid, out bool writeable)
       {
-         bool isValidUser;
-         writeable = false;
+         int state = 0; // Should really be an enum, denotes that a user has already been validated, AND if they have write
          using (validatedDomainUsersLock.UpgradableReadLock())
          {
-            
-            isValidUser = validatedDomainUsers.ContainsKey(getDomainUserFromPid);
-            if ( !isValidUser )
+            if (!validatedDomainUsers.ContainsKey(getDomainUserFromPid))
             {
-               // TODO Go and call       bool CanIdentityUseThis(string DomainUserIdentity, string sharePath, out bool writeable);
-
+               ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
+               IShareEnabler remoteIF = factory.CreateChannel();
+               if (remoteIF.CanIdentityUseThis(getDomainUserFromPid, configDetail.TargetShareName, out writeable))
+                  state = 1;
+               if (writeable)
+                  state = 2;
+               using (validatedDomainUsersLock.WriteLock())
+                  validatedDomainUsers[getDomainUserFromPid] = state;
             }
-            if (isValidUser)
-               writeable = validatedDomainUsers[getDomainUserFromPid];
+            else
+               writeable = validatedDomainUsers[getDomainUserFromPid] > 1;
          }
-         return isValidUser;
+         return state > 0;
       }
 
       public int OpenDirectory(string filename, DokanFileInfo info)

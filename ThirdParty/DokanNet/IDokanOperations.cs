@@ -8,7 +8,7 @@ namespace DokanNet
    {
       public Object Context; // This is initialised to null
       public bool IsDirectory;
-      public ulong InfoId;
+      internal ulong InfoId;
 // ReSharper disable UnaccessedField.Global
       public uint ProcessId;
       public bool DeleteOnClose;

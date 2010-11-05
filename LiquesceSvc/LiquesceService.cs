@@ -55,6 +55,7 @@ namespace LiquesceSvc
 
       private static ServiceHost _ILiquesceHost;
       private static ServiceHost _ILiquesceHostCallBack;
+      private static ServiceHost _IShareEnablerHost;
 
       protected override void OnStart(string[] args)
       {
@@ -75,8 +76,11 @@ namespace LiquesceSvc
             }
             _ILiquesceHost = new ServiceHost(typeof(LiquesceFacade));
             _ILiquesceHostCallBack = new ServiceHost(typeof(LiquesceCallBackFacade));
+            _IShareEnablerHost = new ServiceHost(typeof(ShareEnabler));
+
             _ILiquesceHost.Open();
             _ILiquesceHostCallBack.Open();
+            _IShareEnablerHost.Open();
 
             RequestAdditionalTime(30000); // let the SCM know that this part could take a while due to other services starting up
             base.OnStart(args);
@@ -140,6 +144,10 @@ namespace LiquesceSvc
          {
             Log.Info("Stop the ManagementLayer and remove");
             RequestAdditionalTime(30000);
+            
+            if (_IShareEnablerHost != null)
+               _IShareEnablerHost.Close();
+            
             if ( _ILiquesceHost != null )
                _ILiquesceHost.Close();
             if ( _ILiquesceHostCallBack != null )

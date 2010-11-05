@@ -80,6 +80,14 @@ namespace LiquesceSvc
                 Log.ErrorException("Unsubscribe", ex);
             }
         }
+
+// ReSharper disable MemberCanBeMadeStatic.Local
+       // This will need to be changed to be a map of drive to ops
+        public LiquesceOps dokanOperations
+        // ReSharper restore MemberCanBeMadeStatic.Local
+        {
+           get; private set;
+        }
         /// <summary>
         /// Invokes DokanNet.DokanMain function to mount a drive. 
         /// The function blocks until the file system is unmounted.
@@ -140,8 +148,9 @@ namespace LiquesceSvc
                                                   VolumeLabel = currentConfigDetails.VolumeLabel
                                               };
 
-                    LiquesceOps dokanOperations = new LiquesceOps(currentConfigDetails);
-                    ThreadPool.QueueUserWorkItem(dokanOperations.InitialiseShares, dokanOperations);
+                    
+                   dokanOperations = new LiquesceOps(currentConfigDetails);
+                   ThreadPool.QueueUserWorkItem(dokanOperations.InitialiseShares, dokanOperations);
 
                     mountedDriveLetter = currentConfigDetails.DriveLetter[0];
 

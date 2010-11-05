@@ -165,6 +165,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings1.settings</DependentUpon>
     </Compile>
+    <Compile Include="ShareEnabler.cs" />
     <Compile Include="ShellAPI.cs" />
   </ItemGroup>
   <ItemGroup>
