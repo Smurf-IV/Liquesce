@@ -91,7 +91,7 @@ namespace LiquesceTray
                 InitializeControls();
                 RefreshControls();
 
-                th = new Thread(new ThreadStart(this.threadBackupSize));
+                th = new Thread(threadBackupSize);
                 th.Start();
 
             }
@@ -146,22 +146,21 @@ namespace LiquesceTray
             // 
             // tableLayout
             // 
-            System.Windows.Forms.TableLayoutPanel tableLayout = new System.Windows.Forms.TableLayoutPanel();
-            tableLayout.ColumnCount = TABLE_CELL_CNT + 1;
-            tableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, COLUMN_NAME_SIZE));
-            tableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, COLUMN_TOTAL_SIZE));
-            tableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.AutoSize, COLUMN_FREE_SIZE));
-            tableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.AutoSize, COLUMN_BACKUP_SIZE));
-            tableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.AutoSize, COLUMN_RATE_SIZE));
-            tableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.AutoSize, COLUMN_CHECK_1_SIZE));
-            tableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.AutoSize, COLUMN_CHECK_2_SIZE));
+            TableLayoutPanel tableLayout = new TableLayoutPanel {ColumnCount = TABLE_CELL_CNT + 1};
+           tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, COLUMN_NAME_SIZE));
+            tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, COLUMN_TOTAL_SIZE));
+            tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_FREE_SIZE));
+            tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_BACKUP_SIZE));
+            tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_RATE_SIZE));
+            tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_CHECK_1_SIZE));
+            tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_CHECK_2_SIZE));
             tableLayout.Location = new System.Drawing.Point(3, 3);
             tableLayout.Name = "tableLayout";
             tableLayout.RowCount = 1;
-            tableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            tableLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             tableLayout.Size = new System.Drawing.Size(TABLE_SIZE, CONTROL_SPACE);
             tableLayout.TabIndex = 0;
-            this.flowLayout.Controls.Add(tableLayout);
+            flowLayout.Controls.Add(tableLayout);
 
 
 
@@ -290,21 +289,20 @@ namespace LiquesceTray
             // 
             // tableLayout
             // 
-            tableLayout = new System.Windows.Forms.TableLayoutPanel();
-            tableLayout.ColumnCount = TABLE_CELL_CNT;
-            tableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, COLUMN_NAME_SIZE));
-            tableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, COLUMN_TOTAL_SIZE));
-            tableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.AutoSize, COLUMN_FREE_SIZE));
-            tableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.AutoSize, COLUMN_BACKUP_SIZE));
-            tableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.AutoSize, COLUMN_RATE_SIZE));
-            tableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.AutoSize, COLUMN_BAR_SIZE));
+            tableLayout = new TableLayoutPanel {ColumnCount = TABLE_CELL_CNT};
+           tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, COLUMN_NAME_SIZE));
+            tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, COLUMN_TOTAL_SIZE));
+            tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_FREE_SIZE));
+            tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_BACKUP_SIZE));
+            tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_RATE_SIZE));
+            tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_BAR_SIZE));
             tableLayout.Location = new System.Drawing.Point(3, 3);
             tableLayout.Name = "tableLayout";
             tableLayout.RowCount = 1;
-            tableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            tableLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             tableLayout.Size = new System.Drawing.Size(TABLE_SIZE, CONTROL_SPACE);
             tableLayout.TabIndex = 0;
-            this.flowLayout.Controls.Add(tableLayout);
+            flowLayout.Controls.Add(tableLayout);
 
             leftSpace = 0;
             // 
@@ -404,12 +402,12 @@ namespace LiquesceTray
             //
             // progress barLiquesce
             //
-            barLiquesce = new DoubleProgressBar();
+            barLiquesce = new DoubleProgressBar {Name = "barLiquesce", 
             //barControlOffsetLeft = CONTROL_OFFSET_LEFT + leftSpace;
             //barLiquesce.Location = new System.Drawing.Point(barControlOffsetLeft, CONTROL_OFFSET_TOP + CONTROL_OFFSET_TOP_LABEL);
-            barLiquesce.Name = "barLiquesce";
-            barLiquesce.Size = new System.Drawing.Size(BAR_SIZE, 20);
-            //barLiquesce.TabIndex = 0;
+           //barLiquesce.TabIndex = 0;
+                                                 Size = new System.Drawing.Size(BAR_SIZE, 20)
+            };
             tableLayout.Controls.Add(barLiquesce, COLUMN_BAR_INDEX, 0);
 
 
@@ -426,21 +424,20 @@ namespace LiquesceTray
                 // 
                 // tableLayout
                 // 
-                tableLayouts[i] = new System.Windows.Forms.TableLayoutPanel();
-                tableLayouts[i].ColumnCount = TABLE_CELL_CNT;
-                tableLayouts[i].ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, COLUMN_NAME_SIZE));
-                tableLayouts[i].ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, COLUMN_TOTAL_SIZE));
-                tableLayouts[i].ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.AutoSize, COLUMN_FREE_SIZE));
-                tableLayouts[i].ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.AutoSize, COLUMN_BACKUP_SIZE));
-                tableLayouts[i].ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.AutoSize, COLUMN_RATE_SIZE));
-                tableLayouts[i].ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.AutoSize, COLUMN_BAR_SIZE));
+                tableLayouts[i] = new TableLayoutPanel {ColumnCount = TABLE_CELL_CNT};
+               tableLayouts[i].ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, COLUMN_NAME_SIZE));
+                tableLayouts[i].ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, COLUMN_TOTAL_SIZE));
+                tableLayouts[i].ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_FREE_SIZE));
+                tableLayouts[i].ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_BACKUP_SIZE));
+                tableLayouts[i].ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_RATE_SIZE));
+                tableLayouts[i].ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_BAR_SIZE));
                 tableLayouts[i].Location = new System.Drawing.Point(3, 3);
-                tableLayouts[i].Name = "tableLayouts" + i.ToString();
+                tableLayouts[i].Name = "tableLayouts" + i;
                 tableLayouts[i].RowCount = 1;
-                tableLayouts[i].RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+                tableLayouts[i].RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
                 tableLayouts[i].Size = new System.Drawing.Size(TABLE_SIZE, CONTROL_SPACE);
                 tableLayouts[i].TabIndex = 0;
-                this.flowLayout.Controls.Add(tableLayouts[i]);
+                flowLayout.Controls.Add(tableLayouts[i]);
 
 
                 // 
@@ -622,7 +619,7 @@ namespace LiquesceTray
                     // 
                     // textBox rate
                     // 
-                    rate[i].Text = FormatBytesRate(thisRate / this.timer1.Interval * 1000);
+                    rate[i].Text = FormatBytesRate(thisRate / timer1.Interval * 1000);
 
                     //
                     // progress bar
@@ -652,7 +649,7 @@ namespace LiquesceTray
             totalSpaceLiquesce.Text = FormatBytes((long)allTotal);
             freeSpaceLiquesce.Text = FormatBytes((long)allAvailabel);
             backupLiquesce.Text = FormatBytes((long)allBackup);
-            rateLiquesce.Text = FormatBytesRate(allRate / this.timer1.Interval * 1000);
+            rateLiquesce.Text = FormatBytesRate(allRate / timer1.Interval * 1000);
             barLiquesce.Maximum = BAR_SCALE;
             barLiquesce.Value1 = (int)(((allTotal - allAvailabel - allBackup) * BAR_SCALE) / allTotal);
             barLiquesce.Value2 = (int)(((allTotal - allAvailabel) * BAR_SCALE) / allTotal);
@@ -729,16 +726,10 @@ namespace LiquesceTray
                 if (Directory.Exists(directory))
                 {
                     DirectoryInfo dir = new DirectoryInfo(directory);
-                    foreach (FileInfo f in dir.GetFiles())
+                   sizeInBytes += dir.GetFiles().Sum(f => f.Length);
+                   if (deep)
                     {
-                        sizeInBytes += f.Length;
-                    }
-                    if (deep)
-                    {
-                        foreach (DirectoryInfo d in dir.GetDirectories())
-                        {
-                            sizeInBytes += FolderSize(d.FullName, deep);
-                        }
+                       sizeInBytes += dir.GetDirectories().Sum(d => FolderSize(d.FullName, deep));
                     }
                 }
             }
@@ -756,7 +747,7 @@ namespace LiquesceTray
                     backupValues[i] = (ulong)FolderSize(config.SourceLocations[i] + "\\" + BackupFileManager.HIDDEN_BACKUP_FOLDER, true);
                 }
 
-                Thread.Sleep(this.timer1.Interval);
+                Thread.Sleep(timer1.Interval);
             }
         }
 
