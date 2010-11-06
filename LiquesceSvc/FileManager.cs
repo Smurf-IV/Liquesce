@@ -11,9 +11,9 @@ namespace LiquesceSvc
     class FileManager
     {
 
-        private static const char DOS_STAR = '<';
-        private static const char DOS_QM = '>';
-        private static const char DOS_DOT = '"';
+        private const char DOS_STAR = '<';
+        private const char DOS_QM = '>';
+        private const char DOS_DOT = '"';
 
 
         private static Object lockvarMirrorToDo = "";
