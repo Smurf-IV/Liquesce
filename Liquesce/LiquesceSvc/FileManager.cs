@@ -96,10 +96,10 @@ namespace LiquesceSvc
                 if (Expression[ei] == '*')
                 {
                     ei++;
-                    if (Expression[ei] == '\0')
+                    if (ei >= Expression.Length)
                         return true;
 
-                    while (Name[ni] != '\0')
+                    while (ni < Name.Length)
                     {
                         if (IsNameInExpression(Expression.Substring(ei), Name.Substring(ni), IgnoreCase))
                             return true;
