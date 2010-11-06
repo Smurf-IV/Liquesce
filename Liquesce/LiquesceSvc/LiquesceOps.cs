@@ -177,8 +177,8 @@ namespace LiquesceSvc
                     Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error(), new IntPtr(-1));
                 }
                 FileStream fs = new FileStream(handle, writeable ? FileAccess.ReadWrite : FileAccess.Read, (int)configDetails.BufferReadSize);
-               using (openFilesSync.WriteLock())
-               {
+                using (openFilesSync.WriteLock())
+                {
                     info.Context = ++openFilesLastKey; // never be Zero !
                     openFiles.Add(openFilesLastKey, fs);
                 }
@@ -191,7 +191,7 @@ namespace LiquesceSvc
             }
             finally
             {
-                using( openFilesSync.ReadLock())
+                using (openFilesSync.ReadLock())
                     Log.Trace("CreateFile OUT actualErrorCode=[{0}] context[{1}]", actualErrorCode, openFilesLastKey);
             }
             return actualErrorCode;
@@ -221,7 +221,7 @@ namespace LiquesceSvc
                 if (currentMatchingDirs.Count > 0)
                 {
                     info.IsDirectory = true;
-                    using (foundDirectoriesSync.WriteLock() )
+                    using (foundDirectoriesSync.WriteLock())
                         foundDirectories[filename] = currentMatchingDirs;
                     dokanError = Dokan.DOKAN_SUCCESS;
                 }
@@ -343,7 +343,7 @@ namespace LiquesceSvc
                     if (info.IsDirectory)
                     {
                         Log.Trace("DeleteOnClose Directory");
-                        using ( foundDirectoriesSync.UpgradableReadLock() )
+                        using (foundDirectoriesSync.UpgradableReadLock())
                         {
                             // Only delete the directories that this knew about before the delet was called 
                             // (As the user may be moving files into the sources from the mount !!)
@@ -356,8 +356,8 @@ namespace LiquesceSvc
                                     Log.Trace("Deleting matched dir [{0}]", fullPath);
                                     Directory.Delete(fullPath, false);
                                 }
-                            using( foundDirectoriesSync.WriteLock() )
-                              foundDirectories.Remove(filename);
+                            using (foundDirectoriesSync.WriteLock())
+                                foundDirectories.Remove(filename);
                         }
                     }
                     else
@@ -421,8 +421,8 @@ namespace LiquesceSvc
                 else
                 {
                     Log.Trace("context [{0}]", context);
-                using( openFilesSync.ReadLock())
-                           fileStream = openFiles[context];
+                    using (openFilesSync.ReadLock())
+                        fileStream = openFiles[context];
                 }
                 if (offset > fileStream.Length)
                 {
@@ -460,7 +460,7 @@ namespace LiquesceSvc
                 {
                     Log.Trace("context [{0}]", context);
                     FileStream fileStream;
-                using( openFilesSync.ReadLock())
+                    using (openFilesSync.ReadLock())
                         fileStream = openFiles[context];
                     fileStream.Seek(offset, SeekOrigin.Begin);
                     fileStream.Write(buffer, 0, buffer.Length);
@@ -498,7 +498,7 @@ namespace LiquesceSvc
                 if (!IsNullOrDefault(context))
                 {
                     Log.Trace("context [{0}]", context);
-                using( openFilesSync.ReadLock())
+                    using (openFilesSync.ReadLock())
                         openFiles[context].Flush();
                 }
                 else
@@ -568,6 +568,19 @@ namespace LiquesceSvc
 
         public int FindFilesWithPattern(string filename, string pattern, out FileInformation[] files, DokanFileInfo info)
         {
+            //***************** dirty debug start
+            //// got this "<"" in the debug logs... since it comes from dokan I replaced it with a '\'
+            //pattern = pattern.Replace("<\"", "\\");
+
+            //// move all folders from the pattern to the filename
+            //string[] splitpattern = pattern.Split('\\');
+            //for (int i = 0; i < splitpattern.Length - 1; i++)
+            //{
+            //    filename = filename + "\\" + splitpattern[i];
+            //}
+            //pattern = splitpattern[splitpattern.Length - 1];
+            //****************** dirty debug stop
+
             return FindFiles(filename, out files, pattern);
         }
 
@@ -771,7 +784,7 @@ namespace LiquesceSvc
         // removed / ignored. There has to be a way of making sure that the (older) duplicate does not overwrite the shared visible
         private void XMoveDirectory(string filename, string pathTarget, bool replaceIfExisting)
         {
-            using ( foundDirectoriesSync.UpgradableReadLock() )
+            using (foundDirectoriesSync.UpgradableReadLock())
             {
                 Dictionary<string, int> hasPathBeenUsed = new Dictionary<string, int>();
                 List<string> targetMoves = foundDirectories[filename];
@@ -780,8 +793,8 @@ namespace LiquesceSvc
                     {
                         XMoveDirContents(targetMoves[i], pathTarget, hasPathBeenUsed, replaceIfExisting);
                     }
-                using( foundDirectoriesSync.WriteLock() )
-                  foundDirectories.Remove(filename);
+                using (foundDirectoriesSync.WriteLock())
+                    foundDirectories.Remove(filename);
             }
 
 
@@ -959,7 +972,7 @@ namespace LiquesceSvc
                 if (!IsNullOrDefault(context))
                 {
                     Log.Trace("context [{0}]", context);
-                using( openFilesSync.ReadLock())
+                    using (openFilesSync.ReadLock())
                         openFiles[context].SetLength(length);
                 }
                 else
@@ -995,7 +1008,7 @@ namespace LiquesceSvc
                 if (!IsNullOrDefault(context))
                 {
                     Log.Trace("context [{0}]", context);
-                using( openFilesSync.ReadLock())
+                    using (openFilesSync.ReadLock())
                         openFiles[context].Lock(offset, length);
                 }
                 else
@@ -1031,7 +1044,7 @@ namespace LiquesceSvc
                 if (!IsNullOrDefault(context))
                 {
                     Log.Trace("context [{0}]", context);
-                using( openFilesSync.ReadLock())
+                    using (openFilesSync.ReadLock())
                         openFiles[context].Unlock(offset, length);
                 }
                 else
@@ -1091,8 +1104,8 @@ namespace LiquesceSvc
         public int Unmount(DokanFileInfo info)
         {
             Log.Trace("Unmount IN DokanProcessId[{0}]", info.ProcessId);
-           using (openFilesSync.WriteLock())
-           {
+            using (openFilesSync.WriteLock())
+            {
                 foreach (FileStream obj2 in openFiles.Values)
                 {
                     try
@@ -1116,6 +1129,7 @@ namespace LiquesceSvc
         #endregion
         private void AddFiles(string path, Dictionary<string, FileInformation> files, string pattern)
         {
+            Log.Trace("AddFiles IN path[{0}] pattern[{1}]", path, pattern);
             try
             {
                 DirectoryInfo dirInfo = new DirectoryInfo(path);
@@ -1160,8 +1174,8 @@ namespace LiquesceSvc
             {
                 Log.Trace("context [{0}]", context);
                 FileStream fileStream;
-               using (openFilesSync.WriteLock())
-               {
+                using (openFilesSync.WriteLock())
+                {
                     fileStream = openFiles[context];
                     openFiles.Remove(context);
                 }
@@ -1172,43 +1186,6 @@ namespace LiquesceSvc
             }
         }
 
-        #region DLL Imports
-        /// <summary>
-        /// The CreateFile function creates or opens a file, file stream, directory, physical disk, volume, console buffer, tape drive,
-        /// communications resource, mailslot, or named pipe. The function returns a handle that can be used to access an object.
-        /// </summary>
-        /// <param name="lpFileName"></param>
-        /// <param name="dwDesiredAccess"> access to the object, which can be read, write, or both</param>
-        /// <param name="dwShareMode">The sharing mode of an object, which can be read, write, both, or none</param>
-        /// <param name="SecurityAttributes">A pointer to a SECURITY_ATTRIBUTES structure that determines whether or not the returned handle can
-        /// be inherited by child processes. Can be null</param>
-        /// <param name="dwCreationDisposition">An action to take on files that exist and do not exist</param>
-        /// <param name="dwFlagsAndAttributes">The file attributes and flags. </param>
-        /// <param name="hTemplateFile">A handle to a template file with the GENERIC_READ access right. The template file supplies file attributes
-        /// and extended attributes for the file that is being created. This parameter can be null</param>
-        /// <returns>If the function succeeds, the return value is an open handle to a specified file. If a specified file exists before the function
-        /// all and dwCreationDisposition is CREATE_ALWAYS or OPEN_ALWAYS, a call to GetLastError returns ERROR_ALREADY_EXISTS, even when the function
-        /// succeeds. If a file does not exist before the call, GetLastError returns 0 (zero).
-        /// If the function fails, the return value is INVALID_HANDLE_VALUE. To get extended error information, call GetLastError.
-        /// </returns>
-        [DllImport("kernel32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall, SetLastError = true)]
-        private static extern SafeFileHandle CreateFile(
-                string lpFileName,
-                uint dwDesiredAccess,
-                uint dwShareMode,
-                IntPtr SecurityAttributes,
-                uint dwCreationDisposition,
-                uint dwFlagsAndAttributes,
-                IntPtr hTemplateFile
-                );
-
-        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern bool GetDiskFreeSpaceEx(string lpDirectoryName, out ulong lpFreeBytesAvailable, out ulong lpTotalNumberOfBytes, out ulong lpTotalNumberOfFreeBytes);
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern bool MoveFileEx(string lpExistingFileName, string lpNewFileName, UInt32 dwFlags);
-
-        #endregion
 
         public void InitialiseShares(object state)
         {
@@ -1260,8 +1237,50 @@ namespace LiquesceSvc
             }
         }
 
+
+
+
+        #region DLL Imports
+        /// <summary>
+        /// The CreateFile function creates or opens a file, file stream, directory, physical disk, volume, console buffer, tape drive,
+        /// communications resource, mailslot, or named pipe. The function returns a handle that can be used to access an object.
+        /// </summary>
+        /// <param name="lpFileName"></param>
+        /// <param name="dwDesiredAccess"> access to the object, which can be read, write, or both</param>
+        /// <param name="dwShareMode">The sharing mode of an object, which can be read, write, both, or none</param>
+        /// <param name="SecurityAttributes">A pointer to a SECURITY_ATTRIBUTES structure that determines whether or not the returned handle can
+        /// be inherited by child processes. Can be null</param>
+        /// <param name="dwCreationDisposition">An action to take on files that exist and do not exist</param>
+        /// <param name="dwFlagsAndAttributes">The file attributes and flags. </param>
+        /// <param name="hTemplateFile">A handle to a template file with the GENERIC_READ access right. The template file supplies file attributes
+        /// and extended attributes for the file that is being created. This parameter can be null</param>
+        /// <returns>If the function succeeds, the return value is an open handle to a specified file. If a specified file exists before the function
+        /// all and dwCreationDisposition is CREATE_ALWAYS or OPEN_ALWAYS, a call to GetLastError returns ERROR_ALREADY_EXISTS, even when the function
+        /// succeeds. If a file does not exist before the call, GetLastError returns 0 (zero).
+        /// If the function fails, the return value is INVALID_HANDLE_VALUE. To get extended error information, call GetLastError.
+        /// </returns>
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall, SetLastError = true)]
+        private static extern SafeFileHandle CreateFile(
+                string lpFileName,
+                uint dwDesiredAccess,
+                uint dwShareMode,
+                IntPtr SecurityAttributes,
+                uint dwCreationDisposition,
+                uint dwFlagsAndAttributes,
+                IntPtr hTemplateFile
+                );
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern bool GetDiskFreeSpaceEx(string lpDirectoryName, out ulong lpFreeBytesAvailable, out ulong lpTotalNumberOfBytes, out ulong lpTotalNumberOfFreeBytes);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool MoveFileEx(string lpExistingFileName, string lpNewFileName, UInt32 dwFlags);
+
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         private static extern int SendNotifyMessage(IntPtr hwnd, int wMsg, IntPtr wParam, IntPtr lParam);
+
+        #endregion
+
 
     }
 }
