@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using NLog;
@@ -69,7 +70,7 @@ namespace DokanNet
 
       private DokanFileInfo GetNewFileInfo(ref DOKAN_FILE_INFO rawFileInfo)
       {
-         DokanFileInfo fileInfo = new DokanFileInfo(rawFileInfo.DokanContext) {InfoId = ++infoId};
+         DokanFileInfo fileInfo = new DokanFileInfo(rawFileInfo.DokanContext) { InfoId = ++infoId };
 
          rawFileInfo.Context = fileInfo.InfoId;
          ConvertFileInfo(ref rawFileInfo, fileInfo);
@@ -498,9 +499,29 @@ namespace DokanNet
          {
             string file = GetFileName(rawFileName);
             string pattern = GetFileName(rawSearchPattern);
-
+            int ret;
             FileInformation[] files;
-            int ret = operations.FindFilesWithPattern(file, pattern, out files, GetFileInfo(ref rawFileInfo));
+            if (pattern.Contains("\"<>*?"))  // See http://liquesce.codeplex.com/workitem/7556
+            {
+               FileInformation[] nonPatternFiles;
+               ret = operations.FindFiles(file, out nonPatternFiles, GetFileInfo(ref rawFileInfo));
+               // * (asterisk) Matches zero or more characters.
+               // ? (question mark) Matches a single character.
+               // DOS_DOT Matches either a period or zero characters beyond the name string.
+               // DOS_QM Matches any single character or, upon encountering a period or end of name string, 
+               // advances the expression to the end of the set of contiguous DOS_QMs.
+               // DOS_STAR Matches zero or more characters until encountering and matching the final . in the name. 
+               List<FileInformation> matchedFiles = new List<FileInformation>();
+               if (ret == Dokan.DOKAN_SUCCESS)
+               {
+                  // Review note: If this prooves to be a slow CALL then remove and use the C# Regex 
+                  // See http://www.c-sharpcorner.com/uploadfile/prasad_1/regexppsd12062005021717am/regexppsd.aspx
+                  matchedFiles.AddRange(nonPatternFiles.Where(patternFile => DokanDll.DokanIsNameInExpression(pattern, patternFile.FileName, false)));
+               }
+               files = matchedFiles.ToArray();
+            }
+            else
+               ret = operations.FindFilesWithPattern(file, pattern, out files, GetFileInfo(ref rawFileInfo));
 
             FILL_FIND_DATA fill = (FILL_FIND_DATA)Marshal.GetDelegateForFunctionPointer(rawFillFindData, typeof(FILL_FIND_DATA));
 

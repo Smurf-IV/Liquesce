@@ -58,5 +58,11 @@ namespace DokanNet
       [DllImport("dokan.dll")]
       public static extern bool DokanResetTimeout(uint timeout, ref DOKAN_FILE_INFO rawFileInfo);
 
+      [DllImport("dokan.dll", CharSet = CharSet.Unicode)]
+      public static extern bool DokanIsNameInExpression(string Expression, // matching pattern
+         string Name, // file name
+         bool IgnoreCase);
+
+
    }
 }
