@@ -567,19 +567,6 @@ namespace LiquesceSvc
 
       public int FindFilesWithPattern(string filename, string pattern, out FileInformation[] files, DokanFileInfo info)
       {
-         //***************** dirty debug start
-         //// got this "<"" in the debug logs... since it comes from dokan I replaced it with a '\'
-         //pattern = pattern.Replace("<\"", "\\");
-
-         //// move all folders from the pattern to the filename
-         //string[] splitpattern = pattern.Split('\\');
-         //for (int i = 0; i < splitpattern.Length - 1; i++)
-         //{
-         //    filename = filename + "\\" + splitpattern[i];
-         //}
-         //pattern = splitpattern[splitpattern.Length - 1];
-         //****************** dirty debug stop
-
          return FindFiles(filename, out files, pattern);
       }
 

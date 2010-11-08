@@ -119,8 +119,9 @@ namespace LiquesceSvc
                                 if (isCreate)
                                 {
                                     int lastDir = filename.LastIndexOf(Path.DirectorySeparatorChar);
-                                    // check where the mother directory is placed (only in priority mode)
-                                    if (configDetails.eAllocationMode == ConfigDetails.AllocationModes.priority &&
+
+                                    // new file in folder mode
+                                    if (configDetails.eAllocationMode == ConfigDetails.AllocationModes.folder &&
                                         lastDir > -1)
                                     {
                                         Log.Trace("Perform search for path: {0}", filename);
@@ -129,31 +130,34 @@ namespace LiquesceSvc
                                         Log.Trace("Now make sure it can be found when it tries to repopen via the share");
                                         TrimAndAddUnique(foundPath);
                                     }
-                                    else
+
+                                    // new file in .backup mode and it is a backup!
+                                    else if (configDetails.eAllocationMode == ConfigDetails.AllocationModes.backup && 
+                                        Roots.IsBackup(filename))
                                     {
-                                        // This is used when creating new directory / file
-                                        if (configDetails.eAllocationMode == ConfigDetails.AllocationModes.backup && Roots.IsBackup(filename))
+                                        Log.Trace("Seems that we got a backup relative path to create [{0}]", filename);
+
+                                        string originalrelative = Roots.FilterDirFromPath(filename, Roots.HIDDEN_BACKUP_FOLDER);
+                                        string originalpath = GetPath(originalrelative);
+                                        // if folder backup found in the original directory then stop this!
+                                        if (Directory.Exists(originalpath) || File.Exists(originalpath))
                                         {
-                                            Log.Trace("Seems that we got a backup relative path to create [{0}]", filename);
-
-                                            string originalrelative = Roots.FilterDirFromPath(filename, Roots.HIDDEN_BACKUP_FOLDER);
-                                            string originalpath = GetPath(originalrelative);
-                                            // if folder backup found in the original directory then stop this!
-                                            if (Directory.Exists(originalpath) || File.Exists(originalpath))
-                                            {
-                                                foundPath = GetNewRoot(GetRoot(originalpath)) + filename;
-                                                Log.Trace("Seems that we got a backup path [{0}]", foundPath);
-                                            }
-                                            else
-                                            {
-                                                // strict backup
-                                                //foundPath = "";
-
-                                                foundPath = GetNewRoot() + filename;
-                                            }
+                                            foundPath = GetNewRoot(GetRoot(originalpath)) + filename;
+                                            Log.Trace("Seems that we got a backup path [{0}]", foundPath);
                                         }
                                         else
+                                        {
+                                            // strict backup
+                                            //foundPath = "";
+
                                             foundPath = GetNewRoot() + filename;
+                                        }
+                                    }
+
+                                    // new file in other modes priority, balanced, .backup mode
+                                    else
+                                    {
+                                        foundPath = GetNewRoot() + filename;
                                     }
                                 }
                                 else
@@ -221,6 +225,9 @@ namespace LiquesceSvc
         {
             switch (configDetails.eAllocationMode)
             {
+                case ConfigDetails.AllocationModes.folder:
+                    return GetHighestPriority(FilterThisPath, 0);
+
                 case ConfigDetails.AllocationModes.priority:
                     return GetHighestPriority(FilterThisPath, 0);
 
@@ -246,6 +253,9 @@ namespace LiquesceSvc
         {
             switch (configDetails.eAllocationMode)
             {
+                case ConfigDetails.AllocationModes.folder:
+                    return GetHighestPriority(NO_PATH_TO_FILTER, filesize);
+
                 case ConfigDetails.AllocationModes.priority:
                     return GetHighestPriority(NO_PATH_TO_FILTER, filesize);
 
