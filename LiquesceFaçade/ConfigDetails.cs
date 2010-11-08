@@ -90,7 +90,14 @@ namespace LiquesceFacade
     [DataContract]
     public class ConfigDetails
     {
-        public enum AllocationModes { priority = 0, balanced = 1, mirror = 2, backup = 3 };
+        public enum AllocationModes 
+        {
+            folder,
+            priority, 
+            balanced, 
+            mirror, 
+            backup
+        };
 
         [DataMember(IsRequired = true)]
         public uint DelayStartMilliSec = 5000;
@@ -112,7 +119,7 @@ namespace LiquesceFacade
         [DataMember(IsRequired = true)]
         public string VolumeLabel = "Mirror of C";
 
-        public AllocationModes eAllocationMode = AllocationModes.priority;
+        public AllocationModes eAllocationMode = AllocationModes.folder;
         [DataMember]
         private string AllocationMode
         {
