@@ -26,13 +26,13 @@ namespace LiquesceTray
         private const int COLUMN_TOTAL_INDEX = 1;
 
         private const int COLUMN_FREE_SIZE = 80;
-        private const int COLUMN_FREE_INDEX = 3;
+        private const int COLUMN_FREE_INDEX = 4;
 
         private const int COLUMN_BACKUP_SIZE = 80;
-        private const int COLUMN_BACKUP_INDEX = 2;
+        private const int COLUMN_BACKUP_INDEX = 3;
 
-        private const int COLUMN_RATE_SIZE = 80;
-        private const int COLUMN_RATE_INDEX = 4;
+        private const int COLUMN_DATA_SIZE = 80;
+        private const int COLUMN_DATA_INDEX = 2;
 
         private const int COLUMN_BAR_SIZE = BAR_SIZE;
         private const int COLUMN_BAR_INDEX = 5;
@@ -42,7 +42,7 @@ namespace LiquesceTray
         private const int COLUMN_CHECK_2_SIZE = 200;
         private const int COLUMN_CHECK_2_INDEX = 6;
 
-        private const int TABLE_SIZE = COLUMN_NAME_SIZE + COLUMN_TOTAL_SIZE + COLUMN_FREE_SIZE + COLUMN_BACKUP_SIZE + COLUMN_RATE_SIZE + COLUMN_BAR_SIZE + 24;
+        private const int TABLE_SIZE = COLUMN_NAME_SIZE + COLUMN_TOTAL_SIZE + COLUMN_FREE_SIZE + COLUMN_BACKUP_SIZE + COLUMN_DATA_SIZE + COLUMN_BAR_SIZE + 24;
         private const int TABLE_CELL_CNT = 6;
 
         private const int BAR_SCALE = 1000;
@@ -61,8 +61,8 @@ namespace LiquesceTray
         private TextBox freeSpaceLiquesce;
         private TextBox[] backup;
         private TextBox backupLiquesce;
-        private TextBox[] rate;
-        private TextBox rateLiquesce;
+        private TextBox[] data;
+        private TextBox dataLiquesce;
         private DoubleProgressBar[] bars;
         private DoubleProgressBar barLiquesce;
         private CheckBox scaledMode;
@@ -128,7 +128,7 @@ namespace LiquesceTray
             totalSpace = new TextBox[config.SourceLocations.Count()];
             freeSpace = new TextBox[config.SourceLocations.Count()];
             backup = new TextBox[config.SourceLocations.Count()];
-            rate = new TextBox[config.SourceLocations.Count()];
+            data = new TextBox[config.SourceLocations.Count()];
             bars = new DoubleProgressBar[config.SourceLocations.Count()];
 
             oldFree = new ulong[config.SourceLocations.Count()];
@@ -151,7 +151,7 @@ namespace LiquesceTray
             tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, COLUMN_TOTAL_SIZE));
             tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_FREE_SIZE));
             tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_BACKUP_SIZE));
-            tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_RATE_SIZE));
+            tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_DATA_SIZE));
             tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_CHECK_1_SIZE));
             tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_CHECK_2_SIZE));
             tableLayout.Location = new System.Drawing.Point(3, 3);
@@ -229,19 +229,19 @@ namespace LiquesceTray
             leftSpace += 83;
 
             // 
-            // labelRate
+            // labelData
             // 
-            Label labelRate = new Label
+            Label labelData = new Label
             {
                 Location =
                    new System.Drawing.Point(CONTROL_OFFSET_LEFT + leftSpace,
                                             CONTROL_OFFSET_TOP + 2),
-                Name = "labelRate",
+                Name = "labelData",
                 Size = new System.Drawing.Size(80, CONTROL_OFFSET_TOP_LABEL),
-                Text = "Rate:",
+                Text = "Data Size:",
                 Anchor = AnchorStyles.Bottom
             };
-            tableLayout.Controls.Add(labelRate, COLUMN_RATE_INDEX, 0);
+            tableLayout.Controls.Add(labelData, COLUMN_DATA_INDEX, 0);
             leftSpace += 83;
 
             // 
@@ -294,7 +294,7 @@ namespace LiquesceTray
             tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, COLUMN_TOTAL_SIZE));
             tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_FREE_SIZE));
             tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_BACKUP_SIZE));
-            tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_RATE_SIZE));
+            tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_DATA_SIZE));
             tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_BAR_SIZE));
             tableLayout.Location = new System.Drawing.Point(3, 3);
             tableLayout.Name = "tableLayout";
@@ -383,7 +383,7 @@ namespace LiquesceTray
             // 
             // textBox rateLiquesce
             // 
-            rateLiquesce = new TextBox
+            dataLiquesce = new TextBox
             {
                 Location =
                    new System.Drawing.Point(CONTROL_OFFSET_LEFT + leftSpace,
@@ -394,7 +394,7 @@ namespace LiquesceTray
                 TabIndex = 0,
                 TextAlign = HorizontalAlignment.Right
             };
-            tableLayout.Controls.Add(rateLiquesce, COLUMN_RATE_INDEX, 0);
+            tableLayout.Controls.Add(dataLiquesce, COLUMN_DATA_INDEX, 0);
 
             leftSpace += 83;
 
@@ -429,7 +429,7 @@ namespace LiquesceTray
                 tableLayouts[i].ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, COLUMN_TOTAL_SIZE));
                 tableLayouts[i].ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_FREE_SIZE));
                 tableLayouts[i].ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_BACKUP_SIZE));
-                tableLayouts[i].ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_RATE_SIZE));
+                tableLayouts[i].ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_DATA_SIZE));
                 tableLayouts[i].ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_BAR_SIZE));
                 tableLayouts[i].Location = new System.Drawing.Point(3, 3);
                 tableLayouts[i].Name = "tableLayouts" + i;
@@ -527,7 +527,7 @@ namespace LiquesceTray
                     // 
                     // textBox rate
                     // 
-                    rate[i] = new TextBox
+                    data[i] = new TextBox
                     {
                         Location =
                            new System.Drawing.Point(CONTROL_OFFSET_LEFT + leftSpace,
@@ -539,7 +539,7 @@ namespace LiquesceTray
                         TabIndex = 0,
                         TextAlign = HorizontalAlignment.Right
                     };
-                    tableLayouts[i].Controls.Add(rate[i], COLUMN_RATE_INDEX, 0);
+                    tableLayouts[i].Controls.Add(data[i], COLUMN_DATA_INDEX, 0);
                     leftSpace += 83;
 
 
@@ -617,9 +617,9 @@ namespace LiquesceTray
                     backup[i].Text = FormatBytes((long)backupValues[i]);
 
                     // 
-                    // textBox rate
+                    // textBox data
                     // 
-                    rate[i].Text = FormatBytesRate(thisRate / timer1.Interval * 1000);
+                    data[i].Text = FormatBytes((long)(total - availabel - backupValues[i]));
 
                     //
                     // progress bar
@@ -643,16 +643,55 @@ namespace LiquesceTray
                     bars[i].Value1 = (int)(((total - availabel - backupValues[i]) * BAR_SCALE) / total);
                     bars[i].Value2 = (int)(((total - availabel) * BAR_SCALE) / total);
 
+                    if (availabel < config.HoldOffBufferBytes)
+                    {
+                        bars[i].ErrorStatus = DoubleProgressBar.ErrorStatusType.Error;
+                    }
+                    else if (availabel < config.HoldOffBufferBytes)
+                    {
+                        bars[i].ErrorStatus = DoubleProgressBar.ErrorStatusType.Warn;
+                    }
+                    else
+                    {
+                        bars[i].ErrorStatus = DoubleProgressBar.ErrorStatusType.NoError;
+                    }
+
+                    if (thisRate < 0)
+                    {
+                        bars[i].Rate = DoubleProgressBar.RateType.Negative;
+                    }
+                    else if (thisRate > 0)
+                    {
+                        bars[i].Rate = DoubleProgressBar.RateType.Positive;
+                    }
+                    else
+                    {
+                        bars[i].Rate = DoubleProgressBar.RateType.No;
+                    }
                 }
             }
 
             totalSpaceLiquesce.Text = FormatBytes((long)allTotal);
             freeSpaceLiquesce.Text = FormatBytes((long)allAvailabel);
             backupLiquesce.Text = FormatBytes((long)allBackup);
-            rateLiquesce.Text = FormatBytesRate(allRate / timer1.Interval * 1000);
+            dataLiquesce.Text = FormatBytes((long)(allTotal - allAvailabel - allBackup));
             barLiquesce.Maximum = BAR_SCALE;
             barLiquesce.Value1 = (int)(((allTotal - allAvailabel - allBackup) * BAR_SCALE) / allTotal);
             barLiquesce.Value2 = (int)(((allTotal - allAvailabel) * BAR_SCALE) / allTotal);
+
+            if (allRate < 0)
+            {
+                barLiquesce.Rate = DoubleProgressBar.RateType.Negative;
+            }
+            else if (allRate > 0)
+            {
+                barLiquesce.Rate = DoubleProgressBar.RateType.Positive;
+            }
+            else
+            {
+                barLiquesce.Rate = DoubleProgressBar.RateType.No;
+            }
+
         }
 
 
