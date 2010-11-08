@@ -152,6 +152,9 @@
     <Compile Include="DoubleProgressBar.Designer.cs">
       <DependentUpon>DoubleProgressBar.cs</DependentUpon>
     </Compile>
+    <Compile Include="TransparentLabel.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <EmbeddedResource Include="Backup.resx">
       <DependentUpon>Backup.cs</DependentUpon>
     </EmbeddedResource>
