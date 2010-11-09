@@ -15,7 +15,7 @@ namespace Liquesce
 
       private void GridAdvancedSettings_Load(object sender, EventArgs e)
       {
-         ResizeDescriptionArea(ref propertyGrid1, 5); // okay for most
+         ResizeDescriptionArea(ref propertyGrid1, 6); // okay for most
       }
 
       private bool ResizeDescriptionArea(ref PropertyGrid grid, int nNumLines)
