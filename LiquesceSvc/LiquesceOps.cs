@@ -261,11 +261,11 @@ namespace LiquesceSvc
                   //return Dokan.ERROR_ACCESS_DENIED;
 
                   // allows to create other folders to the backup directory
-                  path = Roots.GetNewRoot() + filename;
+                  path = Roots.GetNewRoot(Roots.NO_PATH_TO_FILTER, 0, filename) + filename;
                }
                else
                {
-                  path = Roots.GetNewRoot(Roots.GetRoot(originalpath)) + filename;
+                  path = Roots.GetNewRoot(Roots.GetRoot(originalpath), 0, filename) + filename;
                }
 
                if (Directory.CreateDirectory(path).Exists)
@@ -291,7 +291,7 @@ namespace LiquesceSvc
                roots.TrimAndAddUnique(path);
                if (configDetails.eAllocationMode == ConfigDetails.AllocationModes.mirror)
                {
-                  string mirrorpath = Roots.GetNewRoot(Roots.GetRoot(path)) + "\\" + Roots.HIDDEN_MIRROR_FOLDER + filename;
+                  string mirrorpath = Roots.GetNewRoot(Roots.GetRoot(path), 0, filename) + "\\" + Roots.HIDDEN_MIRROR_FOLDER + filename;
                   MirrorToDo todo = new MirrorToDo();
                   FileManager.AddMirrorToDo(todo.CreateFolderCreate(filename, path, mirrorpath));
                }
