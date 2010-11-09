@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using NLog;
 using ComTypes = System.Runtime.InteropServices.ComTypes;
@@ -501,17 +503,26 @@ namespace DokanNet
             string pattern = GetFileName(rawSearchPattern);
             int ret;
             FileInformation[] files;
-            if (pattern.Contains("\"<>*?"))  // See http://liquesce.codeplex.com/workitem/7556
+            if (-1 != pattern.IndexOfAny(("\"<>?").ToCharArray()))  // See http://liquesce.codeplex.com/workitem/7556
             {
+               Log.Info("An Application is using DOS_STAR style pattern matching[{0}], Will switch to compatible mode matching", pattern);
                FileInformation[] nonPatternFiles;
                ret = operations.FindFiles(file, out nonPatternFiles, GetFileInfo(ref rawFileInfo));
                // * (asterisk) Matches zero or more characters.
                // ? (question mark) Matches a single character.
-               // DOS_DOT Matches either a period or zero characters beyond the name string.
-               // DOS_QM Matches any single character or, upon encountering a period or end of name string, 
+               // #define DOS_DOT (L'"') -  Matches either a period or zero characters beyond the name string.
+               // #define DOS_QM (L'>') - Matches any single character or, upon encountering a period or end of name string, 
                // advances the expression to the end of the set of contiguous DOS_QMs.
-               // DOS_STAR Matches zero or more characters until encountering and matching the final . in the name. 
+               // #define DOS_STAR (L'<') - Matches zero or more characters until encountering and matching the final . in the name. 
                List<FileInformation> matchedFiles = new List<FileInformation>();
+               //pattern = pattern.Replace("*", ".*");
+               //pattern = pattern.Replace('?', '.');
+               //pattern = pattern.Replace(">", @".|\.*");
+               //pattern = pattern.Replace("<\"", @".*\.");
+               //pattern = pattern.Replace("\"", @"\.*$");
+               //Regex regex = new Regex(pattern);
+               //files = nonPatternFiles.Where(patternFile => regex.IsMatch(patternFile.FileName)).ToArray();
+
                if (ret == Dokan.DOKAN_SUCCESS)
                {
                   // Review note: If this prooves to be a slow CALL then remove and use the C# Regex 
@@ -519,6 +530,20 @@ namespace DokanNet
                   matchedFiles.AddRange(nonPatternFiles.Where(patternFile => DokanDll.DokanIsNameInExpression(pattern, patternFile.FileName, false)));
                }
                files = matchedFiles.ToArray();
+               Log.Debug("DOS_STAR style pattern OUT [found {0}]", (files != null ? files.Length : 0));
+               if (Log.IsTraceEnabled)
+               {
+                  if (files != null)
+                  {
+                     StringBuilder sb = new StringBuilder();
+                     sb.AppendLine();
+                     foreach (FileInformation fileInformation in files)
+                     {
+                        sb.AppendLine(fileInformation.FileName);
+                     }
+                     Log.Trace(sb.ToString());
+                  }
+               }
             }
             else
                ret = operations.FindFilesWithPattern(file, pattern, out files, GetFileInfo(ref rawFileInfo));
