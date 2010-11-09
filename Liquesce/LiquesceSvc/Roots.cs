@@ -199,14 +199,14 @@ namespace LiquesceSvc
 
 
         // this method returns a path (real physical path) of a place where the next folder/file root can be.
-        public static string GetNewRoot()
+        public static string GetNewRoot(string relativeFolder = "")
         {
             //if (Log.IsTraceEnabled == true)
             //{
             //    LogToString();
             //}
 
-            return GetNewRoot(NO_PATH_TO_FILTER);
+            return GetNewRoot(NO_PATH_TO_FILTER, relativeFolder);
         }
 
 
@@ -221,12 +221,12 @@ namespace LiquesceSvc
 
         // this method returns a path (real physical path) of a place where the next folder/file root can be.
         // FilterThisPath can be used to not use a specific location (for mirror feature)
-        public static string GetNewRoot(string FilterThisPath)
+        public static string GetNewRoot(string FilterThisPath, string relativeFolder = "")
         {
             switch (configDetails.eAllocationMode)
             {
                 case ConfigDetails.AllocationModes.folder:
-                    return GetHighestPriority(FilterThisPath, 0);
+                    return GetFromFolder(relativeFolder, FilterThisPath);
 
                 case ConfigDetails.AllocationModes.priority:
                     return GetHighestPriority(FilterThisPath, 0);
@@ -249,12 +249,12 @@ namespace LiquesceSvc
 
         // this method returns a path (real physical path) of a place where the next folder/file root can be.
         // filesize should be the size of the file which one wans to create on the disk
-        public static string GetNewRoot(UInt64 filesize)
+        public static string GetNewRoot(UInt64 filesize, string relativeFolder = "")
         {
             switch (configDetails.eAllocationMode)
             {
                 case ConfigDetails.AllocationModes.folder:
-                    return GetHighestPriority(NO_PATH_TO_FILTER, filesize);
+                    return GetFromFolder(relativeFolder, NO_PATH_TO_FILTER);
 
                 case ConfigDetails.AllocationModes.priority:
                     return GetHighestPriority(NO_PATH_TO_FILTER, filesize);
@@ -273,6 +273,46 @@ namespace LiquesceSvc
             }
         }
 
+
+        // returns the root for:
+        //  1. the first disk where relativeFolder exists and there is enough free space
+        //  2. priority mode
+        private static string GetFromFolder(string relativeFolder, string FilterThisPath)
+        {
+            // if no disk with enough free space and an existing relativeFolder
+            // then fall back to priority mode
+            string rootForPriority = "";
+
+            // for every source location
+            for (int i = 0; i < configDetails.SourceLocations.Count; i++)
+            {
+                if (!configDetails.SourceLocations[i].Contains(FilterThisPath))
+                {
+                    // first get free space
+                    ulong num;
+                    ulong num2;
+                    ulong num3;
+                    if (GetDiskFreeSpaceEx(configDetails.SourceLocations[i], out num, out num2, out num3))
+                    {
+                        // see if enough space
+                        if (num > configDetails.HoldOffBufferBytes)
+                        {
+                            string testpath = configDetails.SourceLocations[i] + relativeFolder;
+
+                            // check if relativeFolder is on this disk
+                            if (Directory.Exists(testpath))
+                                return configDetails.SourceLocations[i];
+
+                            // mark as highest priority if first disk
+                            if (rootForPriority.Equals(""))
+                                rootForPriority = configDetails.SourceLocations[i];
+                        }
+                    }
+                }
+            }
+
+            return rootForPriority;
+        }
 
 
         // returns the next root with the highest priority
