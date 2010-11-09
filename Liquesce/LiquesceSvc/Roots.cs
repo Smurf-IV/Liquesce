@@ -47,15 +47,15 @@ namespace LiquesceSvc
                 // if folder backup found in the original directory then stop this!
                 if (Directory.Exists(originalpath))
                 {
-                    foundPath = GetNewRoot(GetRoot(originalpath));
+                    foundPath = GetNewRoot(GetRoot(originalpath), 0, filename);
                 }
                 else
                 {
-                    foundPath = GetNewRoot();
+                    foundPath = GetNewRoot(NO_PATH_TO_FILTER, 0, filename);
                 }
             }
             else
-                foundPath = GetNewRoot();
+                foundPath = GetNewRoot(NO_PATH_TO_FILTER, 0, filename);
 
 
             try
@@ -142,7 +142,7 @@ namespace LiquesceSvc
                                         // if folder backup found in the original directory then stop this!
                                         if (Directory.Exists(originalpath) || File.Exists(originalpath))
                                         {
-                                            foundPath = GetNewRoot(GetRoot(originalpath)) + filename;
+                                            foundPath = GetNewRoot(GetRoot(originalpath), 0, filename) + filename;
                                             Log.Trace("Seems that we got a backup path [{0}]", foundPath);
                                         }
                                         else
@@ -150,14 +150,14 @@ namespace LiquesceSvc
                                             // strict backup
                                             //foundPath = "";
 
-                                            foundPath = GetNewRoot() + filename;
+                                            foundPath = GetNewRoot(NO_PATH_TO_FILTER, 0, filename) + filename;
                                         }
                                     }
 
                                     // new file in other modes priority, balanced, .backup mode
                                     else
                                     {
-                                        foundPath = GetNewRoot() + filename;
+                                        foundPath = GetNewRoot(NO_PATH_TO_FILTER, 0, filename) + filename;
                                     }
                                 }
                                 else
@@ -198,19 +198,6 @@ namespace LiquesceSvc
 
 
 
-        // this method returns a path (real physical path) of a place where the next folder/file root can be.
-        public static string GetNewRoot(string relativeFolder = "")
-        {
-            //if (Log.IsTraceEnabled == true)
-            //{
-            //    LogToString();
-            //}
-
-            return GetNewRoot(NO_PATH_TO_FILTER, relativeFolder);
-        }
-
-
-
         // return the path from a inputpath seen relative from the root
         public static string GetRelative(string path)
         {
@@ -220,8 +207,8 @@ namespace LiquesceSvc
 
 
         // this method returns a path (real physical path) of a place where the next folder/file root can be.
-        // FilterThisPath can be used to not use a specific location (for mirror feature)
-        public static string GetNewRoot(string FilterThisPath, string relativeFolder = "")
+        // filesize should be the size of the file which one wans to create on the disk
+        public static string GetNewRoot(string FilterThisPath, UInt64 filesize, string relativeFolder)
         {
             switch (configDetails.eAllocationMode)
             {
@@ -229,44 +216,16 @@ namespace LiquesceSvc
                     return GetFromFolder(relativeFolder, FilterThisPath);
 
                 case ConfigDetails.AllocationModes.priority:
-                    return GetHighestPriority(FilterThisPath, 0);
+                    return GetHighestPriority(FilterThisPath, filesize);
 
                 case ConfigDetails.AllocationModes.balanced:
-                    return GetWithMostFreeSpace(FilterThisPath, 0);
+                    return GetWithMostFreeSpace(FilterThisPath, filesize);
 
                 case ConfigDetails.AllocationModes.mirror:
-                    return GetWithMostFreeSpace(FilterThisPath, 0);
+                    return GetWithMostFreeSpace(FilterThisPath, filesize);
 
                 case ConfigDetails.AllocationModes.backup:
-                    return GetWithMostFreeSpace(FilterThisPath, 0);
-
-                default:
-                    return GetHighestPriority(FilterThisPath, 0);
-            }
-        }
-
-
-
-        // this method returns a path (real physical path) of a place where the next folder/file root can be.
-        // filesize should be the size of the file which one wans to create on the disk
-        public static string GetNewRoot(UInt64 filesize, string relativeFolder = "")
-        {
-            switch (configDetails.eAllocationMode)
-            {
-                case ConfigDetails.AllocationModes.folder:
-                    return GetFromFolder(relativeFolder, NO_PATH_TO_FILTER);
-
-                case ConfigDetails.AllocationModes.priority:
-                    return GetHighestPriority(NO_PATH_TO_FILTER, filesize);
-
-                case ConfigDetails.AllocationModes.balanced:
-                    return GetWithMostFreeSpace(NO_PATH_TO_FILTER, filesize);
-
-                case ConfigDetails.AllocationModes.mirror:
-                    return GetWithMostFreeSpace(NO_PATH_TO_FILTER, filesize);
-
-                case ConfigDetails.AllocationModes.backup:
-                    return GetWithMostFreeSpace(NO_PATH_TO_FILTER, filesize);
+                    return GetWithMostFreeSpace(FilterThisPath, filesize);
 
                 default:
                     return GetHighestPriority(NO_PATH_TO_FILTER, filesize);
@@ -282,6 +241,14 @@ namespace LiquesceSvc
             // if no disk with enough free space and an existing relativeFolder
             // then fall back to priority mode
             string rootForPriority = "";
+
+            // remove the last \ to delete the last directory
+            relativeFolder = relativeFolder.Substring(0, relativeFolder.Length - 1);
+
+            while (!relativeFolder.EndsWith("\\") && relativeFolder.Length > 0)
+            {
+                relativeFolder = relativeFolder.Substring(0, relativeFolder.Length - 1);
+            }
 
             // for every source location
             for (int i = 0; i < configDetails.SourceLocations.Count; i++)
