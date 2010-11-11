@@ -118,13 +118,13 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="label1.Text" xml:space="preserve">
-    <value>This program checks your ".backup" folder for issues:
-If a file or a folder in the ".backup" directory also exists on the same physical disk, then you have the possibility to delete the backup at one click. 
-After that copy the files again to the ".backup" directory to get a consistent backup.
+    <value>This program checks your "_backup" folder for issues:
+If a file or a folder in the "_backup" directory also exists on the same physical disk, then you have the possibility to delete the backup at one click. 
+After that copy the files again to the "_backup" directory to get a consistent backup.
 
 What can cause an inconsistent backup?
 *) File/folder changes directly on a physical disk. Always use the virtual liquesce drive for making a backup!
-*) A configuration change to an other disk allocation mode then backup. Do not copy files to the ".backup" directory unless you are in the 
+*) A configuration change to an other disk allocation mode then backup. Do not copy files to the "_backup" directory unless you are in the 
     backup mode!
 *) Potential bugs in the implementation since this feature is in an early development phase.</value>
   </data>
