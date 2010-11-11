@@ -4,9 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Runtime.InteropServices;
-using System.Text;
 using LiquesceFacade;
-using DokanNet;
 using NLog;
 
 namespace LiquesceSvc
@@ -40,19 +38,14 @@ namespace LiquesceSvc
         {
             string foundPath;
 
-            if (configDetails.eAllocationMode == ConfigDetails.AllocationModes.backup && Roots.IsBackup(filename))
+            if ( (configDetails.eAllocationMode == ConfigDetails.AllocationModes.backup)
+               && IsBackup(filename)
+               )
             {
-                string originalrelative = Roots.FilterDirFromPath(filename, Roots.HIDDEN_BACKUP_FOLDER);
+                string originalrelative = FilterDirFromPath(filename, HIDDEN_BACKUP_FOLDER);
                 string originalpath = GetPath(originalrelative);
                 // if folder backup found in the original directory then stop this!
-                if (Directory.Exists(originalpath))
-                {
-                    foundPath = GetNewRoot(GetRoot(originalpath), 0, filename);
-                }
-                else
-                {
-                    foundPath = GetNewRoot(NO_PATH_TO_FILTER, 0, filename);
-                }
+               foundPath = GetNewRoot(Directory.Exists(originalpath) ? GetRoot(originalpath) : NO_PATH_TO_FILTER, 0, filename);
             }
             else
                 foundPath = GetNewRoot(NO_PATH_TO_FILTER, 0, filename);
@@ -61,7 +54,7 @@ namespace LiquesceSvc
             try
             {
                 if (!String.IsNullOrWhiteSpace(filename) // Win 7 (x64) passes in a blank
-                   && (filename != this.PathDirectorySeparatorChar)
+                   && (filename != PathDirectorySeparatorChar)
                    )
                 {
                     using ( rootPathsSync.UpgradableReadLock() )
@@ -132,12 +125,13 @@ namespace LiquesceSvc
                                     }
 
                                     // new file in .backup mode and it is a backup!
-                                    else if (configDetails.eAllocationMode == ConfigDetails.AllocationModes.backup && 
-                                        Roots.IsBackup(filename))
+                                    else if ( (configDetails.eAllocationMode == ConfigDetails.AllocationModes.backup)
+                                       && IsBackup(filename)
+                                       )
                                     {
                                         Log.Trace("Seems that we got a backup relative path to create [{0}]", filename);
 
-                                        string originalrelative = Roots.FilterDirFromPath(filename, Roots.HIDDEN_BACKUP_FOLDER);
+                                        string originalrelative = FilterDirFromPath(filename, HIDDEN_BACKUP_FOLDER);
                                         string originalpath = GetPath(originalrelative);
                                         // if folder backup found in the original directory then stop this!
                                         if (Directory.Exists(originalpath) || File.Exists(originalpath))
@@ -148,7 +142,7 @@ namespace LiquesceSvc
                                         else
                                         {
                                             // strict backup
-                                            //foundPath = "";
+                                           //foundPath = String.Empty;
 
                                             foundPath = GetNewRoot(NO_PATH_TO_FILTER, 0, filename) + filename;
                                         }
@@ -161,7 +155,7 @@ namespace LiquesceSvc
                                     }
                                 }
                                 else
-                                    foundPath = ""; // This is used when not creating new directory / file
+                                   foundPath = String.Empty; // This is used when not creating new directory / file
                             }
                         }
                     }
@@ -185,23 +179,20 @@ namespace LiquesceSvc
 
         public static string GetRoot(string path)
         {
-            for (int i = 0; i < configDetails.SourceLocations.Count; i++)
-            {
-                if (path.Contains(configDetails.SourceLocations[i]))
-                {
-                    return configDetails.SourceLocations[i];
-                }
-            }
+           if ( !String.IsNullOrEmpty(path) )
+              foreach (string t in configDetails.SourceLocations.Where(path.Contains))
+              {
+                 return t;
+              }
 
-            return "";
+           return String.Empty;
         }
 
 
-
-        // return the path from a inputpath seen relative from the root
+       // return the path from a inputpath seen relative from the root
         public static string GetRelative(string path)
         {
-            return path.Replace(GetRoot(path),"");
+            return path.Replace(GetRoot(path),String.Empty);
         }
 
 
@@ -240,7 +231,7 @@ namespace LiquesceSvc
         {
             // if no disk with enough free space and an existing relativeFolder
             // then fall back to priority mode
-            string rootForPriority = "";
+            string rootForPriority = String.Empty;
 
             // remove the last \ to delete the last directory
             relativeFolder = relativeFolder.Substring(0, relativeFolder.Length - 1);
@@ -251,78 +242,62 @@ namespace LiquesceSvc
             }
 
             // for every source location
-            for (int i = 0; i < configDetails.SourceLocations.Count; i++)
+            foreach (string t in configDetails.SourceLocations.Where(t => !t.Contains(FilterThisPath)))
             {
-                if (!configDetails.SourceLocations[i].Contains(FilterThisPath))
-                {
-                    // first get free space
-                    ulong num;
-                    ulong num2;
-                    ulong num3;
-                    if (GetDiskFreeSpaceEx(configDetails.SourceLocations[i], out num, out num2, out num3))
-                    {
-                        // see if enough space
-                        if (num > configDetails.HoldOffBufferBytes)
-                        {
-                            string testpath = configDetails.SourceLocations[i] + relativeFolder;
+               // first get free space
+               ulong num, num2, num3;
+               if (GetDiskFreeSpaceEx(t, out num, out num2, out num3))
+               {
+                  // see if enough space
+                  if (num > configDetails.HoldOffBufferBytes)
+                  {
+                     string testpath = t + relativeFolder;
 
-                            // check if relativeFolder is on this disk
-                            if (Directory.Exists(testpath))
-                                return configDetails.SourceLocations[i];
+                     // check if relativeFolder is on this disk
+                     if (Directory.Exists(testpath))
+                        return t;
 
-                            // mark as highest priority if first disk
-                            if (rootForPriority.Equals(""))
-                                rootForPriority = configDetails.SourceLocations[i];
-                        }
-                    }
-                }
+                     // mark as highest priority if first disk
+                     if ( String.IsNullOrEmpty(rootForPriority))
+                        rootForPriority = t;
+                  }
+               }
             }
 
-            return rootForPriority;
+           return rootForPriority;
         }
 
 
         // returns the next root with the highest priority
         private static string GetHighestPriority(string FilterThisPath, UInt64 filesize)
         {
-            for (int i = 0; i < configDetails.SourceLocations.Count; i++)
-            {
-                // if the path shouldn't be filtered or there is no filter
-                if (! configDetails.SourceLocations[i].Contains(FilterThisPath))
-                {
-                    ulong num;
-                    ulong num2;
-                    ulong num3;
-                    if (GetDiskFreeSpaceEx(configDetails.SourceLocations[i], out num, out num2, out num3))
-                    {
-                        if (num > configDetails.HoldOffBufferBytes && num > filesize)
-                        {
-                            return configDetails.SourceLocations[i];
-                        }
-                    }
-                }
-            }
+           ulong num = 0, num2, num3;
+           foreach (string t in from t in configDetails.SourceLocations
+                                where ! t.Contains(FilterThisPath)
+                                where GetDiskFreeSpaceEx(t, out num, out num2, out num3)
+                                where num > configDetails.HoldOffBufferBytes && num > filesize
+                                select t)
+           {
+              return t;
+           }
 
-            // if all drives are full (exepting the HoldOffBuffers) choose that one with the most free space
+           // if all drives are full (exepting the HoldOffBuffers) choose that one with the most free space
             return GetWithMostFreeSpace(FilterThisPath, filesize);
         }
 
 
-
-        // returns the root with the most free space
+       // returns the root with the most free space
         private static string GetWithMostFreeSpace(string FilterThisPath, UInt64 filesize)
         {
             ulong HighestFreeSpace = 0;
-            string PathWithMostFreeSpace = "";
+            string PathWithMostFreeSpace = String.Empty;
 
             configDetails.SourceLocations.ForEach(str =>
             {
                 // if the path shouldn't be filtered or there is no filter
                 if (! str.Contains(FilterThisPath))
                 {
-                    ulong num;
-                    ulong num2;
-                    ulong num3;
+                    ulong num, num2, num3;
                     if (GetDiskFreeSpaceEx(str, out num, out num2, out num3))
                     {
                         if (HighestFreeSpace < num)
@@ -335,26 +310,20 @@ namespace LiquesceSvc
             });
 
             // if the file fits on the disk
-            if (HighestFreeSpace > filesize)
-                return PathWithMostFreeSpace;
-            else
-                return "";
+            return (HighestFreeSpace > filesize) ? PathWithMostFreeSpace : String.Empty;
         }
 
 
 
         public static bool IsBackup(string path)
         {
-            if (path.Contains(HIDDEN_BACKUP_FOLDER))
-                return true;
-            else
-                return false;
+            return path.Contains(HIDDEN_BACKUP_FOLDER);
         }
 
 
         public static string FilterDirFromPath(string path, string filterdir)
         {
-            return path.Replace("\\" + filterdir, "");
+           return path.Replace("\\" + filterdir, String.Empty);
         }
 
 
@@ -363,15 +332,11 @@ namespace LiquesceSvc
         private static void LogToString()
         {
             Log.Trace("Printing all disks:");
-            for (int i = 0; i < configDetails.SourceLocations.Count; i++)
+            ulong num = 0, num2, num3;
+            foreach (string t in
+               configDetails.SourceLocations.Where(t => GetDiskFreeSpaceEx(t, out num, out num2, out num3)))
             {
-                ulong num;
-                ulong num2;
-                ulong num3;
-                if (GetDiskFreeSpaceEx(configDetails.SourceLocations[i], out num, out num2, out num3))
-                {
-                    Log.Trace("root[{0}], space[{1}]", configDetails.SourceLocations[i], num);
-               }
+               Log.Trace("root[{0}], space[{1}]", t, num);
             }
         }
 
@@ -394,8 +359,7 @@ namespace LiquesceSvc
             }
             throw new ArgumentException("Unable to find BelongTo Path: " + fullFilePath, fullFilePath);
         }
-
-
+       
 
         // removes a root from root lookup
         public void RemoveTargetFromLookup(string realFilename)
@@ -410,13 +374,10 @@ namespace LiquesceSvc
                 }
                 if (!String.IsNullOrEmpty(key))
                 {
-                    using( rootPathsSync.WriteLock() )
-                    rootPaths.Remove(key);
+                   RemoveFromLookup(key);
                 }
             }
         }
-
-
 
         // removes a path from root lookup
         public void RemoveFromLookup(string filename)
@@ -428,25 +389,8 @@ namespace LiquesceSvc
 
 
         #region DLL Imports
-        /// <summary>
-        /// The CreateFile function creates or opens a file, file stream, directory, physical disk, volume, console buffer, tape drive,
-        /// communications resource, mailslot, or named pipe. The function returns a handle that can be used to access an object.
-        /// </summary>
-        /// <param name="lpFileName"></param>
-        /// <param name="dwDesiredAccess"> access to the object, which can be read, write, or both</param>
-        /// <param name="dwShareMode">The sharing mode of an object, which can be read, write, both, or none</param>
-        /// <param name="SecurityAttributes">A pointer to a SECURITY_ATTRIBUTES structure that determines whether or not the returned handle can
-        /// be inherited by child processes. Can be null</param>
-        /// <param name="dwCreationDisposition">An action to take on files that exist and do not exist</param>
-        /// <param name="dwFlagsAndAttributes">The file attributes and flags. </param>
-        /// <param name="hTemplateFile">A handle to a template file with the GENERIC_READ access right. The template file supplies file attributes
-        /// and extended attributes for the file that is being created. This parameter can be null</param>
-        /// <returns>If the function succeeds, the return value is an open handle to a specified file. If a specified file exists before the function
-        /// all and dwCreationDisposition is CREATE_ALWAYS or OPEN_ALWAYS, a call to GetLastError returns ERROR_ALREADY_EXISTS, even when the function
-        /// succeeds. If a file does not exist before the call, GetLastError returns 0 (zero).
-        /// If the function fails, the return value is INVALID_HANDLE_VALUE. To get extended error information, call GetLastError.
-        /// </returns>
-        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+
+       [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern bool GetDiskFreeSpaceEx(string lpDirectoryName, out ulong lpFreeBytesAvailable, out ulong lpTotalNumberOfBytes, out ulong lpTotalNumberOfFreeBytes);
 
         #endregion
