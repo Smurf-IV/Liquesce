@@ -14,8 +14,8 @@ namespace LiquesceSvc
     class Roots
     {
         public const string NO_PATH_TO_FILTER = "?";
-        public const string HIDDEN_MIRROR_FOLDER = ".mirror";
-        public const string HIDDEN_BACKUP_FOLDER = ".backup";
+        public const string HIDDEN_MIRROR_FOLDER = "_mirror";
+        public const string HIDDEN_BACKUP_FOLDER = "_backup";
 
         private readonly string PathDirectorySeparatorChar = Path.DirectorySeparatorChar.ToString();
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();

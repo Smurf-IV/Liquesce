@@ -9,7 +9,7 @@ namespace LiquesceTray
 {
     class BackupFileManager
     {
-        public const string HIDDEN_BACKUP_FOLDER = ".backup";
+        public const string HIDDEN_BACKUP_FOLDER = "_backup";
 
 
         public static Backup backupform;

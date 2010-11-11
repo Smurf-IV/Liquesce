@@ -125,7 +125,7 @@ namespace Liquesce
             "folder = try to keep files together on one disk (classic behavior)\n" +
             "priority = strict one disk after the other method\n" +
             "balanced = balance the availabel space on all storage disks\n" + 
-            "backup = balanced with a \".backup\" folder to get a secure allocated backup"
+            "backup = balanced with a \"_backup\" folder to get a secure allocated backup"
             ),
         DisplayName("Disk Allocation Mode"),
         TypeConverter(typeof(AllocationModeValues))
