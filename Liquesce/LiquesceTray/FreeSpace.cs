@@ -647,7 +647,7 @@ namespace LiquesceTray
                     {
                         bars[i].ErrorStatus = DoubleProgressBar.ErrorStatusType.Error;
                     }
-                    else if (availabel < config.HoldOffBufferBytes)
+                    else if (availabel < config.HoldOffBufferBytes * 2)
                     {
                         bars[i].ErrorStatus = DoubleProgressBar.ErrorStatusType.Warn;
                     }
