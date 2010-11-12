@@ -305,7 +305,7 @@
             0,
             0});
          this.DelayCreation.Minimum = new decimal(new int[] {
-            5000,
+            250,
             0,
             0,
             0});
@@ -313,7 +313,9 @@
          this.DelayCreation.Size = new System.Drawing.Size(101, 22);
          this.DelayCreation.TabIndex = 0;
          this.DelayCreation.ThousandsSeparator = true;
-         this.toolTip1.SetToolTip(this.DelayCreation, "The amount of time to give the service to allow the drives to attach in windows");
+         this.toolTip1.SetToolTip(this.DelayCreation, "Range 250 <-> 10000000\r\nThis is a Delay Start Service, But this gives the OS a li" +
+                 "ttle extra to mount Networks and USB devices before attempting to start the Pool" +
+                 " driver.\r\n");
          this.DelayCreation.Value = new decimal(new int[] {
             15000,
             0,

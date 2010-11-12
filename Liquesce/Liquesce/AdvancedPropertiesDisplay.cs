@@ -16,27 +16,10 @@ namespace Liquesce
                 ThreadCount = cd.ThreadCount;
                 LockTimeoutmSec = cd.LockTimeout;
                 DokanDebugMode = cd.DebugMode;
-                eAllocationMode = cd.eAllocationMode;
+                AllocationMode = cd.AllocationMode;
                 HoldOffMBytes = cd.HoldOffBufferBytes / (1024 * 1024);
                 BufferReadSizeKBytes = cd.BufferReadSize / 1024;
-                DelayDokanStartmSec = cd.DelayStartMilliSec;
                 ServiceLogLevel = cd.ServiceLogLevel;
-            }
-        }
-
-        private uint delayDokanStartmSec;
-
-        [DescriptionAttribute("Range 250 <-> 10000000\rThis is a Delay Start Service, But this gives the OS a little extra to mount Networks and USB devices before attempting to start the Pool driver."),
-        DisplayName("Delay Mount Start")
-        , CategoryAttribute("Service")
-        ]
-        public uint DelayDokanStartmSec
-        {
-            get { return delayDokanStartmSec; }
-            set
-            {
-                if (value >= 250
-                   && value <= 10000000) delayDokanStartmSec = value;
             }
         }
 
@@ -119,7 +102,7 @@ namespace Liquesce
         public string ServiceLogLevel { get; set; }
 
 
-        public ConfigDetails.AllocationModes eAllocationMode = ConfigDetails.AllocationModes.priority;
+        private ConfigDetails.AllocationModes allocationMode = ConfigDetails.AllocationModes.priority;
 
         [DescriptionAttribute("The allocation strategy how new files or folders are placed on the storage disks:\n" +
             "folder = try to keep files together on one disk (classic behavior)\n" +
@@ -127,15 +110,10 @@ namespace Liquesce
             "balanced = balance the availabel space on all storage disks\n" + 
             "backup = balanced with a \"_backup\" folder to get a secure allocated backup"
             ),
-        DisplayName("Disk Allocation Mode"),
-        TypeConverter(typeof(AllocationModeValues))
+        DisplayName("Disk Allocation Mode")
         , CategoryAttribute("File")
         ]
-        public string AllocationMode
-        {
-            get { return Enum.GetName(typeof(ConfigDetails.AllocationModes), eAllocationMode); }
-            set { eAllocationMode = (ConfigDetails.AllocationModes)Enum.Parse(typeof(ConfigDetails.AllocationModes), value, true); }
-        }
+        public ConfigDetails.AllocationModes AllocationMode  { get; set; }
     }
     // ReSharper restore MemberCanBePrivate.Global
 
