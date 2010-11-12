@@ -693,7 +693,8 @@ namespace Liquesce
                remoteIF.Stop();
                Log.Info("Send the new details");
                remoteIF.ConfigDetails = cd;
-               Log.Info("Now start");
+               Log.Info("Now start, may need a small sleep to allow things to settle");
+               Thread.Sleep( (int) Math.Max( 1000, 2500 - cd.DelayStartMilliSec ) );
                remoteIF.Start();
             }
          }

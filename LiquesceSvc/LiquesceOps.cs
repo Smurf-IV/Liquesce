@@ -248,7 +248,7 @@ namespace LiquesceSvc
          try
          {
             // BACKUP mode
-            if (configDetails.eAllocationMode == ConfigDetails.AllocationModes.backup && Roots.IsBackup(filename))
+            if (configDetails.AllocationMode == ConfigDetails.AllocationModes.backup && Roots.IsBackup(filename))
             {
                Log.Trace("Detected Backup CreateDirectory [{0}]", filename);
 
@@ -289,7 +289,7 @@ namespace LiquesceSvc
             {
                info.IsDirectory = true;
                roots.TrimAndAddUnique(path);
-               if (configDetails.eAllocationMode == ConfigDetails.AllocationModes.mirror)
+               if (configDetails.AllocationMode == ConfigDetails.AllocationModes.mirror)
                {
                   string mirrorpath = Roots.GetNewRoot(Roots.GetRoot(path), 0, filename) + "\\" + Roots.HIDDEN_MIRROR_FOLDER + filename;
                   MirrorToDo todo = new MirrorToDo();
@@ -754,7 +754,7 @@ namespace LiquesceSvc
             Log.Trace("DeleteDirectory OUT dokanReturn[(0}]", dokanReturn);
          }
 
-         if (configDetails.eAllocationMode == ConfigDetails.AllocationModes.mirror && (!path.Contains(Roots.HIDDEN_MIRROR_FOLDER)))
+         if (configDetails.AllocationMode == ConfigDetails.AllocationModes.mirror && (!path.Contains(Roots.HIDDEN_MIRROR_FOLDER)))
          {
             Log.Trace("DeleteDirectoryMirror...");
             string mirrorpath = roots.GetPath("\\" + Roots.HIDDEN_MIRROR_FOLDER + filename);
@@ -785,7 +785,7 @@ namespace LiquesceSvc
          }
 
 
-         if (configDetails.eAllocationMode == ConfigDetails.AllocationModes.mirror && (!filename.Contains(Roots.HIDDEN_MIRROR_FOLDER)))
+         if (configDetails.AllocationMode == ConfigDetails.AllocationModes.mirror && (!filename.Contains(Roots.HIDDEN_MIRROR_FOLDER)))
          {
             string pathin = roots.GetPath("\\" + Roots.HIDDEN_MIRROR_FOLDER + filename);
             string pathout = Roots.GetRoot(pathin) + "\\" + Roots.HIDDEN_MIRROR_FOLDER + roots.TrimAndAddUnique(pathTarget);
@@ -864,7 +864,7 @@ namespace LiquesceSvc
             Log.Info("MoveFile replaceIfExisting [{0}] filename: [{1}] newname: [{2}]", replaceIfExisting, filename, newname);
 
             // BACKUP mode
-            if (configDetails.eAllocationMode == ConfigDetails.AllocationModes.backup && Roots.IsBackup(filename))
+            if (configDetails.AllocationMode == ConfigDetails.AllocationModes.backup && Roots.IsBackup(filename))
             {
                Log.Trace("Detected Backup MoveFile [{0}] [{1}]", filename, newname);
 

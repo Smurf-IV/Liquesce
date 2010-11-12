@@ -119,13 +119,8 @@ namespace LiquesceFacade
         [DataMember(IsRequired = true)]
         public string VolumeLabel = "Mirror of C";
 
-        public AllocationModes eAllocationMode = AllocationModes.folder;
         [DataMember]
-        private string AllocationMode
-        {
-            get { return Enum.GetName(typeof(AllocationModes), eAllocationMode); }
-            set { eAllocationMode = (AllocationModes)Enum.Parse(typeof(AllocationModes), value, true); }
-        }
+        public AllocationModes AllocationMode = AllocationModes.priority;
 
         [DataMember]
         public UInt64 HoldOffBufferBytes = 1L << 10 << 10 << 10; // ==1GB;

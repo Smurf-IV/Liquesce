@@ -38,7 +38,7 @@ namespace LiquesceSvc
         {
             string foundPath;
 
-            if ( (configDetails.eAllocationMode == ConfigDetails.AllocationModes.backup)
+            if ( (configDetails.AllocationMode == ConfigDetails.AllocationModes.backup)
                && IsBackup(filename)
                )
             {
@@ -114,7 +114,7 @@ namespace LiquesceSvc
                                     int lastDir = filename.LastIndexOf(Path.DirectorySeparatorChar);
 
                                     // new file in folder mode
-                                    if (configDetails.eAllocationMode == ConfigDetails.AllocationModes.folder &&
+                                    if (configDetails.AllocationMode == ConfigDetails.AllocationModes.folder &&
                                         lastDir > -1)
                                     {
                                         Log.Trace("Perform search for path: {0}", filename);
@@ -125,7 +125,7 @@ namespace LiquesceSvc
                                     }
 
                                     // new file in .backup mode and it is a backup!
-                                    else if ( (configDetails.eAllocationMode == ConfigDetails.AllocationModes.backup)
+                                    else if ( (configDetails.AllocationMode == ConfigDetails.AllocationModes.backup)
                                        && IsBackup(filename)
                                        )
                                     {
@@ -201,7 +201,7 @@ namespace LiquesceSvc
         // filesize should be the size of the file which one wans to create on the disk
         public static string GetNewRoot(string FilterThisPath, UInt64 filesize, string relativeFolder)
         {
-            switch (configDetails.eAllocationMode)
+            switch (configDetails.AllocationMode)
             {
                 case ConfigDetails.AllocationModes.folder:
                     return GetFromFolder(relativeFolder, FilterThisPath);

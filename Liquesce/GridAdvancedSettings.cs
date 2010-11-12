@@ -76,10 +76,9 @@ namespace Liquesce
             cd.ThreadCount = apd.ThreadCount;
             cd.LockTimeout = apd.LockTimeoutmSec;
             cd.DebugMode = apd.DokanDebugMode;
-            cd.eAllocationMode = apd.eAllocationMode;
+            cd.AllocationMode = apd.AllocationMode;
             cd.HoldOffBufferBytes = (apd.HoldOffMBytes * (1024 * 1024));
             cd.BufferReadSize = (apd.BufferReadSizeKBytes * 1024);
-            cd.DelayStartMilliSec = apd.DelayDokanStartmSec;
             cd.ServiceLogLevel = apd.ServiceLogLevel;
          }
       }
