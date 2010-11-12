@@ -145,14 +145,19 @@ namespace LiquesceSvc
             Log.Info("Stop the ManagementLayer and remove");
             RequestAdditionalTime(30000);
             
+            // Stop the share first
             if (_IShareEnablerHost != null)
                _IShareEnablerHost.Close();
             
+            // Then stop the host calling in
             if ( _ILiquesceHost != null )
                _ILiquesceHost.Close();
-            if ( _ILiquesceHostCallBack != null )
-               _ILiquesceHostCallBack.Close();
+            // Now stop the drives
             ManagementLayer.Instance.Stop();
+
+            // Now stop the callbacks that would be firing out stating the stop has just occurred
+            if (_ILiquesceHostCallBack != null)
+               _ILiquesceHostCallBack.Close();
 
             Log.Info("LiquesceService stopped.");
          }
