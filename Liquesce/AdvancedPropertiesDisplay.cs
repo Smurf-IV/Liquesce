@@ -102,8 +102,6 @@ namespace Liquesce
         public string ServiceLogLevel { get; set; }
 
 
-        private ConfigDetails.AllocationModes allocationMode = ConfigDetails.AllocationModes.priority;
-
         [DescriptionAttribute("The allocation strategy how new files or folders are placed on the storage disks:\n" +
             "folder = try to keep files together on one disk (classic behavior)\n" +
             "priority = strict one disk after the other method\n" +
