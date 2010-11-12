@@ -631,8 +631,9 @@ namespace LiquesceSvc
                {
                   StringBuilder sb = new StringBuilder();
                   sb.AppendLine();
-                  foreach (FileInformation fileInformation in files)
+                  for (int index = 0; index < files.Length; index++)
                   {
+                     FileInformation fileInformation = files[index];
                      sb.AppendLine(fileInformation.FileName);
                   }
                   Log.Trace(sb.ToString());
