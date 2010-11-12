@@ -157,7 +157,7 @@ namespace LiquesceTray
                 }
                 else
                 {
-                    labelChange.Left = rect.Width - labelChange.Width - 2;
+                    labelChange.Left = panel2.Width - labelChange.Width + 1;
                     labelChange.ForeColor = Color.LightGray;
                 }
             }
