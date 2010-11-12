@@ -20,7 +20,7 @@ namespace LiquesceSvc
       public bool CanIdentityUseThis(string DomainUserIdentity, string sharePath, out bool writeable)
       {
          // TODO
-         writeable = false;
+         writeable = true;
          return true;
       }
 

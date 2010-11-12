@@ -114,13 +114,14 @@ namespace LiquesceSvc
                                     int lastDir = filename.LastIndexOf(Path.DirectorySeparatorChar);
 
                                     // new file in folder mode
-                                    if (configDetails.AllocationMode == ConfigDetails.AllocationModes.folder &&
-                                        lastDir > -1)
+                                    if ((configDetails.AllocationMode == ConfigDetails.AllocationModes.folder)
+                                       && (lastDir > 0) // This will be used in substring, so has to have length
+                                       )
                                     {
                                         Log.Trace("Perform search for path: {0}", filename);
                                         string newPart = filename.Substring(lastDir);
                                         foundPath = GetPath(filename.Substring(0, lastDir), false) + newPart;
-                                        Log.Trace("Now make sure it can be found when it tries to repopen via the share");
+                                        Log.Trace("Now make sure it can be found when it tries to reopen via the share");
                                         TrimAndAddUnique(foundPath);
                                     }
 
@@ -152,6 +153,17 @@ namespace LiquesceSvc
                                     else
                                     {
                                         foundPath = GetNewRoot(NO_PATH_TO_FILTER, 0, filename) + filename;
+                                    }
+                                    // Need to solve the issue with Synctoy performing moves into unknown / unused space
+                                    // MoveFile pathSource: [F:\_backup\Kylie Minogue\FSP01FA0CF932F74BF5AE5C217F4AE6626B.tmp] pathTarget: [G:\_backup\Kylie Minogue\(2010) Aphrodite\12 - Can't Beat The Feeling.mp3] 
+                                    // MoveFile threw:  System.IO.DirectoryNotFoundException: The system cannot find the path specified. (Exception from HRESULT: 0x80070003)
+                                    string newDir = Path.GetDirectoryName(foundPath);
+                                    if (!String.IsNullOrWhiteSpace(newDir)
+                                       && !Directory.Exists(newDir)
+                                       )
+                                    {
+                                       Log.Info("Creating base directory for the Move Target [{0}]", newDir);
+                                       Directory.CreateDirectory(newDir);
                                     }
                                 }
                                 else

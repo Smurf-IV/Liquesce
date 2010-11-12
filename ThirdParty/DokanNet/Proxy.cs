@@ -125,8 +125,8 @@ namespace DokanNet
       // ReSharper disable InconsistentNaming
 #pragma warning disable 169
       private const uint FILE_ATTRIBUTE_VIRTUAL = 0x00010000;
-      private const uint GENERIC_READ = 0x80000000;
-      private const uint GENERIC_WRITE = 0x40000000;
+      public const uint GENERIC_READ = 0x80000000;
+      public const uint GENERIC_WRITE = 0x40000000;
       private const uint GENERIC_EXECUTE = 0x20000000;
 
       private const uint FILE_READ_DATA = 0x00000001;
@@ -149,8 +149,8 @@ namespace DokanNet
       private const uint STANDARD_RIGHTS_WRITE = READ_CONTROL;
       private const uint STANDARD_RIGHTS_EXECUTE = READ_CONTROL;
 
-      private const uint FILE_SHARE_READ = 0x00000001;
-      private const uint FILE_SHARE_WRITE = 0x00000002;
+      public const uint FILE_SHARE_READ = 0x00000001;
+      public const uint FILE_SHARE_WRITE = 0x00000002;
       private const uint FILE_SHARE_DELETE = 0x00000004;
 
       public const uint CREATE_NEW = 1;
@@ -502,42 +502,21 @@ namespace DokanNet
             string file = GetFileName(rawFileName);
             string pattern = GetFileName(rawSearchPattern);
             int ret;
-            FileInformation[] files;
+            FileInformation[] files = null;
             char[] matchDOS = ("\"<>?").ToCharArray();
             if (-1 != pattern.IndexOfAny(matchDOS))  // See http://liquesce.codeplex.com/workitem/7556
             {
                Log.Info("An Application is using DOS_STAR style pattern matching[{0}], Will switch to compatible mode matching", pattern);
                // PureSync (And maybe others) use the following to get this and / or the subdir contents
                // DirName<"*
-               // So, this next code block strips the DOS_STAR styles off the dir structure and attempts to find those matches
-               string newPattern = pattern.Replace('*', ' ');
-               newPattern = matchDOS.Aggregate(newPattern, (current, c) => current.Replace(c, ' '));
-               newPattern = newPattern.TrimEnd();
+               // But there is an issue with the code inside dokan see http://code.google.com/p/dokan/issues/detail?id=192 
                FileInformation[] nonPatternFiles;
                ret = operations.FindFiles(file, out nonPatternFiles, GetFileInfo(ref rawFileInfo));
-               List<FileInformation> matchedFiles = new List<FileInformation>();
                if (ret == Dokan.DOKAN_SUCCESS)
                {
-                  // Have to check for any match as it may not be the first .. last entry returned
-                  if (nonPatternFiles != null)
-                     if (nonPatternFiles.Any(nonPatternFile =>
-                           ((nonPatternFile.Attributes & FileAttributes.Directory) == FileAttributes.Directory)
-                           && (nonPatternFile.FileName == newPattern)
-                           )
-                        )
-                     {
-                        // Have to add any matching files as well !
-                        matchedFiles.AddRange(nonPatternFiles.Where(patternFile => DokanDll.DokanIsNameInExpression(pattern, patternFile.FileName, false)));
-                        // Find the Sub Dir match
-                        ret = operations.FindFiles(Path.Combine(file, newPattern), out nonPatternFiles, GetFileInfo(ref rawFileInfo));
-                        // Now modify the filename to add the base dir
-                        if (nonPatternFiles != null)
-                           for (int index = 0; index < nonPatternFiles.Length; index++)
-                           {
-                              FileInformation patternFile = nonPatternFiles[index];
-                              patternFile.FileName = Path.Combine(newPattern, patternFile.FileName);
-                           }
-                        }
+                  List<FileInformation> matchedFiles = new List<FileInformation>();
+                  matchedFiles.AddRange(nonPatternFiles.Where(patternFile => DokanDll.DokanIsNameInExpression(pattern, patternFile.FileName, false)));
+                  files = matchedFiles.ToArray();
                }
                // * (asterisk) Matches zero or more characters.
                // ? (question mark) Matches a single character.
@@ -545,29 +524,10 @@ namespace DokanNet
                // #define DOS_QM (L'>') - Matches any single character or, upon encountering a period or end of name string, 
                // advances the expression to the end of the set of contiguous DOS_QMs.
                // #define DOS_STAR (L'<') - Matches zero or more characters until encountering and matching the final . in the name. 
-
-               // See http://www.c-sharpcorner.com/uploadfile/prasad_1/regexppsd12062005021717am/regexppsd.aspx
-               //pattern = pattern.Replace("*", ".*");
-               //pattern = pattern.Replace('?', '.');
-               //pattern = pattern.Replace(">", @".|\.*");
-               //pattern = pattern.Replace("<\"", @".*\.");
-               //pattern = pattern.Replace("\"", @"\.*$");
-               //Regex regex = new Regex(pattern);
-               //files = nonPatternFiles.Where(patternFile => regex.IsMatch(patternFile.FileName)).ToArray();
-
-               if (ret == Dokan.DOKAN_SUCCESS)
-               {
-                  // Review note: If this prooves to be a slow CALL then remove and use the C# Regex (They will need testing !)
-                  if (nonPatternFiles != null)
-                     matchedFiles.AddRange(nonPatternFiles.Where(patternFile => DokanDll.DokanIsNameInExpression(pattern, patternFile.FileName, false)));
-               }
-               files = matchedFiles.ToArray();
-               Log.Debug("DOS_STAR style pattern OUT [found {0}]", files.Length );
+               Log.Debug("DOS_STAR style pattern OUT [found {0}]", (files != null) ? files.Length : 0);
                if (Log.IsTraceEnabled)
                {
-// ReSharper disable ConditionIsAlwaysTrueOrFalse
-                  // if (files != null)
-// ReSharper restore ConditionIsAlwaysTrueOrFalse
+                  if (files != null)
                   {
                      StringBuilder sb = new StringBuilder();
                      sb.AppendLine();

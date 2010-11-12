@@ -101,7 +101,10 @@ namespace ClientLiquesceSvc
                   validatedDomainUsers[getDomainUserFromPid] = state;
             }
             else
-               writeable = validatedDomainUsers[getDomainUserFromPid] > 1;
+            {
+               state = validatedDomainUsers[getDomainUserFromPid];
+               writeable = state > 1;
+            }
          }
          return state > 0;
       }
@@ -111,6 +114,21 @@ namespace ClientLiquesceSvc
          int dokanError = Dokan.DOKAN_ERROR;
          try
          {
+            bool writeable;
+            if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
+            {
+               Object DokanContext = info.Context;
+               bool isDirectory = info.IsDirectory;
+               ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
+               IShareEnabler remoteIF = factory.CreateChannel();
+               dokanError = remoteIF.OpenDirectory(filename, ref DokanContext, ref isDirectory);
+               info.Context = DokanContext;
+               info.IsDirectory = isDirectory;
+            }
+            else
+            {
+               dokanError = Dokan.ERROR_ACCESS_DENIED;
+            }
          }
          finally
          {
@@ -125,6 +143,28 @@ namespace ClientLiquesceSvc
          int dokanError = Dokan.DOKAN_ERROR;
          try
          {
+            bool writeable;
+            if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
+            {
+               if (!writeable )
+               {
+                  dokanError = Dokan.ERROR_ACCESS_DENIED;
+               }
+               else
+               {
+                  Object DokanContext = info.Context;
+                  bool isDirectory = info.IsDirectory;
+                  ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
+                  IShareEnabler remoteIF = factory.CreateChannel();
+                  dokanError = remoteIF.CreateDirectory(filename, ref DokanContext, ref isDirectory);
+                  info.Context = DokanContext;
+                  info.IsDirectory = isDirectory;
+               }
+            }
+            else
+            {
+               dokanError = Dokan.ERROR_ACCESS_DENIED;
+            }
          }
          catch (Exception ex)
          {
@@ -137,11 +177,6 @@ namespace ClientLiquesceSvc
             Log.Trace("CreateDirectory OUT dokanError[{0}]", dokanError);
          }
          return dokanError;
-      }
-
-      static bool IsNullOrDefault<T>(T value)
-      {
-         return object.Equals(value, default(T));
       }
 
       /*
@@ -161,39 +196,67 @@ namespace ClientLiquesceSvc
       /// <returns></returns>
       public int Cleanup(string filename, DokanFileInfo info)
       {
+         int dokanError = Dokan.DOKAN_ERROR;
          try
          {
+            bool writeable;
+            if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
+            {
+               Object DokanContext = info.Context;
+               ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
+               IShareEnabler remoteIF = factory.CreateChannel();
+               dokanError = remoteIF.Cleanup(filename, ref DokanContext, info.IsDirectory);
+               info.Context = DokanContext;
+            }
+            else
+            {
+               dokanError = Dokan.ERROR_ACCESS_DENIED;
+            }
          }
          catch (Exception ex)
          {
             int win32 = ((short)Marshal.GetHRForException(ex) * -1);
             Log.ErrorException("Cleanup threw: ", ex);
-            return (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            dokanError = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
          }
          finally
          {
             Log.Trace("Cleanup OUT");
          }
-         return Dokan.DOKAN_SUCCESS;
+         return dokanError;
       }
 
       public int CloseFile(string filename, DokanFileInfo info)
       {
+         int dokanError = Dokan.DOKAN_ERROR;
          try
          {
             Log.Trace("CloseFile IN DokanProcessId[{0}]", info.ProcessId);
+            bool writeable;
+            if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
+         {
+               Object DokanContext = info.Context;
+               ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
+               IShareEnabler remoteIF = factory.CreateChannel();
+               dokanError = remoteIF.CloseFile(filename, ref DokanContext);
+               info.Context = DokanContext;
+            }
+            else
+            {
+               dokanError = Dokan.ERROR_ACCESS_DENIED;
+            }
          }
          catch (Exception ex)
          {
             int win32 = ((short)Marshal.GetHRForException(ex) * -1);
             Log.ErrorException("CloseFile threw: ", ex);
-            return (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            dokanError = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
          }
          finally
          {
             Log.Trace("CloseFile OUT");
          }
-         return Dokan.DOKAN_SUCCESS;
+         return dokanError;
       }
 
       public int ReadFile(string filename, byte[] buffer, ref uint readBytes, long offset, DokanFileInfo info)
@@ -202,6 +265,19 @@ namespace ClientLiquesceSvc
          try
          {
             Log.Debug("ReadFile IN offset=[{1}] DokanProcessId[{0}]", info.ProcessId, offset);
+            bool writeable;
+            if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
+            {
+               Object DokanContext = info.Context;
+               ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
+               IShareEnabler remoteIF = factory.CreateChannel();
+               errorCode = remoteIF.ReadFile(filename, buffer, ref readBytes, offset, ref DokanContext);
+               info.Context = DokanContext;
+            }
+            else
+            {
+               errorCode = Dokan.ERROR_ACCESS_DENIED;
+            }
          }
          catch (Exception ex)
          {
@@ -218,40 +294,75 @@ namespace ClientLiquesceSvc
 
       public int WriteFile(string filename, byte[] buffer, ref uint writtenBytes, long offset, DokanFileInfo info)
       {
+         int dokanError = Dokan.DOKAN_ERROR;
          try
          {
             Log.Trace("WriteFile IN DokanProcessId[{0}]", info.ProcessId);
+            bool writeable;
+            if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
+            {
+               if (!writeable )
+               {
+                  dokanError = Dokan.ERROR_ACCESS_DENIED;
+               }
+               else
+               {
+                  Object DokanContext = info.Context;
+                  ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
+                  IShareEnabler remoteIF = factory.CreateChannel();
+                  dokanError = remoteIF.WriteFile(filename, buffer, ref writtenBytes, offset, ref DokanContext);
+                  info.Context = DokanContext;
+               }
+            }
+            else
+            {
+               dokanError = Dokan.ERROR_ACCESS_DENIED;
+            }
          }
          catch (Exception ex)
          {
             int win32 = ((short)Marshal.GetHRForException(ex) * -1);
             Log.ErrorException("WriteFile threw: ", ex);
-            return (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            dokanError = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
          }
          finally
          {
             Log.Trace("WriteFile OUT");
          }
-         return Dokan.DOKAN_SUCCESS;
+         return dokanError;
       }
 
       public int FlushFileBuffers(string filename, DokanFileInfo info)
       {
+         int dokanError = Dokan.DOKAN_ERROR;
          try
          {
             Log.Trace("FlushFileBuffers IN DokanProcessId[{0}]", info.ProcessId);
+            bool writeable;
+            if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
+            {
+                  Object DokanContext = info.Context;
+                  ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
+                  IShareEnabler remoteIF = factory.CreateChannel();
+                  dokanError = remoteIF.FlushFileBuffers(filename, ref DokanContext);
+                  info.Context = DokanContext;
+            }
+            else
+            {
+               dokanError = Dokan.ERROR_ACCESS_DENIED;
+            }
          }
          catch (Exception ex)
          {
             int win32 = ((short)Marshal.GetHRForException(ex) * -1);
             Log.ErrorException("FlushFileBuffers threw: ", ex);
-            return (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            dokanError = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
          }
          finally
          {
             Log.Trace("FlushFileBuffers OUT");
          }
-         return Dokan.DOKAN_SUCCESS;
+         return dokanError;
       }
 
       public int GetFileInformation(string filename, FileInformation fileinfo, DokanFileInfo info)
@@ -260,6 +371,19 @@ namespace ClientLiquesceSvc
          try
          {
             Log.Trace("GetFileInformation IN DokanProcessId[{0}]", info.ProcessId);
+            bool writeable;
+            if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
+            {
+                  Object DokanContext = info.Context;
+                  ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
+                  IShareEnabler remoteIF = factory.CreateChannel();
+                  dokanReturn = remoteIF.GetFileInformation(filename, fileinfo, ref DokanContext);
+                  info.Context = DokanContext;
+            }
+            else
+            {
+               dokanReturn = Dokan.ERROR_ACCESS_DENIED;
+            }
          }
          catch (Exception ex)
          {
@@ -276,21 +400,30 @@ namespace ClientLiquesceSvc
 
       public int FindFiles(string filename, out FileInformation[] files, DokanFileInfo info)
       {
-         throw new NotImplementedException();
-      }
-
-      public int FindFilesWithPattern(string filename, string pattern, out FileInformation[] files, DokanFileInfo info)
-      {
          files = null;
+         int dokanReturn = Dokan.DOKAN_ERROR;
          try
          {
-            Log.Debug("FindFiles IN [{0}], pattern[{1}]", filename, pattern);
+            Log.Debug("FindFiles IN [{0}]", filename);
+            bool writeable;
+            if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
+            {
+               Object DokanContext = info.Context;
+               ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
+               IShareEnabler remoteIF = factory.CreateChannel();
+               dokanReturn = remoteIF.FindFiles(filename, out files, ref DokanContext);
+               info.Context = DokanContext;
+            }
+            else
+            {
+               dokanReturn = Dokan.ERROR_ACCESS_DENIED;
+            }
          }
          catch (Exception ex)
          {
             int win32 = ((short)Marshal.GetHRForException(ex) * -1);
             Log.ErrorException("FindFiles threw: ", ex);
-            return (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            dokanReturn = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
          }
          finally
          {
@@ -301,53 +434,144 @@ namespace ClientLiquesceSvc
                {
                   StringBuilder sb = new StringBuilder();
                   sb.AppendLine();
-                  foreach (FileInformation fileInformation in files)
+                  for (int index = 0; index < files.Length; index++)
                   {
+                     FileInformation fileInformation = files[index];
                      sb.AppendLine(fileInformation.FileName);
                   }
                   Log.Trace(sb.ToString());
                }
             }
          }
-         return Dokan.DOKAN_SUCCESS;
+         return dokanReturn;
+      }
+
+      public int FindFilesWithPattern(string filename, string pattern, out FileInformation[] files, DokanFileInfo info)
+      {
+         files = null;
+         int dokanReturn = Dokan.DOKAN_ERROR;
+         try
+         {
+            Log.Debug("FindFilesWithPattern IN [{0}], pattern[{1}]", filename, pattern);
+            bool writeable;
+            if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
+            {
+                  Object DokanContext = info.Context;
+                  ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
+                  IShareEnabler remoteIF = factory.CreateChannel();
+                  dokanReturn = remoteIF.FindFilesWithPattern(filename, pattern, out files, ref DokanContext);
+                  info.Context = DokanContext;
+            }
+            else
+            {
+               dokanReturn = Dokan.ERROR_ACCESS_DENIED;
+            }
+         }
+         catch (Exception ex)
+         {
+            int win32 = ((short)Marshal.GetHRForException(ex) * -1);
+            Log.ErrorException("FindFilesWithPattern threw: ", ex);
+            dokanReturn = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+         }
+         finally
+         {
+            Log.Debug("FindFilesWithPattern OUT [found {0}]", (files != null ? files.Length : 0));
+            if (Log.IsTraceEnabled)
+            {
+               if (files != null)
+               {
+                  StringBuilder sb = new StringBuilder();
+                  sb.AppendLine();
+                  for (int index = 0; index < files.Length; index++)
+                  {
+                     FileInformation fileInformation = files[index];
+                     sb.AppendLine(fileInformation.FileName);
+                  }
+                  Log.Trace(sb.ToString());
+               }
+            }
+         }
+         return dokanReturn;
       }
 
       public int SetFileAttributes(string filename, FileAttributes attr, DokanFileInfo info)
       {
+         int dokanReturn = Dokan.DOKAN_ERROR;
          try
          {
             Log.Trace("SetFileAttributes IN DokanProcessId[{0}]", info.ProcessId);
+            bool writeable;
+            if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
+            {
+               if (!writeable )
+               {
+                  dokanReturn = Dokan.ERROR_ACCESS_DENIED;
+               }
+               else
+               {
+                  Object DokanContext = info.Context;
+                  ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
+                  IShareEnabler remoteIF = factory.CreateChannel();
+                  dokanReturn = remoteIF.SetFileAttributes(filename, attr, ref DokanContext);
+                  info.Context = DokanContext;
+               }
+            }
+            else
+            {
+               dokanReturn = Dokan.ERROR_ACCESS_DENIED;
+            }
          }
          catch (Exception ex)
          {
             int win32 = ((short)Marshal.GetHRForException(ex) * -1);
             Log.ErrorException("SetFileAttributes threw: ", ex);
-            return (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            dokanReturn = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
          }
          finally
          {
             Log.Trace("SetFileAttributes OUT");
          }
-         return Dokan.DOKAN_SUCCESS;
+         return dokanReturn;
       }
 
       public int SetFileTime(string filename, DateTime ctime, DateTime atime, DateTime mtime, DokanFileInfo info)
       {
+         int dokanReturn = Dokan.DOKAN_ERROR;
          try
          {
             Log.Trace("SetFileTime IN DokanProcessId[{0}]", info.ProcessId);
+            bool writeable;
+            if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
+            {
+               if (!writeable)
+               {
+                  dokanReturn = Dokan.ERROR_ACCESS_DENIED;
+               }
+               else
+               {
+                  Object DokanContext = info.Context;
+                  ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
+                  IShareEnabler remoteIF = factory.CreateChannel();
+                  dokanReturn = remoteIF.SetFileTime(filename, ctime, atime, mtime, ref DokanContext);
+                  info.Context = DokanContext;
+               }
+            }
+            else
+            {
+               dokanReturn = Dokan.ERROR_ACCESS_DENIED;
+            }
          }
          catch (Exception ex)
          {
             int win32 = ((short)Marshal.GetHRForException(ex) * -1);
             Log.ErrorException("SetFileTime threw: ", ex);
-            return (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            dokanReturn = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
          }
          finally
          {
             Log.Trace("SetFileTime OUT");
          }
-         return Dokan.DOKAN_SUCCESS;
+         return dokanReturn;
       }
 
       /// </summary>
@@ -360,6 +584,26 @@ namespace ClientLiquesceSvc
          try
          {
             Log.Trace("DeleteFile IN DokanProcessId[{0}]", info.ProcessId);
+            bool writeable;
+            if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
+            {
+               if (!writeable)
+               {
+                  dokanReturn = Dokan.ERROR_ACCESS_DENIED;
+               }
+               else
+               {
+                  Object DokanContext = info.Context;
+                  ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
+                  IShareEnabler remoteIF = factory.CreateChannel();
+                  dokanReturn = remoteIF.DeleteFile(filename, ref DokanContext);
+                  info.Context = DokanContext;
+               }
+            }
+            else
+            {
+               dokanReturn = Dokan.ERROR_ACCESS_DENIED;
+            }
          }
          catch (Exception ex)
          {
@@ -380,6 +624,28 @@ namespace ClientLiquesceSvc
          try
          {
             Log.Trace("DeleteDirectory IN DokanProcessId[{0}]", info.ProcessId);
+            bool writeable;
+            if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
+            {
+               if (!writeable)
+               {
+                  dokanReturn = Dokan.ERROR_ACCESS_DENIED;
+               }
+               else
+               {
+                  Object DokanContext = info.Context;
+                  bool isDirectory = info.IsDirectory;
+                  ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
+                  IShareEnabler remoteIF = factory.CreateChannel();
+                  dokanReturn = remoteIF.DeleteDirectory(filename, ref DokanContext, ref isDirectory);
+                  info.Context = DokanContext;
+                  info.IsDirectory = isDirectory;
+               }
+            }
+            else
+            {
+               dokanReturn = Dokan.ERROR_ACCESS_DENIED;
+            }
          }
          catch (Exception ex)
          {
@@ -398,22 +664,45 @@ namespace ClientLiquesceSvc
 
       public int MoveFile(string filename, string newname, bool replaceIfExisting, DokanFileInfo info)
       {
+         int dokanReturn = Dokan.DOKAN_ERROR;
          try
          {
             Log.Trace("MoveFile IN DokanProcessId[{0}]", info.ProcessId);
             Log.Info("MoveFile replaceIfExisting [{0}] filename: [{1}] newname: [{2}]", replaceIfExisting, filename, newname);
+            bool writeable;
+            if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
+            {
+               if (!writeable)
+               {
+                  dokanReturn = Dokan.ERROR_ACCESS_DENIED;
+               }
+               else
+               {
+                  Object DokanContext = info.Context;
+                  bool isDirectory = info.IsDirectory;
+                  ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
+                  IShareEnabler remoteIF = factory.CreateChannel();
+                  dokanReturn = remoteIF.MoveFile(filename, newname, replaceIfExisting, ref DokanContext, ref isDirectory);
+                  info.Context = DokanContext;
+                  info.IsDirectory = isDirectory;
+               }
+            }
+            else
+            {
+               dokanReturn = Dokan.ERROR_ACCESS_DENIED;
+            }
          }
          catch (Exception ex)
          {
             int win32 = ((short)Marshal.GetHRForException(ex) * -1);
             Log.ErrorException("MoveFile threw: ", ex);
-            return (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            dokanReturn = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
          }
          finally
          {
             Log.Trace("MoveFile OUT");
          }
-         return Dokan.DOKAN_SUCCESS;
+         return dokanReturn;
       }
 
       public int SetEndOfFile(string filename, long length, DokanFileInfo info)
@@ -422,6 +711,26 @@ namespace ClientLiquesceSvc
          try
          {
             Log.Trace("SetEndOfFile IN DokanProcessId[{0}]", info.ProcessId);
+            bool writeable;
+            if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
+            {
+               if (!writeable)
+               {
+                  dokanReturn = Dokan.ERROR_ACCESS_DENIED;
+               }
+               else
+               {
+                  Object DokanContext = info.Context;
+                  ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
+                  IShareEnabler remoteIF = factory.CreateChannel();
+                  dokanReturn = remoteIF.SetEndOfFile(filename, length, ref DokanContext);
+                  info.Context = DokanContext;
+               }
+            }
+            else
+            {
+               dokanReturn = Dokan.ERROR_ACCESS_DENIED;
+            }
          }
          catch (Exception ex)
          {
@@ -438,36 +747,63 @@ namespace ClientLiquesceSvc
 
       public int SetAllocationSize(string filename, long length, DokanFileInfo info)
       {
+         int dokanReturn = Dokan.DOKAN_ERROR;
          try
          {
             Log.Trace("SetAllocationSize IN DokanProcessId[{0}]", info.ProcessId);
+            bool writeable;
+            if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
+            {
+               if (!writeable)
+               {
+                  dokanReturn = Dokan.ERROR_ACCESS_DENIED;
+               }
+               else
+               {
+                  Object DokanContext = info.Context;
+                  ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
+                  IShareEnabler remoteIF = factory.CreateChannel();
+                  dokanReturn = remoteIF.SetAllocationSize(filename, length, ref DokanContext);
+                  info.Context = DokanContext;
+               }
+            }
+            else
+            {
+               dokanReturn = Dokan.ERROR_ACCESS_DENIED;
+            }
          }
          catch (Exception ex)
          {
             int win32 = ((short)Marshal.GetHRForException(ex) * -1);
             Log.ErrorException("SetAllocationSize threw: ", ex);
-            return (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            dokanReturn = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
          }
          finally
          {
             Log.Trace("SetAllocationSize OUT");
          }
-         return Dokan.DOKAN_SUCCESS;
+         return dokanReturn;
       }
 
       public int LockFile(string filename, long offset, long length, DokanFileInfo info)
       {
+         int dokanReturn = Dokan.DOKAN_ERROR;
          try
          {
             Log.Trace("LockFile IN DokanProcessId[{0}]", info.ProcessId);
-            UInt64 context = Convert.ToUInt64(info.Context);
-            if (!IsNullOrDefault(context))
+            bool writeable;
+            if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
             {
-               Log.Trace("context [{0}]", context);
+               
+                  Object DokanContext = info.Context;
+                  ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
+                  IShareEnabler remoteIF = factory.CreateChannel();
+                  dokanReturn = remoteIF.LockFile(filename, offset, length, ref DokanContext);
+                  info.Context = DokanContext;
             }
             else
             {
-               return Dokan.ERROR_FILE_NOT_FOUND;
+               dokanReturn = Dokan.ERROR_ACCESS_DENIED;
             }
 
          }
@@ -475,60 +811,79 @@ namespace ClientLiquesceSvc
          {
             int win32 = ((short)Marshal.GetHRForException(ex) * -1);
             Log.ErrorException("LockFile threw: ", ex);
-            return (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            dokanReturn = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
          }
          finally
          {
             Log.Trace("LockFile OUT");
          }
-         return Dokan.DOKAN_SUCCESS;
+         return dokanReturn;
       }
 
       public int UnlockFile(string filename, long offset, long length, DokanFileInfo info)
       {
+         int dokanReturn = Dokan.DOKAN_ERROR;
          try
          {
             Log.Trace("UnlockFile IN DokanProcessId[{0}]", info.ProcessId);
-            UInt64 context = Convert.ToUInt64(info.Context);
-            if (!IsNullOrDefault(context))
+            bool writeable;
+            if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
             {
+                  Object DokanContext = info.Context;
+                  ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
+                  IShareEnabler remoteIF = factory.CreateChannel();
+                  dokanReturn = remoteIF.UnlockFile(filename, offset, length, ref DokanContext);
+                  info.Context = DokanContext;
             }
             else
             {
-               return Dokan.ERROR_FILE_NOT_FOUND;
+               dokanReturn = Dokan.ERROR_ACCESS_DENIED;
             }
-
          }
          catch (Exception ex)
          {
             int win32 = ((short)Marshal.GetHRForException(ex) * -1);
             Log.ErrorException("UnlockFile threw: ", ex);
-            return (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            dokanReturn = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
          }
          finally
          {
             Log.Trace("UnlockFile OUT");
          }
-         return Dokan.DOKAN_SUCCESS;
+         return dokanReturn;
       }
 
       public int GetDiskFreeSpace(ref ulong freeBytesAvailable, ref ulong totalBytes, ref ulong totalFreeBytes, DokanFileInfo info)
       {
+         int dokanReturn = Dokan.DOKAN_ERROR;
          try
          {
             Log.Trace("GetDiskFreeSpace IN DokanProcessId[{0}]", info.ProcessId);
+            bool writeable;
+            if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
+            {
+                  Object DokanContext = info.Context;
+                  ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
+                  IShareEnabler remoteIF = factory.CreateChannel();
+                  dokanReturn = remoteIF.GetDiskFreeSpace(ref freeBytesAvailable, ref totalBytes, ref totalFreeBytes, ref DokanContext);
+                  info.Context = DokanContext;
+            }
+            else
+            {
+               dokanReturn = Dokan.ERROR_ACCESS_DENIED;
+            }
          }
          catch (Exception ex)
          {
             int win32 = ((short)Marshal.GetHRForException(ex) * -1);
             Log.ErrorException("UnlockFile threw: ", ex);
-            return (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            dokanReturn = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
          }
          finally
          {
             Log.Trace("GetDiskFreeSpace OUT");
          }
-         return Dokan.DOKAN_SUCCESS;
+         return dokanReturn;
       }
 
       public int Unmount(DokanFileInfo info)
