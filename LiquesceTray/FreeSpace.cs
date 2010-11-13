@@ -566,6 +566,11 @@ namespace LiquesceTray
             long allRate = 0;
             ulong allBackup = 0;
 
+            int writePriority1Disk = -1;
+            int writePriority2Disk = -1;
+            ulong mostFreeSpace1 = 0;
+            ulong mostFreeSpace2 = 0;
+
             for (int i = 0; i < config.SourceLocations.Count(); i++)
             {
                 ulong availabel;
@@ -577,6 +582,50 @@ namespace LiquesceTray
                     allAvailabel += availabel;
                     allTotal += total;
                     allBackup += backupValues[i];
+
+                    if (config.AllocationMode == ConfigDetails.AllocationModes.backup || 
+                        config.AllocationMode == ConfigDetails.AllocationModes.mirror)
+                    {
+                        if (availabel > mostFreeSpace1)
+                        {
+                            // old first is now second
+                            mostFreeSpace2 = mostFreeSpace1;
+                            writePriority2Disk = writePriority1Disk;
+                            // current disk is now first write disk
+                            mostFreeSpace1 = availabel;
+                            writePriority1Disk = i;
+                        }
+                        else if (availabel > mostFreeSpace2)
+                        {
+                            mostFreeSpace2 = availabel;
+                            writePriority2Disk = i;
+                        }
+                    }
+                    else if (config.AllocationMode == ConfigDetails.AllocationModes.balanced)
+                    {
+                        if (availabel > mostFreeSpace1)
+                        {
+                            // current disk is now first write disk
+                            mostFreeSpace1 = availabel;
+                            writePriority1Disk = i;
+                        }
+                    }
+                    else if (config.AllocationMode == ConfigDetails.AllocationModes.priority)
+                    {
+                        if (writePriority1Disk == -1 && availabel > config.HoldOffBufferBytes)
+                        {
+                            // current disk is now first write disk
+                            writePriority1Disk = i;
+                        }
+                    }
+                    else if (config.AllocationMode == ConfigDetails.AllocationModes.folder)
+                    {
+                        if (writePriority2Disk == -1 && availabel > config.HoldOffBufferBytes)
+                        {
+                            // current disk is now first write disk
+                            writePriority2Disk = i;
+                        }
+                    }
 
                     long thisRate = 0;
                     thisRate = ((long)oldFree[i] - (long)availabel) / 4;
@@ -690,6 +739,18 @@ namespace LiquesceTray
             else
             {
                 barLiquesce.Rate = DoubleProgressBar.RateType.No;
+            }
+
+            // color the wirte priority
+            for (int i = 0; i < config.SourceLocations.Count(); i++)
+            {
+                if (writePriority1Disk == i)
+                    bars[i].WriteMark = DoubleProgressBar.WriteMarkType.Priority1;
+                else if (writePriority2Disk == i)
+                    bars[i].WriteMark = DoubleProgressBar.WriteMarkType.Priority2;
+                else
+                    bars[i].WriteMark = DoubleProgressBar.WriteMarkType.No;
+
             }
 
         }
