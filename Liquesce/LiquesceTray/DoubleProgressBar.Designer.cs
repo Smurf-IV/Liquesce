@@ -39,7 +39,7 @@ namespace LiquesceTray
             // 
             // panel1
             // 
-            this.panel1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(192)))));
+            this.panel1.BackColor = COLOR_BAR1;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(200, 50);
@@ -58,7 +58,7 @@ namespace LiquesceTray
             // 
             // panel2
             // 
-            this.panel2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(128)))), ((int)(((byte)(255)))));
+            this.panel2.BackColor = COLOR_BAR2;
             this.panel2.Controls.Add(this.panel1);
             this.panel2.Location = new System.Drawing.Point(0, 0);
             this.panel2.Name = "panel2";
@@ -89,6 +89,18 @@ namespace LiquesceTray
 
         #endregion
 
+        Color COLOR_BAR1 = Color.DarkBlue;
+        Color COLOR_BAR2 = Color.Blue;
+        Color COLOR_FREE_SPACE = Color.WhiteSmoke;
+        Color COLOR_FREE_SPACE_PRIOR1 = Color.Lime;
+        Color COLOR_FREE_SPACE_PRIOR2 = Color.LimeGreen;
+
+        Pen PEN_BORDER_DARK = Pens.DarkGray;
+        Pen PEN_BORDER_LIGHT = Pens.White;
+        Pen PEN_BORDER_ERROR = Pens.Red;
+        Pen PEN_BORDER_WARN = Pens.Orange;
+
+
         public enum ErrorStatusType
         {
             NoError,
@@ -103,6 +115,13 @@ namespace LiquesceTray
             Negative
         }
 
+        public enum WriteMarkType
+        {
+            No,
+            Priority1,
+            Priority2
+        }
+
         int min = 0;	// Minimum value for progress range
         int max = 100;	// Maximum value for progress range
         int val1 = 0;		// Current progress
@@ -111,6 +130,8 @@ namespace LiquesceTray
         ErrorStatusType errorState = ErrorStatusType.NoError;
 
         RateType rate = RateType.No;
+
+        WriteMarkType writemark = WriteMarkType.No;
 
 
 
@@ -126,6 +147,22 @@ namespace LiquesceTray
             float percent1 = (float)(val1 - min) / (float)(max - min);
             float percent2 = (float)(val2 - min) / (float)(max - min);
             Rectangle rect = this.ClientRectangle;
+
+            if (writemark == WriteMarkType.No)
+            {
+                this.BackColor = COLOR_FREE_SPACE;
+                ToolTip_free.SetToolTip(this, "Free Space");
+            }
+            else if (writemark == WriteMarkType.Priority1)
+            {
+                this.BackColor = COLOR_FREE_SPACE_PRIOR1;
+                ToolTip_free.SetToolTip(this, "Free Space - First disk to write on.");
+            }
+            else if (writemark == WriteMarkType.Priority2)
+            {
+                this.BackColor = COLOR_FREE_SPACE_PRIOR2;
+                ToolTip_free.SetToolTip(this, "Free Space - Alternative disk to write on.");
+            }
 
             panel1.Top = 0;
             panel2.Top = 1;
@@ -153,12 +190,12 @@ namespace LiquesceTray
                 if (labelChange.Width + panel2.Width < rect.Width - 2)
                 {
                     labelChange.Left = panel2.Width + 1;
-                    labelChange.ForeColor = Color.DarkBlue;
+                    labelChange.ForeColor = COLOR_BAR1;
                 }
                 else
                 {
                     labelChange.Left = panel2.Width - labelChange.Width + 1;
-                    labelChange.ForeColor = Color.LightGray;
+                    labelChange.ForeColor = COLOR_FREE_SPACE;
                 }
             }
             else if (rate == RateType.Negative)
@@ -168,12 +205,12 @@ namespace LiquesceTray
                 if (labelChange.Width > panel2.Width)
                 {
                     labelChange.Left = panel2.Width + 1;
-                    labelChange.ForeColor = Color.DarkBlue;
+                    labelChange.ForeColor = COLOR_BAR1;
                 }
                 else
                 {
                     labelChange.Left = panel2.Width - labelChange.Width + 1;
-                    labelChange.ForeColor = Color.LightGray;
+                    labelChange.ForeColor = COLOR_FREE_SPACE;
                 }
             }
 
@@ -266,8 +303,9 @@ namespace LiquesceTray
                     val1 = value;
                 }
 
-                // Invalidate the intersection region only.
-                this.Invalidate();
+                if (val1 != oldValue)
+                    // Invalidate the intersection region only.
+                    this.Invalidate();
             }
         }
 
@@ -296,8 +334,9 @@ namespace LiquesceTray
                     val2 = value;
                 }
 
-                // Invalidate the intersection region only.
-                this.Invalidate();
+                if (val2 != oldValue)
+                    // Invalidate the intersection region only.
+                    this.Invalidate();
             }
         }
 
@@ -310,10 +349,12 @@ namespace LiquesceTray
 
             set
             {
+                ErrorStatusType old = errorState;
                 errorState = value;
 
-                // Invalidate the intersection region only.
-                this.Invalidate();
+                if (errorState != old)
+                    // Invalidate the intersection region only.
+                    this.Invalidate();
             }
         }
 
@@ -326,10 +367,31 @@ namespace LiquesceTray
 
             set
             {
+                RateType old = rate;
                 rate = value;
 
-                // Invalidate the intersection region only.
-                this.Invalidate();
+                if (rate != old)
+                    // Invalidate the intersection region only.
+                    this.Invalidate();
+            }
+        }
+
+        // marks the disk as the next for writing
+        public WriteMarkType WriteMark
+        {
+            get
+            {
+                return writemark;
+            }
+
+            set
+            {
+                WriteMarkType old = writemark;
+                writemark = value;
+
+                if (writemark != old)
+                    // Invalidate the intersection region only.
+                    this.Invalidate();
             }
         }
 
@@ -342,18 +404,18 @@ namespace LiquesceTray
 
             if (errorState == ErrorStatusType.Warn)
             {
-                dark = Pens.Orange;
-                light = Pens.Orange;
+                dark = PEN_BORDER_WARN;
+                light = PEN_BORDER_WARN;
             }
             else if (errorState == ErrorStatusType.Error)
             {
-                dark = Pens.Red;
-                light = Pens.Red;
+                dark = PEN_BORDER_ERROR;
+                light = PEN_BORDER_ERROR;
             }
             else
             {
-                dark = Pens.DarkGray;
-                light = Pens.White;
+                dark = PEN_BORDER_DARK;
+                light = PEN_BORDER_LIGHT;
             }
 
             g.DrawLine(dark,
