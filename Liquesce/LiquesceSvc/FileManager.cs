@@ -22,6 +22,18 @@ namespace LiquesceSvc
 
         static private readonly Logger Log = LogManager.GetCurrentClassLogger();
 
+        private ConfigDetails config;
+        private Roots roots;
+
+
+        public FileManager(ConfigDetails config, Roots roots)
+        {
+            this.config = config;
+            this.roots = roots;
+        }
+
+
+
         public static void DeleteDirectory(string directory) 
         {
             if (Directory.Exists(directory))
@@ -32,21 +44,38 @@ namespace LiquesceSvc
 
 
 
-        public static void XMoveDirectory(string pathSource, string pathTarget, bool replaceIfExisting)
+        public void XMoveDirectory(string pathSource, string pathTarget, bool replaceIfExisting)
         {
             DirectoryInfo currentDirectory = new DirectoryInfo(pathSource);
             if (!Directory.Exists(pathTarget))
                 Directory.CreateDirectory(pathTarget);
+
+            // for every file in the current folder
             foreach (FileInfo filein in currentDirectory.GetFiles())
             {
+                string fileSource = pathSource + Path.DirectorySeparatorChar + filein.Name;
                 string fileTarget = pathTarget + Path.DirectorySeparatorChar + filein.Name;
-                filein.Delete();
+
+                // test whole liquesce drive and not only one physical drive
+                bool fileIsInTarget = Roots.RelativeFileExists(Roots.GetRelative(fileTarget));
+
+                // if replace activated or file is not availabel on target
+                if (replaceIfExisting || !fileIsInTarget)
+                {
+                    File.Move(fileSource, fileTarget);
+                }
             }
+
+            // for every subfolder recurse
             foreach (DirectoryInfo dr in currentDirectory.GetDirectories())
             {
                 XMoveDirectory(dr.FullName, pathTarget + Path.DirectorySeparatorChar + dr.Name, replaceIfExisting);
             }
-            Directory.Delete(pathSource);
+
+            // after files are moved, check if there are new files or new subfolders
+            // if so then don't remove the source directory
+            if(Directory.GetDirectories(pathSource).Length == 0 && Directory.GetFiles(pathSource).Length == 0)
+                Directory.Delete(pathSource);
         }
 
 
