@@ -56,6 +56,8 @@
             this.ClientSize = new System.Drawing.Size(791, 440);
             this.Controls.Add(this.flowLayout);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MaximumSize = new System.Drawing.Size(807, 99999);
+            this.MinimumSize = new System.Drawing.Size(807, 0);
             this.Name = "FreeSpace";
             this.Text = "Liquesce Free Space";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.FreeSpace_FormClosed);

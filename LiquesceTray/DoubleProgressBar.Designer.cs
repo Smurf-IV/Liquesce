@@ -7,7 +7,7 @@ namespace LiquesceTray
     {
         Color COLOR_BAR1 = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(192)))));
         Color COLOR_BAR2 = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(128)))), ((int)(((byte)(255)))));
-        Color COLOR_FREE_SPACE = Color.WhiteSmoke;
+        Color COLOR_FREE_SPACE = Control.DefaultBackColor;
         Color COLOR_FREE_SPACE_PRIOR1 = Color.Lime;
         Color COLOR_FREE_SPACE_PRIOR2 = Color.LimeGreen;
 
@@ -167,16 +167,33 @@ namespace LiquesceTray
                 ToolTip_free.SetToolTip(this, "Free Space - Alternative disk to write on.");
             }
 
-            panel1.Top = 0;
-            panel2.Top = 1;
-            panel1.Left = 0;
-            panel2.Left = 1;
-            panel1.Height = rect.Height - 2;
-            panel2.Height = rect.Height - 2;
+
+            if (errorState != ErrorStatusType.NoError)
+            {
+                panel1.Top = 0;
+                panel2.Top = 2;
+                panel1.Left = 0;
+                panel2.Left = 2;
+                panel1.Height = rect.Height - 4;
+                panel2.Height = rect.Height - 4;
 
 
-            panel1.Width = (int)((float)(rect.Width - 2) * percent1);
-            panel2.Width = (int)((float)(rect.Width - 2) * percent2);
+                panel1.Width = (int)((float)(rect.Width - 2) * percent1) - 2;
+                panel2.Width = (int)((float)(rect.Width - 2) * percent2) - 2;
+            }
+            else
+            {
+                panel1.Top = 0;
+                panel2.Top = 1;
+                panel1.Left = 0;
+                panel2.Left = 1;
+                panel1.Height = rect.Height - 2;
+                panel2.Height = rect.Height - 2;
+
+
+                panel1.Width = (int)((float)(rect.Width - 2) * percent1);
+                panel2.Width = (int)((float)(rect.Width - 2) * percent2);
+            }
 
             labelChange.Width = 20;
             labelChange.Height = rect.Height - 5;
@@ -433,6 +450,22 @@ namespace LiquesceTray
             g.DrawLine(light,
                 new Point(this.ClientRectangle.Width - PenWidth, this.ClientRectangle.Top),
                 new Point(this.ClientRectangle.Width - PenWidth, this.ClientRectangle.Height - PenWidth));
+
+            if (errorState == ErrorStatusType.Warn || errorState == ErrorStatusType.Error)
+            {
+                g.DrawLine(dark,
+                    new Point(this.ClientRectangle.Left + 1, this.ClientRectangle.Top + 1),
+                    new Point(this.ClientRectangle.Width - PenWidth - 1, this.ClientRectangle.Top + 1));
+                g.DrawLine(dark,
+                    new Point(this.ClientRectangle.Left + 1, this.ClientRectangle.Top + 1),
+                    new Point(this.ClientRectangle.Left + 1, this.ClientRectangle.Height - PenWidth - 1));
+                g.DrawLine(light,
+                    new Point(this.ClientRectangle.Left + 1, this.ClientRectangle.Height - PenWidth - 1),
+                    new Point(this.ClientRectangle.Width - PenWidth - 1, this.ClientRectangle.Height - PenWidth - 1));
+                g.DrawLine(light,
+                    new Point(this.ClientRectangle.Width - PenWidth - 1, this.ClientRectangle.Top + 1),
+                    new Point(this.ClientRectangle.Width - PenWidth - 1, this.ClientRectangle.Height - PenWidth - 1));
+            }
         }
 
         private Panel panel1;
