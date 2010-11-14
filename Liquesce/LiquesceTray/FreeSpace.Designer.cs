@@ -46,14 +46,14 @@
             this.flowLayout.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayout.Location = new System.Drawing.Point(0, 0);
             this.flowLayout.Name = "flowLayout";
-            this.flowLayout.Size = new System.Drawing.Size(791, 421);
+            this.flowLayout.Size = new System.Drawing.Size(791, 440);
             this.flowLayout.TabIndex = 0;
             // 
             // FreeSpace
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(791, 421);
+            this.ClientSize = new System.Drawing.Size(791, 440);
             this.Controls.Add(this.flowLayout);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "FreeSpace";

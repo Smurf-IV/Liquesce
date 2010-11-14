@@ -412,6 +412,18 @@ namespace LiquesceTray
 
 
 
+            // 
+            // seperatorPanel
+            // 
+            System.Windows.Forms.Panel seperatorPanel = new Panel();
+            seperatorPanel.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            seperatorPanel.Location = new System.Drawing.Point(0, 0);
+            seperatorPanel.Name = "seperatorPanel";
+            seperatorPanel.Size = new System.Drawing.Size(TABLE_SIZE, 4);
+            seperatorPanel.TabIndex = 0;
+
+            flowLayout.Controls.Add(seperatorPanel);
+
 
 
             for (int i = 0; i < config.SourceLocations.Count(); i++)
@@ -425,7 +437,7 @@ namespace LiquesceTray
                 // tableLayout
                 // 
                 tableLayouts[i] = new TableLayoutPanel {ColumnCount = TABLE_CELL_CNT};
-               tableLayouts[i].ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, COLUMN_NAME_SIZE));
+                tableLayouts[i].ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, COLUMN_NAME_SIZE));
                 tableLayouts[i].ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, COLUMN_TOTAL_SIZE));
                 tableLayouts[i].ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_FREE_SIZE));
                 tableLayouts[i].ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_BACKUP_SIZE));
