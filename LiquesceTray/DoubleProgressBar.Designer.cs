@@ -5,6 +5,52 @@ namespace LiquesceTray
 {
     partial class DoubleProgressBar
     {
+        Color COLOR_BAR1 = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(192)))));
+        Color COLOR_BAR2 = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(128)))), ((int)(((byte)(255)))));
+        Color COLOR_FREE_SPACE = Color.WhiteSmoke;
+        Color COLOR_FREE_SPACE_PRIOR1 = Color.Lime;
+        Color COLOR_FREE_SPACE_PRIOR2 = Color.LimeGreen;
+
+        Pen PEN_BORDER_DARK = Pens.DarkGray;
+        Pen PEN_BORDER_LIGHT = Pens.White;
+        Pen PEN_BORDER_ERROR = Pens.Red;
+        Pen PEN_BORDER_WARN = Pens.Orange;
+
+
+        public enum ErrorStatusType
+        {
+            NoError,
+            Warn,
+            Error
+        }
+
+        public enum RateType
+        {
+            No,
+            Positive,
+            Negative
+        }
+
+        public enum WriteMarkType
+        {
+            No,
+            Priority1,
+            Priority2
+        }
+
+        int min = 0;	// Minimum value for progress range
+        int max = 100;	// Maximum value for progress range
+        int val1 = 0;		// Current progress
+        int val2 = 0;
+
+        ErrorStatusType errorState = ErrorStatusType.NoError;
+
+        RateType rate = RateType.No;
+
+        WriteMarkType writemark = WriteMarkType.No;
+
+
+        
         /// <summary> 
         /// Erforderliche Designervariable.
         /// </summary>
@@ -89,49 +135,6 @@ namespace LiquesceTray
 
         #endregion
 
-        Color COLOR_BAR1 = Color.DarkBlue;
-        Color COLOR_BAR2 = Color.Blue;
-        Color COLOR_FREE_SPACE = Color.WhiteSmoke;
-        Color COLOR_FREE_SPACE_PRIOR1 = Color.Lime;
-        Color COLOR_FREE_SPACE_PRIOR2 = Color.LimeGreen;
-
-        Pen PEN_BORDER_DARK = Pens.DarkGray;
-        Pen PEN_BORDER_LIGHT = Pens.White;
-        Pen PEN_BORDER_ERROR = Pens.Red;
-        Pen PEN_BORDER_WARN = Pens.Orange;
-
-
-        public enum ErrorStatusType
-        {
-            NoError,
-            Warn,
-            Error
-        }
-
-        public enum RateType
-        {
-            No,
-            Positive,
-            Negative
-        }
-
-        public enum WriteMarkType
-        {
-            No,
-            Priority1,
-            Priority2
-        }
-
-        int min = 0;	// Minimum value for progress range
-        int max = 100;	// Maximum value for progress range
-        int val1 = 0;		// Current progress
-        int val2 = 0;
-
-        ErrorStatusType errorState = ErrorStatusType.NoError;
-
-        RateType rate = RateType.No;
-
-        WriteMarkType writemark = WriteMarkType.No;
 
 
 
