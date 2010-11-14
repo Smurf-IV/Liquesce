@@ -188,6 +188,20 @@ namespace LiquesceSvc
         }
 
 
+        public List<string> GetAllPaths(string relativefolder)
+        {
+            List<string> paths = new List<string>();
+
+            for (int i = 0; i < configDetails.SourceLocations.Count; i++)
+            {
+                string current = configDetails.SourceLocations[i] + relativefolder;
+                if (Directory.Exists(current))
+                    paths.Add(current);
+            }
+
+            return paths;
+        }
+
 
         public static string GetRoot(string path)
         {
@@ -330,6 +344,29 @@ namespace LiquesceSvc
         public static bool IsBackup(string path)
         {
             return path.Contains(HIDDEN_BACKUP_FOLDER);
+        }
+
+
+
+        public static bool RelativeFileExists(string relative)
+        {
+            for (int i = 0; i < configDetails.SourceLocations.Count; i++)
+            {
+                if (File.Exists(configDetails.SourceLocations[i] + relative))
+                    return true;
+            }
+            return false;
+        }
+
+
+        public static bool RelativeFolderExists(string relative)
+        {
+            for (int i = 0; i < configDetails.SourceLocations.Count; i++)
+            {
+                if (Directory.Exists(configDetails.SourceLocations[i] + relative))
+                    return true;
+            }
+            return false;
         }
 
 
