@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.ServiceModel;
+using System.ServiceModel.Channels;
 using System.Text;
 using System.Threading;
 using DokanNet;
@@ -17,10 +18,49 @@ namespace ClientLiquesceSvc
    {
       static private readonly Logger Log = LogManager.GetCurrentClassLogger();
       private readonly ClientShareDetail configDetail;
+      private IShareEnabler remoteIF;
+      private readonly ChannelFactory<IShareEnabler> factory;
 
       public ClientLiquesceOps(ClientShareDetail configDetail)
       {
          this.configDetail = configDetail;
+         factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
+      }
+
+      private void CheckAndCreateChannel()
+      {
+         bool needRecreate = false;
+         switch (factory.State)
+         {
+            case CommunicationState.Opening:
+               Thread.Sleep(50);
+               break;
+            case CommunicationState.Opened:
+               break;
+            default:
+               needRecreate = true;
+               break;
+         }
+         if (!needRecreate)
+         {
+            switch (((ICommunicationObject)remoteIF).State)
+            {
+               case CommunicationState.Opening:
+               Thread.Sleep(50);
+                  break;
+               case CommunicationState.Opened:
+                  break;
+               default:
+                  needRecreate = true;
+                  break;
+            }
+         }
+         if (needRecreate)
+         {
+            remoteIF = factory.CreateChannel();
+            // factory.State == CommunicationState.Opened;
+            ((IContextChannel) remoteIF).OperationTimeout = TimeSpan.MaxValue;
+         }
       }
 
       #region IDokanOperations Implementation
@@ -53,12 +93,12 @@ namespace ClientLiquesceSvc
                }
                else
                {
-                  Object DokanContext = info.Context;
-                  bool isDirectory = info.IsDirectory;
-                  ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
-                  IShareEnabler remoteIF = factory.CreateChannel();
-                  actualErrorCode = remoteIF.CreateFile(filename, rawAccessMode, rawShare, rawCreationDisposition, rawFlagsAndAttributes, ref DokanContext, ref isDirectory);
-                  info.Context = DokanContext;
+                  UInt64 fileRefContext;
+                  bool isDirectory;
+                  CheckAndCreateChannel();
+                  actualErrorCode = remoteIF.CreateFile(filename, rawAccessMode, rawShare, rawCreationDisposition,
+                                                         rawFlagsAndAttributes, out fileRefContext, out isDirectory);
+                  info.refFileHandleContext = fileRefContext;
                   info.IsDirectory = isDirectory;
                }
             }
@@ -70,9 +110,8 @@ namespace ClientLiquesceSvc
          }
          catch (Exception ex)
          {
-            int win32 = ((short)Marshal.GetHRForException(ex) * -1);
             Log.ErrorException("CreateFile threw: ", ex);
-            actualErrorCode = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            actualErrorCode = Utils.BestAttemptToWin32(ex); ;
          }
          finally
          {
@@ -91,8 +130,7 @@ namespace ClientLiquesceSvc
          {
             if (!validatedDomainUsers.ContainsKey(getDomainUserFromPid))
             {
-               ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
-               IShareEnabler remoteIF = factory.CreateChannel();
+               CheckAndCreateChannel();
                if (remoteIF.CanIdentityUseThis(getDomainUserFromPid, configDetail.TargetShareName, out writeable))
                   state = 1;
                if (writeable)
@@ -117,12 +155,9 @@ namespace ClientLiquesceSvc
             bool writeable;
             if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
             {
-               Object DokanContext = info.Context;
-               bool isDirectory = info.IsDirectory;
-               ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
-               IShareEnabler remoteIF = factory.CreateChannel();
-               dokanError = remoteIF.OpenDirectory(filename, ref DokanContext, ref isDirectory);
-               info.Context = DokanContext;
+               CheckAndCreateChannel();
+               bool isDirectory;
+               dokanError = remoteIF.OpenDirectory(filename, out isDirectory);
                info.IsDirectory = isDirectory;
             }
             else
@@ -146,18 +181,15 @@ namespace ClientLiquesceSvc
             bool writeable;
             if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
             {
-               if (!writeable )
+               if (!writeable)
                {
                   dokanError = Dokan.ERROR_ACCESS_DENIED;
                }
                else
                {
-                  Object DokanContext = info.Context;
-                  bool isDirectory = info.IsDirectory;
-                  ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
-                  IShareEnabler remoteIF = factory.CreateChannel();
-                  dokanError = remoteIF.CreateDirectory(filename, ref DokanContext, ref isDirectory);
-                  info.Context = DokanContext;
+                  CheckAndCreateChannel();
+                  bool isDirectory;
+                  dokanError = remoteIF.CreateDirectory(filename, out isDirectory);
                   info.IsDirectory = isDirectory;
                }
             }
@@ -168,9 +200,8 @@ namespace ClientLiquesceSvc
          }
          catch (Exception ex)
          {
-            int win32 = ((short)Marshal.GetHRForException(ex) * -1);
             Log.ErrorException("CreateDirectory threw: ", ex);
-            dokanError = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            dokanError = Utils.BestAttemptToWin32(ex);
          }
          finally
          {
@@ -181,7 +212,7 @@ namespace ClientLiquesceSvc
 
       /*
       Cleanup is invoked when the function CloseHandle in Windows API is executed. 
-      If the file system application stored file handle in the Context variable when the function CreateFile is invoked, 
+      If the file system application stored file handle in the refFileHandleContext variable when the function CreateFile is invoked, 
       this should be closed in the Cleanup function, not in CloseFile function. If the user application calls CloseHandle
       and subsequently open the same file, the CloseFile function of the file system application may not be invoked 
       before the CreateFile API is called. This may cause sharing violation error. 
@@ -199,25 +230,31 @@ namespace ClientLiquesceSvc
          int dokanError = Dokan.DOKAN_ERROR;
          try
          {
-            bool writeable;
-            if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
+            if ((info.refFileHandleContext == 0)
+               && !info.DeleteOnClose)
             {
-               Object DokanContext = info.Context;
-               ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
-               IShareEnabler remoteIF = factory.CreateChannel();
-               dokanError = remoteIF.Cleanup(filename, ref DokanContext, info.IsDirectory);
-               info.Context = DokanContext;
+               dokanError = Dokan.DOKAN_SUCCESS;
             }
             else
             {
-               dokanError = Dokan.ERROR_ACCESS_DENIED;
+            // When Closefile is called the, The Process may have already gone (i.e. closing notepad !)
+               //bool writeable;
+               //if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
+               {
+                  CheckAndCreateChannel();
+                  dokanError = remoteIF.Cleanup(filename, ref info.refFileHandleContext, info.DeleteOnClose,
+                                                info.IsDirectory);
+               }
+               //else
+               //{
+               //   dokanError = Dokan.ERROR_ACCESS_DENIED;
+               //}
             }
          }
          catch (Exception ex)
          {
-            int win32 = ((short)Marshal.GetHRForException(ex) * -1);
             Log.ErrorException("Cleanup threw: ", ex);
-            dokanError = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            dokanError = Utils.BestAttemptToWin32(ex);
          }
          finally
          {
@@ -232,25 +269,29 @@ namespace ClientLiquesceSvc
          try
          {
             Log.Trace("CloseFile IN DokanProcessId[{0}]", info.ProcessId);
-            bool writeable;
-            if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
-         {
-               Object DokanContext = info.Context;
-               ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
-               IShareEnabler remoteIF = factory.CreateChannel();
-               dokanError = remoteIF.CloseFile(filename, ref DokanContext);
-               info.Context = DokanContext;
+            if (info.refFileHandleContext == 0)
+            {
+               dokanError = Dokan.DOKAN_SUCCESS;
             }
             else
             {
-               dokanError = Dokan.ERROR_ACCESS_DENIED;
+               // When Closefile is called the, The Process may have already gone (i.e. closing notepad !)
+               // bool writeable;
+               // if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
+               {
+                  CheckAndCreateChannel();
+                  dokanError = remoteIF.CloseFile(filename, ref info.refFileHandleContext);
+               }
+               //else
+               //{
+               //   dokanError = Dokan.ERROR_ACCESS_DENIED;
+               //}
             }
          }
          catch (Exception ex)
          {
-            int win32 = ((short)Marshal.GetHRForException(ex) * -1);
             Log.ErrorException("CloseFile threw: ", ex);
-            dokanError = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            dokanError = Utils.BestAttemptToWin32(ex);
          }
          finally
          {
@@ -259,7 +300,7 @@ namespace ClientLiquesceSvc
          return dokanError;
       }
 
-      public int ReadFile(string filename, byte[] buffer, ref uint readBytes, long offset, DokanFileInfo info)
+      public int ReadFile(string filename, ref byte[] buffer, ref uint readBytes, long offset, DokanFileInfo info)
       {
          int errorCode = Dokan.DOKAN_SUCCESS;
          try
@@ -268,11 +309,8 @@ namespace ClientLiquesceSvc
             bool writeable;
             if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
             {
-               Object DokanContext = info.Context;
-               ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
-               IShareEnabler remoteIF = factory.CreateChannel();
-               errorCode = remoteIF.ReadFile(filename, buffer, ref readBytes, offset, ref DokanContext);
-               info.Context = DokanContext;
+               CheckAndCreateChannel();
+               errorCode = remoteIF.ReadFile(filename, ref buffer, ref readBytes, offset, info.refFileHandleContext);
             }
             else
             {
@@ -281,9 +319,8 @@ namespace ClientLiquesceSvc
          }
          catch (Exception ex)
          {
-            int win32 = ((short)Marshal.GetHRForException(ex) * -1);
             Log.ErrorException("ReadFile threw: ", ex);
-            errorCode = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            errorCode = Utils.BestAttemptToWin32(ex);
          }
          finally
          {
@@ -301,17 +338,29 @@ namespace ClientLiquesceSvc
             bool writeable;
             if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
             {
-               if (!writeable )
+               if (!writeable)
                {
                   dokanError = Dokan.ERROR_ACCESS_DENIED;
                }
                else
                {
-                  Object DokanContext = info.Context;
-                  ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
-                  IShareEnabler remoteIF = factory.CreateChannel();
-                  dokanError = remoteIF.WriteFile(filename, buffer, ref writtenBytes, offset, ref DokanContext);
-                  info.Context = DokanContext;
+                  CheckAndCreateChannel();
+                  // MaxReceivedMessageSize must also match what you put in the MaxBufferSize.  Default is 65536.
+                  // This has been set to 2147483647 in the app config files
+                  int sendSize = buffer.Length;
+                  const int magic = 1 << 30; //Drop as few ToDo_Type be safe)
+                  do
+                  {
+                     int bufSize = sendSize - (int)writtenBytes;
+                     if (bufSize > magic)
+                        bufSize = magic;
+                     byte[] sendBuffer = new byte[bufSize];
+                     Array.Copy(buffer, writtenBytes, sendBuffer, 0, bufSize);
+                     uint writtenBytesThisTime = 0;
+                     dokanError = remoteIF.WriteFile(filename, sendBuffer, ref writtenBytesThisTime, offset + writtenBytes, info.refFileHandleContext);
+                     writtenBytes += writtenBytesThisTime;
+                  } while ((writtenBytes != buffer.Length)
+                        && (dokanError == Dokan.DOKAN_SUCCESS));
                }
             }
             else
@@ -321,9 +370,8 @@ namespace ClientLiquesceSvc
          }
          catch (Exception ex)
          {
-            int win32 = ((short)Marshal.GetHRForException(ex) * -1);
             Log.ErrorException("WriteFile threw: ", ex);
-            dokanError = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            dokanError = Utils.BestAttemptToWin32(ex);
          }
          finally
          {
@@ -338,25 +386,28 @@ namespace ClientLiquesceSvc
          try
          {
             Log.Trace("FlushFileBuffers IN DokanProcessId[{0}]", info.ProcessId);
-            bool writeable;
-            if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
+            if (info.refFileHandleContext == 0)
             {
-                  Object DokanContext = info.Context;
-                  ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
-                  IShareEnabler remoteIF = factory.CreateChannel();
-                  dokanError = remoteIF.FlushFileBuffers(filename, ref DokanContext);
-                  info.Context = DokanContext;
+               dokanError = Dokan.DOKAN_SUCCESS;
             }
             else
             {
-               dokanError = Dokan.ERROR_ACCESS_DENIED;
+               bool writeable;
+               if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
+               {
+                  CheckAndCreateChannel();
+                  dokanError = remoteIF.FlushFileBuffers(filename, info.refFileHandleContext);
+               }
+               else
+               {
+                  dokanError = Dokan.ERROR_ACCESS_DENIED;
+               }
             }
          }
          catch (Exception ex)
          {
-            int win32 = ((short)Marshal.GetHRForException(ex) * -1);
             Log.ErrorException("FlushFileBuffers threw: ", ex);
-            dokanError = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            dokanError = Utils.BestAttemptToWin32(ex);
          }
          finally
          {
@@ -365,7 +416,7 @@ namespace ClientLiquesceSvc
          return dokanError;
       }
 
-      public int GetFileInformation(string filename, FileInformation fileinfo, DokanFileInfo info)
+      public int GetFileInformation(string filename, ref FileInformation fileinfo, DokanFileInfo info)
       {
          int dokanReturn = Dokan.DOKAN_ERROR;
          try
@@ -374,11 +425,8 @@ namespace ClientLiquesceSvc
             bool writeable;
             if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
             {
-                  Object DokanContext = info.Context;
-                  ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
-                  IShareEnabler remoteIF = factory.CreateChannel();
-                  dokanReturn = remoteIF.GetFileInformation(filename, fileinfo, ref DokanContext);
-                  info.Context = DokanContext;
+               CheckAndCreateChannel();
+               dokanReturn = remoteIF.GetFileInformation(filename, ref fileinfo, info.refFileHandleContext);
             }
             else
             {
@@ -387,9 +435,8 @@ namespace ClientLiquesceSvc
          }
          catch (Exception ex)
          {
-            int win32 = ((short)Marshal.GetHRForException(ex) * -1);
             Log.ErrorException("FlushFileBuffers threw: ", ex);
-            dokanReturn = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            dokanReturn = Utils.BestAttemptToWin32(ex);
          }
          finally
          {
@@ -408,11 +455,8 @@ namespace ClientLiquesceSvc
             bool writeable;
             if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
             {
-               Object DokanContext = info.Context;
-               ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
-               IShareEnabler remoteIF = factory.CreateChannel();
-               dokanReturn = remoteIF.FindFiles(filename, out files, ref DokanContext);
-               info.Context = DokanContext;
+               CheckAndCreateChannel();
+               dokanReturn = remoteIF.FindFiles(filename, out files);
             }
             else
             {
@@ -421,9 +465,8 @@ namespace ClientLiquesceSvc
          }
          catch (Exception ex)
          {
-            int win32 = ((short)Marshal.GetHRForException(ex) * -1);
             Log.ErrorException("FindFiles threw: ", ex);
-            dokanReturn = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            dokanReturn = Utils.BestAttemptToWin32(ex);
          }
          finally
          {
@@ -456,11 +499,8 @@ namespace ClientLiquesceSvc
             bool writeable;
             if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
             {
-                  Object DokanContext = info.Context;
-                  ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
-                  IShareEnabler remoteIF = factory.CreateChannel();
-                  dokanReturn = remoteIF.FindFilesWithPattern(filename, pattern, out files, ref DokanContext);
-                  info.Context = DokanContext;
+               CheckAndCreateChannel();
+               dokanReturn = remoteIF.FindFilesWithPattern(filename, pattern, out files);
             }
             else
             {
@@ -469,9 +509,8 @@ namespace ClientLiquesceSvc
          }
          catch (Exception ex)
          {
-            int win32 = ((short)Marshal.GetHRForException(ex) * -1);
             Log.ErrorException("FindFilesWithPattern threw: ", ex);
-            dokanReturn = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            dokanReturn = Utils.BestAttemptToWin32(ex);
          }
          finally
          {
@@ -503,17 +542,14 @@ namespace ClientLiquesceSvc
             bool writeable;
             if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
             {
-               if (!writeable )
+               if (!writeable)
                {
                   dokanReturn = Dokan.ERROR_ACCESS_DENIED;
                }
                else
                {
-                  Object DokanContext = info.Context;
-                  ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
-                  IShareEnabler remoteIF = factory.CreateChannel();
-                  dokanReturn = remoteIF.SetFileAttributes(filename, attr, ref DokanContext);
-                  info.Context = DokanContext;
+                  CheckAndCreateChannel();
+                  dokanReturn = remoteIF.SetFileAttributes(filename, attr, info.refFileHandleContext);
                }
             }
             else
@@ -523,9 +559,8 @@ namespace ClientLiquesceSvc
          }
          catch (Exception ex)
          {
-            int win32 = ((short)Marshal.GetHRForException(ex) * -1);
             Log.ErrorException("SetFileAttributes threw: ", ex);
-            dokanReturn = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            dokanReturn = Utils.BestAttemptToWin32(ex);
          }
          finally
          {
@@ -549,11 +584,8 @@ namespace ClientLiquesceSvc
                }
                else
                {
-                  Object DokanContext = info.Context;
-                  ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
-                  IShareEnabler remoteIF = factory.CreateChannel();
-                  dokanReturn = remoteIF.SetFileTime(filename, ctime, atime, mtime, ref DokanContext);
-                  info.Context = DokanContext;
+                  CheckAndCreateChannel();
+                  dokanReturn = remoteIF.SetFileTime(filename, ctime, atime, mtime, info.refFileHandleContext);
                }
             }
             else
@@ -563,9 +595,8 @@ namespace ClientLiquesceSvc
          }
          catch (Exception ex)
          {
-            int win32 = ((short)Marshal.GetHRForException(ex) * -1);
             Log.ErrorException("SetFileTime threw: ", ex);
-            dokanReturn = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            dokanReturn = Utils.BestAttemptToWin32(ex);
          }
          finally
          {
@@ -593,11 +624,8 @@ namespace ClientLiquesceSvc
                }
                else
                {
-                  Object DokanContext = info.Context;
-                  ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
-                  IShareEnabler remoteIF = factory.CreateChannel();
-                  dokanReturn = remoteIF.DeleteFile(filename, ref DokanContext);
-                  info.Context = DokanContext;
+                  CheckAndCreateChannel();
+                  dokanReturn = remoteIF.DeleteFile(filename, ref info.refFileHandleContext);
                }
             }
             else
@@ -607,9 +635,8 @@ namespace ClientLiquesceSvc
          }
          catch (Exception ex)
          {
-            int win32 = ((short)Marshal.GetHRForException(ex) * -1);
             Log.ErrorException("DeleteFile threw: ", ex);
-            dokanReturn = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            dokanReturn = Utils.BestAttemptToWin32(ex);
          }
          finally
          {
@@ -633,13 +660,8 @@ namespace ClientLiquesceSvc
                }
                else
                {
-                  Object DokanContext = info.Context;
-                  bool isDirectory = info.IsDirectory;
-                  ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
-                  IShareEnabler remoteIF = factory.CreateChannel();
-                  dokanReturn = remoteIF.DeleteDirectory(filename, ref DokanContext, ref isDirectory);
-                  info.Context = DokanContext;
-                  info.IsDirectory = isDirectory;
+                  CheckAndCreateChannel();
+                  dokanReturn = remoteIF.DeleteDirectory(filename, info.refFileHandleContext, info.IsDirectory);
                }
             }
             else
@@ -649,9 +671,8 @@ namespace ClientLiquesceSvc
          }
          catch (Exception ex)
          {
-            int win32 = ((short)Marshal.GetHRForException(ex) * -1);
             Log.ErrorException("DeleteDirectory threw: ", ex);
-            dokanReturn = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            dokanReturn = Utils.BestAttemptToWin32(ex);
          }
          finally
          {
@@ -678,13 +699,8 @@ namespace ClientLiquesceSvc
                }
                else
                {
-                  Object DokanContext = info.Context;
-                  bool isDirectory = info.IsDirectory;
-                  ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
-                  IShareEnabler remoteIF = factory.CreateChannel();
-                  dokanReturn = remoteIF.MoveFile(filename, newname, replaceIfExisting, ref DokanContext, ref isDirectory);
-                  info.Context = DokanContext;
-                  info.IsDirectory = isDirectory;
+                  CheckAndCreateChannel();
+                  dokanReturn = remoteIF.MoveFile(filename, newname, replaceIfExisting, info.refFileHandleContext, info.IsDirectory);
                }
             }
             else
@@ -694,9 +710,8 @@ namespace ClientLiquesceSvc
          }
          catch (Exception ex)
          {
-            int win32 = ((short)Marshal.GetHRForException(ex) * -1);
             Log.ErrorException("MoveFile threw: ", ex);
-            dokanReturn = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            dokanReturn = Utils.BestAttemptToWin32(ex);
          }
          finally
          {
@@ -720,11 +735,8 @@ namespace ClientLiquesceSvc
                }
                else
                {
-                  Object DokanContext = info.Context;
-                  ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
-                  IShareEnabler remoteIF = factory.CreateChannel();
-                  dokanReturn = remoteIF.SetEndOfFile(filename, length, ref DokanContext);
-                  info.Context = DokanContext;
+                  CheckAndCreateChannel();
+                  dokanReturn = remoteIF.SetEndOfFile(filename, length, info.refFileHandleContext);
                }
             }
             else
@@ -734,9 +746,8 @@ namespace ClientLiquesceSvc
          }
          catch (Exception ex)
          {
-            int win32 = ((short)Marshal.GetHRForException(ex) * -1);
             Log.ErrorException("SetEndOfFile threw: ", ex);
-            dokanReturn = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            dokanReturn = Utils.BestAttemptToWin32(ex);
          }
          finally
          {
@@ -760,11 +771,8 @@ namespace ClientLiquesceSvc
                }
                else
                {
-                  Object DokanContext = info.Context;
-                  ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
-                  IShareEnabler remoteIF = factory.CreateChannel();
-                  dokanReturn = remoteIF.SetAllocationSize(filename, length, ref DokanContext);
-                  info.Context = DokanContext;
+                  CheckAndCreateChannel();
+                  dokanReturn = remoteIF.SetAllocationSize(filename, length, info.refFileHandleContext);
                }
             }
             else
@@ -774,9 +782,8 @@ namespace ClientLiquesceSvc
          }
          catch (Exception ex)
          {
-            int win32 = ((short)Marshal.GetHRForException(ex) * -1);
             Log.ErrorException("SetAllocationSize threw: ", ex);
-            dokanReturn = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            dokanReturn = Utils.BestAttemptToWin32(ex);
          }
          finally
          {
@@ -794,12 +801,8 @@ namespace ClientLiquesceSvc
             bool writeable;
             if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
             {
-               
-                  Object DokanContext = info.Context;
-                  ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
-                  IShareEnabler remoteIF = factory.CreateChannel();
-                  dokanReturn = remoteIF.LockFile(filename, offset, length, ref DokanContext);
-                  info.Context = DokanContext;
+               CheckAndCreateChannel();
+               dokanReturn = remoteIF.LockFile(filename, offset, length, info.refFileHandleContext);
             }
             else
             {
@@ -809,9 +812,8 @@ namespace ClientLiquesceSvc
          }
          catch (Exception ex)
          {
-            int win32 = ((short)Marshal.GetHRForException(ex) * -1);
             Log.ErrorException("LockFile threw: ", ex);
-            dokanReturn = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            dokanReturn = Utils.BestAttemptToWin32(ex);
          }
          finally
          {
@@ -829,11 +831,8 @@ namespace ClientLiquesceSvc
             bool writeable;
             if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
             {
-                  Object DokanContext = info.Context;
-                  ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
-                  IShareEnabler remoteIF = factory.CreateChannel();
-                  dokanReturn = remoteIF.UnlockFile(filename, offset, length, ref DokanContext);
-                  info.Context = DokanContext;
+               CheckAndCreateChannel();
+               dokanReturn = remoteIF.UnlockFile(filename, offset, length, info.refFileHandleContext);
             }
             else
             {
@@ -842,9 +841,8 @@ namespace ClientLiquesceSvc
          }
          catch (Exception ex)
          {
-            int win32 = ((short)Marshal.GetHRForException(ex) * -1);
             Log.ErrorException("UnlockFile threw: ", ex);
-            dokanReturn = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            dokanReturn = Utils.BestAttemptToWin32(ex);
          }
          finally
          {
@@ -862,11 +860,8 @@ namespace ClientLiquesceSvc
             bool writeable;
             if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
             {
-                  Object DokanContext = info.Context;
-                  ChannelFactory<IShareEnabler> factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
-                  IShareEnabler remoteIF = factory.CreateChannel();
-                  dokanReturn = remoteIF.GetDiskFreeSpace(ref freeBytesAvailable, ref totalBytes, ref totalFreeBytes, ref DokanContext);
-                  info.Context = DokanContext;
+               CheckAndCreateChannel();
+               dokanReturn = remoteIF.GetDiskFreeSpace(ref freeBytesAvailable, ref totalBytes, ref totalFreeBytes);
             }
             else
             {
@@ -875,9 +870,8 @@ namespace ClientLiquesceSvc
          }
          catch (Exception ex)
          {
-            int win32 = ((short)Marshal.GetHRForException(ex) * -1);
             Log.ErrorException("UnlockFile threw: ", ex);
-            dokanReturn = (win32 != 0) ? win32 : Dokan.ERROR_ACCESS_DENIED;
+            dokanReturn = Utils.BestAttemptToWin32(ex);
          }
          finally
          {
