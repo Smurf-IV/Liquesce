@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Net.Security;
 using System.ServiceModel;
 using DokanNet;
 
@@ -21,66 +22,66 @@ namespace LiquesceFacade
       bool CanIdentityUseThis(string DomainUserIdentity, string sharePath, out bool writeable);
 
       [OperationContract]
-      int CreateFile(string filename, uint rawAccessMode, uint rawShare, uint rawCreationDisposition, uint rawFlagsAndAttributes, ref Object DokanContext, ref bool isDirectory);
+      int CreateFile(string filename, uint rawAccessMode, uint rawShare, uint rawCreationDisposition, uint rawFlagsAndAttributes, out UInt64 fileRefContext, out bool isDirectory);
 
       [OperationContract]
-      int OpenDirectory(string filename, ref Object DokanContext, ref bool isDirectory);
+      int OpenDirectory(string filename, out bool isDirectory);
 
       [OperationContract]
-      int CreateDirectory(string filename, ref Object DokanContext, ref bool isDirectory);
+      int CreateDirectory(string filename, out bool isDirectory);
 
       [OperationContract]
-      int Cleanup(string filename, ref Object DokanContext, bool isDirectory);
+      int Cleanup(string filename, ref UInt64 fileRefContext, bool deleteOnClose, bool isDirectory);
 
       [OperationContract]
-      int CloseFile(string filename, ref Object DokanContext);
+      int CloseFile(string filename, ref UInt64 fileRefContext);
 
       [OperationContract]
-      int ReadFile(string filename, byte[] buffer, ref uint readBytes, long offset, ref Object DokanContext);
+      int ReadFile(string filename, ref byte[] buffer, ref uint readBytes, long offset, UInt64 fileRefContext);
 
       [OperationContract]
-      int WriteFile(string filename, byte[] buffer, ref uint writtenBytes, long offset, ref Object DokanContext);
+      int WriteFile(string filename, byte[] buffer, ref uint writtenBytes, long offset, UInt64 fileRefContext);
 
       [OperationContract]
-      int FlushFileBuffers(string filename, ref Object DokanContext);
+      int FlushFileBuffers(string filename, UInt64 fileRefContext);
 
       [OperationContract]
-      int GetFileInformation(string filename, FileInformation fileinfo, ref Object DokanContext);
+      int GetFileInformation(string filename, ref FileInformation fileinfo, UInt64 fileRefContext);
 
       [OperationContract]
-      int FindFiles(string filename, out FileInformation[] files, ref Object DokanContext);
+      int FindFiles(string filename, out FileInformation[] files);
 
       [OperationContract]
-      int FindFilesWithPattern(string filename, string pattern, out FileInformation[] files, ref Object DokanContext);
+      int FindFilesWithPattern(string filename, string pattern, out FileInformation[] files);
 
       [OperationContract]
-      int SetFileAttributes(string filename, FileAttributes attr, ref Object DokanContext);
+      int SetFileAttributes(string filename, FileAttributes attr, UInt64 fileRefContext);
 
       [OperationContract]
-      int SetFileTime(string filename, DateTime ctime, DateTime atime, DateTime mtime, ref Object DokanContext);
+      int SetFileTime(string filename, DateTime ctime, DateTime atime, DateTime mtime, UInt64 fileRefContext);
 
       [OperationContract]
-      int DeleteFile(string filename, ref Object DokanContext);
+      int DeleteFile(string filename, ref UInt64 fileRefContext);
 
       [OperationContract]
-      int DeleteDirectory(string filename, ref Object DokanContext, ref bool isDirectory);
+      int DeleteDirectory(string filename, UInt64 fileRefContext, bool isDirectory);
 
       [OperationContract]
-      int MoveFile(string filename, string newname, bool replace, ref Object DokanContext, ref bool isDirectory);
+      int MoveFile(string filename, string newname, bool replace, UInt64 fileRefContext, bool isDirectory);
 
       [OperationContract]
-      int SetEndOfFile(string filename, long length, ref Object DokanContext);
+      int SetEndOfFile(string filename, long length, UInt64 fileRefContext);
 
       [OperationContract]
-      int SetAllocationSize(string filename, long length, ref Object DokanContext);
+      int SetAllocationSize(string filename, long length, UInt64 fileRefContext);
 
       [OperationContract]
-      int LockFile(string filename, long offset, long length, ref Object DokanContext);
+      int LockFile(string filename, long offset, long length, UInt64 fileRefContext);
 
       [OperationContract]
-      int UnlockFile(string filename, long offset, long length, ref Object DokanContext);
+      int UnlockFile(string filename, long offset, long length, UInt64 fileRefContext);
 
       [OperationContract]
-      int GetDiskFreeSpace(ref ulong freeBytesAvailable, ref ulong totalBytes, ref ulong totalFreeBytes, ref Object DokanContext);
+      int GetDiskFreeSpace(ref ulong freeBytesAvailable, ref ulong totalBytes, ref ulong totalFreeBytes);
    }
 }

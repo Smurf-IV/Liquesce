@@ -76,11 +76,12 @@ namespace LiquesceSvc
             }
             _ILiquesceHost = new ServiceHost(typeof(LiquesceFacade));
             _ILiquesceHostCallBack = new ServiceHost(typeof(LiquesceCallBackFacade));
-            _IShareEnablerHost = new ServiceHost(typeof(ShareEnabler));
-
+            _IShareEnablerHost = new ServiceHost(typeof(ShareEnabler)) { CloseTimeout = TimeSpan.MaxValue };
             _ILiquesceHost.Open();
             _ILiquesceHostCallBack.Open();
             _IShareEnablerHost.Open();
+
+            
 
             RequestAdditionalTime(30000); // let the SCM know that this part could take a while due to other services starting up
             base.OnStart(args);

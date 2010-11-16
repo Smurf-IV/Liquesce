@@ -308,9 +308,20 @@ namespace ClientLiquesceSvc
          finally
          {
             if (currentConfigDetails == null)
+            {
+               Log.Info("Creating new ClientConfigDetails");
                currentConfigDetails = new ClientConfigDetails();
-            if (!File.Exists(configFile))
+               currentConfigDetails.SharesToRestore.Add(new ClientShareDetail());
+               try
+               {
+                  if (File.Exists(configFile))
+                     File.Move(configFile, configFile + Guid.NewGuid());
+               }
+               catch
+               {
+               }
                WriteOutConfigDetails();
+            }
          }
 
       }

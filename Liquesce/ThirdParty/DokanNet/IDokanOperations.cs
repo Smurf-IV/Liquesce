@@ -6,31 +6,14 @@ namespace DokanNet
 {
    public class DokanFileInfo
    {
-      public Object Context; // This is initialised to null
+      public ulong refFileHandleContext; // Used by the ops.cs files to store a lookup to the FileStream etc.
       public bool IsDirectory;
-      internal ulong InfoId;
-// ReSharper disable UnaccessedField.Global
       public uint ProcessId;
       public bool DeleteOnClose;
       public bool PagingIo;
       public bool SynchronousIo;
       public bool Nocache;
       public bool WriteToEndOfFile;
-// ReSharper restore UnaccessedField.Global
-      internal readonly ulong DokanContext; // for internal use
-
-      public DokanFileInfo(ulong dokanContext)
-      {
-         Context = null;
-         IsDirectory = false;
-         DeleteOnClose = false;
-         PagingIo = false;
-         SynchronousIo = false;
-         Nocache = false;
-         WriteToEndOfFile = false;
-         InfoId = 0;
-         DokanContext = dokanContext;
-      }
    }
 
    // Now used by the client service via WCF
@@ -63,13 +46,13 @@ namespace DokanNet
 
       int CloseFile( string filename, DokanFileInfo info);
 
-      int ReadFile( string filename, byte[] buffer, ref uint readBytes, long offset, DokanFileInfo info);
+      int ReadFile( string filename, ref byte[] buffer, ref uint readBytes, long offset, DokanFileInfo info);
 
       int WriteFile( string filename, byte[] buffer, ref uint writtenBytes, long offset, DokanFileInfo info);
 
       int FlushFileBuffers( string filename, DokanFileInfo info);
 
-      int GetFileInformation( string filename, FileInformation fileinfo, DokanFileInfo info);
+      int GetFileInformation( string filename, ref FileInformation fileinfo, DokanFileInfo info);
 
       int FindFiles(string filename, out FileInformation[] files, DokanFileInfo info);
 

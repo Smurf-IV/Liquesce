@@ -7,17 +7,17 @@ namespace LiquesceFacade
    public class ClientShareDetail
    {
       [DataMember(IsRequired = true)]
-      public string DomainUserIdentity;
+      public string DomainUserIdentity = "Everyone";
       [DataMember(IsRequired = true)]
-      public string TargetShareName;
+      public string TargetShareName = "Dokan";
 
       // Make this is a string so that the XML looks better (Rather than exporting 72 for 'N')
       // Also the V 0.6 of Dokan is supposed to be able to use Mount points so this can then be reused for that..
       [DataMember(IsRequired = true)]
-      public string DriveLetter;
+      public string DriveLetter = "S";
 
       [DataMember(IsRequired = true)]
-      public string VolumeLabel;
+      public string VolumeLabel = "LShare";
    }
 
    /// <summary>
