@@ -362,14 +362,16 @@ namespace LiquesceSvc
          return Dokan.DOKAN_SUCCESS;
       }
 
-      public int ReadFile(string filename, ref byte[] buffer, ref uint readBytes, long offset, DokanFileInfo info)
+
+      public int ReadFileNative(string filename, IntPtr rawBuffer, uint rawBufferLength, ref uint rawReadLength, long rawOffset, DokanFileInfo info)
       {
          int errorCode = Dokan.DOKAN_SUCCESS;
+         bool closeOnReturn = false;
+         FileStream fileStream = null;
          try
          {
-            Log.Debug("ReadFile IN offset=[{1}] DokanProcessId[{0}]", info.ProcessId, offset);
-            bool closeOnReturn = false;
-            FileStream fileStream;
+            Log.Debug("ReadFile IN offset=[{1}] DokanProcessId[{0}]", info.ProcessId, rawOffset);
+            rawReadLength = 0;
             if (info.refFileHandleContext == 0)
             {
                string path = roots.GetPath(filename);
@@ -383,18 +385,19 @@ namespace LiquesceSvc
                using (openFilesSync.ReadLock())
                   fileStream = openFiles[info.refFileHandleContext];
             }
-            if (offset > fileStream.Length)
+            if (rawOffset > fileStream.Length)
             {
-               readBytes = 0;
                errorCode = Dokan.DOKAN_ERROR;
             }
             else
             {
-               fileStream.Seek(offset, SeekOrigin.Begin);
-               readBytes = (uint)fileStream.Read(buffer, 0, buffer.Length);
+               fileStream.Seek(rawOffset, SeekOrigin.Begin);
+               // readBytes = (uint)fileStream.Read(buffer, 0, buffer.Length);
+               if (0 == ReadFile(fileStream.SafeFileHandle, rawBuffer, rawBufferLength, out rawReadLength, IntPtr.Zero))
+               {
+                  Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error(), new IntPtr(-1));
+               }
             }
-            if (closeOnReturn)
-               fileStream.Close();
          }
          catch (Exception ex)
          {
@@ -403,13 +406,26 @@ namespace LiquesceSvc
          }
          finally
          {
-            Log.Debug("ReadFile OUT readBytes=[{0}], errorCode[{1}]", readBytes, errorCode);
+            try
+            {
+               if (closeOnReturn
+                  && (fileStream != null )
+                  )
+                  fileStream.Close();
+            }
+            catch (Exception ex)
+            {
+               Log.ErrorException("closeOnReturn threw: ", ex);
+            } 
+            Log.Debug("ReadFile OUT readBytes=[{0}], errorCode[{1}]", rawReadLength, errorCode);
          }
          return errorCode;
       }
 
-      public int WriteFile(string filename, byte[] buffer, ref uint writtenBytes, long offset, DokanFileInfo info)
+      public int WriteFileNative(string filename, IntPtr rawBuffer, uint rawNumberOfBytesToWrite, ref uint rawNumberOfBytesWritten, long rawOffset, DokanFileInfo info)
       {
+         int errorCode = Dokan.DOKAN_SUCCESS;
+         rawNumberOfBytesWritten = 0;
          try
          {
             Log.Trace("WriteFile IN DokanProcessId[{0}]", info.ProcessId);
@@ -420,33 +436,31 @@ namespace LiquesceSvc
                using (openFilesSync.ReadLock())
                   fileStream = openFiles[info.refFileHandleContext];
                if (info.WriteToEndOfFile)//  If true, write to the current end of file instead of Offset parameter.
-                  fileStream.Seek(offset, SeekOrigin.Begin);
+                  fileStream.Seek(rawOffset, SeekOrigin.Begin);
                else
                   fileStream.Seek(0, SeekOrigin.End);
-               fileStream.Write(buffer, 0, buffer.Length);
-               writtenBytes = (uint)buffer.Length;
+               if ( 0 == WriteFile( fileStream.SafeFileHandle, rawBuffer, rawNumberOfBytesToWrite, out rawNumberOfBytesWritten, IntPtr.Zero ) )
+               {
+                  Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error(), new IntPtr(-1));
+               }
             }
             else
             {
-               return Dokan.ERROR_FILE_NOT_FOUND;
+               errorCode = Dokan.ERROR_FILE_NOT_FOUND;
             }
-         }
-         catch (NotSupportedException ex)
-         {
-            Log.ErrorException("WriteFile threw: ", ex);
-            return Dokan.ERROR_ACCESS_DENIED;
          }
          catch (Exception ex)
          {
             Log.ErrorException("WriteFile threw: ", ex);
-            return Utils.BestAttemptToWin32(ex);
+            errorCode = Utils.BestAttemptToWin32(ex);
          }
          finally
          {
-            Log.Trace("WriteFile OUT");
+            Log.Trace("WriteFile OUT Written[{0}] errorCode[{1}]", rawNumberOfBytesWritten, errorCode);
          }
-         return Dokan.DOKAN_SUCCESS;
+         return errorCode;
       }
+
 
       public int FlushFileBuffers(string filename, DokanFileInfo info)
       {
@@ -478,7 +492,7 @@ namespace LiquesceSvc
 
       public int GetFileInformation(string filename, ref FileInformation fileinfo, DokanFileInfo info)
       {
-         int dokanReturn = Dokan.DOKAN_ERROR;
+         int dokanReturn = Dokan.ERROR_FILE_NOT_FOUND;
          try
          {
             Log.Trace("GetFileInformation IN DokanProcessId[{0}]", info.ProcessId);
@@ -1152,6 +1166,9 @@ namespace LiquesceSvc
                try
                {
                   Log.Info("Restore share for : [{0}] [{1} : {2}]", shareDetails.Path, shareDetails.Name, shareDetails.Description);
+                  // Got to force the file to be found so, that the share has somewhere to attach to
+                  string connectSearch = shareDetails.Path.Replace(Path.GetPathRoot(shareDetails.Path), PathDirectorySeparatorChar);
+                  OpenDirectory(connectSearch, new DokanFileInfo());
                   LanManShareHandler.SetLanManShare(shareDetails);
                }
                catch (Exception ex)
@@ -1205,8 +1222,17 @@ namespace LiquesceSvc
               IntPtr hTemplateFile
               );
 
+      [DllImport("kernel32.dll", SetLastError = true)]
+      private static extern int WriteFile(SafeFileHandle handle, IntPtr buffer,
+        uint numBytesToWrite, out uint numBytesWritten, IntPtr /*NativeOverlapped* */ lpOverlapped);
+
+      [DllImport("kernel32.dll", SetLastError = true)]
+      private static extern int ReadFile(SafeFileHandle handle, IntPtr bytes,
+         uint numBytesToRead, out uint numBytesRead_mustBeZero, IntPtr /*NativeOverlapped* */ overlapped);
+
       [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-      private static extern bool GetDiskFreeSpaceEx(string lpDirectoryName, out ulong lpFreeBytesAvailable, out ulong lpTotalNumberOfBytes, out ulong lpTotalNumberOfFreeBytes);
+      private static extern bool GetDiskFreeSpaceEx(string lpDirectoryName, out ulong lpFreeBytesAvailable, 
+         out ulong lpTotalNumberOfBytes, out ulong lpTotalNumberOfFreeBytes);
 
       [DllImport("kernel32.dll", SetLastError = true)]
       private static extern bool MoveFileEx(string lpExistingFileName, string lpNewFileName, UInt32 dwFlags);
@@ -1216,7 +1242,7 @@ namespace LiquesceSvc
 
       [DllImport("kernel32.dll", SetLastError = true)]
       [return: MarshalAs(UnmanagedType.Bool)]
-      static extern bool SetFileTime(SafeFileHandle hFile, ref long lpCreationTime, ref long lpLastAccessTime, ref long lpLastWriteTime);
+      private static extern bool SetFileTime(SafeFileHandle hFile, ref long lpCreationTime, ref long lpLastAccessTime, ref long lpLastWriteTime);
 
       #endregion
 

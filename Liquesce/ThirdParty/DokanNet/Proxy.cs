@@ -272,16 +272,9 @@ namespace DokanNet
          {
             string file = GetFileName(rawFileName);
 
-            byte[] buf = new Byte[rawBufferLength];
-
-            uint readLength = 0;
-            int ret = operations.ReadFile(file, ref buf, ref readLength, rawOffset, ConvertFileInfo(ref rawFileInfo));
-            if (ret == 0)
-            {
-               rawReadLength = readLength;
-               Marshal.Copy(buf, 0, rawBuffer, (int)rawBufferLength);
-            }
-            return ret;
+            // Need to reduce memory footprint from Dokan to .Net !!
+            // http://code.google.com/p/dokan/issues/detail?id=174
+            return operations.ReadFileNative(file, rawBuffer, rawBufferLength, ref rawReadLength, rawOffset, ConvertFileInfo(ref rawFileInfo));
          }
          catch (Exception ex)
          {
@@ -300,15 +293,9 @@ namespace DokanNet
          {
             string file = GetFileName(rawFileName);
 
-            Byte[] buf = new Byte[rawNumberOfBytesToWrite];
-            Marshal.Copy(rawBuffer, buf, 0, (int)rawNumberOfBytesToWrite);
-
-            uint bytesWritten = 0;
-            int ret = operations.WriteFile(
-                file, buf, ref bytesWritten, rawOffset, ConvertFileInfo(ref rawFileInfo));
-            if (ret == 0)
-               rawNumberOfBytesWritten = bytesWritten;
-            return ret;
+            // Need to reduce memory footprint from Dokan to .Net !!
+            // http://code.google.com/p/dokan/issues/detail?id=174
+            return operations.WriteFileNative(file, rawBuffer, rawNumberOfBytesToWrite, ref rawNumberOfBytesWritten, rawOffset, ConvertFileInfo(ref rawFileInfo));
          }
          catch (Exception ex)
          {
@@ -367,9 +354,9 @@ namespace DokanNet
 
                rawHandleFileInformation.nFileSizeLow = (uint)(fi.Length & 0xffffffff);
                rawHandleFileInformation.nFileSizeHigh = (uint)(fi.Length >> 32);
-               rawHandleFileInformation.dwNumberOfLinks = 0;
+               rawHandleFileInformation.dwNumberOfLinks = 1;
                rawHandleFileInformation.nFileIndexHigh = 0;
-               rawHandleFileInformation.nFileIndexLow = 0;
+               rawHandleFileInformation.nFileIndexLow = (uint)fi.FileName.GetHashCode();
             }
 
             return ret;

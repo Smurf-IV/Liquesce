@@ -81,8 +81,10 @@ namespace LiquesceSvc
             throw new NullReferenceException("The Dokan Drive has not been started");
          DokanFileInfo info = new DokanFileInfo { refFileHandleContext = fileRefContext };
          // TODO: Do not send a huge empty buffer over, just to have it return partially filled !!
-         int status = ManagementLayer.Instance.dokanOperations.ReadFile(filename, ref buffer, ref readBytes, offset, info);
-         return status;
+         // http://code.google.com/p/dokan/issues/detail?id=174
+         throw new NotImplementedException();
+         //int status = ManagementLayer.Instance.dokanOperations.ReadFile(filename, ref buffer, ref readBytes, offset, info);
+         //return status;
       }
 
       public int WriteFile(string filename, byte[] buffer, ref uint writtenBytes, long offset, UInt64 fileRefContext)
@@ -90,8 +92,11 @@ namespace LiquesceSvc
          if (ManagementLayer.Instance.dokanOperations == null)
             throw new NullReferenceException("The Dokan Drive has not been started");
          DokanFileInfo info = new DokanFileInfo { refFileHandleContext = fileRefContext };
-         int status = ManagementLayer.Instance.dokanOperations.WriteFile(filename, buffer, ref writtenBytes, offset, info);
-         return status;
+         // TODO: Do not send a huge empty buffer over, just to have it return partially filled !!
+         // http://code.google.com/p/dokan/issues/detail?id=174
+         throw new NotImplementedException();
+         //int status = ManagementLayer.Instance.dokanOperations.WriteFile(filename, buffer, ref writtenBytes, offset, info);
+         //return status;
       }
 
       public int FlushFileBuffers(string filename, UInt64 fileRefContext)

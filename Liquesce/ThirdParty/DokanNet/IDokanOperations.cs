@@ -46,9 +46,9 @@ namespace DokanNet
 
       int CloseFile( string filename, DokanFileInfo info);
 
-      int ReadFile( string filename, ref byte[] buffer, ref uint readBytes, long offset, DokanFileInfo info);
+      int ReadFileNative(string file, IntPtr rawBuffer, uint rawBufferLength, ref uint rawReadLength, long rawOffset, DokanFileInfo convertFileInfo);
 
-      int WriteFile( string filename, byte[] buffer, ref uint writtenBytes, long offset, DokanFileInfo info);
+      int WriteFileNative(string filename, IntPtr rawBuffer, uint rawNumberOfBytesToWrite, ref uint rawNumberOfBytesWritten, long rawOffset, DokanFileInfo info);
 
       int FlushFileBuffers( string filename, DokanFileInfo info);
 
