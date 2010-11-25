@@ -61,6 +61,18 @@ namespace ClientLiquesceSvc
             // factory.State == CommunicationState.Opened;
             ((IContextChannel) remoteIF).OperationTimeout = TimeSpan.MaxValue;
          }
+         try
+         {
+            bool isDirectory;
+            remoteIF.OpenDirectory(@"\", out isDirectory);
+         }
+         catch (Exception ex)
+         {
+            Log.WarnException("Seems like the connection timed out or something", ex);
+            remoteIF = factory.CreateChannel();
+            // factory.State == CommunicationState.Opened;
+            ((IContextChannel)remoteIF).OperationTimeout = TimeSpan.MaxValue;
+         }
       }
 
       #region IDokanOperations Implementation
@@ -300,38 +312,54 @@ namespace ClientLiquesceSvc
          return dokanError;
       }
 
-      public int ReadFile(string filename, ref byte[] buffer, ref uint readBytes, long offset, DokanFileInfo info)
+      public int ReadFileNative(string filename, IntPtr rawBuffer, uint rawBufferLength, ref uint rawReadLength, long rawOffset, DokanFileInfo info)
       {
-         int errorCode = Dokan.DOKAN_SUCCESS;
+         int dokanError = Dokan.DOKAN_SUCCESS;
+         rawReadLength = 0;
          try
          {
-            Log.Debug("ReadFile IN offset=[{1}] DokanProcessId[{0}]", info.ProcessId, offset);
+            Log.Debug("ReadFile IN offset=[{1}] DokanProcessId[{0}]", info.ProcessId, rawOffset);
             bool writeable;
             if (IsValidatedUser(ProcessIDToUser.GetDomainUserFromPID(info.ProcessId), out writeable))
             {
                CheckAndCreateChannel();
-               errorCode = remoteIF.ReadFile(filename, ref buffer, ref readBytes, offset, info.refFileHandleContext);
+               do
+               {
+                  int bufSize = (int)(rawBufferLength - rawReadLength);
+                  if (bufSize > configDetail.BufferWireTransferSize)
+                     bufSize = configDetail.BufferWireTransferSize;
+
+                  byte[] readBuffer = null;
+                  int actualReadLength = 0;
+                  dokanError = remoteIF.ReadFile(filename, out readBuffer, bufSize, out actualReadLength, rawOffset + rawReadLength, info.refFileHandleContext);
+
+                  Marshal.Copy(readBuffer, 0, rawBuffer + (int)rawReadLength, actualReadLength);
+
+                  rawReadLength += (uint)actualReadLength;
+               } while ( (rawReadLength != rawBufferLength)
+                        && (dokanError == Dokan.DOKAN_SUCCESS));
             }
             else
             {
-               errorCode = Dokan.ERROR_ACCESS_DENIED;
+               dokanError = Dokan.ERROR_ACCESS_DENIED;
             }
          }
          catch (Exception ex)
          {
             Log.ErrorException("ReadFile threw: ", ex);
-            errorCode = Utils.BestAttemptToWin32(ex);
+            dokanError = Utils.BestAttemptToWin32(ex);
          }
          finally
          {
-            Log.Debug("ReadFile OUT readBytes=[{0}], errorCode[{1}]", readBytes, errorCode);
+            Log.Debug("ReadFile OUT readBytes=[{0}], errorCode[{1}]", rawReadLength, dokanError);
          }
-         return errorCode;
+         return dokanError;
       }
 
-      public int WriteFile(string filename, byte[] buffer, ref uint writtenBytes, long offset, DokanFileInfo info)
+      public int WriteFileNative(string filename, IntPtr rawBuffer, uint rawNumberOfBytesToWrite, ref uint rawNumberOfBytesWritten, long rawOffset, DokanFileInfo info)
       {
          int dokanError = Dokan.DOKAN_ERROR;
+         rawNumberOfBytesWritten = 0;
          try
          {
             Log.Trace("WriteFile IN DokanProcessId[{0}]", info.ProcessId);
@@ -345,21 +373,18 @@ namespace ClientLiquesceSvc
                else
                {
                   CheckAndCreateChannel();
-                  // MaxReceivedMessageSize must also match what you put in the MaxBufferSize.  Default is 65536.
-                  // This has been set to 2147483647 in the app config files
-                  int sendSize = buffer.Length;
-                  const int magic = 1 << 30; //Drop as few ToDo_Type be safe)
                   do
                   {
-                     int bufSize = sendSize - (int)writtenBytes;
-                     if (bufSize > magic)
-                        bufSize = magic;
+                     int bufSize = (int) (rawNumberOfBytesToWrite - rawNumberOfBytesWritten);
+                     if (bufSize > configDetail.BufferWireTransferSize)
+                        bufSize = configDetail.BufferWireTransferSize;
+
                      byte[] sendBuffer = new byte[bufSize];
-                     Array.Copy(buffer, writtenBytes, sendBuffer, 0, bufSize);
-                     uint writtenBytesThisTime = 0;
-                     dokanError = remoteIF.WriteFile(filename, sendBuffer, ref writtenBytesThisTime, offset + writtenBytes, info.refFileHandleContext);
-                     writtenBytes += writtenBytesThisTime;
-                  } while ((writtenBytes != buffer.Length)
+                     Marshal.Copy(rawBuffer + (int)rawNumberOfBytesWritten, sendBuffer, 0, bufSize);
+
+                     dokanError = remoteIF.WriteFile(filename, sendBuffer, rawOffset + rawNumberOfBytesWritten, info.refFileHandleContext);
+                     rawNumberOfBytesWritten += (uint)bufSize;
+                  } while ((rawNumberOfBytesWritten != rawNumberOfBytesToWrite)
                         && (dokanError == Dokan.DOKAN_SUCCESS));
                }
             }

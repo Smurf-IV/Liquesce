@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Runtime.Serialization;
 
 namespace LiquesceFacade
@@ -18,6 +19,11 @@ namespace LiquesceFacade
 
       [DataMember(IsRequired = true)]
       public string VolumeLabel = "LShare";
+
+      // Used to send data over the wire, this is not recommended to be over int.maxvalue / 2
+      // In here as different targets may have different capabilities
+      [DataMember]
+      public int BufferWireTransferSize = UInt16.MaxValue;
    }
 
    /// <summary>

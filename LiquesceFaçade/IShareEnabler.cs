@@ -36,11 +36,21 @@ namespace LiquesceFacade
       [OperationContract]
       int CloseFile(string filename, ref UInt64 fileRefContext);
 
+      /// <summary>
+      /// Will only return tha actual readbytes array size, May be null or zero bytes long
+      /// </summary>
+      /// <param name="filename"></param>
+      /// <param name="buffer"></param>
+      /// <param name="requestedReadLength"></param>
+      /// <param name="actualReadLength"></param>
+      /// <param name="offset"></param>
+      /// <param name="fileRefContext"></param>
+      /// <returns></returns>
       [OperationContract]
-      int ReadFile(string filename, ref byte[] buffer, ref uint readBytes, long offset, UInt64 fileRefContext);
+      int ReadFile(string filename, out byte[] buffer, int requestedReadLength, out int actualReadLength, long offset, UInt64 fileRefContext);
 
       [OperationContract]
-      int WriteFile(string filename, byte[] buffer, ref uint writtenBytes, long offset, UInt64 fileRefContext);
+      int WriteFile(string filename, byte[] Buffer, long Offset, UInt64 fileRefContext);
 
       [OperationContract]
       int FlushFileBuffers(string filename, UInt64 fileRefContext);
