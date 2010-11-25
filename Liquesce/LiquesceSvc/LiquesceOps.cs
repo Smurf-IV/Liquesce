@@ -138,7 +138,7 @@ namespace LiquesceSvc
                rawFlagsAndAttributes |= Proxy.FILE_FLAG_WRITE_THROUGH; // | Proxy.FILE_FLAG_NO_BUFFERING;
             // FILE_FLAG_NO_BUFFERING flag requires that all I/O operations on the file handle be in multiples of the sector size, 
             // AND that the I/O buffers also be aligned on addresses which are multiples of the sector size
-            
+
             if (info.SynchronousIo)
                rawFlagsAndAttributes |= Proxy.FILE_FLAG_SEQUENTIAL_SCAN;
             SafeFileHandle handle = CreateFile(path, rawAccessMode, rawShare, IntPtr.Zero, rawCreationDisposition, rawFlagsAndAttributes, IntPtr.Zero);
@@ -409,14 +409,14 @@ namespace LiquesceSvc
             try
             {
                if (closeOnReturn
-                  && (fileStream != null )
+                  && (fileStream != null)
                   )
                   fileStream.Close();
             }
             catch (Exception ex)
             {
                Log.ErrorException("closeOnReturn threw: ", ex);
-            } 
+            }
             Log.Debug("ReadFile OUT readBytes=[{0}], errorCode[{1}]", rawReadLength, errorCode);
          }
          return errorCode;
@@ -435,11 +435,11 @@ namespace LiquesceSvc
                FileStreamName fileStream;
                using (openFilesSync.ReadLock())
                   fileStream = openFiles[info.refFileHandleContext];
-               if (info.WriteToEndOfFile)//  If true, write to the current end of file instead of Offset parameter.
+               if (!info.WriteToEndOfFile)//  If true, write to the current end of file instead of Offset parameter.
                   fileStream.Seek(rawOffset, SeekOrigin.Begin);
                else
                   fileStream.Seek(0, SeekOrigin.End);
-               if ( 0 == WriteFile( fileStream.SafeFileHandle, rawBuffer, rawNumberOfBytesToWrite, out rawNumberOfBytesWritten, IntPtr.Zero ) )
+               if (0 == WriteFile(fileStream.SafeFileHandle, rawBuffer, rawNumberOfBytesToWrite, out rawNumberOfBytesWritten, IntPtr.Zero))
                {
                   Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error(), new IntPtr(-1));
                }
@@ -841,7 +841,7 @@ namespace LiquesceSvc
             // NORMAL mode
             string pathTarget = roots.GetPath(newname, true);
 
-//            CloseAndRemove(info);
+            //            CloseAndRemove(info);
 
             if (!info.IsDirectory)
             {
@@ -1189,7 +1189,123 @@ namespace LiquesceSvc
          }
       }
 
+      #region For the ShareEnabler
 
+      /// <summary>
+      /// Will only return tha actual readbytes array size, May be null or zero bytes long
+      /// </summary>
+      /// <param name="filename"></param>
+      /// <param name="buffer"></param>
+      /// <param name="requestedReadLength"></param>
+      /// <param name="actualReadLength"></param>
+      /// <param name="offset"></param>
+      /// <param name="info"></param>
+      /// <returns></returns>
+      internal int ReadFile(string filename, out byte[] buffer, int requestedReadLength, out int actualReadLength, long offset, DokanFileInfo info)
+      {
+         int errorCode = Dokan.DOKAN_SUCCESS;
+         actualReadLength = 0;
+         buffer = null;
+         bool closeOnReturn = false;
+         FileStream fileStream = null;
+         try
+         {
+            Log.Debug("ReadFile IN offset=[{1}] DokanProcessId[{0}]", info.ProcessId, offset);
+            if (info.refFileHandleContext == 0)
+            {
+               string path = roots.GetPath(filename);
+               Log.Warn("No context handle for [" + path + "]");
+               fileStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, (int)configDetails.BufferReadSize);
+               closeOnReturn = true;
+            }
+            else
+            {
+               Log.Trace("info.refFileHandleContext [{0}]", info.refFileHandleContext);
+               using (openFilesSync.ReadLock())
+                  fileStream = openFiles[info.refFileHandleContext];
+            }
+            fileStream.Seek(offset, SeekOrigin.Begin);
+            byte[] internalBuffer = new byte[requestedReadLength];
+            actualReadLength = fileStream.Read(internalBuffer, 0, requestedReadLength);
+            if (actualReadLength != requestedReadLength)
+               Array.Resize(ref internalBuffer, actualReadLength);
+            buffer = internalBuffer;
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException("ReadFile threw: ", ex);
+            errorCode = Utils.BestAttemptToWin32(ex);
+         }
+         finally
+         {
+            try
+            {
+               if (closeOnReturn
+                  && (fileStream != null)
+                  )
+                  fileStream.Close();
+            }
+            catch (Exception ex)
+            {
+               Log.ErrorException("ReadFile closing filestream threw: ", ex);
+            }
+            Log.Debug("ReadFile OUT readBytes=[{0}], errorCode[{1}]", actualReadLength, errorCode);
+         }
+         return errorCode;
+      }
+
+      public int WriteFile(string filename, byte[] buffer, long offset, DokanFileInfo info)
+      {
+         int errorCode = Dokan.DOKAN_ERROR;
+         bool closeOnReturn = false;
+         FileStream fileStream = null;
+         try
+         {
+            Log.Trace("WriteFile IN DokanProcessId[{0}]", info.ProcessId);
+            if (info.refFileHandleContext == 0)
+            {
+               string path = roots.GetPath(filename);
+               Log.Warn("No context handle for [" + path + "]");
+               fileStream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Write, (int)configDetails.BufferReadSize);
+               closeOnReturn = true;
+            }
+            else
+            {
+               Log.Trace("info.refFileHandleContext [{0}]", info.refFileHandleContext);
+               using (openFilesSync.ReadLock())
+                  fileStream = openFiles[info.refFileHandleContext];
+            }
+            if (!info.WriteToEndOfFile)//  If true, write to the current end of file instead of Offset parameter.
+               fileStream.Seek(offset, SeekOrigin.Begin);
+            else
+               fileStream.Seek(0, SeekOrigin.End);
+            fileStream.Write(buffer, 0, buffer.Length);
+            errorCode = Dokan.DOKAN_SUCCESS;
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException("WriteFile threw: ", ex);
+            errorCode = Utils.BestAttemptToWin32(ex);
+         }
+         finally
+         {
+            try
+            {
+               if (closeOnReturn
+                  && (fileStream != null)
+                  )
+                  fileStream.Close();
+            }
+            catch (Exception ex)
+            {
+               Log.ErrorException("WriteFile closing filestream threw: ", ex);
+            }
+            Log.Trace("WriteFile OUT errorCode[{0}]", errorCode);
+         }
+         return errorCode;
+      }
+
+      #endregion
 
 
       #region DLL Imports
@@ -1231,7 +1347,7 @@ namespace LiquesceSvc
          uint numBytesToRead, out uint numBytesRead_mustBeZero, IntPtr /*NativeOverlapped* */ overlapped);
 
       [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-      private static extern bool GetDiskFreeSpaceEx(string lpDirectoryName, out ulong lpFreeBytesAvailable, 
+      private static extern bool GetDiskFreeSpaceEx(string lpDirectoryName, out ulong lpFreeBytesAvailable,
          out ulong lpTotalNumberOfBytes, out ulong lpTotalNumberOfFreeBytes);
 
       [DllImport("kernel32.dll", SetLastError = true)]
@@ -1253,8 +1369,8 @@ namespace LiquesceSvc
    // If the code never looks for name, then it might be jitted out
    internal class FileStreamName : FileStream
    {
-      public new string Name { get; set;}
-      public FileStreamName( string name, SafeFileHandle handle, FileAccess access, int bufferSize)
+      public new string Name { get; set; }
+      public FileStreamName(string name, SafeFileHandle handle, FileAccess access, int bufferSize)
          : base(handle, access, bufferSize)
       {
          Name = name;

@@ -27,8 +27,42 @@ Keep an open eye on the \cf2\ul\b http://liquesce.codeplex.com/\cf1\ulnone\b0  s
 \par
 \cf0\ul\b Done\par
 \b0\par
-2010-10-##\par
-\ulnone - Merged changed to allow the order of the mount points via the mouse\par
+2010-11-25\par
+\ulnone - Fix Write at end of file logic\par
+- Start to test the code for the ShareEnabler\par
+- Use the Native Read / Write Kernel Api's so that memory is not duplicated in the system; See http://code.google.com/p/dokan/issues/detail?id=174 \par
+- Fix the recreation of the share by forcing a delete first.\par
+- Changed the way the data is stored inthe DokanNet proxy(By removing it !)\par
+- All CreateFiles willnow increment the counter to try and find who did what\par
+- Added Logging of the filename when in trace\par
+- Sorted the 1st pass of the remote share enabler service\par
+- Add in better handling of the exceptions taht are thrown to try and get back to "Known" Win32 errors\par
+- Add timeouts to the Share Enabler interface \par
+FreeSpace Form:\par
+* improved design: fat border indication borders, window resize locked, free space color \par
+* changed colors\par
+* added seperator \par
+* now the next write disk is marked depending on the configured disk allocation mode \par
+* added scroll mode to view many disks\par
+* added align to right checkbox to align it also to the left\ul\par
+\ulnone - Make sure the SyncToy Works.\par
+- Fix SetFileTime on Directories\par
+- Fix Creation of Files / Directories in root when in folder mode\par
+- Remove the rubish that was introduced to attempt to workaround PureSync and Dokan Bug \par
+added dropzone to the tray app.\par
+you can easily find out on which physical disk a file or folder is placed by liquesce \par
+\ul\par
+2010-10-26\par
+\ulnone - Fix the log viewing from inside the management application \par
+- Changed to remove the \'e7 and replace with c in Facade in the Code only. Directory names remain still.\par
+- Awaiting all code before attempting the Dir Renam\par
+- Make the Locks a little tighter around the access to the Dokan raw storage lookup \par
+\ul\par
+2010-10-10\par
+\ulnone - Add in the "Ctrl" key addition to the Tray Application right click\par
+- Added the default Double click handler to the tray\par
+- Fix the Tooltip text for the state chnages in the Tray \par
+- Merged changed to allow the order of the mount points via the mouse\par
 - Tidy up the exception being thrown (And caught) when a ROM Drive does not contain a disc\par
 - Move the "Get Shares" functionality into a call in the service so that the uuser does not need to run the Management application with administrative user mode\par
 - Changed the re-creating and retrieval of the shares over to the WMI functions rather than trying to use the .Net Directory ACL\par
