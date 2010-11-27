@@ -8,6 +8,9 @@ namespace LiquesceFacade
    public class ClientShareDetail
    {
       [DataMember(IsRequired = true)]
+      public string TargetMachineName = "localhost";
+
+      [DataMember(IsRequired = true)]
       public string DomainUserIdentity = "Everyone";
       [DataMember(IsRequired = true)]
       public string TargetShareName = "Dokan";

@@ -24,7 +24,8 @@ namespace ClientLiquesceSvc
       public ClientLiquesceOps(ClientShareDetail configDetail)
       {
          this.configDetail = configDetail;
-         factory = new ChannelFactory<IShareEnabler>("ShareEnabler");
+         EndpointAddress remoteAddress = new EndpointAddress(String.Format("net.tcp://{0}:41016/ShareEnabler", configDetail.TargetMachineName));
+         factory = new ChannelFactory<IShareEnabler>("ShareEnabler", remoteAddress);
       }
 
       private void CheckAndCreateChannel()
@@ -332,7 +333,11 @@ namespace ClientLiquesceSvc
                   byte[] readBuffer = null;
                   int actualReadLength = 0;
                   dokanError = remoteIF.ReadFile(filename, out readBuffer, bufSize, out actualReadLength, rawOffset + rawReadLength, info.refFileHandleContext);
-
+                  if (actualReadLength == 0)
+                  {
+                     Log.Trace("EOF or Error");
+                     break;
+                  }
                   Marshal.Copy(readBuffer, 0, rawBuffer + (int)rawReadLength, actualReadLength);
 
                   rawReadLength += (uint)actualReadLength;
