@@ -15,47 +15,9 @@ namespace Liquesce
 
       private void GridAdvancedSettings_Load(object sender, EventArgs e)
       {
-         ResizeDescriptionArea(ref propertyGrid1, 6); // okay for most
+         Utils.ResizeDescriptionArea(ref propertyGrid1, 6); // okay for most
       }
 
-      private bool ResizeDescriptionArea(ref PropertyGrid grid, int nNumLines)
-      {
-         try
-         {
-            System.Reflection.PropertyInfo pi = grid.GetType().GetProperty("Controls");
-            System.Windows.Forms.Control.ControlCollection cc = (System.Windows.Forms.Control.ControlCollection)pi.GetValue(grid, null); 
-            
-            foreach (Control c in cc)
-            {
-               Type ct = c.GetType();
-               string sName = ct.Name;
-
-               if (sName == "DocComment")
-               {
-                  pi = ct.GetProperty("Lines");
-                  if (pi != null)
-                  {
-                     int i = (int)pi.GetValue(c, null);
-                     pi.SetValue(c, nNumLines, null);
-                  }
-
-                  System.Reflection.FieldInfo fi = ct.BaseType.GetField("userSized",
-                     System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-
-                  if (fi != null) 
-                     fi.SetValue(c, true);
-                  break;
-               }
-            }
-
-            return true;
-         }
-         catch
-         {
-            return false;
-         }
-
-      }
 
       private ConfigDetails cd;
       public ConfigDetails AdvancedConfigDetails
@@ -76,7 +38,7 @@ namespace Liquesce
             cd.ThreadCount = apd.ThreadCount;
             cd.LockTimeout = apd.LockTimeoutmSec;
             cd.DebugMode = apd.DokanDebugMode;
-            cd.AllocationMode = apd.AllocationMode;
+            Enum.TryParse(apd.AllocationMode, out cd.AllocationMode);
             cd.HoldOffBufferBytes = (apd.HoldOffMBytes * (1024 * 1024));
             cd.BufferReadSize = (apd.BufferReadSizeKBytes * 1024);
             cd.ServiceLogLevel = apd.ServiceLogLevel;

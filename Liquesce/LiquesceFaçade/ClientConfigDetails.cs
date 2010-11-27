@@ -25,8 +25,15 @@ namespace LiquesceFacade
 
       // Used to send data over the wire, this is not recommended to be over int.maxvalue / 2
       // In here as different targets may have different capabilities
+      // Set the minimum to be 4096 bytes
       [DataMember]
       public int BufferWireTransferSize = UInt16.MaxValue;
+
+      // This will make the drive show up as a network share in explorer
+      // And prevent recycle bin and other shares from being created on it.
+      [DataMember]
+      public bool ShowAsNetworkDrive = true;
+
    }
 
    /// <summary>
