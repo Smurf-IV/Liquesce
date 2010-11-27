@@ -1,7 +1,7 @@
 ﻿using System;
-using System.IO;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
+using System.Windows.Forms;
 using DokanNet;
 
 namespace LiquesceFacade
@@ -58,5 +58,46 @@ System.Security.SecurityException: The caller does not have the required permiss
             return (HiWord(HrForException) == 0x8007) ? -LoWord(HrForException) : Dokan.ERROR_EXCEPTION_IN_SERVICE;
          }
       }
+
+      public static void ResizeDescriptionArea(ref PropertyGrid grid, int nNumLines)
+      {
+         try
+         {
+            System.Reflection.PropertyInfo pi = grid.GetType().GetProperty("Controls");
+            Control.ControlCollection cc = (Control.ControlCollection)pi.GetValue(grid, null);
+
+            foreach (Control c in cc)
+            {
+               Type ct = c.GetType();
+               string sName = ct.Name;
+
+               if (sName == "DocComment")
+               {
+                  pi = ct.GetProperty("Lines");
+                  if (pi != null)
+                  {
+#pragma warning disable 168
+                     int i = (int)pi.GetValue(c, null);
+#pragma warning restore 168
+                     pi.SetValue(c, nNumLines, null);
+                  }
+
+                  if (ct.BaseType != null)
+                  {
+                     System.Reflection.FieldInfo fi = ct.BaseType.GetField("userSized",
+                                                                           System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+
+                     if (fi != null)
+                        fi.SetValue(c, true);
+                  }
+                  break;
+               }
+            }
+         }
+         catch
+         {
+         }
+      }
+
    }
 }

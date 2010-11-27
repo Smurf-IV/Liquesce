@@ -16,7 +16,7 @@ namespace Liquesce
                 ThreadCount = cd.ThreadCount;
                 LockTimeoutmSec = cd.LockTimeout;
                 DokanDebugMode = cd.DebugMode;
-                AllocationMode = cd.AllocationMode;
+                AllocationMode = cd.AllocationMode.ToString();
                 HoldOffMBytes = cd.HoldOffBufferBytes / (1024 * 1024);
                 BufferReadSizeKBytes = cd.BufferReadSize / 1024;
                 ServiceLogLevel = cd.ServiceLogLevel;
@@ -109,9 +109,10 @@ namespace Liquesce
             "backup = balanced with a \"_backup\" folder to get a secure allocated backup"
             ),
         DisplayName("Disk Allocation Mode")
+        , TypeConverter(typeof(AllocationModeValues))
         , CategoryAttribute("File")
         ]
-        public ConfigDetails.AllocationModes AllocationMode  { get; set; }
+        public String AllocationMode  { get; set; }
     }
     // ReSharper restore MemberCanBePrivate.Global
 
@@ -149,7 +150,11 @@ namespace Liquesce
 
         public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
         {
-            return new StandardValuesCollection(new[] { "folder", "priority", "balanced", "backup" });
+            return new StandardValuesCollection(new[] { ConfigDetails.AllocationModes.folder.ToString(),
+               ConfigDetails.AllocationModes.priority.ToString(), 
+               ConfigDetails.AllocationModes.balanced.ToString(),
+               ConfigDetails.AllocationModes.backup.ToString()
+            } );
         }
     }
 
