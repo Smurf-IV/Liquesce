@@ -39,7 +39,6 @@
          // 
          // serviceInstaller1
          // 
-         this.serviceInstaller1.DelayedAutoStart = true;
          this.serviceInstaller1.Description = "Client LiquesceSvc - Enables Access to x64 hosted shares";
          this.serviceInstaller1.DisplayName = "Liquesce Service Client";
          this.serviceInstaller1.ServiceName = "ClientLiquesceSvc";

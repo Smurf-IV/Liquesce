@@ -155,31 +155,27 @@ namespace ClientLiquesceSvc
             switch (retVal)
             {
                case Dokan.DOKAN_SUCCESS: // = 0;
-                  FireStateChange(LiquesceSvcState.Stopped, "Dokan is not mounted");
+                  Log.Info( "Dokan is not mounted");
                   break;
                case Dokan.DOKAN_ERROR: // = -1; // General Error
-                  FireStateChange(LiquesceSvcState.InError, "Dokan is not mounted [DOKAN_ERROR] - General Error");
+                  Log.Info("Dokan is not mounted [DOKAN_ERROR] - General Error");
                   break;
                case Dokan.DOKAN_DRIVE_LETTER_ERROR: // = -2; // Bad Drive letter
-                  FireStateChange(LiquesceSvcState.InError,
-                                  "Dokan is not mounted [DOKAN_DRIVE_LETTER_ERROR] - Bad drive letter");
+                  Log.Info("Dokan is not mounted [DOKAN_DRIVE_LETTER_ERROR] - Bad drive letter");
                   break;
                case Dokan.DOKAN_DRIVER_INSTALL_ERROR: // = -3; // Can't install driver
-                  FireStateChange(LiquesceSvcState.InError, "Dokan is not mounted [DOKAN_DRIVER_INSTALL_ERROR]");
+                  Log.Info("Dokan is not mounted [DOKAN_DRIVER_INSTALL_ERROR]");
                   Environment.Exit(-1);
                   break;
                case Dokan.DOKAN_START_ERROR: // = -4; // Driver something wrong
-                  FireStateChange(LiquesceSvcState.InError,
-                                  "Dokan is not mounted [DOKAN_START_ERROR] - Driver Something is wrong");
+                  Log.Info("Dokan is not mounted [DOKAN_START_ERROR] - Driver Something is wrong");
                   Environment.Exit(-1);
                   break;
                case Dokan.DOKAN_MOUNT_ERROR: // = -5; // Can't assign drive letter
-                  FireStateChange(LiquesceSvcState.InError,
-                                  "Dokan is not mounted [DOKAN_MOUNT_ERROR] - Can't assign drive letter");
+                  Log.Info("Dokan is not mounted [DOKAN_MOUNT_ERROR] - Can't assign drive letter");
                   break;
                default:
-                  FireStateChange(LiquesceSvcState.InError,
-                                  String.Format("Dokan is not mounted [Uknown Error: {0}]", retVal));
+                  Log.Info(String.Format("Dokan is not mounted [Uknown Error: {0}]", retVal));
                   Environment.Exit(-1);
                   break;
             }
@@ -246,34 +242,6 @@ namespace ClientLiquesceSvc
          }
       }
 
-      internal void FireStateChange(LiquesceSvcState newState, string message)
-      {
-         try
-         {
-            state = newState;
-            Log.Info("Changing newState to [{0}]:[{1}]", newState, message);
-            using (subscribersLock.ReadLock())
-            {
-               // Get all the clients in dictionary
-               var query = (from c in subscribers
-                            select c.Value).ToList();
-               // Create the callback action
-               Action<IStateChange> action = callback => callback.Update(newState, message);
-
-               // For each connected client, invoke the callback
-               query.ForEach(action);
-            }
-         }
-         catch (Exception ex)
-         {
-            Log.ErrorException("Unable to fire state change", ex);
-         }
-      }
-
-      public LiquesceSvcState State
-      {
-         get { return state; }
-      }
 
       public void Stop()
       {
@@ -283,7 +251,6 @@ namespace ClientLiquesceSvc
                int retVal = Dokan.DokanUnmount(mountedDriveLetter[0]);
                Log.Info("Dokan.DokanUnmount({0}) returned[{1}]", mountedDriveLetter, retVal);
             }
-         FireStateChange(LiquesceSvcState.Unknown, "Stop has been requested");
       }
 
 
@@ -294,7 +261,7 @@ namespace ClientLiquesceSvc
             // Initialise a default to allow type get !
             currentConfigDetails = new ClientConfigDetails();
             XmlSerializer x = new XmlSerializer(currentConfigDetails.GetType());
-            Log.Info("Attempting to read Dokan Drive details from: [{0}]", configFile);
+            Log.Info("Attempting to read ClientConfigDetails from: [{0}]", configFile);
             using (TextReader textReader = new StreamReader(configFile))
             {
                currentConfigDetails = x.Deserialize(textReader) as ClientConfigDetails;

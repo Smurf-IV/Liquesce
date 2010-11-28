@@ -53,5 +53,6 @@ namespace LiquesceFacade
       [DataMember]
       public string ServiceLogLevel = "Debug"; // NLog's LogLevel.Debug.ToString() 
       #endregion
+
    }
 }
