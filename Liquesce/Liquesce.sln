@@ -35,6 +35,11 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientLiquesceSvc", "ClientLiquesceSvc\ClientLiquesceSvc.csproj", "{196DE348-A13A-48FD-9E64-930D79042D18}"
 EndProject
 Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "ClientLiquesce_Setup", "ClientLiquesce_Setup\ClientLiquesce_Setup.wixproj", "{D748793E-341F-44E2-B872-A84259E51173}"
+	ProjectSection(ProjectDependencies) = postProject
+		{196DE348-A13A-48FD-9E64-930D79042D18} = {196DE348-A13A-48FD-9E64-930D79042D18}
+		{EF7F7BCB-C045-4FE2-84A7-318DF573B148} = {EF7F7BCB-C045-4FE2-84A7-318DF573B148}
+		{0860A6E1-DE6F-41C2-A89A-101DDD66CE3D} = {0860A6E1-DE6F-41C2-A89A-101DDD66CE3D}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution

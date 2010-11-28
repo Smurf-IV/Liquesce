@@ -39,7 +39,6 @@
          // 
          // serviceInstaller1
          // 
-         this.serviceInstaller1.DelayedAutoStart = true;
          this.serviceInstaller1.Description = "LiquesceSvc - Pools Physcical storage locations into a single entity";
          this.serviceInstaller1.DisplayName = "Liquesce Service";
          this.serviceInstaller1.ServiceName = "LiquesceSvc";

@@ -105,8 +105,6 @@
   <ItemGroup>
     <Compile Include="ClientConfigDetails.cs" />
     <Compile Include="ConfigDetails.cs" />
-    <Compile Include="IClientLiquesceCallBack.cs" />
-    <Compile Include="IClientLiquesceSvc.cs" />
     <Compile Include="ILiquesce.cs" />
     <Compile Include="ILiquesceCallBack.cs" />
     <Compile Include="IShareEnabler.cs" />

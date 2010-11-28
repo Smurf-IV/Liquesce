@@ -7,7 +7,7 @@
    
       <?define UpgradeCode = "47ac796f-b05e-4b01-92d2-a53e13e4089b" ?>
       <!-- do not change this ever !-->
-      <?define Version = "10.11.25" ?>
+      <?define Version = "10.11.28" ?>
       <!-- Change this when creating new release YY-MM-DD -->
       <?define ProductName = "Liquesce Client Share Enabler"?>
 
@@ -80,7 +80,7 @@
                <Directory Id="INSTALLDIR" Name="Liquesce">
                   <Directory Id="ClientDIR" Name="Liquesce Client">
                   </Directory>
-                  <Directory Id="ServiceDIR" Name="Liquesce Service">
+                  <Directory Id="ServiceDIR" Name="Client Liquesce Service">
                   </Directory>
                </Directory>
             </Directory>
@@ -168,16 +168,16 @@
 
          <!--Write custom actions to install, uninstall, commit and rollback the changes-->
          <CustomAction Id="ClientLiquesceSvc.commit.SetProperty" Property="ClientLiquesceSvc.commit"
-           Value='"[NETFRAMEWORK40FULLINSTALLROOTDIR]InstallUtil.exe" /installtype=notransaction /action=commit /LogFile="[ClientLiquesceSvc_Data]ClientLiquesceSvc.commit.log" /InstallStateDir="[CommonAppDataFolder]ClientLiquesceSvc" "[#ClientLiquesceSvc.File]"' />
+           Value='"[NETFRAMEWORK40FULLINSTALLROOTDIR]InstallUtil.exe" /installtype=notransaction /action=commit /LogFile="[LiquesceSvc_Data]ClientLiquesceSvc.commit.log" /InstallStateDir="[CommonAppDataFolder]LiquesceSvc" "[#ClientLiquesceSvc.File]"' />
 
          <CustomAction Id="ClientLiquesceSvc.rollback.SetProperty" Property="ClientLiquesceSvc.rollback"
-           Value='"[NETFRAMEWORK40FULLINSTALLROOTDIR]InstallUtil.exe" /installtype=notransaction /action=rollback /LogFile="[ClientLiquesceSvc_Data]ClientLiquesceSvc.rollback.log" /InstallStateDir="[CommonAppDataFolder]ClientLiquesceSvc" "[#ClientLiquesceSvc.File]"' />
+           Value='"[NETFRAMEWORK40FULLINSTALLROOTDIR]InstallUtil.exe" /installtype=notransaction /action=rollback /LogFile="[LiquesceSvc_Data]ClientLiquesceSvc.rollback.log" /InstallStateDir="[CommonAppDataFolder]LiquesceSvc" "[#ClientLiquesceSvc.File]"' />
 
          <CustomAction Id="ClientLiquesceSvc.install.SetProperty" Property="ClientLiquesceSvc.install"
-           Value='"[NETFRAMEWORK40FULLINSTALLROOTDIR]InstallUtil.exe" /installtype=notransaction /action=install /LogFile="[ClientLiquesceSvc_Data]ClientLiquesceSvc.install.log" /InstallStateDir="[CommonAppDataFolder]ClientLiquesceSvc" "[#ClientLiquesceSvc.File]"' />
+           Value='"[NETFRAMEWORK40FULLINSTALLROOTDIR]InstallUtil.exe" /installtype=notransaction /action=install /LogFile="[LiquesceSvc_Data]ClientLiquesceSvc.install.log" /InstallStateDir="[CommonAppDataFolder]LiquesceSvc" "[#ClientLiquesceSvc.File]"' />
 
          <CustomAction Id="ClientLiquesceSvc.uninstall.SetProperty" Property="ClientLiquesceSvc.uninstall"
-           Value='"[NETFRAMEWORK40FULLINSTALLROOTDIR]InstallUtil.exe" /installtype=notransaction /action=uninstall /LogFile="[ClientLiquesceSvc_Data]ClientLiquesceSvc.uninstall.log" /InstallStateDir="[CommonAppDataFolder]ClientLiquesceSvc" "[#ClientLiquesceSvc.File]"' />
+           Value='"[NETFRAMEWORK40FULLINSTALLROOTDIR]InstallUtil.exe" /installtype=notransaction /action=uninstall /LogFile="[LiquesceSvc_Data]ClientLiquesceSvc.uninstall.log" /InstallStateDir="[CommonAppDataFolder]LiquesceSvc" "[#ClientLiquesceSvc.File]"' />
 
          <CustomAction Id="ClientLiquesceSvc.commit" BinaryKey="WixCA" DllEntry="CAQuietExec" Execute="commit" Impersonate="no" Return="check" />
          <CustomAction Id="ClientLiquesceSvc.rollback" BinaryKey="WixCA" DllEntry="CAQuietExec" Execute="rollback" Impersonate="no" Return="check" />
