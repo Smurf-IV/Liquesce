@@ -768,8 +768,10 @@ namespace DokanNet
             //#define FILE_CASE_SENSITIVE_SEARCH      0x00000001  
             //#define FILE_CASE_PRESERVED_NAMES       0x00000002  
             //#define FILE_UNICODE_ON_DISK            0x00000004  
-            //#define FILE_PERSISTENT_ACLS            0x00000008  
-            rawFileSystemFlags = 7;
+            //#define FILE_PERSISTENT_ACLS            0x00000008  // This sends the data to the Recycler and not Recycled
+            // FILE_FILE_COMPRESSION      0x00000010     // Don;t do this.. It causes lot's of problems later on
+            // See http://msdn.microsoft.com/en-us/library/aa364993%28VS.85%29.aspx for more flags
+            rawFileSystemFlags = 0x0f;
 
             byte[] sys = Encoding.Unicode.GetBytes("DOKAN");
             length = sys.Length;
