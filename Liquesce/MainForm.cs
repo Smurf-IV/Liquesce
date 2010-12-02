@@ -727,12 +727,12 @@ namespace Liquesce
 
       private void userLogViewToolStripMenuItem_Click(object sender, EventArgs e)
       {
-         new LogDisplay(@"Liquesce\Logs").ShowDialog(this);
+         DisplayLog.LogDisplay(@"Liquesce\Logs");
       }
 
       private void serviceLogViewToolStripMenuItem_Click(object sender, EventArgs e)
       {
-         new LogDisplay(@"LiquesceSvc\Logs").ShowDialog(this);
+         DisplayLog.LogDisplay(@"LiquesceSvc\Logs");
 
       }
 
