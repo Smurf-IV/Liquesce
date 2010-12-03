@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using NLog;
 
@@ -34,7 +35,12 @@ namespace Liquesce
 
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
-               Process.Start("Wordpad.exe", '"' + openFileDialog.FileName + '"');
+               Process word = Process.Start("Wordpad.exe", '"' + openFileDialog.FileName + '"');
+               if (word != null)
+               {
+                  word.WaitForInputIdle();
+                  SendKeys.SendWait("^{END}");
+               }
             }
          }
          catch (Exception ex)
@@ -42,6 +48,5 @@ namespace Liquesce
             Log.ErrorException("OpenFile has an exception: ", ex);
          }
       }
-
    }
 }
