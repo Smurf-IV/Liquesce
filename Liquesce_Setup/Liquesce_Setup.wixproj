@@ -23,18 +23,20 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+    <SuppressAllWarnings>False</SuppressAllWarnings>
+    <Pedantic>True</Pedantic>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Product.wxs" />
   </ItemGroup>
   <ItemGroup>
+    <WixExtension Include="WixUIExtension">
+      <HintPath>C:\Program Files\Windows Installer XML v3.5\bin\WixUIExtension.dll</HintPath>
+      <Name>WixUIExtension</Name>
+    </WixExtension>
     <WixExtension Include="WixUtilExtension">
       <HintPath>E:\Windows Installer XML v3.5\bin\WixUtilExtension.dll</HintPath>
       <Name>WixUtilExtension</Name>
-    </WixExtension>
-    <WixExtension Include="WixUIExtension">
-      <HintPath>E:\Windows Installer XML v3.5\bin\WixUIExtension.dll</HintPath>
-      <Name>WixUIExtension</Name>
     </WixExtension>
     <WixExtension Include="WixNetFxExtension">
       <HintPath>E:\Windows Installer XML v3.5\bin\WixNetFxExtension.dll</HintPath>
@@ -44,6 +46,10 @@
       <HintPath>E:\Windows Installer XML v3.5\bin\WixFirewallExtension.dll</HintPath>
       <Name>WixFirewallExtension</Name>
     </WixExtension>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Banner.bmp" />
+    <Content Include="GPL.rtf" />
   </ItemGroup>
   <Import Project="$(WixTargetsPath)" />
   <!--

@@ -1,11 +1,11 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
      xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension"
      xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension"
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
      >
-   <?define UpgradeCode = "f6f94f17-a05f-4824-8dd9-9f5e8267d783" ?>  <!-- do not change this ever !-->
-   <?define Version = "10.11.25" ?>    <!-- Change this when creating new release YY-MM-DD -->
+   <?define UpgradeCode = "F6F94F17-A05F-4824-8DD9-9F5E8267D783" ?>  <!-- do not change this ever !-->
+   <?define Version = "10.12.07" ?>    <!-- Change this when creating new release YY-MM-DD -->
    <?define ProductName = "Liquesce Windows HDD Pooling Suite"?>
 
    <Product Version="$(var.Version)" Id="*" UpgradeCode="$(var.UpgradeCode)"
@@ -95,7 +95,7 @@
       </Directory>
 
       <DirectoryRef Id="ClientDIR">
-         <Component Id="Client.Component" Guid="5ebf3f29-9cf1-44fe-a94c-cc1b4fe09367">
+         <Component Id="Client.Component" Guid="5EBF3F29-9CF1-44FE-A94C-CC1B4FE09367">
             <File Id="InstallerIcon" Name="Liquesce.ico" Source="Z:\Liquesce\Liquesce\Resources\Liquesce.ico" />
             <File Id="Liquesce.exe" Name="Liquesce.exe" Source="Z:\Liquesce\Liquesce\bin\Release\Liquesce.exe" KeyPath="yes">
                <fire:FirewallException Id="LiquesceFWX1" Name="Liquesce Mount Management" Scope="localSubnet" IgnoreFailure="yes" />
@@ -121,7 +121,7 @@
          </Component>
       </DirectoryRef>
       <DirectoryRef Id="ServiceDIR">
-         <Component Id="LiquesceSvc.Component" Guid="Bebf3f29-9cf1-44fe-a94c-cc1b4fe09367">
+         <Component Id="LiquesceSvc.Component" Guid="BEBF3F29-9CF1-44FE-A94C-CC1B4FE09367">
             <File Id="LiquesceSvc.File" Name="LiquesceSvc.exe" Source="Z:\Liquesce\LiquesceSvc\bin\Release\LiquesceSvc.exe" KeyPath="yes">
                <fire:FirewallException Id="LiquesceFWX2" Name="LiquesceSvc" Scope="localSubnet" IgnoreFailure="yes" />
                <!-- Why Use NGen ? http://msdn.microsoft.com/en-gb/magazine/cc163610.aspx -->
@@ -223,6 +223,46 @@
          <Custom Action="StartTrayApp" After="InstallFinalize">Not Installed</Custom>
          <Custom Action="MgtApp" After="StartTrayApp">Not Installed</Custom>
       </InstallExecuteSequence>
+
+      <!-- Get the install to skip a few steps -->
+      <UIRef Id="WixUI_Common" />
+      <WixVariable Id="WixUICostingPopupOptOut" Value="1" Overridable="yes" />
+      <WixVariable Id="WixUIBannerBmp" Value="banner.bmp" />   <!-- This just adds 90K on top of the UI Extension.dll -->
+      <UI>
+         <Property Id="DefaultUIFont" Value="WixUI_Font_Normal" />
+         <TextStyle Id="WixUI_Font_Normal" FaceName="Tahoma" Size="8" />
+         <TextStyle Id="WixUI_Font_Bigger" FaceName="Tahoma" Size="12" />
+         <TextStyle Id="WixUI_Font_Title" FaceName="Tahoma" Size="9" Bold="yes" />
+         
+         <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
+         <Property Id="ARPNOMODIFY" Value="1" />
+
+         <DialogRef Id="BrowseDlg" />
+         <DialogRef Id="DiskCostDlg" />
+         <DialogRef Id="ErrorDlg" />
+         <DialogRef Id="FatalError" />
+         <DialogRef Id="FilesInUse" />
+         <DialogRef Id="MsiRMFilesInUse" />
+         <DialogRef Id="PrepareDlg" />
+         <DialogRef Id="ProgressDlg" />
+         <DialogRef Id="ResumeDlg" />
+         <DialogRef Id="UserExit" />
+
+         <Publish Dialog="ExitDialog" Control="Finish" Event="EndDialog" Value="Return" Order="999">1</Publish>
+         <Publish Dialog="WelcomeEulaDlg" Control="Install" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+         <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="WelcomeEulaDlg" Order="1">NOT Installed</Publish>
+         <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="MaintenanceTypeDlg" Order="2">Installed</Publish>
+
+         <Publish Dialog="MaintenanceWelcomeDlg" Control="Next" Event="NewDialog" Value="MaintenanceTypeDlg">1</Publish>
+         <Publish Dialog="MaintenanceTypeDlg" Control="RepairButton" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+         <Publish Dialog="MaintenanceTypeDlg" Control="RemoveButton" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+         <Publish Dialog="MaintenanceTypeDlg" Control="Back" Event="NewDialog" Value="MaintenanceWelcomeDlg">1</Publish>
+         
+      </UI>
+
+
+
+      <UIRef Id="WixUI_ErrorProgressText" />
 
    </Product>
 </Wix>
