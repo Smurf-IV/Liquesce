@@ -397,6 +397,12 @@ namespace LiquesceSvc
                {
                   Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error(), new IntPtr(-1));
                }
+               //else if ( rawReadLength == 0 )
+               //{
+               //   // ERROR_HANDLE_EOF 38 (0x26)
+               //   if (fileStream.Position == fileStream.Length)
+               //      errorCode = -38;
+               //}
             }
          }
          catch (Exception ex)
@@ -435,6 +441,7 @@ namespace LiquesceSvc
                FileStreamName fileStream;
                using (openFilesSync.ReadLock())
                   fileStream = openFiles[info.refFileHandleContext];
+               fileStream.fsi = null;
                if (!info.WriteToEndOfFile)//  If true, write to the current end of file instead of Offset parameter.
                   fileStream.Seek(rawOffset, SeekOrigin.Begin);
                else
@@ -496,18 +503,34 @@ namespace LiquesceSvc
          try
          {
             Log.Trace("GetFileInformation IN DokanProcessId[{0}]", info.ProcessId);
-            string path = roots.GetPath(filename);
             FileSystemInfo fsi = null;
-            if (File.Exists(path))
+            using (openFilesSync.ReadLock())
             {
-               FileInfo info2 = new FileInfo(path);
-               fileinfo.Length = info2.Length;
-               fsi = info2;
-            }
-            else if (Directory.Exists(path))
-            {
-               fsi = new DirectoryInfo(path);
-               fileinfo.Length = 0L;
+               if (info.refFileHandleContext != 0)
+               {
+                  Log.Trace("info.refFileHandleContext [{0}]", info.refFileHandleContext);
+                  fsi = openFiles[info.refFileHandleContext].fsi;
+               }
+               if (fsi == null)
+               {
+                  string path = roots.GetPath(filename);
+                  if (File.Exists(path))
+                  {
+                     fsi = new FileInfo(path);
+                  }
+                  else if (Directory.Exists(path))
+                  {
+                     fsi = new DirectoryInfo(path);
+                     info.IsDirectory = true;
+                  }
+                  // Store the fsi away, as ALL calls for _any_ information will be routed through this API.
+                  if ((fsi != null)
+                      && (info.refFileHandleContext != 0)
+                     )
+                  {
+                     openFiles[info.refFileHandleContext].fsi = fsi;
+                  }
+               }
             }
             if (fsi != null)
             {
@@ -519,7 +542,8 @@ namespace LiquesceSvc
                fileinfo.CreationTime = fsi.CreationTime;
                fileinfo.LastAccessTime = fsi.LastAccessTime;
                fileinfo.LastWriteTime = fsi.LastWriteTime;
-               fileinfo.FileName = fsi.Name;
+               fileinfo.FileName = fsi.Name; // <- this is not used in the structure that is passed back to Dokan !
+               fileinfo.Length = info.IsDirectory ? 0L : ((FileInfo)fsi).Length;
                dokanReturn = Dokan.DOKAN_SUCCESS;
             }
 
@@ -845,6 +869,13 @@ namespace LiquesceSvc
 
             if (!info.IsDirectory)
             {
+               if (info.refFileHandleContext != 0)
+               {
+                  Log.Trace("info.refFileHandleContext [{0}]", info.refFileHandleContext);
+                  FileStreamName fileHandle = openFiles[info.refFileHandleContext];
+                  if (fileHandle != null)
+                     fileHandle.Close();
+               }
                string pathSource = roots.GetPath(filename);
                Log.Info("MoveFile pathSource: [{0}] pathTarget: [{1}]", pathSource, pathTarget);
                XMoveFile(pathSource, pathTarget, replaceIfExisting);
@@ -852,6 +883,7 @@ namespace LiquesceSvc
             }
             else
             {
+
                // getting all paths of the source location
                List<string> allDirSources = roots.GetAllPaths(filename);
                if (allDirSources.Count == 0)
@@ -1065,6 +1097,46 @@ namespace LiquesceSvc
          return Dokan.DOKAN_SUCCESS;
       }
 
+      public int GetFileSecurity(string file, ref SECURITY_INFORMATION rawRequestedInformation, ref SECURITY_DESCRIPTOR rawSecurityDescriptor, uint rawSecurityDescriptorLength, ref uint rawSecurityDescriptorLengthNeeded, DokanFileInfo info)
+      {
+         Log.Trace("Unmount IN GetFileSecurity[{0}]", info.ProcessId);
+         int dokanReturn = Dokan.DOKAN_ERROR;
+         try
+         {
+            throw new NotImplementedException();
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException("GetFileSecurity threw: ", ex);
+            dokanReturn = Utils.BestAttemptToWin32(ex);
+         }
+         finally
+         {
+            Log.Trace("GetFileSecurity out");
+         }
+         return dokanReturn;
+      }
+
+      public int SetFileSecurity(string file, ref SECURITY_INFORMATION rawSecurityInformation, ref SECURITY_DESCRIPTOR rawSecurityDescriptor, ref uint rawSecurityDescriptorLengthNeeded, DokanFileInfo info)
+      {
+         Log.Trace("Unmount IN SetFileSecurity[{0}]", info.ProcessId);
+         int dokanReturn = Dokan.DOKAN_ERROR;
+         try
+         {
+            throw new NotImplementedException();
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException("SetFileSecurity threw: ", ex);
+            dokanReturn = Utils.BestAttemptToWin32(ex);
+         }
+         finally
+         {
+            Log.Trace("SetFileSecurity out");
+         }
+         return dokanReturn;
+      }
+
       #endregion
       private void AddFiles(string path, Dictionary<string, FileInformation> files, string pattern)
       {
@@ -1274,6 +1346,7 @@ namespace LiquesceSvc
                Log.Trace("info.refFileHandleContext [{0}]", info.refFileHandleContext);
                using (openFilesSync.ReadLock())
                   fileStream = openFiles[info.refFileHandleContext];
+               ((FileStreamName)fileStream).fsi = null;
             }
             if (!info.WriteToEndOfFile)//  If true, write to the current end of file instead of Offset parameter.
                fileStream.Seek(offset, SeekOrigin.Begin);
@@ -1370,6 +1443,9 @@ namespace LiquesceSvc
    internal class FileStreamName : FileStream
    {
       public new string Name { get; set; }
+
+      public FileSystemInfo fsi { get; set; }
+
       public FileStreamName(string name, SafeFileHandle handle, FileAccess access, int bufferSize)
          : base(handle, access, bufferSize)
       {

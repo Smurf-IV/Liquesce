@@ -5,7 +5,7 @@
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
      >
    <?define UpgradeCode = "F6F94F17-A05F-4824-8DD9-9F5E8267D783" ?>  <!-- do not change this ever !-->
-   <?define Version = "10.12.07" ?>    <!-- Change this when creating new release YY-MM-DD -->
+   <?define Version = "11.01.11" ?>    <!-- Change this when creating new release YY-MM-DD -->
    <?define ProductName = "Liquesce Windows HDD Pooling Suite"?>
 
    <Product Version="$(var.Version)" Id="*" UpgradeCode="$(var.UpgradeCode)"
@@ -39,18 +39,18 @@
 
       <Property Id="DOKANVERCHECK32">
          <DirectorySearch Id="Dokan.sys.version" Path="[SystemFolder]\Drivers">
-            <!--Make sure that the min / max _straddle_ the actual version..  -->
-            <FileSearch Name="Dokan.sys" MinSize="84991" MaxSize="84993"  MinVersion="6.1.7600.16384"  MaxVersion="6.1.7600.16386"/>
+            <!--Make sure that the min / max _straddle_ the actual version..  Check for 0.6.0 x32 Size -->
+            <FileSearch Name="Dokan.sys" MinSize="91903" MaxSize="91905" />
          </DirectorySearch>
       </Property>
       <Property Id="DOKANVERCHECK64">
          <DirectorySearch Id="Dokan.sys64.version" Path="[System64Folder]\Drivers">
-            <!--Make sure that the min / max _straddle_ the actual version..  -->
-            <FileSearch Name="Dokan.sys" MinSize="106887" MaxSize="106889" />
+            <!--Make sure that the min / max _straddle_ the actual version.. Check for 0.6.0 x64 Size -->
+            <FileSearch Name="Dokan.sys" MinSize="120407" MaxSize="120409" />
          </DirectorySearch>
       </Property>
 
-      <Condition Message="This application requires Dokan Ver 0.5.3.">
+      <Condition Message="This application requires Dokan Ver 0.6.0.">
          <![CDATA[Installed OR (DOKANVERCHECK64 AND VersionNT64) OR (DOKANVERCHECK32 AND NOT VersionNT64)]]>
       </Condition>
 
@@ -226,7 +226,6 @@
 
       <!-- Get the install to skip a few steps -->
       <UIRef Id="WixUI_Common" />
-      <WixVariable Id="WixUICostingPopupOptOut" Value="1" Overridable="yes" />
       <WixVariable Id="WixUIBannerBmp" Value="banner.bmp" />   <!-- This just adds 90K on top of the UI Extension.dll -->
       <UI>
          <Property Id="DefaultUIFont" Value="WixUI_Font_Normal" />

@@ -39,6 +39,30 @@ namespace DokanNet
       public readonly byte WriteToEndOfFile;
    }
 
+   [Flags]
+   public enum SECURITY_INFORMATION : uint
+   {
+      OWNER_SECURITY_INFORMATION = 0x00000001,
+      GROUP_SECURITY_INFORMATION = 0x00000002,
+      DACL_SECURITY_INFORMATION = 0x00000004,
+      SACL_SECURITY_INFORMATION = 0x00000008,
+      UNPROTECTED_SACL_SECURITY_INFORMATION = 0x10000000,
+      UNPROTECTED_DACL_SECURITY_INFORMATION = 0x20000000,
+      PROTECTED_SACL_SECURITY_INFORMATION = 0x40000000,
+      PROTECTED_DACL_SECURITY_INFORMATION = 0x80000000
+   }
+
+   [StructLayoutAttribute(LayoutKind.Sequential, Pack = 4)]
+   public struct SECURITY_DESCRIPTOR
+   {
+      public byte revision;
+      public byte size;
+      public short control;
+      public IntPtr owner;
+      public IntPtr group;
+      public IntPtr sacl;
+      public IntPtr dacl;
+   }
 
    public class Proxy
    {
@@ -84,7 +108,6 @@ namespace DokanNet
       #region Win32 Constants fro file controls
       // ReSharper disable InconsistentNaming
 #pragma warning disable 169
-      private const uint FILE_ATTRIBUTE_VIRTUAL = 0x00010000;
       public const uint GENERIC_READ = 0x80000000;
       public const uint GENERIC_WRITE = 0x40000000;
       private const uint GENERIC_EXECUTE = 0x20000000;
@@ -119,23 +142,28 @@ namespace DokanNet
       private const uint OPEN_ALWAYS = 4;
       public const uint TRUNCATE_EXISTING = 5;
 
-      private const uint FILE_ATTRIBUTE_ARCHIVE = 0x00000020;
-      private const uint FILE_ATTRIBUTE_ENCRYPTED = 0x00004000;
-      private const uint FILE_ATTRIBUTE_HIDDEN = 0x00000002;
-      private const uint FILE_ATTRIBUTE_NORMAL = 0x00000080;
+      private const uint FILE_ATTRIBUTE_READONLY           =  0x00000001;
+      private const uint FILE_ATTRIBUTE_HIDDEN             =  0x00000002;
+      private const uint FILE_ATTRIBUTE_SYSTEM             =  0x00000004;
+      private const uint FILE_ATTRIBUTE_DIRECTORY          =  0x00000010;
+      private const uint FILE_ATTRIBUTE_ARCHIVE            =  0x00000020;
+      private const uint FILE_ATTRIBUTE_ENCRYPTED          =  0x00000040;
+      private const uint FILE_ATTRIBUTE_NORMAL             =  0x00000080;
+      private const uint FILE_ATTRIBUTE_TEMPORARY          =  0x00000100;
+      private const uint FILE_ATTRIBUTE_SPARSE_FILE        =  0x00000200;
+      private const uint FILE_ATTRIBUTE_REPARSE_POINT      =  0x00000400;
+      private const uint FILE_ATTRIBUTE_COMPRESSED         =  0x00000800;
+      private const uint FILE_ATTRIBUTE_OFFLINE            =  0x00001000;
       private const uint FILE_ATTRIBUTE_NOT_CONTENT_INDEXED = 0x00002000;
-      private const uint FILE_ATTRIBUTE_OFFLINE = 0x00001000;
-      private const uint FILE_ATTRIBUTE_READONLY = 0x00000001;
-      private const uint FILE_ATTRIBUTE_SYSTEM = 0x00000004;
-      private const uint FILE_ATTRIBUTE_TEMPORARY = 0x00000100;
-
-      //
+      private const uint FILE_ATTRIBUTE_VIRTUAL            =  0x00010000;
+         
+         //
       // File creation flags must start at the high end since they
       // are combined with the attributes
       //
 
       public const uint FILE_FLAG_WRITE_THROUGH = 0x80000000;
-      private const uint FILE_FLAG_OVERLAPPED = 0x40000000;
+      public const uint FILE_FLAG_OVERLAPPED = 0x40000000;
       public const uint FILE_FLAG_NO_BUFFERING = 0x20000000;
       public const uint FILE_FLAG_RANDOM_ACCESS = 0x10000000;
       public const uint FILE_FLAG_SEQUENTIAL_SCAN = 0x08000000;
@@ -339,7 +367,7 @@ namespace DokanNet
 
             if (ret == 0)
             {
-               rawHandleFileInformation.dwFileAttributes = (uint)fi.Attributes + FILE_ATTRIBUTE_VIRTUAL;
+               rawHandleFileInformation.dwFileAttributes = (uint)fi.Attributes/* + FILE_ATTRIBUTE_VIRTUAL*/;
 
                rawHandleFileInformation.ftCreationTime.dwHighDateTime = (int)(fi.CreationTime.ToFileTime() >> 32);
                rawHandleFileInformation.ftCreationTime.dwLowDateTime = (int)(fi.CreationTime.ToFileTime() & 0xffffffff);
@@ -769,8 +797,14 @@ namespace DokanNet
             //#define FILE_CASE_PRESERVED_NAMES       0x00000002  
             //#define FILE_UNICODE_ON_DISK            0x00000004  
             //#define FILE_PERSISTENT_ACLS            0x00000008  // This sends the data to the Recycler and not Recycled
-            // FILE_FILE_COMPRESSION      0x00000010     // Don;t do this.. It causes lot's of problems later on
             // See http://msdn.microsoft.com/en-us/library/aa364993%28VS.85%29.aspx for more flags
+            //
+            // FILE_FILE_COMPRESSION      0x00000010     // Don't do this.. It causes lot's of problems later on
+            // And the Dokan code does not support it
+            //case FileStreamInformation:
+            //            //DbgPrint("FileStreamInformation\n");
+            //            status = STATUS_NOT_IMPLEMENTED;
+            //            break;
             rawFileSystemFlags = 0x0f;
 
             byte[] sys = Encoding.Unicode.GetBytes("DOKAN");
@@ -800,6 +834,44 @@ namespace DokanNet
          catch (Exception ex)
          {
             Log.ErrorException("UnmountProxy threw: ", ex);
+            return -1;
+         }
+      }
+
+      public delegate int GetFileSecurityDelegate( IntPtr rawFileName, ref SECURITY_INFORMATION rawRequestedInformation,
+          ref SECURITY_DESCRIPTOR rawSecurityDescriptor, uint rawSecurityDescriptorLength, ref uint rawSecurityDescriptorLengthNeeded,
+          ref DOKAN_FILE_INFO rawFileInfo);
+
+      public int GetFileSecurity( IntPtr rawFileName, ref SECURITY_INFORMATION rawRequestedInformation,
+          ref SECURITY_DESCRIPTOR rawSecurityDescriptor, uint rawSecurityDescriptorLength, ref uint rawSecurityDescriptorLengthNeeded,
+          ref DOKAN_FILE_INFO rawFileInfo)
+      {
+         try
+         {
+            string file = GetFileName(rawFileName);
+            return operations.GetFileSecurity(file, ref rawRequestedInformation, ref rawSecurityDescriptor, rawSecurityDescriptorLength, ref rawSecurityDescriptorLengthNeeded, ConvertFileInfo(ref rawFileInfo));
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException("GetFileSecurity threw: ", ex);
+            return -1;
+         }
+      }
+
+      public delegate int SetFileSecurityDelegate( IntPtr rawFileName, ref SECURITY_INFORMATION rawSecurityInformation,
+          ref SECURITY_DESCRIPTOR rawSecurityDescriptor, uint rawSecurityDescriptorLength, ref DOKAN_FILE_INFO rawFileInfo);
+
+      public int SetFileSecurity( IntPtr rawFileName, ref SECURITY_INFORMATION rawSecurityInformation,
+          ref SECURITY_DESCRIPTOR rawSecurityDescriptor, ref uint rawSecurityDescriptorLengthNeeded, ref DOKAN_FILE_INFO rawFileInfo)
+      {
+         try
+         {
+            string file = GetFileName(rawFileName);
+            return operations.SetFileSecurity(file, ref rawSecurityInformation, ref rawSecurityDescriptor, ref rawSecurityDescriptorLengthNeeded, ConvertFileInfo(ref rawFileInfo));
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException("SetFileSecurity threw: ", ex);
             return -1;
          }
       }

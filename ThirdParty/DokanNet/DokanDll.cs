@@ -3,13 +3,15 @@ using System.Runtime.InteropServices;
 
 namespace DokanNet
 {
-   [StructLayout(LayoutKind.Sequential, Pack = 4)]
+   [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto, Pack = 4)]
    struct DOKAN_OPTIONS
    {
-      public char DriveLetter; // driver letter to be mounted
+      public ushort Version;
       public ushort ThreadCount; // number of threads to be used
       public uint Options;
-      private readonly ulong Dummy1;
+      public ulong Dummy1;
+      [MarshalAs(UnmanagedType.LPWStr)]
+      public string MountPoint;
    }
 
    // this struct must be the same layout as DOKAN_OPERATIONS
@@ -39,6 +41,8 @@ namespace DokanNet
       public Proxy.GetDiskFreeSpaceDelegate GetDiskFreeSpace;
       public Proxy.GetVolumeInformationDelegate GetVolumeInformation;
       public Proxy.UnmountDelegate Unmount;
+      public Proxy.GetFileSecurityDelegate GetFileSecurity;
+      public Proxy.SetFileSecurityDelegate SetFileSecurity;
    }
 
    static class DokanDll
@@ -54,6 +58,9 @@ namespace DokanNet
 
       [DllImport("dokan.dll")]
       public static extern uint DokanDriveVersion();
+
+      [DllImport("dokan.dll")]
+      public static extern int DokanRemoveMountPoint([MarshalAs(UnmanagedType.LPWStr)] string mountPoint);
 
       [DllImport("dokan.dll")]
       public static extern bool DokanResetTimeout(uint timeout, ref DOKAN_FILE_INFO rawFileInfo);
