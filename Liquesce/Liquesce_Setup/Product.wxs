@@ -40,7 +40,8 @@
       <Property Id="DOKANVERCHECK32">
          <DirectorySearch Id="Dokan.sys.version" Path="[SystemFolder]\Drivers">
             <!--Make sure that the min / max _straddle_ the actual version..  Check for 0.6.0 x32 Size -->
-            <FileSearch Name="Dokan.sys" MinSize="91903" MaxSize="91905" />
+            <!-- It appears that there is yet another version for Windows 7 x32 !! -->
+            <FileSearch Name="Dokan.sys" MinSize="91903" MaxSize="95745" />
          </DirectorySearch>
       </Property>
       <Property Id="DOKANVERCHECK64">
