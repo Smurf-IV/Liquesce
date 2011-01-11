@@ -7,7 +7,7 @@
    
       <?define UpgradeCode = "47ac796f-b05e-4b01-92d2-a53e13e4089b" ?>
       <!-- do not change this ever !-->
-      <?define Version = "10.11.28" ?>
+      <?define Version = "11.01.11" ?>
       <!-- Change this when creating new release YY-MM-DD -->
       <?define ProductName = "Liquesce Client Share Enabler"?>
 
@@ -42,18 +42,18 @@
 
          <Property Id="DOKANVERCHECK32">
             <DirectorySearch Id="Dokan.sys.version" Path="[SystemFolder]\Drivers">
-               <!--Make sure that the min / max _straddle_ the actual version..  -->
-               <FileSearch Name="Dokan.sys" MinSize="84991" MaxSize="84993"  MinVersion="6.1.7600.16384"  MaxVersion="6.1.7600.16386"/>
+               <!--Make sure that the min / max _straddle_ the actual version..  Check for 0.6.0 x32 Size -->
+               <FileSearch Name="Dokan.sys" MinSize="91903" MaxSize="91905" />
             </DirectorySearch>
          </Property>
          <Property Id="DOKANVERCHECK64">
             <DirectorySearch Id="Dokan.sys64.version" Path="[System64Folder]\Drivers">
-               <!--Make sure that the min / max _straddle_ the actual version..  -->
-               <FileSearch Name="Dokan.sys" MinSize="106887" MaxSize="106889" />
+               <!--Make sure that the min / max _straddle_ the actual version.. Check for 0.6.0 x64 Size -->
+               <FileSearch Name="Dokan.sys" MinSize="120407" MaxSize="120409" />
             </DirectorySearch>
          </Property>
 
-         <Condition Message="This application requires Dokan Ver 0.5.3.">
+         <Condition Message="This application requires Dokan Ver 0.6.0.">
             <![CDATA[Installed OR (DOKANVERCHECK64 AND VersionNT64) OR (DOKANVERCHECK32 AND NOT VersionNT64)]]>
          </Condition>
 

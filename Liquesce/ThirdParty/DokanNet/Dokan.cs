@@ -5,14 +5,16 @@ namespace DokanNet
 {
    public class DokanOptions
    {
-      public char DriveLetter;
+      public ushort Version; 
       public ushort ThreadCount;
       public bool DebugMode;
       public bool UseStdErr;
       public bool UseAltStream;
       public bool UseKeepAlive;
       public bool NetworkDrive;
+      public bool RemovableDrive;
       public string VolumeLabel;
+      public string MountPoint;
    }
 
 
@@ -44,12 +46,15 @@ namespace DokanNet
       public const int DOKAN_MOUNT_ERROR = -5; // Can't assign drive letter
       #endregion
 
+      private const ushort DOKAN_VERSION = 600; // ver 0.6.0
+
       #region Dokan Driver Options
       private const uint DOKAN_OPTION_DEBUG = 1;
       private const uint DOKAN_OPTION_STDERR = 2;
       private const uint DOKAN_OPTION_ALT_STREAM = 4;
       private const uint DOKAN_OPTION_KEEP_ALIVE = 8;
       private const uint DOKAN_OPTION_NETWORK = 16;
+      private const uint DOKAN_OPTION_REMOVABLE = 32;
       #endregion
 #pragma warning restore 169
 // ReSharper restore InconsistentNaming
@@ -68,10 +73,12 @@ namespace DokanNet
 
          var dokanOptions = new DOKAN_OPTIONS
                                          {
-                                            DriveLetter = options.DriveLetter,
+                                            Version = options.Version != 0 ? options.Version : DOKAN_VERSION,
+                                            MountPoint = options.MountPoint,
                                             ThreadCount = options.ThreadCount
                                          };
 
+         dokanOptions.Options |= options.RemovableDrive ? DOKAN_OPTION_REMOVABLE : 0;
          dokanOptions.Options |= options.DebugMode ? DOKAN_OPTION_DEBUG : 0;
          dokanOptions.Options |= options.UseStdErr ? DOKAN_OPTION_STDERR : 0;
          dokanOptions.Options |= options.UseAltStream ? DOKAN_OPTION_ALT_STREAM : 0;
@@ -114,6 +121,10 @@ namespace DokanNet
          return DokanDll.DokanUnmount(driveLetter);
       }
 
+      public static int DokanRemoveMountPoint(string mountPoint)
+      {
+         return Dokan.DokanRemoveMountPoint(mountPoint);
+      }
 
       public static uint DokanVersion()
       {

@@ -918,10 +918,49 @@ namespace ClientLiquesceSvc
          }
          finally
          {
-            // openFilesSync.ExitWriteLock();
+            Log.Trace("Unmount out");
          }
-         Log.Trace("Unmount out");
          return Dokan.DOKAN_SUCCESS;
+      }
+
+      public int GetFileSecurity(string file, ref SECURITY_INFORMATION rawRequestedInformation, ref SECURITY_DESCRIPTOR rawSecurityDescriptor, uint rawSecurityDescriptorLength, ref uint rawSecurityDescriptorLengthNeeded, DokanFileInfo info)
+      {
+         Log.Trace("Unmount IN GetFileSecurity[{0}]", info.ProcessId);
+         int dokanReturn = Dokan.DOKAN_ERROR;
+         try
+         {
+            throw new NotImplementedException();
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException("GetFileSecurity threw: ", ex);
+            dokanReturn = Utils.BestAttemptToWin32(ex);
+         }
+         finally
+         {
+            Log.Trace("GetFileSecurity out");
+         }
+         return dokanReturn;
+      }
+
+      public int SetFileSecurity(string file, ref SECURITY_INFORMATION rawSecurityInformation, ref SECURITY_DESCRIPTOR rawSecurityDescriptor, ref uint rawSecurityDescriptorLengthNeeded, DokanFileInfo info)
+      {
+         Log.Trace("Unmount IN SetFileSecurity[{0}]", info.ProcessId);
+         int dokanReturn = Dokan.DOKAN_ERROR;
+         try
+         {
+            throw new NotImplementedException();
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException("SetFileSecurity threw: ", ex);
+            dokanReturn = Utils.BestAttemptToWin32(ex);
+         }
+         finally
+         {
+            Log.Trace("SetFileSecurity out");
+         }
+         return dokanReturn;
       }
 
       #endregion

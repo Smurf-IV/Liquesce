@@ -134,9 +134,11 @@ namespace ClientLiquesceSvc
          }
          if (needToCreateDrive)
          {
+            if (clientShareDetail.DriveLetter.Length == 1)
+               clientShareDetail.DriveLetter += ":\\"; // Make this into a MountPoint for V 0.6.0
             DokanOptions options = new DokanOptions
                                       {
-                                         DriveLetter = clientShareDetail.DriveLetter[0],
+                                         MountPoint = clientShareDetail.DriveLetter,
                                          ThreadCount = currentConfigDetails.ThreadCount,
                                          DebugMode = currentConfigDetails.DebugMode,
                                          //      public bool UseStdErr;
