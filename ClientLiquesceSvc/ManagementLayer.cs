@@ -134,19 +134,21 @@ namespace ClientLiquesceSvc
          }
          if (needToCreateDrive)
          {
-            if (clientShareDetail.DriveLetter.Length == 1)
-               clientShareDetail.DriveLetter += ":\\"; // Make this into a MountPoint for V 0.6.0
+            // TODO: Search all usages of the DriveLetter and make sure they become MountPoint compatible
+            string mountPoint = clientShareDetail.DriveLetter;
+            if (mountPoint.Length == 1)
+               mountPoint += ":\\"; // Make this into a MountPoint for V 0.6.0
             DokanOptions options = new DokanOptions
-                                      {
-                                         MountPoint = clientShareDetail.DriveLetter,
-                                         ThreadCount = currentConfigDetails.ThreadCount,
-                                         DebugMode = currentConfigDetails.DebugMode,
-                                         //      public bool UseStdErr;
-                                         //    public bool UseAltStream;
-                                         UseKeepAlive = true,
-                                         NetworkDrive = true,
-                                         VolumeLabel = clientShareDetail.VolumeLabel
-                                      };
+            {
+               MountPoint = mountPoint,
+               ThreadCount = currentConfigDetails.ThreadCount,
+               DebugMode = currentConfigDetails.DebugMode,
+               //      public bool UseStdErr;
+               //    public bool UseAltStream;
+               UseKeepAlive = true,
+               NetworkDrive = true,
+               VolumeLabel = clientShareDetail.VolumeLabel
+            };
 
             ClientLiquesceOps dokanOperations = new ClientLiquesceOps(clientShareDetail);
 
@@ -157,7 +159,7 @@ namespace ClientLiquesceSvc
             switch (retVal)
             {
                case Dokan.DOKAN_SUCCESS: // = 0;
-                  Log.Info( "Dokan is not mounted");
+                  Log.Info("Dokan is not mounted");
                   break;
                case Dokan.DOKAN_ERROR: // = -1; // General Error
                   Log.Info("Dokan is not mounted [DOKAN_ERROR] - General Error");

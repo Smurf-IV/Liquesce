@@ -137,11 +137,13 @@ namespace LiquesceSvc
                   Thread.Sleep(delayStartMilliseconds);
                }
 
-               if (currentConfigDetails.DriveLetter.Length == 1)
-                  currentConfigDetails.DriveLetter += ":\\"; // Make this into a MountPoint for V 0.6.0
+               // TODO: Search all usages of the DriveLetter and make sure they become MountPoint compatible
+               string mountPoint = currentConfigDetails.DriveLetter;
+               if (mountPoint.Length == 1)
+                  mountPoint += ":\\"; // Make this into a MountPoint for V 0.6.0
                DokanOptions options = new DokanOptions
                {
-                  MountPoint = currentConfigDetails.DriveLetter,
+                  MountPoint = mountPoint,
                   ThreadCount = currentConfigDetails.ThreadCount,
                   DebugMode = currentConfigDetails.DebugMode,
                   //      public bool UseStdErr;
