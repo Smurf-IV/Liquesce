@@ -923,7 +923,7 @@ namespace ClientLiquesceSvc
          return Dokan.DOKAN_SUCCESS;
       }
 
-      public int GetFileSecurity(string file, ref SECURITY_INFORMATION rawRequestedInformation, ref SECURITY_DESCRIPTOR rawSecurityDescriptor, uint rawSecurityDescriptorLength, ref uint rawSecurityDescriptorLengthNeeded, DokanFileInfo info)
+      public int GetFileSecurityNative(string file, ref SECURITY_INFORMATION rawRequestedInformation, ref SECURITY_DESCRIPTOR rawSecurityDescriptor, uint rawSecurityDescriptorLength, ref uint rawSecurityDescriptorLengthNeeded, DokanFileInfo info)
       {
          Log.Trace("Unmount IN GetFileSecurity[{0}]", info.ProcessId);
          int dokanReturn = Dokan.DOKAN_ERROR;
@@ -943,7 +943,7 @@ namespace ClientLiquesceSvc
          return dokanReturn;
       }
 
-      public int SetFileSecurity(string file, ref SECURITY_INFORMATION rawSecurityInformation, ref SECURITY_DESCRIPTOR rawSecurityDescriptor, ref uint rawSecurityDescriptorLengthNeeded, DokanFileInfo info)
+      public int SetFileSecurityNative(string file, ref SECURITY_INFORMATION rawSecurityInformation, ref SECURITY_DESCRIPTOR rawSecurityDescriptor, ref uint rawSecurityDescriptorLengthNeeded, DokanFileInfo info)
       {
          Log.Trace("Unmount IN SetFileSecurity[{0}]", info.ProcessId);
          int dokanReturn = Dokan.DOKAN_ERROR;

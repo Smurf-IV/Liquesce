@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Security.AccessControl;
 using System.Text;
 using System.Threading;
 using DokanNet;
@@ -1097,13 +1098,28 @@ namespace LiquesceSvc
          return Dokan.DOKAN_SUCCESS;
       }
 
-      public int GetFileSecurity(string file, ref SECURITY_INFORMATION rawRequestedInformation, ref SECURITY_DESCRIPTOR rawSecurityDescriptor, uint rawSecurityDescriptorLength, ref uint rawSecurityDescriptorLengthNeeded, DokanFileInfo info)
+      public int GetFileSecurityNative(string file, ref SECURITY_INFORMATION rawRequestedInformation, ref SECURITY_DESCRIPTOR rawSecurityDescriptor, uint rawSecurityDescriptorLength, ref uint rawSecurityDescriptorLengthNeeded, DokanFileInfo info)
       {
          Log.Trace("Unmount IN GetFileSecurity[{0}]", info.ProcessId);
          int dokanReturn = Dokan.DOKAN_ERROR;
          try
          {
-            throw new NotImplementedException();
+            string objectPath;
+            if (info.refFileHandleContext != 0)
+            {
+               Log.Trace("info.refFileHandleContext [{0}]", info.refFileHandleContext);
+               using (openFilesSync.ReadLock())
+                  objectPath = openFiles[info.refFileHandleContext].Name;
+            }
+            else
+            {
+               objectPath = roots.GetPath(file);
+            }
+            if ( !GetFileSecurity( objectPath, rawRequestedInformation, ref rawSecurityDescriptor, rawSecurityDescriptorLength, ref rawSecurityDescriptorLengthNeeded ) )
+            {
+               Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error(), new IntPtr(-1));
+            }
+
          }
          catch (Exception ex)
          {
@@ -1117,13 +1133,28 @@ namespace LiquesceSvc
          return dokanReturn;
       }
 
-      public int SetFileSecurity(string file, ref SECURITY_INFORMATION rawSecurityInformation, ref SECURITY_DESCRIPTOR rawSecurityDescriptor, ref uint rawSecurityDescriptorLengthNeeded, DokanFileInfo info)
+      public int SetFileSecurityNative(string file, ref SECURITY_INFORMATION rawSecurityInformation, ref SECURITY_DESCRIPTOR rawSecurityDescriptor, ref uint rawSecurityDescriptorLengthNeeded, DokanFileInfo info)
       {
          Log.Trace("Unmount IN SetFileSecurity[{0}]", info.ProcessId);
          int dokanReturn = Dokan.DOKAN_ERROR;
          try
          {
-            throw new NotImplementedException();
+            string objectPath;
+            if (info.refFileHandleContext != 0)
+            {
+               Log.Trace("info.refFileHandleContext [{0}]", info.refFileHandleContext);
+               using (openFilesSync.ReadLock())
+                  objectPath = openFiles[info.refFileHandleContext].Name;
+            }
+            else
+            {
+               objectPath = roots.GetPath(file);
+            }
+            if ( !SetFileSecurity( objectPath, rawSecurityInformation, ref rawSecurityDescriptor))
+            {
+               Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error(), new IntPtr(-1));
+            }
+
          }
          catch (Exception ex)
          {
@@ -1432,6 +1463,41 @@ namespace LiquesceSvc
       [DllImport("kernel32.dll", SetLastError = true)]
       [return: MarshalAs(UnmanagedType.Bool)]
       private static extern bool SetFileTime(SafeFileHandle hFile, ref long lpCreationTime, ref long lpLastAccessTime, ref long lpLastWriteTime);
+
+      private enum SE_OBJECT_TYPE
+      {
+         SE_UNKNOWN_OBJECT_TYPE = 0,
+         SE_FILE_OBJECT,
+         SE_SERVICE,
+         SE_PRINTER,
+         SE_REGISTRY_KEY,
+         SE_LMSHARE,
+         SE_KERNEL_OBJECT,
+         SE_WINDOW_OBJECT,
+         SE_DS_OBJECT,
+         SE_DS_OBJECT_ALL,
+         SE_PROVIDER_DEFINED_OBJECT,
+         SE_WMIGUID_OBJECT,
+         SE_REGISTRY_WOW64_32KEY
+      }
+      /// <summary>
+      /// The GetFileSecurity function obtains specified information about the security of a file or directory. The information obtained is constrained by the caller's access rights and privileges.
+      ///	The GetNamedSecurityInfo function provides functionality similar to GetFileSecurity for files as well as other types of objects.
+      /// Windows NT 3.51 and earlier:  The GetNamedSecurityInfo function is not supported.
+      /// </summary>
+      /// <param name="lpFileName">[in] Pointer to a null-terminated string that specifies the file or directory for which security information is retrieved.</param>
+      /// <param name="requestedInformation">[in] A SecurityInformation value that identifies the security information being requested. </param>
+      /// <param name="securityDescriptor">[out] Pointer to a buffer that receives a copy of the security descriptor of the object specified by the lpFileName parameter. The calling process must have permission to view the specified aspects of the object's security status. The SECURITY_DESCRIPTOR structure is returned in self-relative format.</param>
+      /// <param name="length">[in] Specifies the size, in bytes, of the buffer pointed to by the pSecurityDescriptor parameter.</param>
+      /// <param name="lengthNeeded">[out] Pointer to the variable that receives the number of bytes necessary to store the complete security descriptor. If the returned number of bytes is less than or equal to nLength, the entire security descriptor is returned in the output buffer; otherwise, none of the descriptor is returned.</param>
+      /// <returns></returns>
+      [DllImport("AdvAPI32.DLL", CharSet = CharSet.Auto, SetLastError = true, CallingConvention=CallingConvention.Winapi )]
+      private static extern bool GetFileSecurity(string lpFileName, SECURITY_INFORMATION requestedInformation, ref SECURITY_DESCRIPTOR pSecurityDescriptor, 
+         uint length, ref uint lengthNeeded);
+
+      [DllImport("advapi32.dll", CharSet = CharSet.Auto, SetLastError = true, CallingConvention=CallingConvention.Winapi )]
+      [return: MarshalAs(UnmanagedType.Bool)]
+      private static extern bool SetFileSecurity( string pFileName, SECURITY_INFORMATION SecurityInformation, ref SECURITY_DESCRIPTOR pSecurityDescriptor );
 
       #endregion
 

@@ -39,29 +39,43 @@ namespace DokanNet
       public readonly byte WriteToEndOfFile;
    }
 
-   [Flags]
+   /// <summary>
+   /// Check http://msdn.microsoft.com/en-us/library/cc230369%28v=prot.13%29.aspx
+   /// and usage http://msdn.microsoft.com/en-us/library/ff556635%28v=vs.85%29.aspx
+   /// </summary>
+   [Flags] 
    public enum SECURITY_INFORMATION : uint
    {
+      /// <summary>
+      /// Structure taken from http://www.pinvoke.net/default.aspx/Enums/SECURITY_INFORMATION.html
+      /// </summary>
       OWNER_SECURITY_INFORMATION = 0x00000001,
       GROUP_SECURITY_INFORMATION = 0x00000002,
       DACL_SECURITY_INFORMATION = 0x00000004,
       SACL_SECURITY_INFORMATION = 0x00000008,
+      // Dokan may not be passing Label ?? 0x00000010
       UNPROTECTED_SACL_SECURITY_INFORMATION = 0x10000000,
       UNPROTECTED_DACL_SECURITY_INFORMATION = 0x20000000,
       PROTECTED_SACL_SECURITY_INFORMATION = 0x40000000,
       PROTECTED_DACL_SECURITY_INFORMATION = 0x80000000
    }
 
+   /// <summary>
+   /// See http://www.pinvoke.net/search.aspx?search=SECURITY_DESCRIPTOR&namespace=[All]
+   /// </summary>
    [StructLayoutAttribute(LayoutKind.Sequential, Pack = 4)]
    public struct SECURITY_DESCRIPTOR
    {
+      /// <summary>
+      /// Structure taken from http://msdn.microsoft.com/en-us/library/ff556610%28v=vs.85%29.aspx
+      /// </summary>
       public byte revision;
       public byte size;
-      public short control;
-      public IntPtr owner;
-      public IntPtr group;
-      public IntPtr sacl;
-      public IntPtr dacl;
+      public short control;   // == SECURITY_DESCRIPTOR_CONTROL
+      public IntPtr owner;    // == PSID  
+      public IntPtr group;    // == PSID  
+      public IntPtr sacl;     // == PACL  
+      public IntPtr dacl;     // == PACL  
    }
 
    public class Proxy
@@ -849,7 +863,7 @@ namespace DokanNet
          try
          {
             string file = GetFileName(rawFileName);
-            return operations.GetFileSecurity(file, ref rawRequestedInformation, ref rawSecurityDescriptor, rawSecurityDescriptorLength, ref rawSecurityDescriptorLengthNeeded, ConvertFileInfo(ref rawFileInfo));
+            return operations.GetFileSecurityNative(file, ref rawRequestedInformation, ref rawSecurityDescriptor, rawSecurityDescriptorLength, ref rawSecurityDescriptorLengthNeeded, ConvertFileInfo(ref rawFileInfo));
          }
          catch (Exception ex)
          {
@@ -867,7 +881,7 @@ namespace DokanNet
          try
          {
             string file = GetFileName(rawFileName);
-            return operations.SetFileSecurity(file, ref rawSecurityInformation, ref rawSecurityDescriptor, ref rawSecurityDescriptorLengthNeeded, ConvertFileInfo(ref rawFileInfo));
+            return operations.SetFileSecurityNative(file, ref rawSecurityInformation, ref rawSecurityDescriptor, ref rawSecurityDescriptorLengthNeeded, ConvertFileInfo(ref rawFileInfo));
          }
          catch (Exception ex)
          {
