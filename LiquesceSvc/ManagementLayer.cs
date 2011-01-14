@@ -139,8 +139,8 @@ namespace LiquesceSvc
 
                // TODO: Search all usages of the DriveLetter and make sure they become MountPoint compatible
                string mountPoint = currentConfigDetails.DriveLetter;
-               if (mountPoint.Length == 1)
-                  mountPoint += ":\\"; // Make this into a MountPoint for V 0.6.0
+               //if (mountPoint.Length == 1)
+               //   mountPoint += ":\\"; // Make this into a MountPoint for V 0.6.0
                DokanOptions options = new DokanOptions
                {
                   MountPoint = mountPoint,
@@ -148,7 +148,7 @@ namespace LiquesceSvc
                   DebugMode = currentConfigDetails.DebugMode,
                   //      public bool UseStdErr;
                   // UseAltStream = true, // This needs all sorts of extra API's
-                  UseKeepAlive = false,  // When you set TRUE on DokanOptions->UseKeepAlive, dokan library automatically unmounts 15 seconds after user-mode file system hanged up
+                  UseKeepAlive = true,  // When you set TRUE on DokanOptions->UseKeepAlive, dokan library automatically unmounts 15 seconds after user-mode file system hanged up
                   NetworkDrive = false,  // Set this to true to see if it stops the recycler bin question until [workitem:7253] is sorted
                   VolumeLabel = currentConfigDetails.VolumeLabel
                };
