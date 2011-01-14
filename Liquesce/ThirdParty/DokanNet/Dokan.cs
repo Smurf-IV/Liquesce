@@ -133,9 +133,7 @@ namespace DokanNet
 
       public static uint DokanDriverVersion()
       {
-         // TODO why does this not work
-         return 1;
-         // return DokanDll.DokanDriveVersion();
+         return DokanDll.DokanDriverVersion();
       }
 
       //public static bool DokanResetTimeout(uint timeout, DokanFileInfo fileinfo)

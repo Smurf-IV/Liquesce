@@ -51,13 +51,13 @@ namespace DokanNet
       public static extern int DokanMain(ref DOKAN_OPTIONS options, ref DOKAN_OPERATIONS operations);
 
       [DllImport("dokan.dll")]
-      public static extern int DokanUnmount(int driveLetter);
+      public static extern int DokanUnmount(char driveLetter);
 
       [DllImport("dokan.dll")]
       public static extern uint DokanVersion();
 
       [DllImport("dokan.dll")]
-      public static extern uint DokanDriveVersion();
+      public static extern uint DokanDriverVersion();
 
       [DllImport("dokan.dll")]
       public static extern int DokanRemoveMountPoint([MarshalAs(UnmanagedType.LPWStr)] string mountPoint);
