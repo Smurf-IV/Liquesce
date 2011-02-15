@@ -27,7 +27,7 @@ Keep an open eye on the \cf2\ul\b http://liquesce.codeplex.com/\cf1\ulnone\b0  s
 \par
 \cf0\ul\b Done\par
 \par
-2011-01-11 (Alpha)\par
+2011-02-14\par
 \ulnone\b0 - Fix the Dokan Proxy.Net call that returns the Volume information to fill in the Preserve ACL's \par
 - Use wordpad instead of trying to re-invent the wheel \par
 - Make word goto the end of the file when opening \par
@@ -37,8 +37,14 @@ Keep an open eye on the \cf2\ul\b http://liquesce.codeplex.com/\cf1\ulnone\b0  s
 - Check to ensure that Dokan 0.6.0 has been installed\par
 - Recycle bin is not populated in XP\par
 - Bring the code upto the changes needed to implement Dokan 0.6.0\ul\b\par
-\b0\par
-2010-11-25\par
+\ulnone\b0 - [workitem:7039] - There are 3 file sizes now !!\par
+- Fix DriveLetter to mountPoint conversion\par
+- Update Dokan.dll binary for dll referencing \par
+- Implement the #etFileSecurity functions to route through to the Native API's\par
+- Fix for http://code.google.com/p/dokan/issues/detail?id=198 \par
+- Revert back to the char drive letter, Seems to be a bit more reliable (Needs proving) \par
+\ul\par
+\b 2010-11-25\b0\par
 \ulnone - Fix Write at end of file logic\par
 - Start to test the code for the ShareEnabler\par
 - Use the Native Read / Write Kernel Api's so that memory is not duplicated in the system; See http://code.google.com/p/dokan/issues/detail?id=174 \par
@@ -63,13 +69,13 @@ FreeSpace Form:\par
 added dropzone to the tray app.\par
 you can easily find out on which physical disk a file or folder is placed by liquesce \par
 \ul\par
-2010-10-26\par
+\b 2010-10-26\b0\par
 \ulnone - Fix the log viewing from inside the management application \par
 - Changed to remove the \'e7 and replace with c in Facade in the Code only. Directory names remain still.\par
 - Awaiting all code before attempting the Dir Renam\par
 - Make the Locks a little tighter around the access to the Dokan raw storage lookup \par
 \ul\par
-2010-10-10\par
+\b 2010-10-10\b0\par
 \ulnone - Add in the "Ctrl" key addition to the Tray Application right click\par
 - Added the default Double click handler to the tray\par
 - Fix the Tooltip text for the state chnages in the Tray \par
@@ -84,7 +90,7 @@ you can easily find out on which physical disk a file or folder is placed by liq
 - Fix the Tooltip text for the state chnages in the Tray\par
 \ul\par
 \par
-2010-10-06\par
+\b 2010-10-06\b0\par
 \ulnone - Force 32 bit in 64 bit OS's (Have to wait for Dokan dll to be really 64 bit)\par
 - Make sure Icon usage is consistent (Use the new icons!)\par
 - Switched to using the P/Invoke for the create file, so that the temporary attributes etc are used in the file creation\par

@@ -5,7 +5,7 @@
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
      >
    <?define UpgradeCode = "F6F94F17-A05F-4824-8DD9-9F5E8267D783" ?>  <!-- do not change this ever !-->
-   <?define Version = "11.01.11" ?>    <!-- Change this when creating new release YY-MM-DD -->
+   <?define Version = "11.02.14" ?>    <!-- Change this when creating new release YY-MM-DD -->
    <?define ProductName = "Liquesce Windows HDD Pooling Suite"?>
 
    <Product Version="$(var.Version)" Id="*" UpgradeCode="$(var.UpgradeCode)"
@@ -189,12 +189,6 @@
       <CustomAction Id="LiquesceSvc.rollback" BinaryKey="WixCA" DllEntry="CAQuietExec" Execute="rollback" Impersonate="no" Return="check" />
       <CustomAction Id="LiquesceSvc.install" BinaryKey="WixCA" DllEntry="CAQuietExec" Execute="deferred" Impersonate="no" Return="check" />
       <CustomAction Id="LiquesceSvc.uninstall" BinaryKey="WixCA" DllEntry="CAQuietExec" Execute="deferred" Impersonate="no" Return="check" />
-
-      <CustomAction Id="StopService.SetProperty" Property="StopService" Value='"[System64Folder]Net.exe stop FRWinService"' />
-      <CustomAction Id="StopService" BinaryKey="WixCA" DllEntry="CAQuietExec" Execute="deferred" Impersonate="no" Return="check"/>
-
-      <CustomAction Id="StartService.SetProperty" Property="StartService" Value='"[System64Folder]Net.exe start FRWinService"' />
-      <CustomAction Id="StartService" BinaryKey="WixCA" DllEntry="CAQuietExec" Execute="deferred" Impersonate="no" Return="check"/>
 
       <!--Custom Actions to start stop Application tray-->
       <CustomAction Id="StartTrayApp" FileKey="LiquesceTray.exe" ExeCommand="" Return="asyncNoWait" />
