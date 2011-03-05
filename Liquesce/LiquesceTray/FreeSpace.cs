@@ -60,7 +60,6 @@ namespace LiquesceTray
         private TextBox[] freeSpace;
         private TextBox freeSpaceLiquesce;
         private TextBox[] backup;
-        private TextBox backupLiquesce;
         private TextBox[] data;
         private TextBox dataLiquesce;
         private DoubleProgressBar[] bars;
@@ -69,14 +68,9 @@ namespace LiquesceTray
         private CheckBox rightAligned;
         private TableLayoutPanel[] tableLayouts;
 
-        private ulong[] backupValues;
-
         private ulong[] oldFree;
 
         private List<long>[] averageRate;
-
-        private Thread th;
-
 
 
         public FreeSpace()
@@ -90,10 +84,6 @@ namespace LiquesceTray
             {
                 InitializeControls();
                 RefreshControls();
-
-                th = new Thread(threadBackupSize);
-                th.Start();
-
             }
             else
                 Close();
@@ -138,9 +128,6 @@ namespace LiquesceTray
                 oldFree[i] = 0;
                 averageRate[i] = new List<long>();
             }
-
-            backupValues = new ulong[config.SourceLocations.Count()];
-
 
             //------------------------------------------------------------------------------------------------
             // 
@@ -362,25 +349,6 @@ namespace LiquesceTray
 
 
             // 
-            // textBox backupLiquesce
-            // 
-            backupLiquesce = new TextBox
-            {
-                Location =
-                   new System.Drawing.Point(CONTROL_OFFSET_LEFT + leftSpace,
-                                            CONTROL_OFFSET_TOP + 2 + CONTROL_OFFSET_TOP_LABEL),
-                Name = "backupLiquesce",
-                ReadOnly = true,
-                Size = new System.Drawing.Size(80, 20),
-                TabIndex = 0,
-                TextAlign = HorizontalAlignment.Right
-            };
-            tableLayout.Controls.Add(backupLiquesce, COLUMN_BACKUP_INDEX, 0);
-
-            leftSpace += 83;
-
-
-            // 
             // textBox rateLiquesce
             // 
             dataLiquesce = new TextBox
@@ -576,12 +544,10 @@ namespace LiquesceTray
             ulong allAvailabel = 0;
             ulong allTotal = 0;
             long allRate = 0;
-            ulong allBackup = 0;
 
             int writePriority1Disk = -1;
             int writePriority2Disk = -1;
             ulong mostFreeSpace1 = 0;
-            ulong mostFreeSpace2 = 0;
 
             for (int i = 0; i < config.SourceLocations.Count(); i++)
             {
@@ -593,50 +559,31 @@ namespace LiquesceTray
                 {
                     allAvailabel += availabel;
                     allTotal += total;
-                    allBackup += backupValues[i];
 
-                    if (config.AllocationMode == ConfigDetails.AllocationModes.backup || 
-                        config.AllocationMode == ConfigDetails.AllocationModes.mirror)
+                    switch (config.PluginMode)
                     {
-                        if (availabel > mostFreeSpace1)
-                        {
-                            // old first is now second
-                            mostFreeSpace2 = mostFreeSpace1;
-                            writePriority2Disk = writePriority1Disk;
-                            // current disk is now first write disk
-                            mostFreeSpace1 = availabel;
-                            writePriority1Disk = i;
-                        }
-                        else if (availabel > mostFreeSpace2)
-                        {
-                            mostFreeSpace2 = availabel;
-                            writePriority2Disk = i;
-                        }
-                    }
-                    else if (config.AllocationMode == ConfigDetails.AllocationModes.balanced)
-                    {
-                        if (availabel > mostFreeSpace1)
-                        {
-                            // current disk is now first write disk
-                            mostFreeSpace1 = availabel;
-                            writePriority1Disk = i;
-                        }
-                    }
-                    else if (config.AllocationMode == ConfigDetails.AllocationModes.priority)
-                    {
-                        if (writePriority1Disk == -1 && availabel > config.HoldOffBufferBytes)
-                        {
-                            // current disk is now first write disk
-                            writePriority1Disk = i;
-                        }
-                    }
-                    else if (config.AllocationMode == ConfigDetails.AllocationModes.folder)
-                    {
-                        if (writePriority2Disk == -1 && availabel > config.HoldOffBufferBytes)
-                        {
-                            // current disk is now first write disk
-                            writePriority2Disk = i;
-                        }
+                       case "balanced":
+                          if (availabel > mostFreeSpace1)
+                          {
+                             // current disk is now first write disk
+                             mostFreeSpace1 = availabel;
+                             writePriority1Disk = i;
+                          }
+                          break;
+                       case "priority":
+                          if (writePriority1Disk == -1 && availabel > config.HoldOffBufferBytes)
+                          {
+                             // current disk is now first write disk
+                             writePriority1Disk = i;
+                          }
+                          break;
+                       case "folder":
+                          if (writePriority2Disk == -1 && availabel > config.HoldOffBufferBytes)
+                          {
+                             // current disk is now first write disk
+                             writePriority2Disk = i;
+                          }
+                          break;
                     }
 
                     long thisRate = 0;
@@ -673,14 +620,9 @@ namespace LiquesceTray
                     freeSpace[i].Text = FormatBytes((long)availabel);
 
                     // 
-                    // textBox backup
-                    // 
-                    backup[i].Text = FormatBytes((long)backupValues[i]);
-
-                    // 
                     // textBox data
                     // 
-                    data[i].Text = FormatBytes((long)(total - availabel - backupValues[i]));
+                    data[i].Text = FormatBytes((long)(total - availabel));
 
                     //
                     // progress bar
@@ -701,7 +643,7 @@ namespace LiquesceTray
                     }
 
                     bars[i].Maximum = BAR_SCALE;
-                    bars[i].Value1 = (int)(((total - availabel - backupValues[i]) * BAR_SCALE) / total);
+                    bars[i].Value1 = (int)(((total - availabel) * BAR_SCALE) / total);
                     bars[i].Value2 = (int)(((total - availabel) * BAR_SCALE) / total);
 
                     if (availabel < config.HoldOffBufferBytes)
@@ -734,10 +676,9 @@ namespace LiquesceTray
 
             totalSpaceLiquesce.Text = FormatBytes((long)allTotal);
             freeSpaceLiquesce.Text = FormatBytes((long)allAvailabel);
-            backupLiquesce.Text = FormatBytes((long)allBackup);
-            dataLiquesce.Text = FormatBytes((long)(allTotal - allAvailabel - allBackup));
+            dataLiquesce.Text = FormatBytes((long)(allTotal - allAvailabel));
             barLiquesce.Maximum = BAR_SCALE;
-            barLiquesce.Value1 = (int)(((allTotal - allAvailabel - allBackup) * BAR_SCALE) / allTotal);
+            barLiquesce.Value1 = (int)(((allTotal - allAvailabel) * BAR_SCALE) / allTotal);
             barLiquesce.Value2 = (int)(((allTotal - allAvailabel) * BAR_SCALE) / allTotal);
 
             if (allRate < 0)
@@ -850,22 +791,5 @@ namespace LiquesceTray
         }
 
 
-        private void threadBackupSize()
-        {
-            while (true)
-            {
-                for (int i = 0; i < config.SourceLocations.Count; i++)
-                {
-                    backupValues[i] = (ulong)FolderSize(config.SourceLocations[i] + "\\" + BackupFileManager.HIDDEN_BACKUP_FOLDER, true);
-                }
-
-                Thread.Sleep(timer1.Interval);
-            }
-        }
-
-        private void FreeSpace_FormClosed(object sender, FormClosedEventArgs e)
-        {
-            th.Abort();
-        }
     }
 }

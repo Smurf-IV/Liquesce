@@ -1,15 +1,16 @@
 ﻿using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("LiquesceFacade")]
+[assembly: AssemblyTitle("PriorityMEF")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Smurf-IV")]
-[assembly: AssemblyProduct("Liquesce")]
-[assembly: AssemblyCopyright("Copyright © Smurf-IV 2010")]
+[assembly: AssemblyCompany("TTV")]
+[assembly: AssemblyProduct("PriorityMEF")]
+[assembly: AssemblyCopyright("Copyright © TTV 2011")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -19,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("0add1bfe-80d9-460b-ab4f-1db837df49b3")]
+[assembly: Guid("cc638a9c-62a1-4544-80b9-eb0e64c249f3")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -31,5 +32,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("2011.2.27.425")]
-[assembly: AssemblyFileVersion("2011.2.27.425")]
+[assembly: AssemblyVersion("2011.2.27.12")]
+[assembly: AssemblyFileVersion("2011.2.27.12")]

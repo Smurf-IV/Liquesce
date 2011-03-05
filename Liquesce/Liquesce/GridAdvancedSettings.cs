@@ -38,7 +38,7 @@ namespace Liquesce
             cd.ThreadCount = apd.ThreadCount;
             cd.LockTimeout = apd.LockTimeoutmSec;
             cd.DebugMode = apd.DokanDebugMode;
-            Enum.TryParse(apd.AllocationMode, out cd.AllocationMode);
+            cd.PluginMode = apd.PluginMode;
             cd.HoldOffBufferBytes = (apd.HoldOffMBytes * (1024 * 1024));
             cd.BufferReadSize = (apd.BufferReadSizeKBytes * 1024);
             cd.ServiceLogLevel = apd.ServiceLogLevel;
