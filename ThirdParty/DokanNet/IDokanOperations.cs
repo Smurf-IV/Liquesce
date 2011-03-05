@@ -36,23 +36,23 @@ namespace DokanNet
 
    public interface IDokanOperations
    {
-      int CreateFile(string filename, uint rawAccessMode, uint rawShare, uint rawCreationDisposition, uint rawFlagsAndAttributes, DokanFileInfo info);
+      int CreateFile(string dokanPath, uint rawAccessMode, uint rawShare, uint rawCreationDisposition, uint rawFlagsAndAttributes, DokanFileInfo info);
 
-      int OpenDirectory( string filename, DokanFileInfo info);
+      int OpenDirectory( string dokanPath, DokanFileInfo info);
 
-      int CreateDirectory( string filename, DokanFileInfo info);
+      int CreateDirectory( string dokanPath, DokanFileInfo info);
 
-      int Cleanup( string filename, DokanFileInfo info);
+      int Cleanup( string dokanPath, DokanFileInfo info);
 
-      int CloseFile( string filename, DokanFileInfo info);
+      int CloseFile( string dokanPath, DokanFileInfo info);
 
       int ReadFileNative(string file, IntPtr rawBuffer, uint rawBufferLength, ref uint rawReadLength, long rawOffset, DokanFileInfo convertFileInfo);
 
-      int WriteFileNative(string filename, IntPtr rawBuffer, uint rawNumberOfBytesToWrite, ref uint rawNumberOfBytesWritten, long rawOffset, DokanFileInfo info);
+      int WriteFileNative(string dokanPath, IntPtr rawBuffer, uint rawNumberOfBytesToWrite, ref uint rawNumberOfBytesWritten, long rawOffset, DokanFileInfo info);
 
-      int FlushFileBuffers( string filename, DokanFileInfo info);
+      int FlushFileBuffers( string dokanPath, DokanFileInfo info);
 
-      int GetFileInformation( string filename, ref FileInformation fileinfo, DokanFileInfo info);
+      int GetFileInformation( string dokanPath, ref FileInformation fileinfo, DokanFileInfo info);
 
       int FindFiles(string filename, out FileInformation[] files, DokanFileInfo info);
 

@@ -1,12 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
+using System.ComponentModel.Composition.Hosting;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.ServiceModel;
 using System.Threading;
 using System.Xml.Serialization;
 using DokanNet;
 using LiquesceFacade;
+using LiquesceSvc.Properties;
+using LiquesceSvcMEF;
 using NLog;
 using NLog.Config;
 
@@ -32,6 +37,34 @@ namespace LiquesceSvc
          get { return instance ?? (instance = new ManagementLayer()); }
       }
 
+
+      [ImportMany(typeof(ICreateFactory))]
+      public IEnumerable<Lazy<ICreateFactory, IDescription>> pluginProviders;
+
+      private void DoImport()
+      {
+         //An aggregate catalog that combines multiple catalogs
+         //Adds all the parts found in all assemblies in the same directory as the executing program
+         var catalog = new SafeDirectoryCatalog(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
+
+         //Create the CompositionContainer with the parts in the catalog
+         CompositionContainer container = new CompositionContainer(catalog);
+
+         //Fill the imports of this object
+         container.ComposeParts(this);
+         foreach (Lazy<ICreateFactory, IDescription> plugin in pluginProviders)
+         {
+            try 
+            {
+               var val = plugin.Value;
+            }
+            catch (CompositionException ex)
+            {
+               Log.ErrorException("pluginProviders have an invalid value: ", ex);
+            }
+         }   
+      }
+
       /// <summary>
       /// Private constructor to prevent multiple instances
       /// </summary>
@@ -41,6 +74,7 @@ namespace LiquesceSvc
          {
             Log.Debug("New ManagementLayer created.");
             startTime = DateTime.UtcNow;
+            DoImport();
          }
          catch (Exception ex)
          {
@@ -100,7 +134,6 @@ namespace LiquesceSvc
       {
          try
          {
-            TimeSpan delayStart = DateTime.UtcNow - startTime;
             int repeatWait = 0;
             while (IsRunning
                && (repeatWait++ < 100)
@@ -127,16 +160,6 @@ namespace LiquesceSvc
                FireStateChange(LiquesceSvcState.Unknown, "Dokan initialised");
                IsRunning = true;
 
-               // Sometimes the math gets all confused due to the casting !!
-               int delayStartMilliseconds = (int)(currentConfigDetails.DelayStartMilliSec - delayStart.Milliseconds);
-               if ((delayStartMilliseconds > 0)
-                  && (delayStartMilliseconds < UInt16.MaxValue)
-                  )
-               {
-                  Log.Info("Delay Start needs to be obeyed");
-                  Thread.Sleep(delayStartMilliseconds);
-               }
-
                // TODO: Search all usages of the DriveLetter and make sure they become MountPoint compatible
                string mountPoint = currentConfigDetails.DriveLetter;
                //if (mountPoint.Length == 1)
@@ -153,8 +176,9 @@ namespace LiquesceSvc
                   VolumeLabel = currentConfigDetails.VolumeLabel
                };
 
-
-               dokanOperations = new LiquesceOps(currentConfigDetails);
+               IServicePlugin plugin = pluginProviders.Where(pluginProvider => 0 == String.Compare(pluginProvider.Metadata.Description, currentConfigDetails.PluginMode, true)).Select(pluginProvider => pluginProvider.Value.Create()).FirstOrDefault(); 
+               plugin.Initialise(currentConfigDetails.DriveLetter, currentConfigDetails.HoldOffBufferBytes);
+               dokanOperations = new LiquesceOps(currentConfigDetails, plugin);
                ThreadPool.QueueUserWorkItem(dokanOperations.InitialiseShares, dokanOperations);
 
                mountedDriveLetter = currentConfigDetails.DriveLetter[0];
@@ -321,15 +345,6 @@ namespace LiquesceSvc
          return (LanManShareHandler.MatchDriveLanManShares(currentConfigDetails.DriveLetter));
       }
 
-      //public MirrorToDoList ConsumeMirrorToDo()
-      //{
-      //    return FileManager.ConsumeMirrorToDo();
-      //}
-
-      public MirrorToDoList MirrorToDo
-      {
-         get { return FileManager.ConsumeMirrorToDo(); }
-      }
 
       private void ReadConfigDetails()
       {
@@ -378,7 +393,6 @@ namespace LiquesceSvc
                currentConfigDetails = new ConfigDetails
                                          {
                                             DebugMode = true,
-                                            DelayStartMilliSec = (uint)short.MaxValue,
                                             DriveLetter = "N",
                                             SourceLocations = new List<string>(1),
                                             ThreadCount = 1,
@@ -412,5 +426,9 @@ namespace LiquesceSvc
             }
       }
 
+      public List<string> GetCurrentPluginModes()
+      {
+         return pluginProviders.Select(pluginProvider => pluginProvider.Metadata.Description).ToList();
+      }
    }
 }

@@ -127,10 +127,12 @@
       <HintPath>..\ThirdParty\NLog.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Configuration.Install" />
     <Reference Include="System.Core" />
     <Reference Include="System.Management" />
     <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -139,8 +141,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FileManager.cs" />
-    <Compile Include="Roots.cs" />
     <Compile Include="LiquesceCallBackFacade.cs" />
     <Compile Include="LiquesceFacade.cs" />
     <Compile Include="LiquesceOps.cs" />
@@ -159,20 +159,18 @@
       <DependentUpon>ProjectInstaller.cs</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Settings1.cs" />
-    <Compile Include="Settings1.Designer.cs">
+    <Compile Include="Properties\Settings1.cs" />
+    <Compile Include="Properties\Settings1.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings1.settings</DependentUpon>
     </Compile>
-    <Compile Include="ShareEnabler.cs" />
-    <Compile Include="ShellAPI.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Settings1.settings">
+    <None Include="Properties\Settings1.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings1.Designer.cs</LastGenOutput>
     </None>
@@ -181,6 +179,18 @@
     <ProjectReference Include="..\LiquesceFaçade\LiquesceFacade.csproj">
       <Project>{CFE5DC7B-25FB-45C4-AF18-1963853375E1}</Project>
       <Name>LiquesceFacade</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\LiquesceSvcMEF\LiquesceSvcMEF.csproj">
+      <Project>{E39910A2-C72A-4D3C-BFD0-4356906B86A7}</Project>
+      <Name>LiquesceSvcMEF</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ServiceMEFs\FolderMEF\FolderMEF.csproj">
+      <Project>{8D071FB8-5E7B-43F4-81D4-839D2203D6AF}</Project>
+      <Name>FolderMEF</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ServiceMEFs\PriorityMEF\PriorityMEF.csproj">
+      <Project>{0B134E04-A1C8-4BA3-A5D6-E83AD26A73ED}</Project>
+      <Name>PriorityMEF</Name>
     </ProjectReference>
     <ProjectReference Include="..\ThirdParty\DokanNet\DokanNet.csproj">
       <Project>{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C}</Project>

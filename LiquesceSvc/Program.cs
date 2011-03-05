@@ -1,4 +1,7 @@
-﻿using System.ServiceProcess;
+﻿using System;
+using System.Reflection;
+using System.ServiceProcess;
+using System.Windows.Forms;
 using NLog;
 
 namespace LiquesceSvc
@@ -9,12 +12,30 @@ namespace LiquesceSvc
       /// <summary>
       /// The main entry point for the application.
       /// </summary>
-      static void Main()
+      static void Main(string[] args)
       {
          Log.Error("=====================================================================");
-         Log.Error("File Re-opened: " + System.DateTime.UtcNow);
-         ServiceBase.Run(new ServiceBase[] { new LiquesceService() });
+         Log.Error("File Re-opened: Ver :" + Assembly.GetExecutingAssembly().GetName().Version.ToString());
+         var runner = new LiquesceService();
+         if ((args.Length > 0) && ("/debug" == args[0].ToLower()))
+         {
+            // main service object
+            LiquesceService.RunningAsService = false;
+            runner.StartService(args);
+            Console.WriteLine("Press Q to quit");
+            Application.Run();
+            runner.StopService();
+            // We called the static run, so call the static exit
+            Application.Exit();
+         }
+         else
+         {
+            LiquesceService.RunningAsService = true;
+            ServiceBase.Run(new ServiceBase[] { runner });
+         }
+
          Log.Error("========================Clean=Exit===================================");
       }
    }
+
 }
