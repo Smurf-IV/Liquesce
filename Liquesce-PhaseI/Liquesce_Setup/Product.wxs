@@ -4,8 +4,16 @@
      xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension"
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
      >
-   <?define UpgradeCode = "F6F94F17-A05F-4824-8DD9-9F5E8267D783" ?>  <!-- do not change this ever !-->
-   <?define Version = "11.02.14" ?>    <!-- Change this when creating new release YY-MM-DD -->
+
+   <?define MgtSource=$(sys.SOURCEFILEDIR)..\Liquesce\bin\Release ?>
+   <?define SvcSource=$(sys.SOURCEFILEDIR)..\LiquesceSvc\bin\Release ?>
+   <?define TraySource=$(sys.SOURCEFILEDIR)..\LiquesceTray\bin\Release ?>
+
+
+   <?define UpgradeCode = "F6F94F17-A05F-4824-8DD9-9F5E8267D783" ?>
+   <!-- do not change this ever !-->
+   <?define Version = "11.02.14" ?>
+   <!-- Change this when creating new release YY-MM-DD -->
    <?define ProductName = "Liquesce Windows HDD Pooling Suite"?>
 
    <Product Version="$(var.Version)" Id="*" UpgradeCode="$(var.UpgradeCode)"
@@ -26,9 +34,9 @@
       <Property Id="ARPCOMMENTS" Value="http://liquesce.codeplex.com/discussions"/>
       <Property Id="ARPCONTACT" Value="Smurf-IV" />
       <Property Id="ARPURLINFOABOUT" Value="http://liquesce.codeplex.com/" />
-      <Icon Id="InstallerIcon" SourceFile="Z:\Liquesce\Liquesce\Resources\Liquesce.ico" />
+      <Icon Id="InstallerIcon" SourceFile="$(sys.SOURCEFILEDIR)..\Liquesce\Resources\Liquesce.ico" />
       <Property Id="ARPPRODUCTICON" Value="InstallerIcon" />
-      
+
       <!-- Properties to allow detection of .Net installation -->
       <PropertyRef Id="NETFRAMEWORK40FULL"/>
       <PropertyRef Id="NETFRAMEWORK40FULLINSTALLROOTDIR" />
@@ -97,48 +105,48 @@
 
       <DirectoryRef Id="ClientDIR">
          <Component Id="Client.Component" Guid="5EBF3F29-9CF1-44FE-A94C-CC1B4FE09367">
-            <File Id="InstallerIcon" Name="Liquesce.ico" Source="Z:\Liquesce\Liquesce\Resources\Liquesce.ico" />
-            <File Id="Liquesce.exe" Name="Liquesce.exe" Source="Z:\Liquesce\Liquesce\bin\Release\Liquesce.exe" KeyPath="yes">
+            <File Id="InstallerIcon" Name="Liquesce.ico" Source="$(sys.SOURCEFILEDIR)..\Liquesce\Resources\Liquesce.ico" />
+            <File Id="Liquesce.exe" Name="Liquesce.exe" Source="$(var.MgtSource)\Liquesce.exe" KeyPath="yes">
                <fire:FirewallException Id="LiquesceFWX1" Name="Liquesce Mount Management" Scope="localSubnet" IgnoreFailure="yes" />
             </File>
          </Component>
          <Component Id="ChangeLog.Component" >
-            <File Source="Z:\Liquesce\Liquesce\ChangeLog.rtf" KeyPath="yes" />
+            <File Source="$(sys.SOURCEFILEDIR)..\Liquesce\ChangeLog.rtf" KeyPath="yes" />
          </Component>
          <Component Id="Liquesce.exe.config.Component" >
-            <File Source="Z:\Liquesce\Liquesce\bin\Release\Liquesce.exe.config" KeyPath="yes" />
+            <File Source="$(var.MgtSource)\Liquesce.exe.config" KeyPath="yes" />
          </Component>
          <Component Id="C_NLog.dll.Component" >
-            <File Id="C_NLog.dll" Source="Z:\Liquesce\Liquesce\bin\Release\NLog.dll" KeyPath="yes" />
+            <File Id="C_NLog.dll" Source="$(var.MgtSource)\NLog.dll" KeyPath="yes" />
          </Component>
          <Component Id="C_LiquesceFacade.dll.Component" >
-            <File Id="C_LiquesceFacade.dll" Source="Z:\Liquesce\Liquesce\bin\Release\LiquesceFacade.dll" KeyPath="yes" />
+            <File Id="C_LiquesceFacade.dll" Source="$(var.MgtSource)\LiquesceFacade.dll" KeyPath="yes" />
          </Component>
          <Component Id="LiquesceTray.exe.config.Component" >
-            <File Source="Z:\Liquesce\LiquesceTray\bin\Release\LiquesceTray.exe.config" KeyPath="yes" />
+            <File Source="$(var.TraySource)\LiquesceTray.exe.config" KeyPath="yes" />
          </Component>
          <Component Id="LiquesceTray.exe.Component" >
-            <File Id="LiquesceTray.exe" Source="Z:\Liquesce\LiquesceTray\bin\Release\LiquesceTray.exe" KeyPath="yes" />
+            <File Id="LiquesceTray.exe" Source="$(var.TraySource)\LiquesceTray.exe" KeyPath="yes" />
          </Component>
       </DirectoryRef>
       <DirectoryRef Id="ServiceDIR">
          <Component Id="LiquesceSvc.Component" Guid="BEBF3F29-9CF1-44FE-A94C-CC1B4FE09367">
-            <File Id="LiquesceSvc.File" Name="LiquesceSvc.exe" Source="Z:\Liquesce\LiquesceSvc\bin\Release\LiquesceSvc.exe" KeyPath="yes">
+            <File Id="LiquesceSvc.File" Name="LiquesceSvc.exe" Source="$(var.SvcSource)\LiquesceSvc.exe" KeyPath="yes">
                <fire:FirewallException Id="LiquesceFWX2" Name="LiquesceSvc" Scope="localSubnet" IgnoreFailure="yes" />
                <!-- Why Use NGen ? http://msdn.microsoft.com/en-gb/magazine/cc163610.aspx -->
                <netfx:NativeImage Id="ngen_LiquesceSvc.exe" Platform="32bit" Priority="1" AppBaseDirectory="ServiceDIR"/>
             </File>
-            <File Id="LiquesceSvc.exe.config.File" Name="LiquesceSvc.exe.config" Source="Z:\Liquesce\LiquesceSvc\bin\Release\LiquesceSvc.exe.config"/>
+            <File Id="LiquesceSvc.exe.config.File" Name="LiquesceSvc.exe.config" Source="$(var.SvcSource)\LiquesceSvc.exe.config"/>
             <ServiceControl Id='LiquesceSvcControl' Name='LiquesceSvc' Start='install' Stop='both' Remove='uninstall' Wait='yes' />
          </Component>
          <Component Id="DokanNet.dll.Component" >
-            <File Source="Z:\Liquesce\LiquesceSvc\bin\Release\DokanNet.dll" KeyPath="yes" />
+            <File Source="$(var.SvcSource)\DokanNet.dll" KeyPath="yes" />
          </Component>
          <Component Id="LiquesceFacade.dll.Component" >
-            <File Source="Z:\Liquesce\LiquesceSvc\bin\Release\LiquesceFacade.dll" KeyPath="yes" />
+            <File Source="$(var.SvcSource)\LiquesceFacade.dll" KeyPath="yes" />
          </Component>
          <Component Id="NLog.dll.Component" >
-            <File Source="Z:\Liquesce\LiquesceSvc\bin\Release\NLog.dll" KeyPath="yes" />
+            <File Source="$(var.SvcSource)\NLog.dll" KeyPath="yes" />
          </Component>
       </DirectoryRef>
       <DirectoryRef Id="ProgramMenuDir">
@@ -221,13 +229,14 @@
 
       <!-- Get the install to skip a few steps -->
       <UIRef Id="WixUI_Common" />
-      <WixVariable Id="WixUIBannerBmp" Value="banner.bmp" />   <!-- This just adds 90K on top of the UI Extension.dll -->
+      <WixVariable Id="WixUIBannerBmp" Value="banner.bmp" />
+      <!-- This just adds 90K on top of the UI Extension.dll -->
       <UI>
          <Property Id="DefaultUIFont" Value="WixUI_Font_Normal" />
          <TextStyle Id="WixUI_Font_Normal" FaceName="Tahoma" Size="8" />
          <TextStyle Id="WixUI_Font_Bigger" FaceName="Tahoma" Size="12" />
          <TextStyle Id="WixUI_Font_Title" FaceName="Tahoma" Size="9" Bold="yes" />
-         
+
          <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
          <Property Id="ARPNOMODIFY" Value="1" />
 
@@ -251,7 +260,7 @@
          <Publish Dialog="MaintenanceTypeDlg" Control="RepairButton" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
          <Publish Dialog="MaintenanceTypeDlg" Control="RemoveButton" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
          <Publish Dialog="MaintenanceTypeDlg" Control="Back" Event="NewDialog" Value="MaintenanceWelcomeDlg">1</Publish>
-         
+
       </UI>
 
 
