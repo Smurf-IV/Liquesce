@@ -33,6 +33,12 @@ namespace LiquesceSvc
          InitializeComponent();
       }
 
+      public static bool RunningAsService
+      { 
+         get; 
+         set; 
+      }
+
       private static void LogUnhandledException(object sender, UnhandledExceptionEventArgs e)
       {
          try
@@ -57,12 +63,24 @@ namespace LiquesceSvc
       private static ServiceHost _ILiquesceHostCallBack;
       private static ServiceHost _IShareEnablerHost;
 
+      public void StartService(string[] args)
+      { 
+         OnStart(args); 
+      }
+
+      public void StopService()
+      { 
+         OnStop(); 
+      }
+
       protected override void OnStart(string[] args)
       {
          Log.Info("OnStart");
          try
          {
-            RequestAdditionalTime(30000); // let the SCM know that this part could take a while due to other services starting up
+            if (RunningAsService)
+               RequestAdditionalTime(30000);
+               // let the SCM know that this part could take a while due to other services starting up
             foreach (string arg in args)
             {
                Log.Debug(arg);
@@ -81,30 +99,26 @@ namespace LiquesceSvc
             _ILiquesceHostCallBack.Open();
             _IShareEnablerHost.Open();
 
-            
+            if (RunningAsService)
+            {
+               RequestAdditionalTime(30000);
+                  // let the SCM know that this part could take a while due to other services starting up
+               base.OnStart(args);
 
-            RequestAdditionalTime(30000); // let the SCM know that this part could take a while due to other services starting up
-            base.OnStart(args);
-
-            Log.Info("Create Management object to hold the listeners etc.");
-            RequestAdditionalTime(30000); // let the SCM know that this part could take a while due to other services starting up
-
+               Log.Info("Create Management object to hold the listeners etc.");
+               RequestAdditionalTime(30000);
+                  // let the SCM know that this part could take a while due to other services starting up
+            }
             // Queue the main work as a thread pool task as we want this method to finish promptly.
             ThreadPool.QueueUserWorkItem(ThreadProc, this);
-         }
-         catch (System.Runtime.Remoting.RemotingException e)
-         {
-            base.EventLog.WriteEntry(e.Message, EventLogEntryType.Error);
-            OnStop();
-            Stop();
-            throw;
          }
          catch (Exception ex)
          {
             Log.ErrorException("LiquesceService startup error.", ex);
-            base.EventLog.WriteEntry(ex.Message, EventLogEntryType.Error);
-            OnStop();
-            Stop();
+               base.EventLog.WriteEntry(ex.Message, EventLogEntryType.Error);
+               OnStop();
+               if (RunningAsService)
+                  Stop();
             throw;
          }
       }
@@ -130,7 +144,8 @@ namespace LiquesceSvc
             if (me != null)
             {
                me.OnStop();
-               ((ServiceBase)me)/*.base*/.Stop();
+               if (RunningAsService)
+                  ((ServiceBase)me)/*.base*/.Stop();
             }
             throw;
          }
@@ -144,7 +159,8 @@ namespace LiquesceSvc
          try
          {
             Log.Info("Stop the ManagementLayer and remove");
-            RequestAdditionalTime(30000);
+            if (RunningAsService)
+               RequestAdditionalTime(30000);
             
             // Stop the share first
             if (_IShareEnablerHost != null)
@@ -169,7 +185,8 @@ namespace LiquesceSvc
          finally
          {
             Log.Info("base.OnStop()");
-            base.OnStop();
+            if (RunningAsService)
+               base.OnStop();
          }
       }
 

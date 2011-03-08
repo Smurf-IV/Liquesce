@@ -138,7 +138,7 @@ namespace LiquesceSvc
          return status;
       }
 
-      public int SetFileTime(string filename, DateTime ctime, DateTime atime, DateTime mtime, UInt64 fileRefContext)
+      public int SetFileTime(string filename, DateTime? ctime, DateTime? atime, DateTime? mtime, UInt64 fileRefContext)
       {
          if (ManagementLayer.Instance.dokanOperations == null)
             throw new NullReferenceException("The Dokan Drive has not been started");
