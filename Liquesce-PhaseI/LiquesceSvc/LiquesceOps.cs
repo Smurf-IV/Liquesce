@@ -671,7 +671,7 @@ namespace LiquesceSvc
          return Dokan.DOKAN_SUCCESS;
       }
 
-      public int SetFileTime(string filename, DateTime ctime, DateTime atime, DateTime mtime, DokanFileInfo info)
+      public int SetFileTime(string filename, DateTime? ctime, DateTime? atime, DateTime? mtime, DokanFileInfo info)
       {
          SafeFileHandle safeFileHandle = null;
          bool needToClose = false;
@@ -702,9 +702,9 @@ namespace LiquesceSvc
                   && !safeFileHandle.IsInvalid
                   )
                {
-                  long lCreationTime = (ctime != DateTime.MinValue) ? ctime.ToFileTime() : 0;
-                  long lAccessTime = (atime != DateTime.MinValue) ? atime.ToFileTime() : -1; // Preserve last access time from the open
-                  long lWriteTime = (mtime != DateTime.MinValue) ? mtime.ToFileTime() : 0;
+                  long lCreationTime = (ctime.HasValue) ? ctime.Value.ToFileTime() : 0;
+                  long lAccessTime = (atime.HasValue) ? atime.Value.ToFileTime() : -1; // Preserve last access time from the open
+                  long lWriteTime = (mtime.HasValue) ? mtime.Value.ToFileTime() : 0;
                   if (!SetFileTime(safeFileHandle, ref lCreationTime, ref lAccessTime, ref lWriteTime))
                   {
                      Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error(), new IntPtr(-1));

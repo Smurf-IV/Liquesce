@@ -68,7 +68,7 @@ namespace LiquesceFacade
       int SetFileAttributes(string filename, FileAttributes attr, UInt64 fileRefContext);
 
       [OperationContract]
-      int SetFileTime(string filename, DateTime ctime, DateTime atime, DateTime mtime, UInt64 fileRefContext);
+      int SetFileTime(string filename, DateTime? ctime, DateTime? atime, DateTime? mtime, UInt64 fileRefContext);
 
       [OperationContract]
       int DeleteFile(string filename, ref UInt64 fileRefContext);

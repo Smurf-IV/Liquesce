@@ -599,7 +599,7 @@ namespace ClientLiquesceSvc
          return dokanReturn;
       }
 
-      public int SetFileTime(string filename, DateTime ctime, DateTime atime, DateTime mtime, DokanFileInfo info)
+      public int SetFileTime(string filename, DateTime? ctime, DateTime? atime, DateTime? mtime, DokanFileInfo info)
       {
          int dokanReturn = Dokan.DOKAN_ERROR;
          try

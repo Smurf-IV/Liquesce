@@ -643,31 +643,22 @@ namespace DokanNet
       {
          try
          {
+            DateTime? ctime = null;
+            DateTime? atime = null;
+            DateTime? mtime = null;
             string file = GetFileName(rawFileName);
 
             long time = ((long)rawCreationTime.dwHighDateTime << 32) + (uint)rawCreationTime.dwLowDateTime;
-            if (time == -1)
-               time = 0;
-            DateTime ctime = DateTime.FromFileTime(time);
-
-            if (time == 0)
-               ctime = DateTime.UtcNow;
+            if (time > 0 )
+               ctime = DateTime.FromFileTime(time);
 
             time = ((long)rawLastAccessTime.dwHighDateTime << 32) + (uint)rawLastAccessTime.dwLowDateTime;
-            if (time == -1)
-               time = 0;
-            DateTime atime = DateTime.FromFileTime(time);
-
-            if (time == 0)
-               atime = DateTime.UtcNow;
+            if (time > 0)
+               atime = DateTime.FromFileTime(time);
 
             time = ((long)rawLastWriteTime.dwHighDateTime << 32) + (uint)rawLastWriteTime.dwLowDateTime;
-            if (time == -1)
-               time = 0;
-            DateTime mtime = DateTime.FromFileTime(time);
-
-            if (time == 0)
-               mtime = DateTime.UtcNow;
+            if (time > 0)
+               mtime = DateTime.FromFileTime(time);
 
             return operations.SetFileTime(file, ctime, atime, mtime, ConvertFileInfo(ref rawFileInfo));
          }

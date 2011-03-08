@@ -60,7 +60,7 @@ namespace DokanNet
 
       int SetFileAttributes(string filename, FileAttributes attr, DokanFileInfo info);
 
-      int SetFileTime( string filename, DateTime ctime, DateTime atime, DateTime mtime, DokanFileInfo info);
+      int SetFileTime( string filename, DateTime? ctime, DateTime? atime, DateTime? mtime, DokanFileInfo info);
 
       int DeleteFile( string filename, DokanFileInfo info);
 
