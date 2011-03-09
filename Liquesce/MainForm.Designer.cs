@@ -63,6 +63,7 @@
          this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
          this.FillExpectedLayoutWorker = new System.ComponentModel.BackgroundWorker();
          this.serviceController1 = new System.ServiceProcess.ServiceController();
+         this.versionNumberToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
          this.splitContainer1.Panel1.SuspendLayout();
          this.splitContainer1.Panel2.SuspendLayout();
@@ -395,7 +396,8 @@
          this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.commitToolStripMenuItem,
             this.logsToolStripMenuItem,
-            this.advancedToolStripMenuItem});
+            this.advancedToolStripMenuItem,
+            this.versionNumberToolStripMenuItem});
          this.menuStrip1.Location = new System.Drawing.Point(0, 0);
          this.menuStrip1.Name = "menuStrip1";
          this.menuStrip1.ShowItemToolTips = true;
@@ -482,6 +484,15 @@
          this.serviceController1.MachineName = "127.0.0.1";
          this.serviceController1.ServiceName = "LiquesceSvc";
          // 
+         // versionNumberToolStripMenuItem
+         // 
+         this.versionNumberToolStripMenuItem.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+         this.versionNumberToolStripMenuItem.Enabled = false;
+         this.versionNumberToolStripMenuItem.Name = "versionNumberToolStripMenuItem";
+         this.versionNumberToolStripMenuItem.Size = new System.Drawing.Size(106, 20);
+         this.versionNumberToolStripMenuItem.Text = "Version Number";
+         this.versionNumberToolStripMenuItem.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+         // 
          // MainForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
@@ -557,5 +568,6 @@
       private System.Windows.Forms.ToolStripMenuItem userLogViewToolStripMenuItem;
       private System.Windows.Forms.ToolStripMenuItem currentSharesToolStripMenuItem;
       private System.Windows.Forms.ToolStripMenuItem deleteToolStripMenuItem;
+      private System.Windows.Forms.ToolStripMenuItem versionNumberToolStripMenuItem;
    }
 }
