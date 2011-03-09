@@ -5,12 +5,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.ServiceModel;
-using System.ServiceModel.Channels;
 using System.Text;
 using System.Threading;
 using DokanNet;
 using LiquesceFacade;
 using NLog;
+using ComTypes = System.Runtime.InteropServices.ComTypes;
 
 namespace ClientLiquesceSvc
 {
@@ -599,7 +599,8 @@ namespace ClientLiquesceSvc
          return dokanReturn;
       }
 
-      public int SetFileTime(string filename, DateTime? ctime, DateTime? atime, DateTime? mtime, DokanFileInfo info)
+      public int SetFileTimeNative(string filename, ref ComTypes.FILETIME rawCreationTime, ref ComTypes.FILETIME rawLastAccessTime,
+          ref ComTypes.FILETIME rawLastWriteTime, DokanFileInfo info)
       {
          int dokanReturn = Dokan.DOKAN_ERROR;
          try
@@ -615,7 +616,7 @@ namespace ClientLiquesceSvc
                else
                {
                   CheckAndCreateChannel();
-                  dokanReturn = remoteIF.SetFileTime(filename, ctime, atime, mtime, info.refFileHandleContext);
+                  dokanReturn = remoteIF.SetFileTimeNative(filename, ref rawCreationTime, ref rawLastAccessTime, ref rawLastWriteTime, info.refFileHandleContext);
                }
             }
             else

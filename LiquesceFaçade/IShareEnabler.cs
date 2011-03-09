@@ -1,8 +1,8 @@
 ﻿using System;
 using System.IO;
-using System.Net.Security;
 using System.ServiceModel;
 using DokanNet;
+using ComTypes = System.Runtime.InteropServices.ComTypes;
 
 namespace LiquesceFacade
 {
@@ -68,7 +68,8 @@ namespace LiquesceFacade
       int SetFileAttributes(string filename, FileAttributes attr, UInt64 fileRefContext);
 
       [OperationContract]
-      int SetFileTime(string filename, DateTime? ctime, DateTime? atime, DateTime? mtime, UInt64 fileRefContext);
+      int SetFileTimeNative(string filename, ref ComTypes.FILETIME rawCreationTime, ref ComTypes.FILETIME rawLastAccessTime,
+          ref ComTypes.FILETIME rawLastWriteTime, UInt64 fileRefContext);
 
       [OperationContract]
       int DeleteFile(string filename, ref UInt64 fileRefContext);
