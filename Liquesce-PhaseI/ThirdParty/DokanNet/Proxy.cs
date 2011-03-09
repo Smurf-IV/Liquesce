@@ -643,24 +643,9 @@ namespace DokanNet
       {
          try
          {
-            DateTime? ctime = null;
-            DateTime? atime = null;
-            DateTime? mtime = null;
             string file = GetFileName(rawFileName);
-
-            long time = ((long)rawCreationTime.dwHighDateTime << 32) + (uint)rawCreationTime.dwLowDateTime;
-            if (time > 0 )
-               ctime = DateTime.FromFileTime(time);
-
-            time = ((long)rawLastAccessTime.dwHighDateTime << 32) + (uint)rawLastAccessTime.dwLowDateTime;
-            if (time > 0)
-               atime = DateTime.FromFileTime(time);
-
-            time = ((long)rawLastWriteTime.dwHighDateTime << 32) + (uint)rawLastWriteTime.dwLowDateTime;
-            if (time > 0)
-               mtime = DateTime.FromFileTime(time);
-
-            return operations.SetFileTime(file, ctime, atime, mtime, ConvertFileInfo(ref rawFileInfo));
+            // http://liquesce.codeplex.com/workitem/8488
+            return operations.SetFileTimeNative(file, ref rawCreationTime, ref rawLastAccessTime, ref rawLastWriteTime, ConvertFileInfo(ref rawFileInfo));
          }
          catch (Exception ex)
          {

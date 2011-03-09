@@ -5,13 +5,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Security.AccessControl;
 using System.Text;
 using System.Threading;
 using DokanNet;
 using LiquesceFacade;
 using Microsoft.Win32.SafeHandles;
 using NLog;
+using ComTypes = System.Runtime.InteropServices.ComTypes;
 
 namespace LiquesceSvc
 {
@@ -671,7 +671,8 @@ namespace LiquesceSvc
          return Dokan.DOKAN_SUCCESS;
       }
 
-      public int SetFileTime(string filename, DateTime? ctime, DateTime? atime, DateTime? mtime, DokanFileInfo info)
+      public int SetFileTimeNative(string filename, ref ComTypes.FILETIME rawCreationTime, ref ComTypes.FILETIME rawLastAccessTime,
+          ref ComTypes.FILETIME rawLastWriteTime, DokanFileInfo info)
       {
          SafeFileHandle safeFileHandle = null;
          bool needToClose = false;
@@ -702,10 +703,7 @@ namespace LiquesceSvc
                   && !safeFileHandle.IsInvalid
                   )
                {
-                  long lCreationTime = (ctime.HasValue) ? ctime.Value.ToFileTime() : 0;
-                  long lAccessTime = (atime.HasValue) ? atime.Value.ToFileTime() : -1; // Preserve last access time from the open
-                  long lWriteTime = (mtime.HasValue) ? mtime.Value.ToFileTime() : 0;
-                  if (!SetFileTime(safeFileHandle, ref lCreationTime, ref lAccessTime, ref lWriteTime))
+                  if (!SetFileTime(safeFileHandle, ref rawCreationTime, ref rawLastAccessTime, ref rawLastWriteTime))
                   {
                      Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error(), new IntPtr(-1));
                   }
@@ -1462,7 +1460,7 @@ namespace LiquesceSvc
 
       [DllImport("kernel32.dll", SetLastError = true)]
       [return: MarshalAs(UnmanagedType.Bool)]
-      private static extern bool SetFileTime(SafeFileHandle hFile, ref long lpCreationTime, ref long lpLastAccessTime, ref long lpLastWriteTime);
+      private static extern bool SetFileTime(SafeFileHandle hFile, ref ComTypes.FILETIME lpCreationTime, ref ComTypes.FILETIME lpLastAccessTime, ref ComTypes.FILETIME lpLastWriteTime);
 
       private enum SE_OBJECT_TYPE
       {

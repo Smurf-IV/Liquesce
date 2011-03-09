@@ -2,6 +2,7 @@
 using System.IO;
 using DokanNet;
 using LiquesceFacade;
+using ComTypes = System.Runtime.InteropServices.ComTypes;
 
 namespace LiquesceSvc
 {
@@ -138,12 +139,13 @@ namespace LiquesceSvc
          return status;
       }
 
-      public int SetFileTime(string filename, DateTime? ctime, DateTime? atime, DateTime? mtime, UInt64 fileRefContext)
+      public int SetFileTimeNative(string filename, ref ComTypes.FILETIME rawCreationTime, ref ComTypes.FILETIME rawLastAccessTime,
+          ref ComTypes.FILETIME rawLastWriteTime, UInt64 fileRefContext)
       {
          if (ManagementLayer.Instance.dokanOperations == null)
             throw new NullReferenceException("The Dokan Drive has not been started");
          DokanFileInfo info = new DokanFileInfo { refFileHandleContext = fileRefContext };
-         int status = ManagementLayer.Instance.dokanOperations.SetFileTime(filename, ctime, atime, mtime, info);
+         int status = ManagementLayer.Instance.dokanOperations.SetFileTimeNative(filename, ref rawCreationTime, ref rawLastAccessTime, ref rawLastWriteTime, info);
          return status;
       }
 
