@@ -1,4 +1,5 @@
-﻿using System.Security.Principal;
+﻿using System.Reflection;
+using System.Security.Principal;
 using System.ServiceProcess;
 using NLog;
 
@@ -13,7 +14,7 @@ namespace ClientLiquesceSvc
       static void Main()
       {
          Log.Error("=====================================================================");
-         Log.Error("File Re-opened: " + System.DateTime.UtcNow);
+         Log.Error("File Re-opened: Ver :" + Assembly.GetExecutingAssembly().GetName().Version);
          ServiceBase.Run(new ServiceBase[] { new ClientLiquesceService() });
          Log.Error("========================Clean=Exit===================================");
       }

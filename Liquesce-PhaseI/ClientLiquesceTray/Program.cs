@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using System.Windows.Forms;
 using NLog;
 
@@ -32,7 +33,7 @@ namespace ClientLiquesceTray
          try
          {
             Log.Error("=====================================================================");
-            Log.Error(String.Concat("File Re-opened: ", DateTime.UtcNow));
+            Log.Error("File Re-opened: Ver :" + Assembly.GetExecutingAssembly().GetName().Version);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             nih = new NotifyIconHandler();
