@@ -137,7 +137,6 @@ namespace LiquesceTray
             stopServiceToolStripMenuItem.Visible = visible;
             startServiceToolStripMenuItem.Visible = visible;
          }
-
          if (LiquesceSvcState.Running == lastState)
          {
              showFreeDiskSpaceToolStripMenuItem.Enabled = true;
@@ -156,7 +155,27 @@ namespace LiquesceTray
       {
          try
          {
-            serviceController1.Stop();
+            ProcessStartInfo startInfo = new ProcessStartInfo
+            {
+               UseShellExecute = true,
+               CreateNoWindow = true,
+               WindowStyle = ProcessWindowStyle.Hidden,
+               WorkingDirectory = Environment.CurrentDirectory,
+               FileName = @"LiquesceTrayHelper.exe",
+               Arguments = @"stop",
+               // Two lines below make the UAC dialog modal to this app
+               ErrorDialog = true,
+               ErrorDialogParentHandle = this.Handle
+            };
+
+            //// if the other process did not have a manifest
+            //// then force it to run elevated
+            //startInfo.Verb = "runas";
+            Process p = Process.Start(startInfo);
+
+            // block this UI until the launched process exits
+            // I.e. make it modal
+            p.WaitForExit();
          }
          catch (Exception ex)
          {
@@ -168,7 +187,27 @@ namespace LiquesceTray
       {
          try
          {
-            serviceController1.Start();
+            ProcessStartInfo startInfo = new ProcessStartInfo
+            {
+               UseShellExecute = true,
+               CreateNoWindow  = true,
+               WindowStyle = ProcessWindowStyle.Hidden,
+               WorkingDirectory = Environment.CurrentDirectory,
+               FileName = @"LiquesceTrayHelper.exe",
+               Arguments = @"start",
+               // Two lines below make the UAC dialog modal to this app
+               ErrorDialog = true,
+               ErrorDialogParentHandle = this.Handle
+            };
+
+            //// if the other process did not have a manifest
+            //// then force it to run elevated
+            //startInfo.Verb = "runas";
+            Process p = Process.Start(startInfo);
+
+            // block this UI until the launched process exits
+            // I.e. make it modal
+            p.WaitForExit();
          }
          catch (Exception ex)
          {
@@ -221,8 +260,6 @@ namespace LiquesceTray
           dropperForm.BringToFront();
 
       }
-
-
 
    }
 }
