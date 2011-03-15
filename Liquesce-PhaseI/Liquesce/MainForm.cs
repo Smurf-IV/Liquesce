@@ -290,7 +290,7 @@ namespace Liquesce
             // Start the drag-and-drop operation with a cloned copy of the node.
             if (selected != null)
             {
-               DragDropItem ud = new DragDropItem(GetSelectedNodesPath(selected));
+               DragDropItem ud = new DragDropItem(GetSelectedNodesPath(selected), DragDropItem.SourceType.Drive);
                if (!String.IsNullOrEmpty(ud.Name))
                   driveAndDirTreeView.DoDragDrop(ud, DragDropEffects.All);
             }
@@ -408,7 +408,7 @@ namespace Liquesce
             // Start the drag-and-drop operation with a cloned copy of the node.
             if (selected != null)
             {
-               DragDropItem ud = new DragDropItem(selected.Text);
+               DragDropItem ud = new DragDropItem(selected.Text, DragDropItem.SourceType.Merge);
                mergeList.DoDragDrop(ud, DragDropEffects.All);
             }
          }

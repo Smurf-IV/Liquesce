@@ -1,5 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Reflection;
+using System.ServiceProcess;
+using System.Threading;
 using System.Windows.Forms;
 using NLog;
 
@@ -34,14 +39,11 @@ namespace LiquesceTray
          {
             Log.Error("=====================================================================");
             Log.Error("File Re-opened: Ver :" + Assembly.GetExecutingAssembly().GetName().Version);
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            nih = new NotifyIconHandler();
-            Application.Run( new HiddenFormToAcceptCloseMessage());
+            CheckAndRunSingleApp();
          }
          catch (Exception ex)
          {
-            Log.Fatal("Exception has not been caught by the rest of the application!", ex);
+            Log.FatalException("Exception has not been caught by the rest of the application!", ex);
             MessageBox.Show(ex.Message, "Uncaught Exception - Exiting !");
          }
          finally
@@ -57,6 +59,27 @@ namespace LiquesceTray
             Log.Error("=====================================================================");
          }
       }
+
+      private static void CheckAndRunSingleApp()
+      {
+         string MutexName = string.Format("{0} [{1}]", Path.GetFileName(Application.ExecutablePath), Environment.UserName);
+         bool GrantedOwnership;
+         using (Mutex AppUserMutex = new Mutex(true, MutexName, out GrantedOwnership))
+         {
+            if (GrantedOwnership)
+            {
+               Application.EnableVisualStyles();
+               Application.SetCompatibleTextRenderingDefault(false);
+               nih = new NotifyIconHandler();
+               Application.Run(new HiddenFormToAcceptCloseMessage());
+            }
+            else
+            {
+               MessageBox.Show(MutexName + " is already running");
+            }
+         }
+      }
+
       private static void logUnhandledException(object sender, UnhandledExceptionEventArgs e)
       {
          try
