@@ -14,7 +14,7 @@
    <?define UpgradeCode = "F6F94F17-A05F-4824-8DD9-9F5E8267D783" ?>
 
    <!-- Change this when creating new release YY-MM-DD -->
-   <?define Version = "11.03.14" ?>
+   <?define Version = "11.03.15" ?>
    
    <?define ProductName = "Liquesce Windows HDD Pooling Suite"?>
 
@@ -106,36 +106,36 @@
       </Directory>
 
       <ComponentGroup Id="Client" >
-         <Component Id="Client.Component" Guid="5EBF3F29-9CF1-44FE-A94C-CC1B4FE09367" Directory="ClientDIR">
+         <Component Id="Client" Guid="5EBF3F29-9CF1-44FE-A94C-CC1B4FE09367" Directory="ClientDIR">
             <File Id="InstallerIcon" Name="Liquesce.ico" Source="$(sys.SOURCEFILEDIR)..\Liquesce\Resources\Liquesce.ico" />
             <File Id="Liquesce.exe" Name="Liquesce.exe" Source="$(var.MgtSource)\Liquesce.exe" KeyPath="yes">
                <fire:FirewallException Id="LiquesceFWX1" Name="Liquesce Mount Management" Scope="localSubnet" IgnoreFailure="yes" />
             </File>
          </Component>
-         <Component Id="ChangeLog.Component" Directory="ClientDIR">
+         <Component Id="ChangeLog" Directory="ClientDIR">
             <File Source="$(sys.SOURCEFILEDIR)..\Liquesce\ChangeLog.rtf" KeyPath="yes" />
          </Component>
-         <Component Id="Liquesce.exe.config.Component" Directory="ClientDIR">
+         <Component Id="Liquesce.exe.config" Directory="ClientDIR">
             <File Source="$(var.MgtSource)\Liquesce.exe.config" KeyPath="yes" />
          </Component>
-         <Component Id="C_NLog.dll.Component" Directory="ClientDIR">
+         <Component Id="C_NLog.dll" Directory="ClientDIR">
             <File Id="C_NLog.dll" Source="$(var.MgtSource)\NLog.dll" KeyPath="yes" />
          </Component>
-         <Component Id="C_LiquesceFacade.dll.Component" Directory="ClientDIR">
+         <Component Id="C_LiquesceFacade.dll" Directory="ClientDIR">
             <File Id="C_LiquesceFacade.dll" Source="$(var.MgtSource)\LiquesceFacade.dll" KeyPath="yes" />
          </Component>
-         <Component Id="LiquesceTray.exe.config.Component" Directory="ClientDIR">
+         <Component Id="LiquesceTray.exe.config" Directory="ClientDIR">
             <File Source="$(var.TraySource)\LiquesceTray.exe.config" KeyPath="yes" />
          </Component>
-         <Component Id="LiquesceTray.exe.Component" Directory="ClientDIR">
-            <File Id="LiquesceTray.exe" Source="$(var.TraySource)\LiquesceTray.exe" KeyPath="yes" />
+         <Component Id="LiquesceTray.exe" Directory="ClientDIR">
+            <File Source="$(var.TraySource)\LiquesceTray.exe" KeyPath="yes" />
          </Component>
-         <Component Id="LiquesceTrayHelper.exe.Component" Directory="ClientDIR">
-            <File Id="LiquesceTrayHelper.exe" Source="$(sys.SOURCEFILEDIR)..\LiquesceTrayHelper\bin\Release\LiquesceTrayHelper.exe" KeyPath="yes" />
+         <Component Id="LiquesceTrayHelper.exe" Directory="ClientDIR">
+            <File Source="$(sys.SOURCEFILEDIR)..\LiquesceTrayHelper\bin\Release\LiquesceTrayHelper.exe" KeyPath="yes" />
          </Component>
       </ComponentGroup>
       <ComponentGroup Id="Service">
-         <Component Id="LiquesceSvc.Component" Guid="BEBF3F29-9CF1-44FE-A94C-CC1B4FE09367" Directory="ServiceDIR">
+         <Component Id="LiquesceSvc" Guid="BEBF3F29-9CF1-44FE-A94C-CC1B4FE09367" Directory="ServiceDIR">
             <File Id="LiquesceSvc.File" Name="LiquesceSvc.exe" Source="$(var.SvcSource)\LiquesceSvc.exe" KeyPath="yes">
                <fire:FirewallException Id="LiquesceFWX2" Name="LiquesceSvc" Scope="localSubnet" IgnoreFailure="yes" />
                <!-- Why Use NGen ? http://msdn.microsoft.com/en-gb/magazine/cc163610.aspx -->
@@ -144,13 +144,13 @@
             <File Id="LiquesceSvc.exe.config.File" Name="LiquesceSvc.exe.config" Source="$(var.SvcSource)\LiquesceSvc.exe.config"/>
             <ServiceControl Id='LiquesceSvcControl' Name='LiquesceSvc' Start='install' Stop='both' Remove='uninstall' Wait='yes' />
          </Component>
-         <Component Id="DokanNet.dll.Component" Directory="ServiceDIR">
+         <Component Id="DokanNet.dll" Directory="ServiceDIR">
             <File Source="$(var.SvcSource)\DokanNet.dll" KeyPath="yes" />
          </Component>
-         <Component Id="LiquesceFacade.dll.Component" Directory="ServiceDIR">
+         <Component Id="LiquesceFacade.dll" Directory="ServiceDIR">
             <File Source="$(var.SvcSource)\LiquesceFacade.dll" KeyPath="yes" />
          </Component>
-         <Component Id="NLog.dll.Component" Directory="ServiceDIR">
+         <Component Id="NLog.dll" Directory="ServiceDIR">
             <File Source="$(var.SvcSource)\NLog.dll" KeyPath="yes" />
          </Component>
       </ComponentGroup>
@@ -206,17 +206,17 @@
       <InstallExecuteSequence>
          <Custom Action="WixCloseApplications" Before="LaunchConditions" />
 
-         <Custom Action="LiquesceSvc.commit.SetProperty" After="InstallServices"><![CDATA[ $LiquesceSvc.Component > 2 ]]></Custom>
-         <Custom Action="LiquesceSvc.commit" After="LiquesceSvc.commit.SetProperty"><![CDATA[ $LiquesceSvc.Component > 2 ]]></Custom>
+         <Custom Action="LiquesceSvc.commit.SetProperty" After="InstallServices"><![CDATA[ $LiquesceSvc > 2 ]]></Custom>
+         <Custom Action="LiquesceSvc.commit" After="LiquesceSvc.commit.SetProperty"><![CDATA[ $LiquesceSvc > 2 ]]></Custom>
 
-         <Custom Action="LiquesceSvc.rollback.SetProperty" After="LiquesceSvc.commit"><![CDATA[ $LiquesceSvc.Component > 2 ]]></Custom>
-         <Custom Action="LiquesceSvc.rollback" After="LiquesceSvc.rollback.SetProperty"><![CDATA[ $LiquesceSvc.Component > 2 ]]></Custom>
+         <Custom Action="LiquesceSvc.rollback.SetProperty" After="LiquesceSvc.commit"><![CDATA[ $LiquesceSvc > 2 ]]></Custom>
+         <Custom Action="LiquesceSvc.rollback" After="LiquesceSvc.rollback.SetProperty"><![CDATA[ $LiquesceSvc > 2 ]]></Custom>
 
-         <Custom Action="LiquesceSvc.install.SetProperty" After="LiquesceSvc.rollback"><![CDATA[ $LiquesceSvc.Component > 2 ]]></Custom>
-         <Custom Action="LiquesceSvc.install" After="LiquesceSvc.install.SetProperty"><![CDATA[ $LiquesceSvc.Component > 2 ]]></Custom>
+         <Custom Action="LiquesceSvc.install.SetProperty" After="LiquesceSvc.rollback"><![CDATA[ $LiquesceSvc > 2 ]]></Custom>
+         <Custom Action="LiquesceSvc.install" After="LiquesceSvc.install.SetProperty"><![CDATA[ $LiquesceSvc > 2 ]]></Custom>
 
-         <Custom Action="LiquesceSvc.uninstall.SetProperty" After="MsiUnpublishAssemblies"><![CDATA[ $LiquesceSvc.Component = 2 ]]></Custom>
-         <Custom Action="LiquesceSvc.uninstall" After="LiquesceSvc.uninstall.SetProperty"><![CDATA[ $LiquesceSvc.Component = 2 ]]></Custom>
+         <Custom Action="LiquesceSvc.uninstall.SetProperty" After="MsiUnpublishAssemblies"><![CDATA[ $LiquesceSvc = 2 ]]></Custom>
+         <Custom Action="LiquesceSvc.uninstall" After="LiquesceSvc.uninstall.SetProperty"><![CDATA[ $LiquesceSvc = 2 ]]></Custom>
          <Custom Action="StartTrayApp" After="InstallFinalize">Not Installed</Custom>
          <Custom Action="MgtApp" After="StartTrayApp">Not Installed</Custom>
       </InstallExecuteSequence>
