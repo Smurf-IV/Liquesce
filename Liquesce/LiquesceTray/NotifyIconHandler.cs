@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Reflection;
 using System.ServiceProcess;
 using System.Windows.Forms;
 using LiquesceFacade;
@@ -144,7 +145,7 @@ namespace LiquesceTray
       {
          try
          {
-            serviceController1.Stop();
+            CallTrayHelper("stop");
          }
          catch (Exception ex)
          {
@@ -152,11 +153,33 @@ namespace LiquesceTray
          }
       }
 
+      private void CallTrayHelper(string action)
+      {
+         ProcessStartInfo startInfo = new ProcessStartInfo
+                                         {
+                                            UseShellExecute = false,
+                                            CreateNoWindow = true,
+                                            WindowStyle = ProcessWindowStyle.Hidden,
+                                            //WorkingDirectory = Environment.CurrentDirectory,
+                                            FileName = Application.ExecutablePath,
+                                            Arguments = action,
+                                            // Two lines below make the UAC dialog modal to this app
+                                            ErrorDialog = true,
+                                            ErrorDialogParentHandle = this.Handle,
+                                            // if the other process did not have a manifest then force it to run elevated
+                                            Verb = "runas"
+                                         };
+
+         // block this UI until the launched process exits
+         // I.e. make it modal
+         Process.Start(startInfo).WaitForExit();
+      }
+
       private void startServiceToolStripMenuItem_Click(object sender, EventArgs e)
       {
          try
          {
-            serviceController1.Start();
+            CallTrayHelper("start");
          }
          catch (Exception ex)
          {
