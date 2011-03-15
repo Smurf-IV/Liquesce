@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.ServiceModel;
 using System.ServiceProcess;
 using System.Threading;
@@ -29,6 +30,7 @@ namespace Liquesce
          InitializeComponent();
          Icon icon = ExtractIcon.GetIconForFilename(Environment.GetFolderPath(Environment.SpecialFolder.MyComputer), true);
          imageListUnits.Images.Add("MyComputer", icon.ToBitmap());
+         versionNumberToolStripMenuItem.Text = Assembly.GetExecutingAssembly().GetName().Version.ToString();
       }
 
       private void MainForm_Shown(object sender, EventArgs e)
@@ -287,7 +289,7 @@ namespace Liquesce
             // Start the drag-and-drop operation with a cloned copy of the node.
             if (selected != null)
             {
-               DragDropItem ud = new DragDropItem(GetSelectedNodesPath(selected));
+               DragDropItem ud = new DragDropItem(GetSelectedNodesPath(selected), DragDropItem.SourceType.Drive);
                if (!String.IsNullOrEmpty(ud.Name))
                   driveAndDirTreeView.DoDragDrop(ud, DragDropEffects.All);
             }
@@ -303,7 +305,17 @@ namespace Liquesce
          DragDropItem ud = e.Data.GetData(typeof(DragDropItem)) as DragDropItem;
          if (ud != null)
          {
-            e.Effect = DragDropEffects.Copy;
+            //we only ever want an entry in 1x in the list.  Remove any duplicates, so you can reorder from the filesystem treeview
+            TreeNode[] nodes = mergeList.Nodes.Find(ud.Name, false);
+            if (ud.Source == DragDropItem.SourceType.Drive)
+            {
+               if (nodes.Length < 1)
+                  e.Effect = DragDropEffects.Copy;
+            }
+            else
+            {
+               e.Effect = DragDropEffects.Copy;
+            }
          }
       }
 
@@ -311,10 +323,10 @@ namespace Liquesce
       {
          // Is it a valid format?
          DragDropItem ud = e.Data.GetData(typeof(DragDropItem)) as DragDropItem;
-         Point newPoint = mergeList.PointToClient(new Point(e.X, e.Y));
-         TreeNode selected = mergeList.GetNodeAt(newPoint.X, newPoint.Y);
          if (ud != null)
          {
+            Point newPoint = mergeList.PointToClient(new Point(e.X, e.Y));
+            TreeNode selected = mergeList.GetNodeAt(newPoint.X, newPoint.Y);
             CheckDrop(mergeList, ud, selected);
          }
       }
@@ -340,33 +352,26 @@ namespace Liquesce
                Name = newPath.Name
             };
 
+            //no node below?  stick this at the bottom of the list, else put in before the one your over.
+            int index = (selected == null) ? targetTree.Nodes.Count - 1 : selected.Index;
             //we only ever want an entry in 1x in the list.  Remove any duplicates, so you can reorder from the filesystem treeview
             TreeNode[] nodes = targetTree.Nodes.Find(newPath.Name, false);
-
-             //no node below?  stick this at the bottom of the list, else put in before the one your over.
-            if (selected == null)
+            if (nodes.Length > 0)
             {
-               targetTree.Nodes.Add(tn);
+               if (nodes[0].Index < index)
+               {
+                  targetTree.Nodes.Insert(index + 1, tn);
+                  nodes[0].Remove();
+               }
+               else if (nodes[0].Index > index)
+               {
+                  targetTree.Nodes.Insert(index, tn);
+                  nodes[0].Remove();
+               }
             }
-            else
+            else if (newPath.Source == DragDropItem.SourceType.Drive)
             {
-                if (nodes.Length > 0)
-                {
-                    if (nodes[0].Index < selected.Index)
-                    {
-                        targetTree.Nodes.Insert(selected.Index+1, tn);
-                        nodes[0].Remove();
-                    }
-                    else if (nodes[0].Index > selected.Index)
-                    {
-                        targetTree.Nodes.Insert(selected.Index, tn);
-                        nodes[0].Remove();
-                    }
-                }
-                else
-                {
-                    targetTree.Nodes.Insert(selected.Index, tn);
-                }
+               targetTree.Nodes.Insert(index, tn);
             }
             targetTree.SelectedNode = tn;
             RestartExpectedOutput();
@@ -405,14 +410,14 @@ namespace Liquesce
             // Start the drag-and-drop operation with a cloned copy of the node.
             if (selected != null)
             {
-               DragDropItem ud = new DragDropItem(selected.Text);
+               DragDropItem ud = new DragDropItem(selected.Text, DragDropItem.SourceType.Merge);
                mergeList.DoDragDrop(ud, DragDropEffects.All);
             }
          }
       }
 
       private void mergeList_KeyUp(object sender, KeyEventArgs e)
-        {
+      {
          if (e.KeyCode != Keys.Delete)
             return;
          // Get the node underneath the mouse.
