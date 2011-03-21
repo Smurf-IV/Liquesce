@@ -4,6 +4,7 @@ using System.IO;
 using System.ServiceProcess;
 using System.Windows.Forms;
 using LiquesceFacade;
+using LiquesceTray.Properties;
 using NLog;
 
 namespace LiquesceTray
@@ -17,9 +18,9 @@ namespace LiquesceTray
       public NotifyIconHandler()
       {
          InitializeComponent();
-         notifyIcon1.BalloonTipTitle = "Service Status";
+         notifyIcon1.BalloonTipTitle = Resources.NotifyIconHandler_NotifyIconHandler_Service_Status;
          // Use last state to prevent balloon tip showing on start !
-         SetState(lastState, "Application tray is starting");
+         SetState(lastState, Resources.NotifyIconHandler_NotifyIconHandler_Application_tray_is_starting);
          DoStatusCheck(0);
          timer1.Start();
       }
@@ -58,27 +59,27 @@ namespace LiquesceTray
          switch (state)
          {
             case LiquesceSvcState.InWarning:
-               notifyIcon1.Text = "Liquesce State Warning";
+               notifyIcon1.Text = Resources.NotifyIconHandler_SetState_Liquesce_State_Warning;
                notifyIcon1.BalloonTipIcon = ToolTipIcon.Warning;
                break;
             case LiquesceSvcState.Unknown:
-               notifyIcon1.Text = "Liquesce State Unknown";
+               notifyIcon1.Text = Resources.NotifyIconHandler_SetState_Liquesce_State_Unknown;
                notifyIcon1.BalloonTipIcon = ToolTipIcon.Warning;
                break;
             case LiquesceSvcState.Running:
-               notifyIcon1.Text = "Liquesce State Running";
+               notifyIcon1.Text = Resources.NotifyIconHandler_SetState_Liquesce_State_Running;
                notifyIcon1.BalloonTipIcon = ToolTipIcon.None;
                break;
             case LiquesceSvcState.Stopped:
-               notifyIcon1.Text = "Liquesce State Stopped";
+               notifyIcon1.Text = Resources.NotifyIconHandler_SetState_Liquesce_State_Stopped;
                notifyIcon1.BalloonTipIcon = ToolTipIcon.Info;
                break;
             case LiquesceSvcState.InError:
-               notifyIcon1.Text = "Liquesce State In Error";
+               notifyIcon1.Text = Resources.NotifyIconHandler_SetState_Liquesce_State_In_Error;
                notifyIcon1.BalloonTipIcon = ToolTipIcon.Error;
                break;
             default:
-               notifyIcon1.Text = "Liquesce State Unknown";
+               notifyIcon1.Text = Resources.NotifyIconHandler_SetState_Liquesce_State_Unknown;
                Log.Error("SetState has an unknown state value [{0}]", state);
                notifyIcon1.BalloonTipIcon = ToolTipIcon.None;
                break;
@@ -103,7 +104,7 @@ namespace LiquesceTray
             if (LiquesceSvcState.Running != lastState)
             {
                notifyIcon1.Icon = Properties.Resources.OKIcon;
-               SetState(LiquesceSvcState.Running, String.Format("Started @ {0}", DateTime.Now) );
+               SetState(LiquesceSvcState.Running, String.Format(Resources.NotifyIconHandler_DoStatusCheck_Started____0_, DateTime.Now) );
                stateChangeHandler.CreateCallBack(SetState);
             }
          }
@@ -114,7 +115,7 @@ namespace LiquesceTray
             if (LiquesceSvcState.InWarning != lastState)
             {
                Log.WarnException("Service is not in a running state", tex);
-               SetState(LiquesceSvcState.InWarning, "Liquesce service is Stopped");
+               SetState(LiquesceSvcState.InWarning, Resources.NotifyIconHandler_DoStatusCheck_Liquesce_service_is_Stopped);
                notifyIcon1.Icon = Properties.Resources.StopIcon;
             }
          }
