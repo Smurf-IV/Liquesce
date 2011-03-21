@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.ServiceProcess;
 using System.Windows.Forms;
 using LiquesceFacade;
@@ -160,8 +161,7 @@ namespace LiquesceTray
                UseShellExecute = true,
                CreateNoWindow = true,
                WindowStyle = ProcessWindowStyle.Hidden,
-               WorkingDirectory = Environment.CurrentDirectory,
-               FileName = @"LiquesceTrayHelper.exe",
+               FileName = Path.Combine(Application.StartupPath, @"LiquesceTrayHelper.exe"),
                Arguments = @"stop",
                // Two lines below make the UAC dialog modal to this app
                ErrorDialog = true,
@@ -192,8 +192,7 @@ namespace LiquesceTray
                UseShellExecute = true,
                CreateNoWindow  = true,
                WindowStyle = ProcessWindowStyle.Hidden,
-               WorkingDirectory = Environment.CurrentDirectory,
-               FileName = @"LiquesceTrayHelper.exe",
+               FileName = Path.Combine(Application.StartupPath, @"LiquesceTrayHelper.exe"),
                Arguments = @"start",
                // Two lines below make the UAC dialog modal to this app
                ErrorDialog = true,
