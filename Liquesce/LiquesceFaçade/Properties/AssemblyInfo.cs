@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Smurf-IV")]
-[assembly: AssemblyProduct("Liquesce")]
+[assembly: AssemblyProduct("LiquesceFacade")]
 [assembly: AssemblyCopyright("Copyright © Smurf-IV 2010")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -31,5 +31,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("2011.2.27.425")]
-[assembly: AssemblyFileVersion("2011.2.27.425")]
+[assembly: AssemblyVersion("2011.3.15.431")]
+[assembly: AssemblyFileVersion("2011.3.15.431")]
