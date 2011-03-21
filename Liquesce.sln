@@ -141,8 +141,8 @@ Global
 		{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C} = {C1ADA293-B55A-4B33-AE5A-6FC40323FC39}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		BuildVersion_UseGlobalSettings = False
-		BuildVersion_AssemblyInfoFilename = ..\Liquesce\LiquesceSvc\Properties\AssemblyInfo.cs
 		BuildVersion_BuildVersioningStyle = YearStamp.MonthStamp.DayStamp.Increment
+		BuildVersion_AssemblyInfoFilename = ..\Liquesce\LiquesceSvc\Properties\AssemblyInfo.cs
+		BuildVersion_UseGlobalSettings = False
 	EndGlobalSection
 EndGlobal
