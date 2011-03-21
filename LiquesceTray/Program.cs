@@ -6,6 +6,7 @@ using System.Reflection;
 using System.ServiceProcess;
 using System.Threading;
 using System.Windows.Forms;
+using LiquesceTray.Properties;
 using NLog;
 
 namespace LiquesceTray
@@ -62,11 +63,11 @@ namespace LiquesceTray
 
       private static void CheckAndRunSingleApp()
       {
-         string MutexName = string.Format("{0} [{1}]", Path.GetFileName(Application.ExecutablePath), Environment.UserName);
-         bool GrantedOwnership;
-         using (Mutex AppUserMutex = new Mutex(true, MutexName, out GrantedOwnership))
+         string mutexName = string.Format("{0} [{1}]", Path.GetFileName(Application.ExecutablePath), Environment.UserName);
+         bool grantedOwnership;
+         using (Mutex appUserMutex = new Mutex(true, mutexName, out grantedOwnership))
          {
-            if (GrantedOwnership)
+            if (grantedOwnership)
             {
                Application.EnableVisualStyles();
                Application.SetCompatibleTextRenderingDefault(false);
@@ -75,7 +76,7 @@ namespace LiquesceTray
             }
             else
             {
-               MessageBox.Show(MutexName + " is already running");
+               MessageBox.Show(mutexName + Resources.Program_CheckAndRunSingleApp__is_already_running);
             }
          }
       }
