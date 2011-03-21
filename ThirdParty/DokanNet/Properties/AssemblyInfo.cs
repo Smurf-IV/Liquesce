@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 //
@@ -36,5 +37,5 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("2011.2.27.259")]
-[assembly: AssemblyFileVersion("2011.2.27.259")]
+[assembly: AssemblyVersion("2011.3.15.265")]
+[assembly: AssemblyFileVersion("2011.3.15.265")]

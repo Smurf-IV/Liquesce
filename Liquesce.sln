@@ -169,6 +169,11 @@ Global
 		{8D071FB8-5E7B-43F4-81D4-839D2203D6AF} = {D840EDCD-7088-423F-9AF3-90C1F12255E8}
 		{0B134E04-A1C8-4BA3-A5D6-E83AD26A73ED} = {D840EDCD-7088-423F-9AF3-90C1F12255E8}
 	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		BuildVersion_UseGlobalSettings = False
+		BuildVersion_AssemblyInfoFilename = ..\Liquesce\LiquesceSvc\Properties\AssemblyInfo.cs
+		BuildVersion_BuildVersioningStyle = YearStamp.MonthStamp.DayStamp.Increment
+	EndGlobalSection
 	GlobalSection(NDepend) = preSolution
 		Project = ".\Liquesce.ndproj"
 	EndGlobalSection

@@ -644,32 +644,8 @@ namespace DokanNet
          try
          {
             string file = GetFileName(rawFileName);
-
-            long time = ((long)rawCreationTime.dwHighDateTime << 32) + (uint)rawCreationTime.dwLowDateTime;
-            if (time == -1)
-               time = 0;
-            DateTime ctime = DateTime.FromFileTime(time);
-
-            if (time == 0)
-               ctime = DateTime.UtcNow;
-
-            time = ((long)rawLastAccessTime.dwHighDateTime << 32) + (uint)rawLastAccessTime.dwLowDateTime;
-            if (time == -1)
-               time = 0;
-            DateTime atime = DateTime.FromFileTime(time);
-
-            if (time == 0)
-               atime = DateTime.UtcNow;
-
-            time = ((long)rawLastWriteTime.dwHighDateTime << 32) + (uint)rawLastWriteTime.dwLowDateTime;
-            if (time == -1)
-               time = 0;
-            DateTime mtime = DateTime.FromFileTime(time);
-
-            if (time == 0)
-               mtime = DateTime.UtcNow;
-
-            return operations.SetFileTime(file, ctime, atime, mtime, ConvertFileInfo(ref rawFileInfo));
+            // http://liquesce.codeplex.com/workitem/8488
+            return operations.SetFileTimeNative(file, ref rawCreationTime, ref rawLastAccessTime, ref rawLastWriteTime, ConvertFileInfo(ref rawFileInfo));
          }
          catch (Exception ex)
          {

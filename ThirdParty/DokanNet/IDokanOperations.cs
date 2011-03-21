@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.Serialization;
 using System.IO;
+using ComTypes = System.Runtime.InteropServices.ComTypes;
 
 namespace DokanNet
 {
@@ -60,7 +61,8 @@ namespace DokanNet
 
       int SetFileAttributes(string filename, FileAttributes attr, DokanFileInfo info);
 
-      int SetFileTime( string filename, DateTime ctime, DateTime atime, DateTime mtime, DokanFileInfo info);
+      int SetFileTimeNative(string filename, ref ComTypes.FILETIME rawCreationTime, ref ComTypes.FILETIME rawLastAccessTime,
+          ref ComTypes.FILETIME rawLastWriteTime, DokanFileInfo info);
 
       int DeleteFile( string filename, DokanFileInfo info);
 

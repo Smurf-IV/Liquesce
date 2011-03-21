@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Security.AccessControl;
 using System.Text;
 using System.Threading;
 using DokanNet;
@@ -13,6 +12,7 @@ using LiquesceFacade;
 using LiquesceSvcMEF;
 using Microsoft.Win32.SafeHandles;
 using NLog;
+using ComTypes = System.Runtime.InteropServices.ComTypes;
 
 namespace LiquesceSvc
 {
@@ -535,9 +535,10 @@ namespace LiquesceSvc
          return Dokan.DOKAN_SUCCESS;
       }
 
-      public int SetFileTime(string dokanPath, DateTime ctime, DateTime atime, DateTime mtime, DokanFileInfo info)
+      public int SetFileTimeNative(string dokanPath, ref ComTypes.FILETIME rawCreationTime, ref ComTypes.FILETIME rawLastAccessTime,
+          ref ComTypes.FILETIME rawLastWriteTime, DokanFileInfo info)
       {
-         List<SafeFileHandle> safeFileHandle = new List<SafeFileHandle>();
+         List<SafeFileHandle> handles = new List<SafeFileHandle>();
          bool needToClose = false;
          try
          {
@@ -547,7 +548,7 @@ namespace LiquesceSvc
                if (info.refFileHandleContext != 0)
                {
                   Log.Trace("info.refFileHandleContext [{0}]", info.refFileHandleContext);
-                  safeFileHandle.Add( openFiles[info.refFileHandleContext].SafeFileHandle );
+                  handles.Add( openFiles[info.refFileHandleContext].SafeFileHandle );
                }
                else
                {
@@ -562,34 +563,41 @@ namespace LiquesceSvc
                   if (Directory.Exists(path))
                   {
                      rawFlagsAndAttributes = Proxy.FILE_FLAG_BACKUP_SEMANTICS;
-                     safeFileHandle.AddRange(plugin.OpenDirectoryLocations(dokanPath).Select(location => CreateFile(path, rawAccessMode, rawShare, IntPtr.Zero, rawCreationDisposition, rawFlagsAndAttributes, IntPtr.Zero)));
+                     handles.AddRange(plugin.OpenDirectoryLocations(dokanPath).Select(
+                        location => CreateFile(location, rawAccessMode, rawShare, IntPtr.Zero, rawCreationDisposition, rawFlagsAndAttributes, IntPtr.Zero)
+                        ));
                   }
                   else
                   {
-                     safeFileHandle.Add( CreateFile(path, rawAccessMode, rawShare, IntPtr.Zero, rawCreationDisposition,
+                     handles.Add( CreateFile(path, rawAccessMode, rawShare, IntPtr.Zero, rawCreationDisposition,
                                                  rawFlagsAndAttributes, IntPtr.Zero) );
                   }
                   needToClose = true;
                }
-               long clCreationTime = (ctime != DateTime.MinValue) ? ctime.ToFileTime() : 0;
-               long clAccessTime = (atime != DateTime.MinValue) ? atime.ToFileTime() : -1;
-               // Preserve last access time from the open
-               long clWriteTime = (mtime != DateTime.MinValue) ? mtime.ToFileTime() : 0;
-               foreach (SafeFileHandle fileHandle in safeFileHandle)
+               ComTypes.FILETIME lpCreationTime = rawCreationTime;
+               ComTypes.FILETIME lpAccessTime = rawLastAccessTime;
+               ComTypes.FILETIME lpWriteTime = rawLastWriteTime;
+               for (int index = 0; index < handles.Count; index++)
                {
+                  SafeFileHandle fileHandle = handles[index];
+                  lpCreationTime = rawCreationTime;
+                  lpAccessTime = rawLastAccessTime;
+                  lpWriteTime = rawLastWriteTime;
                   if ((fileHandle != null)
                       && !fileHandle.IsInvalid
                      )
                   {
-                     long lCreationTime = clCreationTime;
-                     long lAccessTime = clAccessTime;
-                     long lWriteTime = clWriteTime;
-                     if (!SetFileTime(fileHandle, ref lCreationTime, ref lAccessTime, ref lWriteTime))
+                     if (!SetFileTime(fileHandle, ref lpCreationTime, ref lpAccessTime, ref lpWriteTime))
                      {
                         Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error(), new IntPtr(-1));
                      }
                   }
                }
+               // They are passed as ref, so they might have been updated ?
+               rawCreationTime = lpCreationTime;
+               rawLastAccessTime = lpAccessTime;
+               rawLastWriteTime = lpWriteTime;
+
             }
          }
          catch (Exception ex)
@@ -603,14 +611,10 @@ namespace LiquesceSvc
             {
                if (needToClose)
                {
-                  foreach (SafeFileHandle fileHandle in safeFileHandle)
+                  foreach (SafeFileHandle fileHandle in
+                     handles.Where(fileHandle => (fileHandle != null) && !fileHandle.IsInvalid))
                   {
-                     if ( (fileHandle != null)
-                     && !fileHandle.IsInvalid
-                     )
-                     {
-                        fileHandle.Close();
-                     }
+                     fileHandle.Close();
                   }
                }
             }
@@ -1304,7 +1308,7 @@ namespace LiquesceSvc
 
       [DllImport("kernel32.dll", SetLastError = true)]
       [return: MarshalAs(UnmanagedType.Bool)]
-      private static extern bool SetFileTime(SafeFileHandle hFile, ref long lpCreationTime, ref long lpLastAccessTime, ref long lpLastWriteTime);
+      private static extern bool SetFileTime(SafeFileHandle hFile, ref ComTypes.FILETIME lpCreationTime, ref ComTypes.FILETIME lpLastAccessTime, ref ComTypes.FILETIME lpLastWriteTime);
 
       private enum SE_OBJECT_TYPE
       {
