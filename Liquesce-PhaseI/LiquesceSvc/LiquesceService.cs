@@ -114,6 +114,15 @@ namespace LiquesceSvc
          }
          catch (Exception ex)
          {
+            /*
+Windows Server 2003/Windows XP - use the HttpCfg.exe tool
+Windows 7/Windows Server 2008 - configure these settings with the Netsh.exe tool (you need to deal with UAC here). The steps are mentioned below:
+1. Go to Start > Accessories > Command Prompt > Right-Click (Run as Administrator)
+2. Execute this at the command prompt:
+HTTP could not register URL http://+:8731/Design_Time_Addresses/LiquesceSvc/LiquesceCallBackFacade/. Your process does not have access rights to this namespace (see http://go.microsoft.com/fwlink/?LinkId=70353 for details).
+    netsh http add urlacl url=http://+:8000/OrderManagerService user=DOMAIN\username
+    8000 here is your port number, you can replace this with a port number of  your choice (using which your WCF service is hosted)            
+             */
             Log.ErrorException("LiquesceService startup error.", ex);
                base.EventLog.WriteEntry(ex.Message, EventLogEntryType.Error);
                OnStop();

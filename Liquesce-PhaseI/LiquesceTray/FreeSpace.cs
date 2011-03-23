@@ -595,8 +595,9 @@ namespace LiquesceTray
                     allTotal += total;
                     allBackup += backupValues[i];
 
-                    if (config.AllocationMode == ConfigDetails.AllocationModes.backup || 
-                        config.AllocationMode == ConfigDetails.AllocationModes.mirror)
+                    if (config.AllocationMode == ConfigDetails.AllocationModes.backup 
+                       // || (config.AllocationMode == ConfigDetails.AllocationModes.mirror)
+                       )
                     {
                         if (availabel > mostFreeSpace1)
                         {
