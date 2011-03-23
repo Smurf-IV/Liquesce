@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -48,13 +49,22 @@ System.IO.FileNotFoundException: The file specified in path was not found.
 System.NotSupportedException: path is in an invalid format. 
 
 System.Security.SecurityException: The caller does not have the required permission. 
-*/         if ( ex.InnerException is SocketException)
+*/         
+         if ( ex.InnerException is SocketException)
          {
             return -((SocketException) ex.InnerException).ErrorCode;
          }
          else
          {
             int HrForException = Marshal.GetHRForException(ex);
+            if (ex is IOException)
+            {
+               switch (HrForException)
+               {
+                  case -2147024784:
+                     return Dokan.ERROR_DISK_FULL;
+               }
+            }
             return (HiWord(HrForException) == 0x8007) ? -LoWord(HrForException) : Dokan.ERROR_EXCEPTION_IN_SERVICE;
          }
       }
