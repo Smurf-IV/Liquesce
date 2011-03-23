@@ -260,12 +260,12 @@ namespace LiquesceSvc
             Log.Debug("By the time it gets here the dir should exist, or have existed by another method / thread");
             info.IsDirectory = true;
             roots.TrimAndAddUnique(path);
-            if (configDetails.AllocationMode == ConfigDetails.AllocationModes.mirror)
-            {
-               string mirrorpath = Roots.GetNewRoot(Roots.GetRoot(path), 0, filename) + Path.DirectorySeparatorChar + Roots.HIDDEN_MIRROR_FOLDER + filename;
-               MirrorToDo todo = new MirrorToDo();
-               FileManager.AddMirrorToDo(todo.CreateFolderCreate(filename, path, mirrorpath));
-            }
+            //if (configDetails.AllocationMode == ConfigDetails.AllocationModes.mirror)
+            //{
+            //   string mirrorpath = Roots.GetNewRoot(Roots.GetRoot(path), 0, filename) + Path.DirectorySeparatorChar + Roots.HIDDEN_MIRROR_FOLDER + filename;
+            //   MirrorToDo todo = new MirrorToDo();
+            //   FileManager.AddMirrorToDo(todo.CreateFolderCreate(filename, path, mirrorpath));
+            //}
             dokanError = Dokan.DOKAN_SUCCESS;
          }
          catch (Exception ex)
@@ -794,14 +794,14 @@ namespace LiquesceSvc
             Log.Trace("DeleteDirectory OUT dokanReturn[(0}]", dokanReturn);
          }
 
-         if (configDetails.AllocationMode == ConfigDetails.AllocationModes.mirror && (!path.Contains(Roots.HIDDEN_MIRROR_FOLDER)))
-         {
-            Log.Trace("DeleteDirectoryMirror...");
-            string mirrorpath = roots.GetPath(Path.DirectorySeparatorChar + Roots.HIDDEN_MIRROR_FOLDER + filename);
-            // send to tray app:
-            MirrorToDo todo = new MirrorToDo();
-            FileManager.AddMirrorToDo(todo.CreateFolderDelete(filename, path, mirrorpath));
-         }
+         //if (configDetails.AllocationMode == ConfigDetails.AllocationModes.mirror && (!path.Contains(Roots.HIDDEN_MIRROR_FOLDER)))
+         //{
+         //   Log.Trace("DeleteDirectoryMirror...");
+         //   string mirrorpath = roots.GetPath(Path.DirectorySeparatorChar + Roots.HIDDEN_MIRROR_FOLDER + filename);
+         //   // send to tray app:
+         //   MirrorToDo todo = new MirrorToDo();
+         //   FileManager.AddMirrorToDo(todo.CreateFolderDelete(filename, path, mirrorpath));
+         //}
 
          return dokanReturn;
       }
@@ -1506,7 +1506,7 @@ namespace LiquesceSvc
    // If the code never looks for name, then it might be jitted out
    internal class FileStreamName : FileStream
    {
-      public new string Name { get; set; }
+      public new string Name { get; private set; }
 
       public FileSystemInfo fsi { get; set; }
 

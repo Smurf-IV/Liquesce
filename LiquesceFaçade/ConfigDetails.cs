@@ -92,11 +92,11 @@ namespace LiquesceFacade
     {
         public enum AllocationModes 
         {
-            folder,
-            priority, 
-            balanced, 
-            mirror, 
-            backup
+             folder
+            ,priority 
+            ,balanced
+            ,backup
+            // ,mirror
         };
 
         [DataMember(IsRequired = true)]

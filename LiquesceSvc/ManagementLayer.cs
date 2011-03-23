@@ -123,6 +123,17 @@ namespace LiquesceSvc
                   // ReSharper restore HeuristicUnreachableCode
                }
                SetNLogLevel(currentConfigDetails.ServiceLogLevel);
+               string mountPoint = currentConfigDetails.DriveLetter;
+               mountedDriveLetter = currentConfigDetails.DriveLetter[0];
+               try
+               {
+                  Log.Info("DokanVersion:[{0}], DokanDriverVersion[{1}]", Dokan.DokanVersion(), Dokan.DokanDriverVersion());
+                  Dokan.DokanUnmount(mountedDriveLetter);
+               }
+               catch (Exception ex)
+               {
+                  Log.InfoException("Make sure it's unmounted threw:", ex);
+               }
 
                FireStateChange(LiquesceSvcState.Unknown, "Dokan initialised");
                IsRunning = true;
@@ -138,7 +149,6 @@ namespace LiquesceSvc
                }
 
                // TODO: Search all usages of the DriveLetter and make sure they become MountPoint compatible
-               string mountPoint = currentConfigDetails.DriveLetter;
                //if (mountPoint.Length == 1)
                //   mountPoint += ":\\"; // Make this into a MountPoint for V 0.6.0
                DokanOptions options = new DokanOptions
@@ -157,18 +167,6 @@ namespace LiquesceSvc
                dokanOperations = new LiquesceOps(currentConfigDetails);
                ThreadPool.QueueUserWorkItem(dokanOperations.InitialiseShares, dokanOperations);
 
-               mountedDriveLetter = currentConfigDetails.DriveLetter[0];
-
-
-               try
-               {
-                  Log.Info("DokanVersion:[{0}], DokanDriverVersion[{1}]", Dokan.DokanVersion(), Dokan.DokanDriverVersion());
-                  Dokan.DokanUnmount(mountedDriveLetter);
-               }
-               catch (Exception ex)
-               {
-                  Log.InfoException("Make sure it's unmounted threw:", ex);
-               }
                int retVal = Dokan.DokanMain(options, dokanOperations);
                Log.Warn("Dokan.DokanMain has exited");
                IsRunning = false;

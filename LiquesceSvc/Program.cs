@@ -13,7 +13,7 @@ namespace LiquesceSvc
       /// The main entry point for the application.
       /// </summary>
       /// 
-      /*
+      
       static void Main(string[] args)
       {
          Log.Error("=====================================================================");
@@ -37,7 +37,7 @@ namespace LiquesceSvc
          }
          Log.Error("========================Clean=Exit===================================");
       }
-      */
+      /*
       static void Main()
       {
          Log.Error("=====================================================================");
@@ -49,5 +49,6 @@ namespace LiquesceSvc
          }
          Log.Error("========================Clean=Exit===================================");
       }
+       * */
    }
 }
