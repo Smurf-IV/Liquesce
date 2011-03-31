@@ -50,6 +50,23 @@ namespace LiquesceSvc
       }
 
        
+      //public MirrorToDoList ConsumeMirrorToDo()
+      //{
+      //    Log.Debug("Calling ConsumeMirrorToDo");
+      //    return ManagementLayer.Instance.ConsumeMirrorToDo();
+      //}
+
+      public MirrorToDoList MirrorToDo
+      {
+          get
+          {
+              Log.Debug("Calling State");
+              return ManagementLayer.Instance.MirrorToDo;
+          }
+      }
+
+
+
       public ConfigDetails ConfigDetails
       {
          get
@@ -64,10 +81,5 @@ namespace LiquesceSvc
          }
       }
 
-      public List<string> GetCurrentPluginModes()
-      {
-         Log.Debug("Calling GetPossibleShares");
-         return ManagementLayer.Instance.GetCurrentPluginModes();
-      }
    }
 }

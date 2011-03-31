@@ -12,7 +12,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("DokanNet")]
-[assembly: AssemblyCopyright("Copyright (C) 2007")]
+[assembly: AssemblyCopyright("Copyright (C)  2007")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -37,5 +37,5 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("2011.3.15.265")]
-[assembly: AssemblyFileVersion("2011.3.15.265")]
+[assembly: AssemblyVersion("2011.3.23.274")]
+[assembly: AssemblyFileVersion("2011.3.23.274")]

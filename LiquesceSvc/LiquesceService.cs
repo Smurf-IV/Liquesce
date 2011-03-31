@@ -61,7 +61,8 @@ namespace LiquesceSvc
 
       private static ServiceHost _ILiquesceHost;
       private static ServiceHost _ILiquesceHostCallBack;
-      
+      private static ServiceHost _IShareEnablerHost;
+
       public void StartService(string[] args)
       { 
          OnStart(args); 
@@ -91,10 +92,12 @@ namespace LiquesceSvc
                      break;
                }
             }
-            _ILiquesceHost = new ServiceHost(typeof (LiquesceFacade));
-            _ILiquesceHostCallBack = new ServiceHost(typeof (LiquesceCallBackFacade));
+            _ILiquesceHost = new ServiceHost(typeof(LiquesceFacade));
+            _ILiquesceHostCallBack = new ServiceHost(typeof(LiquesceCallBackFacade));
+            _IShareEnablerHost = new ServiceHost(typeof(ShareEnabler)) { CloseTimeout = TimeSpan.MaxValue };
             _ILiquesceHost.Open();
             _ILiquesceHostCallBack.Open();
+            _IShareEnablerHost.Open();
 
             if (RunningAsService)
             {
@@ -111,6 +114,15 @@ namespace LiquesceSvc
          }
          catch (Exception ex)
          {
+            /*
+Windows Server 2003/Windows XP - use the HttpCfg.exe tool
+Windows 7/Windows Server 2008 - configure these settings with the Netsh.exe tool (you need to deal with UAC here). The steps are mentioned below:
+1. Go to Start > Accessories > Command Prompt > Right-Click (Run as Administrator)
+2. Execute this at the command prompt:
+HTTP could not register URL http://+:8731/Design_Time_Addresses/LiquesceSvc/LiquesceCallBackFacade/. Your process does not have access rights to this namespace (see http://go.microsoft.com/fwlink/?LinkId=70353 for details).
+    netsh http add urlacl url=http://+:8000/OrderManagerService user=DOMAIN\username
+    8000 here is your port number, you can replace this with a port number of  your choice (using which your WCF service is hosted)            
+             */
             Log.ErrorException("LiquesceService startup error.", ex);
                base.EventLog.WriteEntry(ex.Message, EventLogEntryType.Error);
                OnStop();
@@ -158,6 +170,10 @@ namespace LiquesceSvc
             Log.Info("Stop the ManagementLayer and remove");
             if (RunningAsService)
                RequestAdditionalTime(30000);
+            
+            // Stop the share first
+            if (_IShareEnablerHost != null)
+               _IShareEnablerHost.Close();
             
             // Then stop the host calling in
             if ( _ILiquesceHost != null )

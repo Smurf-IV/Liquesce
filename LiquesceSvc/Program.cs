@@ -12,6 +12,8 @@ namespace LiquesceSvc
       /// <summary>
       /// The main entry point for the application.
       /// </summary>
+      /// 
+      
       static void Main(string[] args)
       {
          Log.Error("=====================================================================");
@@ -33,9 +35,20 @@ namespace LiquesceSvc
             LiquesceService.RunningAsService = true;
             ServiceBase.Run(new ServiceBase[] { runner });
          }
-
          Log.Error("========================Clean=Exit===================================");
       }
+      /*
+      static void Main()
+      {
+         Log.Error("=====================================================================");
+         Log.Error("File Re-opened: Ver :" + Assembly.GetExecutingAssembly().GetName().Version.ToString());
+         var runner = new LiquesceService();
+         {
+            LiquesceService.RunningAsService = true;
+            ServiceBase.Run(new ServiceBase[] { runner });
+         }
+         Log.Error("========================Clean=Exit===================================");
+      }
+       * */
    }
-
 }

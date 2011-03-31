@@ -105,6 +105,7 @@ namespace Liquesce
                {
                   mergeList.Nodes.Add(tn);
                }
+            DelayCreation.Text = cd.DelayStartMilliSec.ToString();
             VolumeLabel.Text = cd.VolumeLabel;
             RestartExpectedOutput();
          }
@@ -446,6 +447,7 @@ namespace Liquesce
          }
          ConfigDetails configDetails = new ConfigDetails
                                {
+                                  DelayStartMilliSec = (uint)DelayCreation.Value,
                                   DriveLetter = MountPoint.Text,
                                   VolumeLabel = VolumeLabel.Text,
                                   SourceLocations = new List<string>(mergeList.Nodes.Count)
@@ -680,6 +682,7 @@ namespace Liquesce
             if (DialogResult.Yes == MessageBox.Show(this, "Performing this action will \"Remove the Mounted drive(s)\" on this machine.\n All open files will be forceably closed by this.\nDo you wish to continue ?", "Caution..", MessageBoxButtons.YesNo, MessageBoxIcon.Question))
             {
                SetProgressBarStyle(ProgressBarStyle.Marquee);
+               cd.DelayStartMilliSec = (uint)DelayCreation.Value;
                cd.DriveLetter = MountPoint.Text;
                cd.VolumeLabel = VolumeLabel.Text;
                cd.SourceLocations = new List<string>(mergeList.Nodes.Count);
@@ -696,7 +699,7 @@ namespace Liquesce
                Log.Info("Send the new details");
                remoteIF.ConfigDetails = cd;
                Log.Info("Now start, may need a small sleep to allow things to settle");
-               Thread.Sleep(2500);
+               Thread.Sleep(Math.Max(1000, 2500 - (int)cd.DelayStartMilliSec));
                remoteIF.Start();
             }
          }

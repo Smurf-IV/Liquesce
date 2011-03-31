@@ -6,6 +6,7 @@ using System.Reflection;
 using System.ServiceProcess;
 using System.Threading;
 using System.Windows.Forms;
+using LiquesceTray.Properties;
 using NLog;
 
 namespace LiquesceTray
@@ -19,7 +20,7 @@ namespace LiquesceTray
       /// The main entry point for the application.
       /// </summary>
       [STAThread]
-      static void Main(string[] args)
+      static void Main()
       {
          try
          {
@@ -39,15 +40,7 @@ namespace LiquesceTray
          {
             Log.Error("=====================================================================");
             Log.Error("File Re-opened: Ver :" + Assembly.GetExecutingAssembly().GetName().Version);
-            if (args.Length > 0)
-            {
-               TrayHelper(args);
-            }
-            else
-            {
-               // Create a mutex name for this App + user.
-               CheckAndRunSingleApp();
-            }
+            CheckAndRunSingleApp();
          }
          catch (Exception ex)
          {
@@ -70,11 +63,11 @@ namespace LiquesceTray
 
       private static void CheckAndRunSingleApp()
       {
-         string MutexName = string.Format("{0} [{1}]", Path.GetFileName(Application.ExecutablePath), Environment.UserName);
-         bool GrantedOwnership;
-         using (Mutex AppUserMutex = new Mutex(true, MutexName, out GrantedOwnership))
+         string mutexName = string.Format("{0} [{1}]", Path.GetFileName(Application.ExecutablePath), Environment.UserName);
+         bool grantedOwnership;
+         using (Mutex appUserMutex = new Mutex(true, mutexName, out grantedOwnership))
          {
-            if (GrantedOwnership)
+            if (grantedOwnership)
             {
                Application.EnableVisualStyles();
                Application.SetCompatibleTextRenderingDefault(false);
@@ -83,41 +76,8 @@ namespace LiquesceTray
             }
             else
             {
-               MessageBox.Show(MutexName + " is already running");
+               MessageBox.Show(mutexName + Resources.Program_CheckAndRunSingleApp__is_already_running);
             }
-         }
-      }
-
-      private static void TrayHelper(IList<string> args)
-      {
-         if (args == null) 
-            throw new ArgumentNullException("args");
-         try
-         {
-            int argsLength = args.Count;
-
-            ServiceController serviceController1 = new ServiceController { ServiceName = "LiquesceSvc" };
-            for (int index = 0; index < argsLength; index++)
-            {
-               Log.Debug("Arg[{0}]={1}", index, args[index]);
-               switch (args[index].ToLower())
-               {
-                  case "-debug":
-                     Debugger.Launch();
-                     break;
-                  case "stop":
-                     serviceController1.Stop();
-                     break;
-                  case "start":
-                     serviceController1.Start();
-                     break;
-               }
-            }
-
-         }
-         catch (Exception ex)
-         {
-            Log.ErrorException("TrayHelper threw an Exception", ex);
          }
       }
 

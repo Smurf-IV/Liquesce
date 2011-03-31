@@ -90,6 +90,17 @@ namespace LiquesceFacade
     [DataContract]
     public class ConfigDetails
     {
+        public enum AllocationModes 
+        {
+             folder
+            ,priority 
+            ,balanced
+            ,backup
+            // ,mirror
+        };
+
+        [DataMember(IsRequired = true)]
+        public uint DelayStartMilliSec = 5000;
 
         // Make this is a string so that the XML looks better (Rather than exporting 72 for 'N')
         // Also the V 0.6 of Dokan is supposed to be able to use Mount points so this can then be reused for that..
@@ -109,7 +120,7 @@ namespace LiquesceFacade
         public string VolumeLabel = "Mirror of C";
 
         [DataMember]
-        public string PluginMode = "Priority";
+        public AllocationModes AllocationMode = AllocationModes.priority;
 
         [DataMember]
         public UInt64 HoldOffBufferBytes = 1L << 10 << 10 << 10; // ==1GB;
@@ -119,6 +130,9 @@ namespace LiquesceFacade
 
         [DataMember(IsRequired = true)]
         public List<string> SourceLocations;
+
+        [DataMember(IsRequired = true)]
+        public List<string> PathsToMirror;
 
         [DataMember]
         public string ServiceLogLevel = "Debug"; // NLog's LogLevel.Debug.ToString()

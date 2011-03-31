@@ -60,9 +60,23 @@ namespace LiquesceTray.Properties {
             }
         }
         
+        internal static System.Drawing.Bitmap backup {
+            get {
+                object obj = ResourceManager.GetObject("backup", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         internal static System.Drawing.Bitmap Config {
             get {
                 object obj = ResourceManager.GetObject("Config", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap drop {
+            get {
+                object obj = ResourceManager.GetObject("drop", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -95,10 +109,100 @@ namespace LiquesceTray.Properties {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to Liquesce service is Stopped.
+        /// </summary>
+        internal static string NotifyIconHandler_DoStatusCheck_Liquesce_service_is_Stopped {
+            get {
+                return ResourceManager.GetString("NotifyIconHandler_DoStatusCheck_Liquesce_service_is_Stopped", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Started @ {0}.
+        /// </summary>
+        internal static string NotifyIconHandler_DoStatusCheck_Started____0_ {
+            get {
+                return ResourceManager.GetString("NotifyIconHandler_DoStatusCheck_Started____0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Application tray is starting.
+        /// </summary>
+        internal static string NotifyIconHandler_NotifyIconHandler_Application_tray_is_starting {
+            get {
+                return ResourceManager.GetString("NotifyIconHandler_NotifyIconHandler_Application_tray_is_starting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Service Status.
+        /// </summary>
+        internal static string NotifyIconHandler_NotifyIconHandler_Service_Status {
+            get {
+                return ResourceManager.GetString("NotifyIconHandler_NotifyIconHandler_Service_Status", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Liquesce State In Error.
+        /// </summary>
+        internal static string NotifyIconHandler_SetState_Liquesce_State_In_Error {
+            get {
+                return ResourceManager.GetString("NotifyIconHandler_SetState_Liquesce_State_In_Error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Liquesce State Running.
+        /// </summary>
+        internal static string NotifyIconHandler_SetState_Liquesce_State_Running {
+            get {
+                return ResourceManager.GetString("NotifyIconHandler_SetState_Liquesce_State_Running", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Liquesce State Stopped.
+        /// </summary>
+        internal static string NotifyIconHandler_SetState_Liquesce_State_Stopped {
+            get {
+                return ResourceManager.GetString("NotifyIconHandler_SetState_Liquesce_State_Stopped", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Liquesce State Unknown.
+        /// </summary>
+        internal static string NotifyIconHandler_SetState_Liquesce_State_Unknown {
+            get {
+                return ResourceManager.GetString("NotifyIconHandler_SetState_Liquesce_State_Unknown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Liquesce State Warning.
+        /// </summary>
+        internal static string NotifyIconHandler_SetState_Liquesce_State_Warning {
+            get {
+                return ResourceManager.GetString("NotifyIconHandler_SetState_Liquesce_State_Warning", resourceCulture);
+            }
+        }
+        
         internal static System.Drawing.Icon OKIcon {
             get {
                 object obj = ResourceManager.GetObject("OKIcon", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to  is already running.
+        /// </summary>
+        internal static string Program_CheckAndRunSingleApp__is_already_running {
+            get {
+                return ResourceManager.GetString("Program_CheckAndRunSingleApp__is_already_running", resourceCulture);
             }
         }
         
