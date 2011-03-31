@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension"
+     xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
+     >
+
+   <?define MgtSource=$(sys.SOURCEFILEDIR)..\Liquesce\bin\Release ?>
+   <?define SvcSource=$(sys.SOURCEFILEDIR)..\LiquesceSvc\bin\Release ?>
+   <?define TraySource=$(sys.SOURCEFILEDIR)..\LiquesceTray\bin\Release ?>
+
+
+   <!-- do not change this ever !-->
+   <?define UpgradeCode = "F6F94F17-A05F-4824-8DD9-9F5E8267D783" ?>
+
+   <!-- Change this when creating new release YY-MM-DD -->
+   <?define Version = "11.03.23" ?>
+   
+   <?define ProductName = "Liquesce Windows HDD Pooling Suite"?>
+
+   <Product Version="$(var.Version)" Id="*" UpgradeCode="$(var.UpgradeCode)"
+          Name="$(var.ProductName)" Language="1033" Manufacturer="http://liquesce.codeplex.com/" >
+
+      <Package Id="*" Keywords='Installer'
+               InstallScope='perMachine'
+               Description="$(var.ProductName)"
+               Comments="Liquesce" InstallerVersion="301" Compressed="yes"
+               AdminImage='no'
+               Platform='x86'
+               />
+
+      <MajorUpgrade DowngradeErrorMessage="Downgrades are not allowed - Use add/remove from the control panel" />
+
+      <!-- Support Information shown in Add/Remove programs (this is optional) -->
+      <Property Id="ARPHELPLINK" Value="http://liquesce.codeplex.com/documentation" />
+      <Property Id="ARPCOMMENTS" Value="http://liquesce.codeplex.com/discussions"/>
+      <Property Id="ARPCONTACT" Value="Smurf-IV" />
+      <Property Id="ARPURLINFOABOUT" Value="http://liquesce.codeplex.com/" />
+      <Icon Id="InstallerIcon" SourceFile="$(sys.SOURCEFILEDIR)..\Liquesce\Resources\Liquesce.ico" />
+      <Property Id="ARPPRODUCTICON" Value="InstallerIcon" />
+
+      <!-- Properties to allow detection of .Net installation -->
+      <PropertyRef Id="NETFRAMEWORK40FULL"/>
+      <PropertyRef Id="NETFRAMEWORK40FULLINSTALLROOTDIR" />
+
+      <Property Id="DOKANINSTALLED" >
+         <RegistrySearch Id="IsDokanServiceInstalled" Root="HKLM" Key="SYSTEM\CurrentControlSet\services\Dokan" Name="DisplayName" Type="raw" />
+      </Property>
+
+      <Property Id="DOKANVERCHECK32">
+         <DirectorySearch Id="Dokan.sys.version" Path="[SystemFolder]\Drivers">
+            <!--Make sure that the min / max _straddle_ the actual version..  Check for 0.6.0 x32 Size -->
+            <!-- It appears that there is yet another version for Windows 7 x32 !! -->
+            <FileSearch Name="Dokan.sys" MinSize="91903" MaxSize="95745" />
+         </DirectorySearch>
+      </Property>
+      <Property Id="DOKANVERCHECK64">
+         <DirectorySearch Id="Dokan.sys64.version" Path="[System64Folder]\Drivers">
+            <!--Make sure that the min / max _straddle_ the actual version.. Check for 0.6.0 x64 Size -->
+            <FileSearch Name="Dokan.sys" MinSize="120407" MaxSize="120409" />
+         </DirectorySearch>
+      </Property>
+
+      <Condition Message="This application requires Dokan Ver 0.6.0.">
+         <![CDATA[Installed OR (DOKANVERCHECK64 AND VersionNT64) OR (DOKANVERCHECK32 AND NOT VersionNT64)]]>
+      </Condition>
+
+      <!--Some test conditions to allow the installer to run-->
+      <Condition Message="Dokan.sys Driver Is Not Installed in the SYSTEM\CurrentControlSet\services registry correctly!">
+         <![CDATA[Installed OR DOKANINSTALLED]]>
+      </Condition>
+      <Condition Message="[ProductName] Requires .NET Framework 4.0 Main profile to be installed">
+         <![CDATA[Installed OR NETFRAMEWORK40FULL]]>
+      </Condition>
+      <Condition Message="You need to be an administrator to install this product.">
+         Privileged
+      </Condition>
+
+      <!--<Condition Message="A later version of [ProductName] is already installed. Setup will now exit.">
+         <![CDATA[NOT NEWERVERSIONDETECTED OR Installed]]>
+      </Condition>-->
+
+      <!--Allow 7z / zip compression to squeeze this tighter -->
+      <Media Id="1" Cabinet="Setup.cab" EmbedCab="yes" CompressionLevel="high" />
+
+      <Directory Id="TARGETDIR" Name="SourceDir">
+         <Directory Id="ProgramFilesFolder">
+            <Directory Id="INSTALLDIR" Name="Liquesce">
+               <Directory Id="ClientDIR" Name="Liquesce Client">
+               </Directory>
+               <Directory Id="ServiceDIR" Name="Liquesce Service">
+               </Directory>
+            </Directory>
+         </Directory>
+         <Directory Id="ProgramMenuFolder">
+            <Directory Id="ProgramMenuDir" Name="Liquesce"/>
+            <Directory Id="StartupFolder" Name="Startup" />
+         </Directory>
+
+         <Directory Id="CommonAppDataFolder" Name="CommonAppData">
+            <Directory Id="LiquesceSvc_Data" Name="LiquesceSvc" >
+               <Component Id="DataDir" Guid="01234567-7E98-44CE-B049-C477CC0A2B01" KeyPath="yes" />
+            </Directory>
+         </Directory>
+
+      </Directory>
+
+      <ComponentGroup Id="Client" >
+         <Component Id="Client" Guid="5EBF3F29-9CF1-44FE-A94C-CC1B4FE09367" Directory="ClientDIR">
+            <File Id="InstallerIcon" Name="Liquesce.ico" Source="$(sys.SOURCEFILEDIR)..\Liquesce\Resources\Liquesce.ico" />
+            <File Id="Liquesce.exe" Name="Liquesce.exe" Source="$(var.MgtSource)\Liquesce.exe" KeyPath="yes">
+               <fire:FirewallException Id="LiquesceFWX1" Name="Liquesce Mount Management" Scope="localSubnet" IgnoreFailure="yes" />
+            </File>
+         </Component>
+         <Component Id="ChangeLog" Directory="ClientDIR">
+            <File Source="$(sys.SOURCEFILEDIR)..\Liquesce\ChangeLog.rtf" KeyPath="yes" />
+         </Component>
+         <Component Id="Liquesce.exe.config" Directory="ClientDIR">
+            <File Source="$(var.MgtSource)\Liquesce.exe.config" KeyPath="yes" />
+         </Component>
+         <Component Id="C_NLog.dll" Directory="ClientDIR">
+            <File Id="C_NLog.dll" Source="$(var.MgtSource)\NLog.dll" KeyPath="yes" />
+         </Component>
+         <Component Id="C_LiquesceFacade.dll" Directory="ClientDIR">
+            <File Id="C_LiquesceFacade.dll" Source="$(var.MgtSource)\LiquesceFacade.dll" KeyPath="yes" />
+         </Component>
+         <Component Id="LiquesceTray.exe.config" Directory="ClientDIR">
+            <File Source="$(var.TraySource)\LiquesceTray.exe.config" KeyPath="yes" />
+         </Component>
+         <Component Id="LiquesceTray.exe" Directory="ClientDIR">
+            <File Source="$(var.TraySource)\LiquesceTray.exe" KeyPath="yes" />
+         </Component>
+         <Component Id="LiquesceTrayHelper.exe" Directory="ClientDIR">
+            <File Source="$(sys.SOURCEFILEDIR)..\LiquesceTrayHelper\bin\Release\LiquesceTrayHelper.exe" KeyPath="yes" />
+         </Component>
+      </ComponentGroup>
+      <ComponentGroup Id="Service">
+         <Component Id="LiquesceSvc" Guid="BEBF3F29-9CF1-44FE-A94C-CC1B4FE09367" Directory="ServiceDIR">
+            <File Id="LiquesceSvc.File" Name="LiquesceSvc.exe" Source="$(var.SvcSource)\LiquesceSvc.exe" KeyPath="yes">
+               <fire:FirewallException Id="LiquesceFWX2" Name="LiquesceSvc" Scope="localSubnet" IgnoreFailure="yes" />
+               <!-- Why Use NGen ? http://msdn.microsoft.com/en-gb/magazine/cc163610.aspx -->
+               <netfx:NativeImage Id="ngen_LiquesceSvc.exe" Platform="32bit" Priority="1" AppBaseDirectory="ServiceDIR"/>
+            </File>
+            <File Id="LiquesceSvc.exe.config.File" Name="LiquesceSvc.exe.config" Source="$(var.SvcSource)\LiquesceSvc.exe.config"/>
+            <ServiceControl Id='LiquesceSvcControl' Name='LiquesceSvc' Start='install' Stop='both' Remove='uninstall' Wait='yes' />
+         </Component>
+         <Component Id="DokanNet.dll" Directory="ServiceDIR">
+            <File Source="$(var.SvcSource)\DokanNet.dll" KeyPath="yes" />
+         </Component>
+         <Component Id="LiquesceFacade.dll" Directory="ServiceDIR">
+            <File Source="$(var.SvcSource)\LiquesceFacade.dll" KeyPath="yes" />
+         </Component>
+         <Component Id="NLog.dll" Directory="ServiceDIR">
+            <File Source="$(var.SvcSource)\NLog.dll" KeyPath="yes" />
+         </Component>
+      </ComponentGroup>
+      <DirectoryRef Id="ProgramMenuDir">
+         <Component Id="ProgramMenuDir2" Guid="11234567-7E98-44CE-B049-C477CC0A2B01">
+            <Shortcut Id="Liquesce_Shortcut" Name="Liquesce MGT" Description="Liquesce Management Application" Target="[ClientDIR]Liquesce.exe" WorkingDirectory="ClientDIR" Icon="InstallerIcon" IconIndex="0" />
+            <Shortcut Id="LiquesceTray_Shortcut" Name="Liquesce Tray" Description="Liquesce Tray Application" Target="[ClientDIR]LiquesceTray.exe" WorkingDirectory="ClientDIR" Icon="InstallerIcon" IconIndex="0" />
+            <Shortcut Id="LiquesceTray_Start" Name="Liquesce Tray" Directory="StartupFolder" Description="Liquesce Tray Application" Target="[ClientDIR]LiquesceTray.exe" WorkingDirectory="ClientDIR" Icon="InstallerIcon" IconIndex="0" />
+            <util:InternetShortcut Type="url" Id="Home" Name="Liquesce Forum" Target="[ARPHELPLINK]" />
+            <util:InternetShortcut Type="link" Id="Change" Name="Change Log" Target="[ClientDIR]ChangeLog.rtf"/>
+            <RemoveFolder Id="ProgramMenuDir" On="uninstall"/>
+            <RegistryValue Root="HKCU" Key="Software\Microsoft\Liquesce" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+         </Component>
+      </DirectoryRef>
+
+      <Feature Id="ProductFeature" Title="Liquesce_Setup" Level="1">
+         <ComponentGroupRef Id="Service" />
+         <ComponentRef Id="DataDir" />
+         <ComponentGroupRef Id="Client" />
+         <ComponentRef Id='ProgramMenuDir2'/>
+      </Feature>
+
+
+      <!--Write custom actions to install, uninstall, commit and rollback the changes-->
+      <CustomAction Id="LiquesceSvc.commit.SetProperty" Property="LiquesceSvc.commit"
+        Value='"[NETFRAMEWORK40FULLINSTALLROOTDIR]InstallUtil.exe" /installtype=notransaction /action=commit /LogFile="[LiquesceSvc_Data]LiquesceSvc.commit.log" /InstallStateDir="[CommonAppDataFolder]LiquesceSvc" "[#LiquesceSvc.File]"' />
+
+      <CustomAction Id="LiquesceSvc.rollback.SetProperty" Property="LiquesceSvc.rollback"
+        Value='"[NETFRAMEWORK40FULLINSTALLROOTDIR]InstallUtil.exe" /installtype=notransaction /action=rollback /LogFile="[LiquesceSvc_Data]LiquesceSvc.rollback.log" /InstallStateDir="[CommonAppDataFolder]LiquesceSvc" "[#LiquesceSvc.File]"' />
+
+      <CustomAction Id="LiquesceSvc.install.SetProperty" Property="LiquesceSvc.install"
+        Value='"[NETFRAMEWORK40FULLINSTALLROOTDIR]InstallUtil.exe" /installtype=notransaction /action=install /LogFile="[LiquesceSvc_Data]LiquesceSvc.install.log" /InstallStateDir="[CommonAppDataFolder]LiquesceSvc" "[#LiquesceSvc.File]"' />
+
+      <CustomAction Id="LiquesceSvc.uninstall.SetProperty" Property="LiquesceSvc.uninstall"
+        Value='"[NETFRAMEWORK40FULLINSTALLROOTDIR]InstallUtil.exe" /installtype=notransaction /action=uninstall /LogFile="[LiquesceSvc_Data]LiquesceSvc.uninstall.log" /InstallStateDir="[CommonAppDataFolder]LiquesceSvc" "[#LiquesceSvc.File]"' />
+
+      <CustomAction Id="LiquesceSvc.commit" BinaryKey="WixCA" DllEntry="CAQuietExec" Execute="commit" Impersonate="no" Return="check" />
+      <CustomAction Id="LiquesceSvc.rollback" BinaryKey="WixCA" DllEntry="CAQuietExec" Execute="rollback" Impersonate="no" Return="check" />
+      <CustomAction Id="LiquesceSvc.install" BinaryKey="WixCA" DllEntry="CAQuietExec" Execute="deferred" Impersonate="no" Return="check" />
+      <CustomAction Id="LiquesceSvc.uninstall" BinaryKey="WixCA" DllEntry="CAQuietExec" Execute="deferred" Impersonate="no" Return="check" />
+
+      <!--Custom Actions to start stop Application tray-->
+      <CustomAction Id="StartTrayApp" FileKey="LiquesceTray.exe" ExeCommand="" Return="asyncNoWait" />
+      <util:CloseApplication CloseMessage="yes" Id="CloseServerTray" Target="LiquesceTray.exe" RebootPrompt="no"/>
+      <CustomAction Id="MgtApp" FileKey="Liquesce.exe" ExeCommand="" Return="asyncNoWait" />
+      <util:CloseApplication CloseMessage="yes" Id="CloseMgtAppTray" Target="Liquesce.exe" RebootPrompt="no"/>
+
+      <InstallUISequence>
+         <Custom Action="WixCloseApplications" Before="LaunchConditions" />
+      </InstallUISequence>
+
+      <!-- Now to sequence these Custom Actions in the execute sequence -->
+      <InstallExecuteSequence>
+         <Custom Action="WixCloseApplications" Before="LaunchConditions" />
+
+         <Custom Action="LiquesceSvc.commit.SetProperty" After="InstallServices"><![CDATA[ $LiquesceSvc > 2 ]]></Custom>
+         <Custom Action="LiquesceSvc.commit" After="LiquesceSvc.commit.SetProperty"><![CDATA[ $LiquesceSvc > 2 ]]></Custom>
+
+         <Custom Action="LiquesceSvc.rollback.SetProperty" After="LiquesceSvc.commit"><![CDATA[ $LiquesceSvc > 2 ]]></Custom>
+         <Custom Action="LiquesceSvc.rollback" After="LiquesceSvc.rollback.SetProperty"><![CDATA[ $LiquesceSvc > 2 ]]></Custom>
+
+         <Custom Action="LiquesceSvc.install.SetProperty" After="LiquesceSvc.rollback"><![CDATA[ $LiquesceSvc > 2 ]]></Custom>
+         <Custom Action="LiquesceSvc.install" After="LiquesceSvc.install.SetProperty"><![CDATA[ $LiquesceSvc > 2 ]]></Custom>
+
+         <Custom Action="LiquesceSvc.uninstall.SetProperty" After="MsiUnpublishAssemblies"><![CDATA[ $LiquesceSvc = 2 ]]></Custom>
+         <Custom Action="LiquesceSvc.uninstall" After="LiquesceSvc.uninstall.SetProperty"><![CDATA[ $LiquesceSvc = 2 ]]></Custom>
+         <Custom Action="StartTrayApp" After="InstallFinalize">Not Installed</Custom>
+         <Custom Action="MgtApp" After="StartTrayApp">Not Installed</Custom>
+      </InstallExecuteSequence>
+
+      <!-- Get the install to skip a few steps -->
+      <UIRef Id="WixUI_Common" />
+      <WixVariable Id="WixUIBannerBmp" Value="banner.bmp" />
+      <!-- This just adds 90K on top of the UI Extension.dll -->
+      <UI>
+         <Property Id="DefaultUIFont" Value="WixUI_Font_Normal" />
+         <TextStyle Id="WixUI_Font_Normal" FaceName="Tahoma" Size="8" />
+         <TextStyle Id="WixUI_Font_Bigger" FaceName="Tahoma" Size="12" />
+         <TextStyle Id="WixUI_Font_Title" FaceName="Tahoma" Size="9" Bold="yes" />
+
+         <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
+         <Property Id="ARPNOMODIFY" Value="1" />
+
+         <DialogRef Id="BrowseDlg" />
+         <DialogRef Id="DiskCostDlg" />
+         <DialogRef Id="ErrorDlg" />
+         <DialogRef Id="FatalError" />
+         <DialogRef Id="FilesInUse" />
+         <DialogRef Id="MsiRMFilesInUse" />
+         <DialogRef Id="PrepareDlg" />
+         <DialogRef Id="ProgressDlg" />
+         <DialogRef Id="ResumeDlg" />
+         <DialogRef Id="UserExit" />
+
+         <Publish Dialog="ExitDialog" Control="Finish" Event="EndDialog" Value="Return" Order="999">1</Publish>
+         <Publish Dialog="WelcomeEulaDlg" Control="Install" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+         <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="WelcomeEulaDlg" Order="1">NOT Installed</Publish>
+         <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="MaintenanceTypeDlg" Order="2">Installed</Publish>
+
+         <Publish Dialog="MaintenanceWelcomeDlg" Control="Next" Event="NewDialog" Value="MaintenanceTypeDlg">1</Publish>
+         <Publish Dialog="MaintenanceTypeDlg" Control="RepairButton" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+         <Publish Dialog="MaintenanceTypeDlg" Control="RemoveButton" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+         <Publish Dialog="MaintenanceTypeDlg" Control="Back" Event="NewDialog" Value="MaintenanceWelcomeDlg">1</Publish>
+
+      </UI>
+
+
+
+      <UIRef Id="WixUI_ErrorProgressText" />
+
+   </Product>
+</Wix>
