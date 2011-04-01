@@ -32,14 +32,6 @@ namespace LiquesceFacade
       [OperationContract]
       List<LanManShareDetails> GetPossibleShares();
 
-      //[OperationContract]
-      //MirrorToDoList ConsumeMirrorToDo();
-
-      MirrorToDoList MirrorToDo
-      {
-          [OperationContract]
-          get;
-      }
 
       ConfigDetails ConfigDetails
       {

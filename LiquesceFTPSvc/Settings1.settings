@@ -1,0 +1,18 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="LiquesceFTPSvc" GeneratedClassName="Settings1">
+  <Profiles />
+  <Settings>
+    <Setting Name="ConfigFileName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Properties.config.xml</Value>
+    </Setting>
+    <Setting Name="FtpPort" Type="System.UInt16" Scope="Application">
+      <Value Profile="(Default)">21</Value>
+    </Setting>
+    <Setting Name="MinPassvPort" Type="System.UInt16" Scope="Application">
+      <Value Profile="(Default)">7000</Value>
+    </Setting>
+    <Setting Name="MaxPassvPort" Type="System.UInt16" Scope="Application">
+      <Value Profile="(Default)">7100</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>
