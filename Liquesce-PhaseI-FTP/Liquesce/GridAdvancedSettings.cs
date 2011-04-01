@@ -15,7 +15,43 @@ namespace Liquesce
 
       private void GridAdvancedSettings_Load(object sender, EventArgs e)
       {
-         Utils.ResizeDescriptionArea(ref propertyGrid1, 6); // okay for most
+         int nNumLines = 6;
+         try
+         {
+            System.Reflection.PropertyInfo pi = propertyGrid1.GetType().GetProperty("Controls");
+            Control.ControlCollection cc = (Control.ControlCollection)pi.GetValue(propertyGrid1, null);
+
+            foreach (Control c in cc)
+            {
+               Type ct = c.GetType();
+               string sName = ct.Name;
+
+               if (sName == "DocComment")
+               {
+                  pi = ct.GetProperty("Lines");
+                  if (pi != null)
+                  {
+#pragma warning disable 168
+                     int i = (int)pi.GetValue(c, null);
+#pragma warning restore 168
+                     pi.SetValue(c, nNumLines, null);
+                  }
+
+                  if (ct.BaseType != null)
+                  {
+                     System.Reflection.FieldInfo fi = ct.BaseType.GetField("userSized",
+                                                                           System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+
+                     if (fi != null)
+                        fi.SetValue(c, true);
+                  }
+                  break;
+               }
+            }
+         }
+         catch
+         {
+         }
       }
 
 

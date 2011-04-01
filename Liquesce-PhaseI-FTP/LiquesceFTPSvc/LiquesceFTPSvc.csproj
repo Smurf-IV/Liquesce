@@ -166,6 +166,8 @@
     <Compile Include="Installer1.Designer.cs">
       <DependentUpon>Installer1.cs</DependentUpon>
     </Compile>
+    <Compile Include="LiquesceCallBackFacade.cs" />
+    <Compile Include="LiquesceFacade.cs" />
     <Compile Include="LiquesceFTPSvc.cs">
       <SubType>Component</SubType>
     </Compile>
