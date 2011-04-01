@@ -38,7 +38,6 @@ namespace Liquesce
          Enabled = false;
          UseWaitCursor = true;
          StartTree();
-         PopulatePoolSettings();
          ServiceControllerStatus serviceStatus = ServiceControllerStatus.Stopped;
          try
          {
@@ -48,16 +47,9 @@ namespace Liquesce
          {
             Log.ErrorException("Service is probably not installed", ex);
          }
-         if (serviceStatus != ServiceControllerStatus.Running)
-         {
-            currentSharesToolStripMenuItem.ToolTipText = commitToolStripMenuItem.ToolTipText = "Service is not running";
-            currentSharesToolStripMenuItem.Enabled = commitToolStripMenuItem.Enabled = false;
-         }
-         else
          {
             try
             {
-               currentSharesToolStripMenuItem.Enabled = commitToolStripMenuItem.Enabled = true;
                ChannelFactory<ILiquesce> factory = new ChannelFactory<ILiquesce>("LiquesceFacade");
                ILiquesce remoteIF = factory.CreateChannel();
                cd = remoteIF.ConfigDetails;
@@ -89,11 +81,6 @@ namespace Liquesce
 
       private void InitialiseWith()
       {
-         if (!String.IsNullOrWhiteSpace(cd.DriveLetter))
-         {
-            // Add the drive letter back in as this would already have been removed
-            MountPoint.Items.Add(cd.DriveLetter);
-            MountPoint.Text = cd.DriveLetter;
             if (cd.SourceLocations != null)
                foreach (TreeNode tn in cd.SourceLocations.Select(sourceLocation => new TreeNode
                                                                                       {
@@ -105,21 +92,9 @@ namespace Liquesce
                {
                   mergeList.Nodes.Add(tn);
                }
-            DelayCreation.Text = cd.DelayStartMilliSec.ToString();
-            VolumeLabel.Text = cd.VolumeLabel;
             RestartExpectedOutput();
-         }
       }
 
-      private void PopulatePoolSettings()
-      {
-         string[] drives = Environment.GetLogicalDrives();
-         foreach (string dr in drives)
-         {
-            MountPoint.Items.Remove(dr.Remove(1));
-         }
-         MountPoint.Text = "N";
-      }
 
       #region Methods to populate and drill down in the tree
       // Code stolen from the http://frwingui.codeplex.com project
@@ -447,9 +422,6 @@ namespace Liquesce
          }
          ConfigDetails configDetails = new ConfigDetails
                                {
-                                  DelayStartMilliSec = (uint)DelayCreation.Value,
-                                  DriveLetter = MountPoint.Text,
-                                  VolumeLabel = VolumeLabel.Text,
                                   SourceLocations = new List<string>(mergeList.Nodes.Count)
                                };
          // if (mergeList.Nodes != null) // Apperently always true
@@ -479,7 +451,7 @@ namespace Liquesce
             Log.Error("Worker, or auguments are null, exiting.");
             return;
          }
-         TreeNode root = new TreeNode(configDetails.VolumeLabel + " (" + configDetails.DriveLetter + ")");
+         TreeNode root = new TreeNode("FTP");
          AddExpectedNode(null, root);
          if (worker.CancellationPending
             || IsClosing)
@@ -682,9 +654,6 @@ namespace Liquesce
             if (DialogResult.Yes == MessageBox.Show(this, "Performing this action will \"Remove the Mounted drive(s)\" on this machine.\n All open files will be forceably closed by this.\nDo you wish to continue ?", "Caution..", MessageBoxButtons.YesNo, MessageBoxIcon.Question))
             {
                SetProgressBarStyle(ProgressBarStyle.Marquee);
-               cd.DelayStartMilliSec = (uint)DelayCreation.Value;
-               cd.DriveLetter = MountPoint.Text;
-               cd.VolumeLabel = VolumeLabel.Text;
                cd.SourceLocations = new List<string>(mergeList.Nodes.Count);
                // if (mergeList.Nodes != null) // Apperently always true
                foreach (TreeNode node in mergeList.Nodes)
@@ -699,7 +668,7 @@ namespace Liquesce
                Log.Info("Send the new details");
                remoteIF.ConfigDetails = cd;
                Log.Info("Now start, may need a small sleep to allow things to settle");
-               Thread.Sleep(Math.Max(1000, 2500 - (int)cd.DelayStartMilliSec));
+               Thread.Sleep(1000);
                remoteIF.Start();
             }
          }
@@ -746,13 +715,6 @@ namespace Liquesce
          GridAdvancedSettings advancedSettings = new GridAdvancedSettings { AdvancedConfigDetails = cd };
          if (advancedSettings.ShowDialog(this) == DialogResult.OK)
             cd = advancedSettings.AdvancedConfigDetails;
-      }
-
-      private void currentSharesToolStripMenuItem_Click(object sender, EventArgs e)
-      {
-         CurrentShares shareSettings = new CurrentShares { ShareDetails = cd };
-         if (shareSettings.ShowDialog(this) == DialogResult.OK)
-            cd = shareSettings.ShareDetails;
       }
 
    }

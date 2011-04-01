@@ -95,29 +95,8 @@ namespace LiquesceFacade
              folder
             ,priority 
             ,balanced
-            ,backup
-            // ,mirror
         };
 
-        [DataMember(IsRequired = true)]
-        public uint DelayStartMilliSec = 5000;
-
-        // Make this is a string so that the XML looks better (Rather than exporting 72 for 'N')
-        // Also the V 0.6 of Dokan is supposed to be able to use Mount points so this can then be reused for that..
-        [DataMember(IsRequired = true)]
-        public string DriveLetter = "N";
-
-        [DataMember]
-        public ushort ThreadCount = 5;
-
-        [DataMember]
-        public int LockTimeout = short.MaxValue; // Useful if you are getting locks in the multiple threads - Can be set to -1 for infinite
-
-        [DataMember]
-        public bool DebugMode = false;
-
-        [DataMember(IsRequired = true)]
-        public string VolumeLabel = "Mirror of C";
 
         [DataMember]
         public AllocationModes AllocationMode = AllocationModes.priority;
@@ -130,9 +109,6 @@ namespace LiquesceFacade
 
         [DataMember(IsRequired = true)]
         public List<string> SourceLocations;
-
-        [DataMember(IsRequired = true)]
-        public List<string> PathsToMirror;
 
         [DataMember]
         public string ServiceLogLevel = "Debug"; // NLog's LogLevel.Debug.ToString()

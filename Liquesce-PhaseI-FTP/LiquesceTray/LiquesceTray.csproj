@@ -94,7 +94,7 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="NLog, Version=2.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+    <Reference Include="NLog">
       <HintPath>..\ThirdParty\NLog.dll</HintPath>
     </Reference>
     <Reference Include="System" />
@@ -211,20 +211,6 @@
     <None Include="Service References\LiquesceCallbackSvcRef\LiquesceCallBackFacade.wsdl" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\LiquesceFaçade\LiquesceFacade.csproj">
-      <Project>{CFE5DC7B-25FB-45C4-AF18-1963853375E1}</Project>
-      <Name>LiquesceFacade</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\LiquesceTrayHelper\LiquesceTrayHelper.csproj">
-      <Project>{F216D80D-2D70-4B3B-8632-813F6C399948}</Project>
-      <Name>LiquesceTrayHelper</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Liquesce\Liquesce.csproj">
-      <Project>{74447D1D-F52F-485C-BDEE-66B114A45460}</Project>
-      <Name>Liquesce</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Icons\backup.ico" />
     <Content Include="Icons\base.ico" />
     <Content Include="Icons\Config.ico" />
@@ -276,10 +262,20 @@
   <ItemGroup>
     <WCFMetadataStorage Include="Service References\LiquesceCallbackSvcRef\" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LiquesceFaçade\LiquesceFacade.csproj">
+      <Project>{CFE5DC7B-25FB-45C4-AF18-1963853375E1}</Project>
+      <Name>LiquesceFacade</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Liquesce\Liquesce.csproj">
+      <Project>{74447D1D-F52F-485C-BDEE-66B114A45460}</Project>
+      <Name>Liquesce</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="YearStamp.MonthStamp.DayStamp.Increment" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UseGlobalSettings="False" />
+      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="YearStamp.MonthStamp.DayStamp.Increment" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

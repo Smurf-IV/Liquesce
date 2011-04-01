@@ -13,9 +13,6 @@ namespace Liquesce
         {
             if (cd != null)
             {
-                ThreadCount = cd.ThreadCount;
-                LockTimeoutmSec = cd.LockTimeout;
-                DokanDebugMode = cd.DebugMode;
                 AllocationMode = cd.AllocationMode.ToString();
                 HoldOffMBytes = cd.HoldOffBufferBytes / (1024 * 1024);
                 BufferReadSizeKBytes = cd.BufferReadSize / 1024;
@@ -55,44 +52,6 @@ namespace Liquesce
             }
         }
 
-        [DescriptionAttribute("Later on will allow Dokan Debug information to be captured into the Service log."),
-        DisplayName("Dokan Debug Mode")
-        , CategoryAttribute("Dokan")
-        ]
-        public bool DokanDebugMode { get; set; }
-
-        private int lockTimeoutmSec;
-
-        [DescriptionAttribute("Useful if you are getting file overwrites in some applications that perform quick creation deletion / creation of files, and multiple threads - Can be set to -1 for infinite.\rRange -1 <-> 100000"),
-        DisplayName("File Lock Timeout (mSec)")
-        , CategoryAttribute("File")
-        ]
-        public int LockTimeoutmSec
-        {
-            get { return lockTimeoutmSec; }
-            set
-            {
-                if (value >= -1
-                   && value <= 100000) lockTimeoutmSec = value;
-            }
-        }
-
-        private ushort threadCount;
-
-        [DescriptionAttribute("0 is automatic, use 1 for problem finding scenario's.\rRange 0 <-> 32"),
-        DisplayName("Thread Count")
-        , CategoryAttribute("Dokan")
-        ]
-        public ushort ThreadCount
-        {
-            get { return threadCount; }
-            set
-            {
-                if (value >= 0
-                    && value <= 32)
-                    threadCount = value;
-            }
-        }
 
         [DescriptionAttribute("The amount of information that will be placed into the Log files (Trace means slower performance!)."),
         DisplayName("Service Logging Level"),
@@ -152,8 +111,7 @@ namespace Liquesce
         {
             return new StandardValuesCollection(new[] { ConfigDetails.AllocationModes.folder.ToString(),
                ConfigDetails.AllocationModes.priority.ToString(), 
-               ConfigDetails.AllocationModes.balanced.ToString(),
-               ConfigDetails.AllocationModes.backup.ToString()
+               ConfigDetails.AllocationModes.balanced.ToString()
             } );
         }
     }
