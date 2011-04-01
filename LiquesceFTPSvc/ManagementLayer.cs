@@ -18,9 +18,7 @@ namespace LiquesceSvc
       static private readonly Logger Log = LogManager.GetCurrentClassLogger();
       private static ManagementLayer instance;
       private ConfigDetails currentConfigDetails;
-      private readonly DateTime startTime;
       private readonly string configFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "LiquesceSvc", Settings1.Default.ConfigFileName);
-      private char mountedDriveLetter;
       private LiquesceSvcState state = LiquesceSvcState.Stopped;
       private static readonly Dictionary<Client, IStateChange> subscribers = new Dictionary<Client, IStateChange>();
       private static readonly ReaderWriterLockSlim subscribersLock = new ReaderWriterLockSlim();
@@ -42,7 +40,6 @@ namespace LiquesceSvc
          try
          {
             Log.Debug("New ManagementLayer created.");
-            startTime = DateTime.UtcNow;
          }
          catch (Exception ex)
          {
@@ -105,7 +102,6 @@ namespace LiquesceSvc
                   // ReSharper restore HeuristicUnreachableCode
                }
                SetNLogLevel(currentConfigDetails.ServiceLogLevel);
-            mountedDriveLetter = currentConfigDetails.DriveLetter[0];
 
                FireStateChange(LiquesceSvcState.Unknown, "Dokan initialised");
                FtpServer = new FTPServer(currentConfigDetails);
@@ -256,16 +252,10 @@ namespace LiquesceSvc
       public List<LanManShareDetails> GetPossibleShares()
       {
          // TODO: Phase 2 will have a foreach onthe drive letter
-         return (LanManShareHandler.MatchDriveLanManShares(currentConfigDetails.DriveLetter));
+         throw new NotImplementedException();
+         // return (LanManShareHandler.MatchDriveLanManShares(currentConfigDetails.DriveLetter));
       }
 
-
-// ReSharper disable MemberCanBeMadeStatic.Global
-      public MirrorToDoList MirrorToDo
-// ReSharper restore MemberCanBeMadeStatic.Global
-      {
-         get { throw new NotImplementedException();  }
-      }
 
       private void ReadConfigDetails()
       {
@@ -313,13 +303,8 @@ namespace LiquesceSvc
             {
                currentConfigDetails = new ConfigDetails
                                          {
-                                            DebugMode = true,
-                                            DelayStartMilliSec = (uint)short.MaxValue,
-                                            DriveLetter = "N",
                                             SourceLocations = new List<string>(1),
-                                            ThreadCount = 1,
                                             //HoldOffBufferBytes = 1*1024*1024*1024, // ==1GB
-                                            VolumeLabel = "InternallyCreated"
                                          };
                currentConfigDetails.SourceLocations.Add(@"C:\");
             }
