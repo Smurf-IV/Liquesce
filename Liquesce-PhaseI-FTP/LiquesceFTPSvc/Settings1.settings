@@ -9,10 +9,10 @@
       <Value Profile="(Default)">21</Value>
     </Setting>
     <Setting Name="MinPassvPort" Type="System.UInt16" Scope="Application">
-      <Value Profile="(Default)">7000</Value>
+      <Value Profile="(Default)">6000</Value>
     </Setting>
     <Setting Name="MaxPassvPort" Type="System.UInt16" Scope="Application">
-      <Value Profile="(Default)">7100</Value>
+      <Value Profile="(Default)">7000</Value>
     </Setting>
   </Settings>
 </SettingsFile>

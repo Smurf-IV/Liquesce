@@ -28,48 +28,29 @@ namespace LiquesceFTPSvc.FTP
             return ConnectedTime.Ticks.ToString();
          }
       }
-      Socket ClientSocket;
+      NetworkStream ClientSocket;
       internal FTPUser ConnectedUser;
 
-      internal string EndPoint
-      {
-         get
-         {
-            return ClientSocket.RemoteEndPoint.ToString();
-         }
-      }
-
-      internal bool IsConnected
-      {
-         get
-         {
-            if ( (ClientSocket == null) 
-               || !ClientSocket.Connected 
-               || (ConnectedTime.ToString("HH:mm:ss") == LastInteraction.ToString("HH:mm:ss")) 
-               )
-            { 
-               Disconnect(); 
-               return false; 
-            }
-            return true;
-         }
-      }
-
       protected bool UseUTF8 { get; set; }
+
+      protected EndPoint LocalEndPoint { get; set; }
+      protected bool abortReceived { get; set; }
 
       bool DataTransferEnabled = false;
       TcpListener DataListener = null;
 
       string Rename_FilePath;
 
-      byte[] BufferData = new byte[500];
+      byte[] BufferData = new byte[1024];
       private int startOffset;
 
-      internal FTPClientCommander(Socket ClientSocket)
+      internal FTPClientCommander(TcpClient newClientSocket)
       {
-         this.ClientSocket = ClientSocket;
+         // Disable Nagle algorithm. Most of the time single short strings get transferred over the control connection. 
+         newClientSocket.NoDelay = false;
+         LocalEndPoint = newClientSocket.Client.LocalEndPoint;
+         ClientSocket = newClientSocket.GetStream();
          //SubItems[1].Text = ClientSocket.RemoteEndPoint.ToString();
-         ClientSocket.NoDelay = false;
          ConnectedTime = DateTime.Now;
 
          ConnectedUser = new FTPUser();
@@ -78,10 +59,12 @@ namespace LiquesceFTPSvc.FTP
          // Report the client that the server is ready to serve.
          SendMessage("220 FTP Ready\r\n");
 
+         
          // Wait for the command to be sent by the client
-         ClientSocket.BeginReceive(BufferData, 0, BufferData.Length, SocketFlags.None, new AsyncCallback(CommandReceived), null);
+         ClientSocket.BeginRead(BufferData, 0, BufferData.Length, CommandReceived, null);
          //ClientStream.BeginRead(BufferData, 0, BufferData.Length, new AsyncCallback(CommandReceived), null);
       }
+
 
       /// <summary>
       /// https://secure.wikimedia.org/wikipedia/en/wiki/List_of_FTP_server_return_codes
@@ -93,12 +76,12 @@ namespace LiquesceFTPSvc.FTP
          #region Read and Parse commands
          int CommandSize = 0;
          if ((ClientSocket != null)
-            && ClientSocket.Connected
+            && ClientSocket.CanRead
             )
          {
             try
             {
-               CommandSize = ClientSocket.EndReceive(arg);
+               CommandSize = ClientSocket.EndRead(arg);
             }
             catch
             {
@@ -114,7 +97,7 @@ namespace LiquesceFTPSvc.FTP
          // Wait for the next command to be sent by the client
          try
          {
-            ClientSocket.BeginReceive(BufferData, 0, BufferData.Length, SocketFlags.None, new AsyncCallback(CommandReceived), null);
+            ClientSocket.BeginRead(BufferData, 0, BufferData.Length, CommandReceived, null);
          }
          catch
          {
@@ -139,6 +122,7 @@ namespace LiquesceFTPSvc.FTP
             )
             CmdArguments = CmdArguments.Substring(0, CmdArguments.Length - 2);
          bool CommandExecued = false;
+         Log.Info(string.Format("Received Command: [{0}] with args: [{1}]", Command, CmdArguments));
          switch (Command)
          {
             case "USER":
@@ -351,10 +335,12 @@ namespace LiquesceFTPSvc.FTP
 
       internal void Disconnect()
       {
-         if ( (ClientSocket != null) 
-            && ClientSocket.Connected
-            ) 
-            ClientSocket.Close(); 
+         Log.Warn("Disconnect called");
+         if ( ClientSocket != null)
+         {
+            ClientSocket.Flush();
+            ClientSocket.Close(15);
+         }
          ClientSocket = null;
          if (DataListener != null) 
             DataListener.Stop(); 
@@ -373,15 +359,18 @@ namespace LiquesceFTPSvc.FTP
          if (!String.IsNullOrEmpty(Data)) 
          try
          {
+            Log.Info(Data);
             if ((ClientSocket != null)
-               && ClientSocket.Connected
+               && ClientSocket.CanWrite
                )
             {
-               ClientSocket.Send(UseUTF8 ? Encoding.UTF8.GetBytes(Data) : Encoding.ASCII.GetBytes(Data));
+               byte[] buffer = UseUTF8 ? Encoding.UTF8.GetBytes(Data) : Encoding.ASCII.GetBytes(Data);
+               ClientSocket.Write(buffer, 0, buffer.Length);
             }
          }
-         catch 
-         { 
+         catch ( Exception ex )
+         {
+            Log.ErrorException("SendMessage ", ex);
             Disconnect(); 
          }
       }
@@ -422,9 +411,9 @@ namespace LiquesceFTPSvc.FTP
          return dir.Replace("\\\\", "\\");
       }
 
-      Socket GetDataSocket()
+      NetworkStream GetDataSocket()
       {
-         Socket DataSocket = null;
+         TcpClient DataSocket = null;
          try
          {
             if (DataTransferEnabled)
@@ -442,14 +431,13 @@ namespace LiquesceFTPSvc.FTP
                   }
                }
 
-               DataSocket = DataListener.AcceptSocket();
+               DataSocket = DataListener.AcceptTcpClient();
                SendMessage("125 Connected, Starting Data Transfer.\r\n");
             }
             else
             {
                SendMessage("150 Connecting.\r\n");
-               DataSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-               DataSocket.Connect(ClientEndPoint);
+               DataSocket = new TcpClient(ClientEndPoint);
             }
          }
          catch
@@ -468,8 +456,9 @@ namespace LiquesceFTPSvc.FTP
          }
 
          DataTransferEnabled = false;
-
-         return DataSocket;
+         DataSocket.LingerState = new LingerOption(true, 15);
+         DataSocket.Client.DontFragment = false;
+         return DataSocket.GetStream();
       }
 
       #endregion

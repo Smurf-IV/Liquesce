@@ -35,7 +35,7 @@ namespace LiquesceFTPSvc.FTP
                 FTPListener.Start(20);
 
                 // Start accepting the incoming clients.
-                FTPListener.BeginAcceptSocket(NewFTPClientArrived, null);
+                FTPListener.BeginAcceptTcpClient(NewFTPClientArrived, null);
                 return true;
             }
             catch (Exception Ex)
@@ -56,7 +56,7 @@ namespace LiquesceFTPSvc.FTP
         {
             try
             {
-                FTPClients.Add(new FTPClientCommander(FTPListener.EndAcceptSocket(arg)));
+                FTPClients.Add(new FTPClientCommander(FTPListener.EndAcceptTcpClient(arg)));
             }
             catch (Exception Ex)
             {

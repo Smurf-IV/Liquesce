@@ -12,19 +12,20 @@ namespace LiquesceFTPSvc.FTP
       /// i.e. it must come after any PORT or PASV command. 
       /// http://tools.ietf.org/html/rfc3659#page-14
       /// </summary>
+      /// <remarks>
+      /// Some clients use this command with a 0 for an aurgument as an Init style sequence 
+      /// (i.e. will not be setting up a transfer or stor)
+      /// </remarks>
       /// <param name="cmdArguments"></param>
       private void REST_Command(string cmdArguments)
       {
          startOffset = 0;
-         if (DataTransferEnabled)
+         if (int.TryParse(cmdArguments, out startOffset))
          {
-            if (int.TryParse(cmdArguments, out startOffset))
-            {
-               SendMessage("350 Restarting at " + startOffset + ". Send STORe or RETRieve.\r\n");
-               return;
-            }
+            SendMessage("350 Restarting at " + startOffset + ". Send STORe or RETRieve.\r\n");
          }
-         SendMessage("550 Incorrect command format.\r\n");
+         else
+            SendMessage("550 Incorrect command format.\r\n");
       }
 
 

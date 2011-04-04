@@ -5,7 +5,7 @@ using System.Net.Sockets;
 namespace LiquesceFTPSvc.FTP
 {
    partial class FTPClientCommander
-   {  
+   {
       /// <summary>
       /// Syntax: STOR remote-filename
       /// Begins transmission of a file to the remote site. 
@@ -26,7 +26,10 @@ namespace LiquesceFTPSvc.FTP
 
          try
          {
-            FS = new FileStream(Path, FileMode.Create, FileAccess.Write, FileShare.None) {Position = startOffset};
+            FS = new FileStream(Path, FileMode.Create, FileAccess.Write, FileShare.None)
+                              {
+                                 Position = startOffset
+                              };
          }
          catch (Exception Ex)
          {
@@ -34,7 +37,7 @@ namespace LiquesceFTPSvc.FTP
             return;
          }
 
-         Socket DataSocket = GetDataSocket();
+         NetworkStream DataSocket = GetDataSocket();
          if (DataSocket == null)
          {
             return;
@@ -47,7 +50,7 @@ namespace LiquesceFTPSvc.FTP
             // TODO: Respect the ABOR command
             do
             {
-               ReadBytes = DataSocket.Receive(tmpBuffer);
+               ReadBytes = DataSocket.Read(tmpBuffer, 0, tmpBuffer.Length);
                FS.Write(tmpBuffer, 0, ReadBytes);
             } while (ReadBytes > 0);
 
@@ -59,17 +62,16 @@ namespace LiquesceFTPSvc.FTP
          }
          finally
          {
-// ReSharper disable ConditionIsAlwaysTrueOrFalse
+            // ReSharper disable ConditionIsAlwaysTrueOrFalse
             if (DataSocket != null)
-// ReSharper restore ConditionIsAlwaysTrueOrFalse
+            // ReSharper restore ConditionIsAlwaysTrueOrFalse
             {
-               DataSocket.Shutdown(SocketShutdown.Both);
-               DataSocket.Close();
+               DataSocket.Close(15);
             }
             FS.Close();
          }
       }
 
- 
+
    }
 }

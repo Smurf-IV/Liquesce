@@ -18,7 +18,9 @@
       /// <param name="CmdArguments"></param>
       void TYPE_Command(string CmdArguments)
       {
-         if ((CmdArguments = CmdArguments.Trim().ToUpper()) == "A" || CmdArguments == "I")
+         if ( ((CmdArguments = CmdArguments.Trim().ToUpper()) == "A")
+            || (CmdArguments == "I")
+            )
             SendMessage("200 Type " + CmdArguments + " Accepted.\r\n");
          else 
             SendMessage("500 Unknown Type.\r\n");

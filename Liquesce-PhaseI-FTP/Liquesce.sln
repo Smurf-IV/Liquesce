@@ -23,14 +23,25 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiquesceFTPSvc", "LiquesceF
 EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 1
+		SccNumberOfProjects = 6
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs08
 		SccProjectUniqueName0 = Liquesce_Setup\\Liquesce_Setup.wixproj
 		SccProjectName0 = Liquesce_Setup
-		SccAuxPath0 = https://tfs.codeplex.com/tfs/tfs08
 		SccLocalPath0 = Liquesce_Setup
-		SccProvider0 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccLocalPath1 = .
+		SccProjectUniqueName2 = Liquesce\\Liquesce.csproj
+		SccProjectName2 = Liquesce
+		SccLocalPath2 = Liquesce
+		SccProjectUniqueName3 = LiquesceFaçade\\LiquesceFacade.csproj
+		SccProjectName3 = LiquesceFaçade
+		SccLocalPath3 = LiquesceFaçade
+		SccProjectUniqueName4 = LiquesceTray\\LiquesceTray.csproj
+		SccProjectName4 = LiquesceTray
+		SccLocalPath4 = LiquesceTray
+		SccProjectUniqueName5 = LiquesceFTPSvc\\LiquesceFTPSvc.csproj
+		SccProjectName5 = LiquesceFTPSvc
+		SccLocalPath5 = LiquesceFTPSvc
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -61,8 +72,8 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		BuildVersion_BuildVersioningStyle = YearStamp.MonthStamp.DayStamp.Increment
-		BuildVersion_AssemblyInfoFilename = ..\Liquesce\LiquesceSvc\Properties\AssemblyInfo.cs
 		BuildVersion_UseGlobalSettings = False
+		BuildVersion_AssemblyInfoFilename = ..\Liquesce\LiquesceSvc\Properties\AssemblyInfo.cs
+		BuildVersion_BuildVersioningStyle = YearStamp.MonthStamp.DayStamp.Increment
 	EndGlobalSection
 EndGlobal

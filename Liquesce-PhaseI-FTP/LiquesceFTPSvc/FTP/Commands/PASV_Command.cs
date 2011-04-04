@@ -48,7 +48,7 @@ namespace LiquesceFTPSvc.FTP
 
          if (ClientSocket != null)
          {
-            string SocketEndPoint = ClientSocket.LocalEndPoint.ToString();
+            string SocketEndPoint = LocalEndPoint.ToString();
             SocketEndPoint = SocketEndPoint.Substring(0, SocketEndPoint.IndexOf(":")).Replace(".", ",") + "," + (tmpPort >> 8) + "," + (tmpPort & 255);
             DataTransferEnabled = true;
 
