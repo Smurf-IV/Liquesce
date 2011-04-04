@@ -43,7 +43,7 @@ namespace LiquesceFTPSvc {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("7000")]
+        [global::System.Configuration.DefaultSettingValueAttribute("6000")]
         public ushort MinPassvPort {
             get {
                 return ((ushort)(this["MinPassvPort"]));
@@ -52,7 +52,7 @@ namespace LiquesceFTPSvc {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("7100")]
+        [global::System.Configuration.DefaultSettingValueAttribute("7000")]
         public ushort MaxPassvPort {
             get {
                 return ((ushort)(this["MaxPassvPort"]));

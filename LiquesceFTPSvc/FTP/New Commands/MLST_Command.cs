@@ -40,23 +40,21 @@ namespace LiquesceFTPSvc.FTP
          else
          {
             SendMessage("250-Details for: [" + cmdArguments + "]\r\n");
+            string buffer = " ";
             if ((info.Attributes & FileAttributes.Directory) == FileAttributes.Directory)
-               SendDirectory(info);
+               buffer += SendDirectory(info);
             else
-               SendFile(info);
+            {
+               buffer += SendFile(info);
+            }
+            SendMessage(buffer);
             SendMessage("250 Completed.\r\n");
          }
       }
 
-      private void SendFile(FileSystemInfo fileInfo)
+      private string SendFile(FileSystemInfo fileInfo)
       {
-         SendFile(ClientSocket, fileInfo, true);
-      }
-
-      private void SendFile(Socket socket, FileSystemInfo fileInfo, bool space)
-      {
-         StringBuilder sb = space ? new StringBuilder(' ') : new StringBuilder();
-         sb.Append(@"Type=file;");
+         StringBuilder sb = new StringBuilder(@"Type=file;");
          sb.Append(@"size=").Append(((FileInfo)fileInfo).Length).Append(';');
          sb.Append(@"Modify=").Append(GetFormattedTime(fileInfo.LastWriteTimeUtc)).Append(';');
          sb.Append(@"Create=").Append(GetFormattedTime(fileInfo.CreationTimeUtc)).Append(';');
@@ -73,20 +71,21 @@ namespace LiquesceFTPSvc.FTP
          }
          sb.Append("r;"); // indicates that the RETR command may be applied to that object
 
-         string filePath = fileInfo.FullName;
-         sb.Append(@"Unique=").Append(filePath.GetHashCode()).Append(';');
+         sb.Append(@"Unique=").Append(fileInfo.FullName.GetHashCode()).Append(';');
          sb.Append(@"Media-Type=").Append(MimeTypeDetector(fileInfo)).Append(';');
          sb.Append(@"Win32.ea=").AppendFormat("0x{0:x8}", (uint)fileInfo.Attributes).Append(';');
          sb.Append(@"CharSet=UTF-8;");
-         sb.Append(' ').Append(filePath);
+         sb.Append(' ').Append(fileInfo.Name);
          sb.Append("\r\n");
-         socket.Send(UseUTF8 ? Encoding.UTF8.GetBytes(sb.ToString()) : Encoding.ASCII.GetBytes(sb.ToString()));
+         string buffer = sb.ToString();
+         Log.Trace("SendFile: " + buffer);
+         return buffer;
       }
 
       private static void MLST_Support(FTPClientCommander thisClient)
       {
          // Servers SHOULD, if conceivably possible,support at least the type, perm, size, unique, and modify facts.
-         thisClient.SendMessage(" MLSD Type;Size;Modify;Create;Perm;Unique;Media-Type;Win32.ea;CharSet;\r\n");
+         thisClient.SendMessage(" MLST Type;Size;Modify;Create;Perm;Unique;Media-Type;Win32.ea;CharSet;\r\n");
       }
 
 

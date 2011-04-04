@@ -32,7 +32,7 @@ namespace LiquesceFTPSvc
          InitializeComponent();
       }
 
-      public static bool RunningAsService { private get; set; }
+      public bool RunningAsService { get; set; }
 
       private static void LogUnhandledException(object sender, UnhandledExceptionEventArgs e)
       {
@@ -145,7 +145,7 @@ HTTP could not register URL http://+:8731/Design_Time_Addresses/LiquesceSvc/Liqu
             if (me != null)
             {
                me.OnStop();
-               if (RunningAsService)
+               if (me.RunningAsService)
                   ((ServiceBase)me)/*.base*/.Stop();
             }
             throw;

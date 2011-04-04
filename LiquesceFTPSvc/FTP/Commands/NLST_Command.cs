@@ -11,19 +11,20 @@ namespace LiquesceFTPSvc.FTP
       /// Syntax: NLST [remote-directory]
       /// Returns a list of filenames in the given directory (defaulting to the current directory), with no other information. 
       /// Must be preceded by a PORT or PASV command. 
+      /// http://forums.proftpd.org/smf/index.php?topic=2974.0;wap2
       /// </summary>
       /// <param name="CmdArguments"></param>
       void NLST_Command(string CmdArguments)
       {
          string Path = ConnectedUser.StartUpDirectory + GetExactPath(CmdArguments);
-         // TODO: Optimize this to use DirInfo
-         if (!Directory.Exists(Path))
+         DirectoryInfo dirInfo = new DirectoryInfo(Path);
+         if (!dirInfo.Exists)
          {
             SendMessage("550 Invalid Path.\r\n");
             return;
          }
 
-         Socket DataSocket = GetDataSocket();
+         NetworkStream DataSocket = GetDataSocket();
          if (DataSocket == null)
          {
             return;
@@ -31,12 +32,16 @@ namespace LiquesceFTPSvc.FTP
 
          try
          {
-            string[] FoldersList = Directory.GetDirectories(Path, "*.*", SearchOption.TopDirectoryOnly);
-            string FolderList = FoldersList.Aggregate("", (current, Folder) => current + (Folder.Substring(Folder.Replace('\\', '/').LastIndexOf('/') + 1) + "\r\n"));
-            DataSocket.Send(UseUTF8 ? Encoding.UTF8.GetBytes(FolderList) : Encoding.ASCII.GetBytes(FolderList));
-            DataSocket.Shutdown(SocketShutdown.Both);
-            DataSocket.Close();
-
+            using (StreamWriter sw = new StreamWriter(DataSocket, UseUTF8 ? Encoding.UTF8 : Encoding.ASCII))
+            {
+               FileInfo[] FoldersList = dirInfo.GetFiles("*.*", SearchOption.TopDirectoryOnly);
+               for (int index = 0; index < FoldersList.Length; index++)
+               {
+                  sw.Write(FoldersList[index].Name+"\r\n");
+               }
+            }
+            DataSocket.Flush();
+            DataSocket.Close(15);
             SendMessage("226 Transfer Complete.\r\n");
          }
          catch

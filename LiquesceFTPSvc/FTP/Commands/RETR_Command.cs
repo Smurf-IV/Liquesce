@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System;
+using System.ComponentModel;
+using System.IO;
 using System.Net.Sockets;
 
 namespace LiquesceFTPSvc.FTP
@@ -20,29 +22,36 @@ namespace LiquesceFTPSvc.FTP
          }
 
          string ReturnMessage = string.Empty;
+         const int readSize = 8096*4;
 
          FileStream FS = null;
-         Socket DataSocket = null;
+         NetworkStream DataSocket = null;
+         string path;
          try
          {
-            string Path = ConnectedUser.StartUpDirectory + GetExactPath(CmdArguments);
-            Path = Path.Substring(0, Path.Length - 1);
+            path = ConnectedUser.StartUpDirectory + GetExactPath(CmdArguments);
+            path = path.Substring(0, path.Length - 1);
 
-            if ( !ConnectedUser.CanViewHiddenFiles 
-               && ((File.GetAttributes(Path) & FileAttributes.Hidden) == FileAttributes.Hidden)
+            if (!ConnectedUser.CanViewHiddenFiles
+               && ((File.GetAttributes(path) & FileAttributes.Hidden) == FileAttributes.Hidden)
                )
             {
                SendMessage("550 Access Denied or invalid path.\r\n");
                return;
             }
 
-            FS = new FileStream(Path, FileMode.Open, FileAccess.Read, FileShare.Read) {Position = startOffset};
+            FS = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, readSize)
+                              {
+                                 Position = startOffset
+                              };
          }
-         catch(DirectoryNotFoundException ex )
+         catch (Exception ex)
          {
             ReturnMessage = "550 " + ex.Message + "!\r\n";
             goto FinaliseAll;
          }
+         // Not needed any more
+         startOffset = 0;
 
 
          DataSocket = GetDataSocket();
@@ -51,35 +60,57 @@ namespace LiquesceFTPSvc.FTP
 
          try
          {
-            byte[] data = new byte[(FS.Length > 100000) ? 100000 : (int)FS.Length];
-            while (DataSocket.Send(data, 0, FS.Read(data, 0, data.Length), SocketFlags.None) != 0)
+
+            byte[] data = new byte[(FS.Length > readSize) ? readSize : (int)FS.Length];
+
+            //while (DataSocket.Send(data, 0, FS.Read(data, 0, data.Length), SocketFlags.None) != 0)
+            //{
+            //   Log.Trace("Sent[{0}] from {1}", FS.Position, path);
+            //   if ( abortReceived )
+            //      break;
+            //}
+
+            do
             {
-            }
+               int read = FS.Read(data, 0, data.Length);
+               //Log.Trace("Sending[{0}] from {1}", read, path);
+               if ((read > 0)
+                  && !abortReceived
+                  )
+               {
+                  DataSocket.Write(data, 0, read);
+               }
+               else
+                  break;
+            } while (true);
             // If it gets this far then probably a good send 
             // Clients tend to forcibly close rather than use ABOR.....
-            ReturnMessage = "226 Transfer Complete.\r\n";
+            if (abortReceived)
+               ReturnMessage = "226 Transfer Complete.\r\n";
+            else
+               ReturnMessage = "426 Transfer aborted.\r\n";
          }
-         catch
+         catch ( Exception ex )
          {
+            Log.ErrorException("Init Retr", ex);
             ReturnMessage = "426 Transfer aborted.\r\n";
          }
 
       FinaliseAll:
-         if (FS != null) 
+         if (FS != null)
             FS.Close();
-         if ((DataSocket != null) 
-            && DataSocket.Connected
-            )
+         if (DataSocket != null)
          {
-            DataSocket.Shutdown(SocketShutdown.Both);
-            DataSocket.Close();
+            DataSocket.Flush();
+            DataSocket.Close(15);
          }
-// ReSharper disable RedundantAssignment
+         abortReceived = false;
+         // ReSharper disable RedundantAssignment
          DataSocket = null;
-// ReSharper restore RedundantAssignment
+         // ReSharper restore RedundantAssignment
          SendMessage(ReturnMessage);
       }
 
- 
+
    }
 }
