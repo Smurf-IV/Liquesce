@@ -10,7 +10,7 @@
       /// </summary>
       private void SYST_Command()
       {
-         SendMessage("215 Windows_NT\r\n");
+         SendOnControlStream("215 Windows_NT");
       }
 
       

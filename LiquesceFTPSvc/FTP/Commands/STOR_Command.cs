@@ -16,7 +16,7 @@ namespace LiquesceFTPSvc.FTP
       {
          if (!ConnectedUser.CanStoreFiles)
          {
-            SendMessage("426 Access Denied.\r\n");
+            SendOnControlStream("426 Access Denied.");
             return;
          }
          Stream FS;
@@ -33,7 +33,7 @@ namespace LiquesceFTPSvc.FTP
          }
          catch (Exception Ex)
          {
-            SendMessage("550 " + Ex.Message + "\r\n");
+            SendOnControlStream("550 " + Ex.Message);
             return;
          }
 
@@ -54,11 +54,11 @@ namespace LiquesceFTPSvc.FTP
                FS.Write(tmpBuffer, 0, ReadBytes);
             } while (ReadBytes > 0);
 
-            SendMessage("226 Transfer Complete.\r\n");
+            SendOnControlStream("226 Transfer Complete.");
          }
          catch
          {
-            SendMessage("426 Connection closed unexpectedly.\r\n");
+            SendOnControlStream("426 Connection closed unexpectedly.");
          }
          finally
          {

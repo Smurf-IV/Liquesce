@@ -11,7 +11,7 @@
       /// <param name="cmdArguments"></param>
       private void STOU_Command(string cmdArguments)
       {
-         SendMessage("500 Command Not Implemented.\r\n");
+         SendOnControlStream("500 Command Not Implemented.");
       }
 
       

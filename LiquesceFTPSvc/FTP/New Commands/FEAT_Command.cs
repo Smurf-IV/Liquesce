@@ -34,13 +34,13 @@
       /// </summary>
       private void FEAT_Command()
       {
-         SendMessage("211-Extensions supported:\r\n");
+         SendOnControlStream("211-Extensions supported:");
          foreach (var feature in features)
          {
             feature(this);
          }
-         // SendMessage(" TVFS\r\n");  // Enable the Trivial Virtual File Structures for path traversal http://tools.ietf.org/html/rfc3659#page-18
-         SendMessage("211 END\r\n");
+         // SendOnControlStream(" TVFS");  // Enable the Trivial Virtual File Structures for path traversal http://tools.ietf.org/html/rfc3659#page-18
+         SendOnControlStream("211 END");
       }
 
    }

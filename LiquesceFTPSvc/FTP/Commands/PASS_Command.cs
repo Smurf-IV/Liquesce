@@ -16,17 +16,17 @@ namespace LiquesceFTPSvc.FTP
          bool passed;
          if (String.IsNullOrEmpty(ConnectedUser.UserName))
          {
-            SendMessage("503 Invalid User Name\r\n");
+            SendOnControlStream("503 Invalid User Name!");
             passed = false;
          }
          else if (ConnectedUser.Authenticate(CmdArguments))
          {
             passed = true;
-            SendMessage("230 Authentication Successful\r\n");
+            SendOnControlStream("230 Authentication Successful.");
          }
          else
          {
-            SendMessage("530 Authentication Failed!\r\n");
+            SendOnControlStream("530 Authentication Failed!");
             passed = false;
          }
          return passed;

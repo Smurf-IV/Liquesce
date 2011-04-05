@@ -22,7 +22,7 @@ namespace LiquesceFTPSvc.FTP
 
       private static void XSHA256_Support(FTPClientCommander thisClient)
       {
-         thisClient.SendMessage(" XSHA256\r\n");
+         thisClient.SendOnControlStream(" XSHA256");
       }
    }
 }

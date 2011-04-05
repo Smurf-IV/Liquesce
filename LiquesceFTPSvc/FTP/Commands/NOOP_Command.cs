@@ -8,7 +8,7 @@
       /// </summary>
       private void NOOP_Command()
       {
-         SendMessage("200 OK\r\n");
+         SendOnControlStream("200 OK.");
       }
 
       

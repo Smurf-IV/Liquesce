@@ -11,7 +11,7 @@ namespace LiquesceFTPSvc.FTP
       /// <param name="cmdArguments"></param>
       private void LANG_Command(string cmdArguments)
       {
-         SendMessage("500 Command Not Implemented.\r\n");
+         SendOnControlStream("500 Command Not Implemented.");
       }
 
       private static void LANG_Support(FTPClientCommander thisClient)

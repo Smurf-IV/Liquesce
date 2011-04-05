@@ -20,14 +20,14 @@ namespace LiquesceFTPSvc.FTP
          Path = Path.Substring(0, Path.Length - 1);
          FileInfo fi = new FileInfo(Path);
          if (fi.Exists)
-            SendMessage("213 " + fi.Length + "\r\n");
+            SendOnControlStream("213 " + fi.Length);
          else
-            SendMessage("550 File does not exist.\r\n");
+            SendOnControlStream("550 File does not exist.");
       }
 
       private static void SIZE_Support(FTPClientCommander thisClient)
       {
-         thisClient.SendMessage(" SIZE\r\n");
+         thisClient.SendOnControlStream(" SIZE");
       }
    }
 }

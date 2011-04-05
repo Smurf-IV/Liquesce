@@ -14,7 +14,7 @@ namespace LiquesceFTPSvc.FTP
       {
          if (!ConnectedUser.CanDeleteFolders)
          {
-            SendMessage("550 Access Denied.\r\n");
+            SendOnControlStream("550 Access Denied.");
             return;
          }
 
@@ -25,11 +25,11 @@ namespace LiquesceFTPSvc.FTP
             try
             {
                Directory.Delete(Path, true);
-               SendMessage("250 \"" + Path + "\" deleted.\r\n");
+               SendOnControlStream("250 \"" + Path + "\" deleted.");
             }
-            catch (Exception Ex) { SendMessage("550 " + Ex.Message + ".\r\n"); }
+            catch (Exception Ex) { SendOnControlStream("550 " + Ex.Message); }
          }
-         else SendMessage("550 Folder dose not exist.\r\n");
+         else SendOnControlStream("550 Folder dose not exist.");
       }
 
    }

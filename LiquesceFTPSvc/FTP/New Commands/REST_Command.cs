@@ -22,16 +22,16 @@ namespace LiquesceFTPSvc.FTP
          startOffset = 0;
          if (int.TryParse(cmdArguments, out startOffset))
          {
-            SendMessage("350 Restarting at " + startOffset + ". Send STORe or RETRieve.\r\n");
+            SendOnControlStream("350 Restarting at " + startOffset + ". Send STORe or RETRieve.");
          }
          else
-            SendMessage("550 Incorrect command format.\r\n");
+            SendOnControlStream("550 Incorrect command format.");
       }
 
 
       private static void REST_Support(FTPClientCommander thisClient)
       {
-         thisClient.SendMessage(" REST STREAM\r\n");
+         thisClient.SendOnControlStream(" REST STREAM");
       }
    }
 }

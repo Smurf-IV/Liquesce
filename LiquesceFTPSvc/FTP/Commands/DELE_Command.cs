@@ -35,17 +35,17 @@ namespace LiquesceFTPSvc.FTP
                   //else
                   FI.Attributes = FileAttributes.Normal;
                   FI.Delete();
-                  SendMessage("250 File deleted.\r\n");
+                  SendOnControlStream("250 File deleted.");
                }
                else 
-                  SendMessage("550 Access Denied.\r\n");
+                  SendOnControlStream("550 Access Denied.");
             }
             else 
-               SendMessage("550 File dose not exist.\r\n");
+               SendOnControlStream("550 File dose not exist.");
          }
          catch (Exception Ex) 
          { 
-            SendMessage("550 " + Ex.Message + ".\r\n"); 
+            SendOnControlStream("550 " + Ex.Message + "."); 
          }
       }
 

@@ -17,7 +17,7 @@ namespace LiquesceFTPSvc.FTP
       {
          if (!ConnectedUser.CanCopyFiles)
          {
-            SendMessage("426 Access Denied.\r\n");
+            SendOnControlStream("426 Access Denied.");
             return;
          }
 
@@ -36,7 +36,7 @@ namespace LiquesceFTPSvc.FTP
                && ((File.GetAttributes(path) & FileAttributes.Hidden) == FileAttributes.Hidden)
                )
             {
-               SendMessage("550 Access Denied or invalid path.\r\n");
+               SendOnControlStream("550 Access Denied or invalid path.");
                return;
             }
 
@@ -47,7 +47,7 @@ namespace LiquesceFTPSvc.FTP
          }
          catch (Exception ex)
          {
-            ReturnMessage = "550 " + ex.Message + "!\r\n";
+            ReturnMessage = "550 " + ex.Message + "!";
             goto FinaliseAll;
          }
          // Not needed any more
@@ -85,15 +85,12 @@ namespace LiquesceFTPSvc.FTP
             } while (true);
             // If it gets this far then probably a good send 
             // Clients tend to forcibly close rather than use ABOR.....
-            if (abortReceived)
-               ReturnMessage = "226 Transfer Complete.\r\n";
-            else
-               ReturnMessage = "426 Transfer aborted.\r\n";
+            ReturnMessage = abortReceived ? "426 Transfer aborted." : "226 Transfer Completed.";
          }
          catch ( Exception ex )
          {
             Log.ErrorException("Init Retr", ex);
-            ReturnMessage = "426 Transfer aborted.\r\n";
+            ReturnMessage = "426 Transfer aborted. " + ex.Message;
          }
 
       FinaliseAll:
@@ -108,7 +105,7 @@ namespace LiquesceFTPSvc.FTP
          // ReSharper disable RedundantAssignment
          DataSocket = null;
          // ReSharper restore RedundantAssignment
-         SendMessage(ReturnMessage);
+         SendOnControlStream(ReturnMessage);
       }
 
 

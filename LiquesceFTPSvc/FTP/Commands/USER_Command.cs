@@ -12,7 +12,7 @@
       {
          if (!string.IsNullOrEmpty(CmdArguments))
          {
-            SendMessage("331 Password required!\r\n");
+            SendOnControlStream("331 Password required!");
             ConnectedUser.LoadProfile(CmdArguments.ToUpper());
          }
       }

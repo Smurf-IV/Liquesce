@@ -10,7 +10,7 @@
       /// <param name="cmdArguments"></param>
       private void ALLO_Command(string cmdArguments)
       {
-         SendMessage("500 Command Not Implemented.\r\n");
+         SendOnControlStream("500 Command Not Implemented.");
       }
 
    }

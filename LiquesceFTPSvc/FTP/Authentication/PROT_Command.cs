@@ -13,7 +13,7 @@
       /// <param name="cmdArguments"></param>
       private void PROT_Command(string cmdArguments)
       {
-         SendMessage("500 Command Not Implemented.\r\n");
+         SendOnControlStream("500 Command Not Implemented.");
       }
 
       private static void PROT_Support(FTPClientCommander thisClient)

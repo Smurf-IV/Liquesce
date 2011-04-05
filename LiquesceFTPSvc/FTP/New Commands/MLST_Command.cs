@@ -33,22 +33,19 @@ namespace LiquesceFTPSvc.FTP
             && ((info.Attributes & FileAttributes.Hidden) == FileAttributes.Hidden)
             )
          {
-            SendMessage("550 Invalid path specified.\r\n");
+            SendOnControlStream("550 Invalid path specified.");
          }
          else if (!info.Exists)
-            SendMessage("501 " + cmdArguments + " does not exist.\r\n");
+            SendOnControlStream("501 " + cmdArguments + " does not exist.");
          else
          {
-            SendMessage("250-Details for: [" + cmdArguments + "]\r\n");
-            string buffer = " ";
-            if ((info.Attributes & FileAttributes.Directory) == FileAttributes.Directory)
-               buffer += SendDirectory(info);
-            else
-            {
-               buffer += SendFile(info);
-            }
-            SendMessage(buffer);
-            SendMessage("250 Completed.\r\n");
+            SendOnControlStream("250-Details for: [" + cmdArguments + "]");
+            ClientSocket.WriteInfo(" ");
+            ClientSocket.WriteInfo(((info.Attributes & FileAttributes.Directory) == FileAttributes.Directory)
+               ? SendDirectory(info)
+               : SendFile(info));
+            ClientSocket.WritePathNameCRLN(UseUTF8, info.Name);
+            SendOnControlStream("250 Completed.");
          }
       }
 
@@ -73,10 +70,7 @@ namespace LiquesceFTPSvc.FTP
 
          sb.Append(@"Unique=").Append(fileInfo.FullName.GetHashCode()).Append(';');
          sb.Append(@"Media-Type=").Append(MimeTypeDetector(fileInfo)).Append(';');
-         sb.Append(@"Win32.ea=").AppendFormat("0x{0:x8}", (uint)fileInfo.Attributes).Append(';');
-         sb.Append(@"CharSet=UTF-8;");
-         sb.Append(' ').Append(fileInfo.Name);
-         sb.Append("\r\n");
+         sb.Append(@"Win32.ea=").AppendFormat("0x{0:x8}", (uint)fileInfo.Attributes).Append("; ");
          string buffer = sb.ToString();
          Log.Trace("SendFile: " + buffer);
          return buffer;
@@ -85,7 +79,7 @@ namespace LiquesceFTPSvc.FTP
       private static void MLST_Support(FTPClientCommander thisClient)
       {
          // Servers SHOULD, if conceivably possible,support at least the type, perm, size, unique, and modify facts.
-         thisClient.SendMessage(" MLST Type;Size;Modify;Create;Perm;Unique;Media-Type;Win32.ea;CharSet;\r\n");
+         thisClient.SendOnControlStream(" MLST Type;Size;Modify;Create;Perm;Unique;Media-Type;Win32.ea;CharSet;");
       }
 
 

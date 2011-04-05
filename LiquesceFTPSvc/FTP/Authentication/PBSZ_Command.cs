@@ -9,7 +9,7 @@
       /// <param name="cmdArguments"></param>
       private void PBSZ_Command(string cmdArguments)
       {
-         SendMessage("500 Command Not Implemented.\r\n");
+         SendOnControlStream("500 Command Not Implemented.");
       }
 
       private static void PBSZ_Support(FTPClientCommander thisClient)

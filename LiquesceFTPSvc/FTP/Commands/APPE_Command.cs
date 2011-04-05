@@ -11,7 +11,7 @@
       void APPE_Command(string CmdArguments)
       {
          // Append the file if exists or create a new file.
-         SendMessage("500 This functionality is currently Unavailable\r\n");
+         SendOnControlStream("500 This functionality is currently Unavailable.");
       }
 
  

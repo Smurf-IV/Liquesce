@@ -38,7 +38,7 @@ namespace LiquesceFTPSvc.FTP
             }
             else
             {
-               SendMessage("500 Action Failed Retry\r\n");
+               SendOnControlStream("500 Action Failed Retry.");
                return;
             }
          }
@@ -52,7 +52,7 @@ namespace LiquesceFTPSvc.FTP
             SocketEndPoint = SocketEndPoint.Substring(0, SocketEndPoint.IndexOf(":")).Replace(".", ",") + "," + (tmpPort >> 8) + "," + (tmpPort & 255);
             DataTransferEnabled = true;
 
-            SendMessage("227 Entering Passive Mode (" + SocketEndPoint + ").\r\n");
+            SendOnControlStream("227 Entering Passive Mode (" + SocketEndPoint + ").");
          }
       }
    }
