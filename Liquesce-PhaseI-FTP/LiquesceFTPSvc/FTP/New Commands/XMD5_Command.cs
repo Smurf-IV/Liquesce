@@ -22,7 +22,7 @@ namespace LiquesceFTPSvc.FTP
 
       private static void XMD5_Support(FTPClientCommander thisClient)
       {
-         thisClient.SendMessage(" XMD5\r\n");
+         thisClient.SendOnControlStream(" XMD5");
       }
    }
 }

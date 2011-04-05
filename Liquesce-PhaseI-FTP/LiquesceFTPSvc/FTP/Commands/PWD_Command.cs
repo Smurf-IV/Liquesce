@@ -8,7 +8,7 @@
       /// </summary>
       private void PWD_Command()
       {
-         SendMessage("257 \"" + ConnectedUser.CurrentWorkingDirectory.Replace('\\', '/') + "\"\r\n");
+         SendOnControlStream("257 \"" + ConnectedUser.CurrentWorkingDirectory.Replace('\\', '/') + "\"");
       }
 
       

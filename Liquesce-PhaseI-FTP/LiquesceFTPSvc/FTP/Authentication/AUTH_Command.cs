@@ -14,7 +14,7 @@
       /// <param name="cmdArguments"></param>
       private void AUTH_Command(string cmdArguments)
       {
-         SendMessage("500 Command Not Implemented.\r\n");
+         SendOnControlStream("500 Command Not Implemented.");
       }
 
       private static void AUTH_Support(FTPClientCommander thisClient)

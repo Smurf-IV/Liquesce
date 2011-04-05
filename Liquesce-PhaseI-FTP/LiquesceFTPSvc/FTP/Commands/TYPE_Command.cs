@@ -21,9 +21,9 @@
          if ( ((CmdArguments = CmdArguments.Trim().ToUpper()) == "A")
             || (CmdArguments == "I")
             )
-            SendMessage("200 Type " + CmdArguments + " Accepted.\r\n");
+            SendOnControlStream("200 Type " + CmdArguments + " Accepted.");
          else 
-            SendMessage("500 Unknown Type.\r\n");
+            SendOnControlStream("500 Unknown Type.");
       }
 
    }

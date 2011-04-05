@@ -15,14 +15,14 @@ namespace LiquesceFTPSvc.FTP
       {
          if (Rename_FilePath.Length == 0)
          {
-            SendMessage("503 Bad sequence of commands.\r\n");
+            SendOnControlStream("503 Bad sequence of commands.");
             return;
          }
 
          string Path = ConnectedUser.StartUpDirectory + GetExactPath(CmdArguments);
 
          if (Directory.Exists(Path) || File.Exists(Path))
-            SendMessage("550 File or folder with the same name already exists.\r\n");
+            SendOnControlStream("550 File or folder with the same name already exists.");
          else
          {
             try
@@ -31,26 +31,26 @@ namespace LiquesceFTPSvc.FTP
                {
                   if (ConnectedUser.CanRenameFolders) 
                   { 
-                     Directory.Move(Rename_FilePath, Path); SendMessage("250 Folder renamed successfully.\r\n"); 
+                     Directory.Move(Rename_FilePath, Path); SendOnControlStream("250 Folder renamed successfully."); 
                   }
                   else 
-                     SendMessage("550 Access Denied.\r\n");
+                     SendOnControlStream("550 Access Denied.");
                }
                else if (File.Exists(Rename_FilePath))
                {
                   if (ConnectedUser.CanRenameFiles) 
                   { 
-                     File.Move(Rename_FilePath, Path); SendMessage("250 File renamed successfully.\r\n"); 
+                     File.Move(Rename_FilePath, Path); SendOnControlStream("250 File renamed successfully."); 
                   }
                   else 
-                     SendMessage("550 Access Denied.\r\n");
+                     SendOnControlStream("550 Access Denied.");
                }
                else 
-                  SendMessage("550 Source file dose not exists.\r\n");
+                  SendOnControlStream("550 Source file dose not exists.");
             }
             catch (Exception Ex) 
             { 
-               SendMessage("550 " + Ex.Message + ".\r\n"); 
+               SendOnControlStream("550 " + Ex.Message); 
             }
          }
          Rename_FilePath = "";

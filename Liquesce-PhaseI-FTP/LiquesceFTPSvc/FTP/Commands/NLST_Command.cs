@@ -20,7 +20,7 @@ namespace LiquesceFTPSvc.FTP
          DirectoryInfo dirInfo = new DirectoryInfo(Path);
          if (!dirInfo.Exists)
          {
-            SendMessage("550 Invalid Path.\r\n");
+            SendOnControlStream("550 Invalid Path.");
             return;
          }
 
@@ -37,16 +37,16 @@ namespace LiquesceFTPSvc.FTP
                FileInfo[] FoldersList = dirInfo.GetFiles("*.*", SearchOption.TopDirectoryOnly);
                for (int index = 0; index < FoldersList.Length; index++)
                {
-                  sw.Write(FoldersList[index].Name+"\r\n");
+                  sw.Write(FoldersList[index].Name);
                }
             }
             DataSocket.Flush();
             DataSocket.Close(15);
-            SendMessage("226 Transfer Complete.\r\n");
+            SendOnControlStream("226 Transfer Complete.");
          }
          catch
          {
-            SendMessage("426 Connection closed; transfer aborted.\r\n");
+            SendOnControlStream("426 Connection closed; transfer aborted.");
          }
       }
 

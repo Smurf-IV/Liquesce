@@ -26,16 +26,16 @@ namespace LiquesceFTPSvc.FTP
                MD5 md5 = new MD5CryptoServiceProvider();
                foreach (byte hex in md5.ComputeHash(fs))
                   sb.Append(hex.ToString("x2"));
-               SendMessage(String.Format("213 MD5 0-{0} {1} {2}\r\n", fi.Length, sb.ToString(), fi.Name));
+               SendOnControlStream(String.Format("213 MD5 0-{0} {1} {2}", fi.Length, sb.ToString(), fi.Name));
             }
          }
          else
-            SendMessage("550 File does not exist.\r\n");
+            SendOnControlStream("550 File does not exist.");
       }
 
       private static void HASH_Support(FTPClientCommander thisClient)
       {
-         thisClient.SendMessage(" HASH MD5*\r\n");
+         thisClient.SendOnControlStream(" HASH MD5*");
       }
    }
 }

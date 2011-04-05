@@ -24,7 +24,7 @@ namespace LiquesceFTPSvc.FTP
             && ((dirInfo.Attributes & FileAttributes.Hidden) == FileAttributes.Hidden)
             )
          {
-            SendMessage("550 Invalid path specified.\r\n");
+            SendOnControlStream("550 Invalid path specified.");
             return;
          }
 
@@ -36,35 +36,28 @@ namespace LiquesceFTPSvc.FTP
 
          try
          {
-            using (StreamWriter sw = new StreamWriter(DataSocket, UseUTF8 ? Encoding.UTF8 : Encoding.ASCII))
+            FileSystemInfo[] infos = dirInfo.GetFileSystemInfos("*.*", SearchOption.TopDirectoryOnly);
+
+            foreach (FileSystemInfo info in
+               infos.Where(info => ConnectedUser.CanViewHiddenFolders || ((info.Attributes & FileAttributes.Hidden) != FileAttributes.Hidden)))
             {
-               FileSystemInfo[] infos = dirInfo.GetFileSystemInfos("*.*", SearchOption.TopDirectoryOnly);
-               foreach (string data in
-                  from info in
-                     infos.Where(
-                        info =>
-                        ConnectedUser.CanViewHiddenFolders ||
-                        ((info.Attributes & FileAttributes.Hidden) != FileAttributes.Hidden))
-                  let data = info.CreationTimeUtc.ToString("MM-dd-yy hh:mmtt")
-                  select
-                     data +
-                     ((info.Attributes & FileAttributes.Directory) == FileAttributes.Directory
-                         ? string.Format(" <DIR> {0}\r\n", info.Name)
-                         : string.Format(" {0} {1}\r\n", ((FileInfo) info).Length, info.Name)))
-               {
-                  sw.Write(data);
-               }
+               DataSocket.WriteInfo(info.CreationTimeUtc.ToString("MM-dd-yy hh:mmtt"));
+               DataSocket.WriteInfo(((info.Attributes & FileAttributes.Directory) == FileAttributes.Directory)
+                                       ? " <DIR> "
+                                       : string.Format(" {0} ", ((FileInfo)info).Length)
+                  );
+               DataSocket.WritePathNameCRLN(UseUTF8, info.Name);
             }
             DataSocket.Flush();
-            SendMessage("226 Transfer Complete.\r\n");
+            SendOnControlStream("226 Transfer Complete.");
          }
          catch (DirectoryNotFoundException)
          {
-            SendMessage("550 Invalid path specified.\r\n");
+            SendOnControlStream("550 Invalid path specified.");
          }
          catch
          {
-            SendMessage("426 Connection closed; transfer aborted.\r\n");
+            SendOnControlStream("426 Connection closed; transfer aborted.");
          }
          finally
          {

@@ -12,9 +12,9 @@
          string dir = GetExactPath(CmdArguments);
 
          if (ConnectedUser.ChangeDirectory(dir))
-            SendMessage("250 CWD command successful.\r\n");
+            SendOnControlStream("250 CWD command successful.");
          else 
-            SendMessage("550 System can't find directory '" + dir + "'.\r\n");
+            SendOnControlStream("550 System can't find directory '" + dir + "'.");
       }
 
    }

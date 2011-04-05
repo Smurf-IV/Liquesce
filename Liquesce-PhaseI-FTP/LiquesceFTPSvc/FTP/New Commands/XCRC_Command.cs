@@ -39,7 +39,7 @@ namespace LiquesceFTPSvc.FTP
                {
                   if (!int.TryParse(args[1], out end))
                   {
-                     SendMessage("550 Requested action not taken: EP is incorrect");
+                     SendOnControlStream("550 Requested action not taken: EP is incorrect");
                      return;
                   }
                }
@@ -47,7 +47,7 @@ namespace LiquesceFTPSvc.FTP
                {
                   if (!int.TryParse(args[1], out start))
                   {
-                     SendMessage("550 Requested action not taken: SP is incorrect");
+                     SendOnControlStream("550 Requested action not taken: SP is incorrect");
                      return;
                   }
                   if (int.TryParse(args[2], out end))
@@ -56,7 +56,7 @@ namespace LiquesceFTPSvc.FTP
                          || (end >= fs.Length)
                         )
                      {
-                        SendMessage("550 Requested action not taken: EP is incorrect");
+                        SendOnControlStream("550 Requested action not taken: EP is incorrect");
                         return;
                      }
                   }
@@ -74,15 +74,15 @@ namespace LiquesceFTPSvc.FTP
                   hash.Append(hex.ToString("x2"));
                }
             }
-            SendMessage("213 " + hash.ToString() + "\r\n");
+            SendOnControlStream("213 " + hash.ToString());
          }
          else
-            SendMessage("550 File does not exist.\r\n");
+            SendOnControlStream("550 File does not exist.");
       }
 
       private static void XCRC_Support(FTPClientCommander thisClient)
       {
-         thisClient.SendMessage(" XCRC\r\n");
+         thisClient.SendOnControlStream(" XCRC");
       }
    }
 

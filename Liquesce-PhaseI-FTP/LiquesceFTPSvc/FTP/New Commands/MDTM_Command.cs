@@ -22,14 +22,14 @@ namespace LiquesceFTPSvc.FTP
          Path = Path.Substring(0, Path.Length - 1);
          FileInfo fi = new FileInfo(Path);
          if (fi.Exists)
-            SendMessage("213 " + GetFormattedTime(fi.LastWriteTimeUtc) + "\r\n");
+            SendOnControlStream("213 " + GetFormattedTime(fi.LastWriteTimeUtc));
          else
-            SendMessage("550 File doe snot exist.\r\n");
+            SendOnControlStream("550 File doe snot exist.");
       }
 
       private static void MDTM_Support(FTPClientCommander thisClient)
       {
-         thisClient.SendMessage(" MDTM\r\n");
+         thisClient.SendOnControlStream(" MDTM");
       }
 
       private string GetFormattedTime(DateTime utcTime)

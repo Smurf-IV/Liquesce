@@ -16,7 +16,7 @@ namespace LiquesceFTPSvc.FTP
          string[] IP_Parts = CmdArguments.Split(',');
          if (IP_Parts.Length != 6)
          {
-            SendMessage("550 Invalid arguments.\r\n");
+            SendOnControlStream("550 Invalid arguments.");
             return;
          }
 
@@ -27,7 +27,7 @@ namespace LiquesceFTPSvc.FTP
 
          DataTransferEnabled = false;
 
-         SendMessage("200 Ready to connect to " + ClientIP + "\r\n");
+         SendOnControlStream("200 Ready to connect to " + ClientIP);
       }
    }
 }

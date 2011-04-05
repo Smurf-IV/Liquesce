@@ -167,6 +167,7 @@
     <Compile Include="FTP\New Commands\XSHA1_Command.cs" />
     <Compile Include="FTP\New Commands\XSHA256_Command.cs" />
     <Compile Include="FTP\New Commands\XSHA512_Command.cs" />
+    <Compile Include="FTP\UTF8PathNames.cs" />
     <Compile Include="Installer1.cs">
       <SubType>Component</SubType>
     </Compile>

@@ -9,7 +9,7 @@
       /// </summary>
       private void REIN_Command()
       {
-         SendMessage("500 Command Not Implemented.\r\n");
+         SendOnControlStream("500 Command Not Implemented.");
       }
 
       

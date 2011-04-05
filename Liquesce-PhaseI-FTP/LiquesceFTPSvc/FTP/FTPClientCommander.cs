@@ -57,7 +57,7 @@ namespace LiquesceFTPSvc.FTP
          //SubItems[3].Text = SubItems[4].Text = (CurrentUser.ConnectedTime = DateTime.Now).ToString("MMM dd, yyyy hh:mm:ss");
 
          // Report the client that the server is ready to serve.
-         SendMessage("220 FTP Ready\r\n");
+         SendOnControlStream("220 FTP Ready");
 
          
          // Wait for the command to be sent by the client
@@ -106,21 +106,27 @@ namespace LiquesceFTPSvc.FTP
 
          LastInteraction = DateTime.Now;
          string CommandText = Encoding.ASCII.GetString(BufferData, 0, CommandSize).TrimStart(' ');
-         string CmdArguments = null, Command = null;
+         string CmdArguments = String.Empty, Command = null;
          int End = 0;
          if ((End = CommandText.IndexOf(' ')) == -1)
             End = (CommandText = CommandText.Trim()).Length;
+         else if (UseUTF8)
+         {
+            CmdArguments = Encoding.UTF8.GetString(BufferData, End, CommandSize - End);
+         }
          else
-            CmdArguments = CommandText.Substring(End).TrimStart(' ');
+         {
+            CmdArguments = CommandText.Substring(End);
+         }
          Command = CommandText.Substring(0, End).ToUpper();
 
          #endregion
 
          #region Execute Commands
-         if ((CmdArguments != null)
-            && CmdArguments.EndsWith("\r\n")
-            )
-            CmdArguments = CmdArguments.Substring(0, CmdArguments.Length - 2);
+         if (!String.IsNullOrEmpty(CmdArguments))
+         {
+            CmdArguments = CmdArguments.TrimStart(' ').Replace("\r\n", String.Empty);
+         }
          bool CommandExecued = false;
          Log.Info(string.Format("Received Command: [{0}] with args: [{1}]", Command, CmdArguments));
          switch (Command)
@@ -314,13 +320,13 @@ namespace LiquesceFTPSvc.FTP
                      break;
 #endregion
                   default:
-                     SendMessage("500 Unknown Command.\r\n");
+                     SendOnControlStream("500 Unknown Command.");
                      break;
 
                }
             }
             else 
-               SendMessage("530 Access Denied! Authenticate first\r\n");
+               SendOnControlStream("530 Access Denied! Authenticate first!");
          }
          #endregion
       }
@@ -354,7 +360,7 @@ namespace LiquesceFTPSvc.FTP
          GC.Collect();
       }
 
-      void SendMessage(string Data)
+      void SendOnControlStream(string Data)
       {
          if (!String.IsNullOrEmpty(Data)) 
          try
@@ -364,13 +370,12 @@ namespace LiquesceFTPSvc.FTP
                && ClientSocket.CanWrite
                )
             {
-               byte[] buffer = UseUTF8 ? Encoding.UTF8.GetBytes(Data) : Encoding.ASCII.GetBytes(Data);
-               ClientSocket.Write(buffer, 0, buffer.Length);
+               ClientSocket.WriteInfoCRLN(Data);
             }
          }
          catch ( Exception ex )
          {
-            Log.ErrorException("SendMessage ", ex);
+            Log.ErrorException("SendOnControlStream ", ex);
             Disconnect(); 
          }
       }
@@ -426,23 +431,23 @@ namespace LiquesceFTPSvc.FTP
                   // Time out after 30 seconds
                   if (Count > 29)
                   {
-                     SendMessage("425 Data Connection Timed out\r\n");
+                     SendOnControlStream("425 Data Connection Timed out.");
                      return null;
                   }
                }
 
                DataSocket = DataListener.AcceptTcpClient();
-               SendMessage("125 Connected, Starting Data Transfer.\r\n");
+               SendOnControlStream("125 Connected, Starting Data Transfer.");
             }
             else
             {
-               SendMessage("150 Connecting.\r\n");
+               SendOnControlStream("150 Connecting.");
                DataSocket = new TcpClient(ClientEndPoint);
             }
          }
          catch
          {
-            SendMessage("425 Can't open data connection.\r\n");
+            SendOnControlStream("425 Can't open data connection.");
             return null;
          }
          finally

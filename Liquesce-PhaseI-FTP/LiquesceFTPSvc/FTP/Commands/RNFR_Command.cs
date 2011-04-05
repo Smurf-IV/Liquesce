@@ -14,7 +14,7 @@ namespace LiquesceFTPSvc.FTP
       {
          if (!ConnectedUser.CanRenameFiles) 
          { 
-            SendMessage("550 Access Denied.\r\n"); 
+            SendOnControlStream("550 Access Denied."); 
             return; 
          }
 
@@ -23,10 +23,10 @@ namespace LiquesceFTPSvc.FTP
          if (Directory.Exists(Path) || File.Exists(Path))
          {
             Rename_FilePath = Path;
-            SendMessage("350 Please specify destination name.\r\n");
+            SendOnControlStream("350 Please specify destination name.");
          }
          else 
-            SendMessage("550 File or directory doesn't exist.\r\n");
+            SendOnControlStream("550 File or directory doesn't exist.");
       }
 
  

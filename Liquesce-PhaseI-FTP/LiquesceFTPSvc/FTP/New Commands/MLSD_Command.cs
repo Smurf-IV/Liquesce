@@ -24,10 +24,10 @@ namespace LiquesceFTPSvc.FTP
             && ((dirInfo.Attributes & FileAttributes.Hidden) == FileAttributes.Hidden)
             )
          {
-            SendMessage("550 Invalid path specified.\r\n");
+            SendOnControlStream("550 Invalid path specified.");
          }
-         else if ( !dirInfo.Exists )
-            SendMessage("501 " + cmdArguments + " does not exist.\r\n");
+         else if (!dirInfo.Exists)
+            SendOnControlStream("501 " + cmdArguments + " does not exist.");
          else
          {
             NetworkStream DataSocket = GetDataSocket();
@@ -38,32 +38,30 @@ namespace LiquesceFTPSvc.FTP
             try
             {
                FileSystemInfo[] infos = dirInfo.GetFileSystemInfos("*.*", SearchOption.TopDirectoryOnly);
-               using (StreamWriter sw = new StreamWriter(DataSocket, UseUTF8 ? Encoding.UTF8 : Encoding.ASCII))
+               DataSocket.WriteInfoCRLN(string.Format("150 Details for: [{0}] with [{1}] entries.", cmdArguments, infos.Length));
+               foreach (FileSystemInfo info in
+                  infos.Where(
+                     info =>
+                     ConnectedUser.CanViewHiddenFolders ||
+                     ((info.Attributes & FileAttributes.Hidden) != FileAttributes.Hidden)))
                {
-                  sw.Write(string.Format("150 Details for: [{0}] with [{1}] entries\r\n", cmdArguments, infos.Length));
-                  foreach (FileSystemInfo info in
-                     infos.Where(
-                        info =>
-                        ConnectedUser.CanViewHiddenFolders ||
-                        ((info.Attributes & FileAttributes.Hidden) != FileAttributes.Hidden)))
-                  {
-                     sw.Write(((info.Attributes & FileAttributes.Directory) == FileAttributes.Directory)
-                                 ? SendDirectory(info)
-                                 : SendFile(info));
-                  }
+                  DataSocket.WriteInfo(((info.Attributes & FileAttributes.Directory) == FileAttributes.Directory)
+                              ? SendDirectory(info)
+                              : SendFile(info));
+                  DataSocket.WritePathNameCRLN(UseUTF8, info.Name);
                }
                DataSocket.Flush();
-               SendMessage("226 Transfer Complete.\r\n");
+               SendOnControlStream("226 Transfer Complete.");
             }
             catch (DirectoryNotFoundException ex)
             {
                Log.ErrorException("MLSD_Command: ", ex);
-               SendMessage("550 Invalid path specified." + ex.Message + "\r\n");
+               SendOnControlStream("550 Invalid path specified." + ex.Message);
             }
-            catch (Exception ex )
+            catch (Exception ex)
             {
                Log.ErrorException("MLSD_Command: ", ex);
-               SendMessage("426 Connection closed; transfer aborted.\r\n");
+               SendOnControlStream("426 Connection closed; transfer aborted.");
             }
             finally
             {
@@ -101,10 +99,7 @@ namespace LiquesceFTPSvc.FTP
          sb.Append(@"l;");      // Allow user to List the directoy
 
          sb.Append(@"Unique=").Append(dirInfo.FullName.GetHashCode()).Append(';');
-         sb.Append(@"Win32.ea=").AppendFormat("0x{0:x8}", (uint)dirInfo.Attributes).Append(';');
-         sb.Append(@"CharSet=UTF-8;");
-         sb.Append(' ').Append(dirInfo.Name);
-         sb.Append("\r\n");
+         sb.Append(@"Win32.ea=").AppendFormat("0x{0:x8}", (uint)dirInfo.Attributes).Append("; ");
          string buffer = sb.ToString();
          Log.Trace("SendDirectory: " + buffer);
          return buffer;
@@ -114,7 +109,7 @@ namespace LiquesceFTPSvc.FTP
       {
          // Note that there is no distinct FEAT output for MLSD.  The presence of the MLST feature indicates 
          // that both MLST and MLSD are supported.
-         thisClient.SendMessage(" MLSD\r\n");
+         thisClient.SendOnControlStream(" MLSD");
       }
 
    }

@@ -9,7 +9,7 @@
       /// <param name="cmdArguments"></param>
       private void ENC_Command(string cmdArguments)
       {
-         SendMessage("500 Command Not Implemented.\r\n");
+         SendOnControlStream("500 Command Not Implemented.");
       }
 
       private static void ENC_Support(FTPClientCommander thisClient)

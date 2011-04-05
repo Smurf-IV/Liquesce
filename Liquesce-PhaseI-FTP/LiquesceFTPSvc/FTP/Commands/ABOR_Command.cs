@@ -12,7 +12,7 @@
          // TODO: Need to implement the ABORt command for DataSocket transfers
          // This will require a revamp of the command statuses and transfer commands
          abortReceived = true;
-         SendMessage("226 Complete.\r\n");
+         SendOnControlStream("226 Complete.");
       }
    }
 }

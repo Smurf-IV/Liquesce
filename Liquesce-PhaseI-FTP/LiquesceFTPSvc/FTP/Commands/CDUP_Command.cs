@@ -18,7 +18,7 @@
             }
          }
 
-         SendMessage("250 CDUP_Command command successful.\r\n");
+         SendOnControlStream("250 CDUP_Command command successful.");
       }
 
  
