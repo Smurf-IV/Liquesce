@@ -4,6 +4,9 @@
    {
       private delegate void FeaturePtr(FTPClientCommander thisClient);
 
+      /// <summary>
+      /// ftp://ftp.iana.org/assignments/ftp-commands-extensions
+      /// </summary>
       private static readonly FeaturePtr[] features =
          {
             // TODO: Add in the Auth keys in here as well
@@ -15,6 +18,9 @@
            ,LPRT_Support
            ,LPSV_Support
            ,MDTM_Support
+           ,MFCT_Support
+           ,MFF_Support
+           ,MFMT_Support
            ,MLSD_Support
            ,MLST_Support
            ,OPTS_Support

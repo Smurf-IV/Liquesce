@@ -10,6 +10,7 @@
       /// </summary>
       private void SYST_Command()
       {
+         // TODO: ftp://ftp.iana.org/assignments/operating-system-names
          SendOnControlStream("215 Windows_NT");
       }
 

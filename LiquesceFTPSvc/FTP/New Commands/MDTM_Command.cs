@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.IO;
 
 namespace LiquesceFTPSvc.FTP
@@ -32,9 +33,16 @@ namespace LiquesceFTPSvc.FTP
          thisClient.SendOnControlStream(" MDTM");
       }
 
+      private const string utcFTPFormat = "yyyyMMddHHmmss";
       private string GetFormattedTime(DateTime utcTime)
       {
-         return utcTime.ToString("yyyyMMddHHmmss");
+         return utcTime.ToString(utcFTPFormat);
       }
+
+      private DateTime SetFormattedTime(string stringTime)
+      {
+         return DateTime.ParseExact(stringTime, utcFTPFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
+      }
+
    }
 }

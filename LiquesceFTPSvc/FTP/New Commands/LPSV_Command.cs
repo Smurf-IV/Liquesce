@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LiquesceFTPSvc.FTP
+﻿namespace LiquesceFTPSvc.FTP
 {
    partial class FTPClientCommander
    {

@@ -22,7 +22,7 @@ namespace LiquesceFTPSvc.FTP
          else if (ConnectedUser.Authenticate(CmdArguments))
          {
             passed = true;
-            SendOnControlStream("230 Authentication Successful.");
+            SendOnControlStream("230 Authentication Successful. Welcome to the \'Liquesce Pooling Service\'.");
          }
          else
          {
