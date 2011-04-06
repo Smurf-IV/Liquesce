@@ -145,6 +145,9 @@ namespace LiquesceFTPSvc.FTP
          {
             if (ConnectedUser.IsAuthenticated)
             {
+               // I looked into making this into a (static) dictionary fuction call thing
+               // But it turns out that the IL code of the switch wil do this of more than five non contiguos items are in the list.
+               // As these are strings, then they non contiguos and will not be "jmp tabled"
                switch (Command)
                {
                   case "CWD":
@@ -290,6 +293,15 @@ namespace LiquesceFTPSvc.FTP
                      break;
                   case "MDTM":
                      MDTM_Command(CmdArguments);
+                     break;
+                  case "MFCT":
+                     MFCT_Command(CmdArguments);
+                     break;
+                  case "MFF":
+                     MFF_Command(CmdArguments);
+                     break;
+                  case "MFMT":
+                     MFMT_Command(CmdArguments);
                      break;
                   case "MLSD":
                      MLSD_Command(CmdArguments);

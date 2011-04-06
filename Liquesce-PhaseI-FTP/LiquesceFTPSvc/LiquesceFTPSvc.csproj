@@ -126,6 +126,9 @@
     <Compile Include="FTP\New Commands\LANG_Command.cs" />
     <Compile Include="FTP\New Commands\LPRT_Command.cs" />
     <Compile Include="FTP\New Commands\LPSV_Command.cs" />
+    <Compile Include="FTP\New Commands\MFCT_Command.cs" />
+    <Compile Include="FTP\New Commands\MFF_Command.cs" />
+    <Compile Include="FTP\New Commands\MFMT_Command.cs" />
     <Compile Include="FTP\New Commands\MLSD_Command.cs" />
     <Compile Include="FTP\New Commands\MLST_Command.cs" />
     <Compile Include="FTP\New Commands\OPTS_Command.cs" />
