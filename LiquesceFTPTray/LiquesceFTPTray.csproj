@@ -244,11 +244,11 @@
     <WCFMetadataStorage Include="Service References\LiquesceCallbackSvcRef\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\LiquesceFaçade\LiquesceFacade.csproj">
+    <ProjectReference Include="..\LiquesceFTPFacade\LiquesceFTPFacade.csproj">
       <Project>{CFE5DC7B-25FB-45C4-AF18-1963853375E1}</Project>
       <Name>LiquesceFacade</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Liquesce\Liquesce.csproj">
+    <ProjectReference Include="..\LiquesceFTPMgr\LiquesceFTPMgr.csproj">
       <Project>{74447D1D-F52F-485C-BDEE-66B114A45460}</Project>
       <Name>Liquesce</Name>
     </ProjectReference>
@@ -256,7 +256,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="YearStamp.MonthStamp.DayStamp.Increment" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UseGlobalSettings="False" />
+      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="YearStamp.MonthStamp.DayStamp.Increment" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
