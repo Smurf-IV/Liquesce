@@ -79,7 +79,7 @@ namespace LiquesceFTPSvc.FTP
       private static void MLST_Support(FTPClientCommander thisClient)
       {
          // Servers SHOULD, if conceivably possible,support at least the type, perm, size, unique, and modify facts.
-         thisClient.SendOnControlStream(" MLST Type;Size;Modify;Create;Perm;Unique;Media-Type;Win32.ea;CharSet;");
+         thisClient.SendOnControlStream(" MLST Type;Size;Modify;Create;Perm;Unique;Media-Type;Win32.ea;");
       }
 
 
