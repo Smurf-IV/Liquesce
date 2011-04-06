@@ -1,8 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Liquesce", "Liquesce\Liquesce.csproj", "{74447D1D-F52F-485C-BDEE-66B114A45460}"
-EndProject
 Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "Liquesce_Setup", "Liquesce_Setup\Liquesce_Setup.wixproj", "{EF06E5CB-374E-4E67-9057-785A3B7DAD5A}"
 	ProjectSection(ProjectDependencies) = postProject
 		{74447D1D-F52F-485C-BDEE-66B114A45460} = {74447D1D-F52F-485C-BDEE-66B114A45460}
@@ -15,11 +13,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ThirdParty", "ThirdParty", 
 		ThirdParty\NLog.dll = ThirdParty\NLog.dll
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiquesceFacade", "LiquesceFaçade\LiquesceFacade.csproj", "{CFE5DC7B-25FB-45C4-AF18-1963853375E1}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiquesceTray", "LiquesceTray\LiquesceTray.csproj", "{3B495DA8-B86F-4249-B94A-05B6FA01303F}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiquesceFTPSvc", "LiquesceFTPSvc\LiquesceFTPSvc.csproj", "{EB77E732-31EA-4B6D-B353-093DC6CF06F3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiquesceFTPFacade", "LiquesceFTPFacade\LiquesceFTPFacade.csproj", "{CFE5DC7B-25FB-45C4-AF18-1963853375E1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiquesceFTPMgr", "LiquesceFTPMgr\LiquesceFTPMgr.csproj", "{74447D1D-F52F-485C-BDEE-66B114A45460}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiquesceFTPTray", "LiquesceFTPTray\LiquesceFTPTray.csproj", "{3B495DA8-B86F-4249-B94A-05B6FA01303F}"
 EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
@@ -30,43 +30,65 @@ Global
 		SccProjectName0 = Liquesce_Setup
 		SccLocalPath0 = Liquesce_Setup
 		SccLocalPath1 = .
-		SccProjectUniqueName2 = Liquesce\\Liquesce.csproj
-		SccProjectName2 = Liquesce
-		SccLocalPath2 = Liquesce
-		SccProjectUniqueName3 = LiquesceFaçade\\LiquesceFacade.csproj
-		SccProjectName3 = LiquesceFaçade
-		SccLocalPath3 = LiquesceFaçade
-		SccProjectUniqueName4 = LiquesceTray\\LiquesceTray.csproj
-		SccProjectName4 = LiquesceTray
-		SccLocalPath4 = LiquesceTray
-		SccProjectUniqueName5 = LiquesceFTPSvc\\LiquesceFTPSvc.csproj
-		SccProjectName5 = LiquesceFTPSvc
-		SccLocalPath5 = LiquesceFTPSvc
+		SccProjectUniqueName2 = LiquesceFTPFacade\\LiquesceFTPFacade.csproj
+		SccProjectName2 = LiquesceFTPFacade
+		SccLocalPath2 = LiquesceFTPFacade
+		SccProjectUniqueName3 = LiquesceFTPMgr\\LiquesceFTPMgr.csproj
+		SccProjectName3 = LiquesceFTPMgr
+		SccLocalPath3 = LiquesceFTPMgr
+		SccProjectUniqueName4 = LiquesceFTPSvc\\LiquesceFTPSvc.csproj
+		SccProjectName4 = LiquesceFTPSvc
+		SccLocalPath4 = LiquesceFTPSvc
+		SccProjectUniqueName5 = LiquesceFTPTray\\LiquesceFTPTray.csproj
+		SccProjectName5 = LiquesceFTPTray
+		SccLocalPath5 = LiquesceFTPTray
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		Debug|x86 = Debug|x86
 		Release|Any CPU = Release|Any CPU
+		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{74447D1D-F52F-485C-BDEE-66B114A45460}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{74447D1D-F52F-485C-BDEE-66B114A45460}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{74447D1D-F52F-485C-BDEE-66B114A45460}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{74447D1D-F52F-485C-BDEE-66B114A45460}.Release|Any CPU.Build.0 = Release|Any CPU
 		{EF06E5CB-374E-4E67-9057-785A3B7DAD5A}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{EF06E5CB-374E-4E67-9057-785A3B7DAD5A}.Debug|x86.ActiveCfg = Debug|x86
+		{EF06E5CB-374E-4E67-9057-785A3B7DAD5A}.Debug|x86.Build.0 = Debug|x86
 		{EF06E5CB-374E-4E67-9057-785A3B7DAD5A}.Release|Any CPU.ActiveCfg = Release|x86
 		{EF06E5CB-374E-4E67-9057-785A3B7DAD5A}.Release|Any CPU.Build.0 = Release|x86
-		{CFE5DC7B-25FB-45C4-AF18-1963853375E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CFE5DC7B-25FB-45C4-AF18-1963853375E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CFE5DC7B-25FB-45C4-AF18-1963853375E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CFE5DC7B-25FB-45C4-AF18-1963853375E1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3B495DA8-B86F-4249-B94A-05B6FA01303F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3B495DA8-B86F-4249-B94A-05B6FA01303F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3B495DA8-B86F-4249-B94A-05B6FA01303F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3B495DA8-B86F-4249-B94A-05B6FA01303F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EF06E5CB-374E-4E67-9057-785A3B7DAD5A}.Release|x86.ActiveCfg = Release|x86
+		{EF06E5CB-374E-4E67-9057-785A3B7DAD5A}.Release|x86.Build.0 = Release|x86
 		{EB77E732-31EA-4B6D-B353-093DC6CF06F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{EB77E732-31EA-4B6D-B353-093DC6CF06F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EB77E732-31EA-4B6D-B353-093DC6CF06F3}.Debug|x86.ActiveCfg = Debug|x86
+		{EB77E732-31EA-4B6D-B353-093DC6CF06F3}.Debug|x86.Build.0 = Debug|x86
 		{EB77E732-31EA-4B6D-B353-093DC6CF06F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EB77E732-31EA-4B6D-B353-093DC6CF06F3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EB77E732-31EA-4B6D-B353-093DC6CF06F3}.Release|x86.ActiveCfg = Release|x86
+		{EB77E732-31EA-4B6D-B353-093DC6CF06F3}.Release|x86.Build.0 = Release|x86
+		{CFE5DC7B-25FB-45C4-AF18-1963853375E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CFE5DC7B-25FB-45C4-AF18-1963853375E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CFE5DC7B-25FB-45C4-AF18-1963853375E1}.Debug|x86.ActiveCfg = Debug|x86
+		{CFE5DC7B-25FB-45C4-AF18-1963853375E1}.Debug|x86.Build.0 = Debug|x86
+		{CFE5DC7B-25FB-45C4-AF18-1963853375E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CFE5DC7B-25FB-45C4-AF18-1963853375E1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CFE5DC7B-25FB-45C4-AF18-1963853375E1}.Release|x86.ActiveCfg = Release|x86
+		{CFE5DC7B-25FB-45C4-AF18-1963853375E1}.Release|x86.Build.0 = Release|x86
+		{74447D1D-F52F-485C-BDEE-66B114A45460}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{74447D1D-F52F-485C-BDEE-66B114A45460}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{74447D1D-F52F-485C-BDEE-66B114A45460}.Debug|x86.ActiveCfg = Debug|x86
+		{74447D1D-F52F-485C-BDEE-66B114A45460}.Debug|x86.Build.0 = Debug|x86
+		{74447D1D-F52F-485C-BDEE-66B114A45460}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{74447D1D-F52F-485C-BDEE-66B114A45460}.Release|Any CPU.Build.0 = Release|Any CPU
+		{74447D1D-F52F-485C-BDEE-66B114A45460}.Release|x86.ActiveCfg = Release|x86
+		{74447D1D-F52F-485C-BDEE-66B114A45460}.Release|x86.Build.0 = Release|x86
+		{3B495DA8-B86F-4249-B94A-05B6FA01303F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B495DA8-B86F-4249-B94A-05B6FA01303F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B495DA8-B86F-4249-B94A-05B6FA01303F}.Debug|x86.ActiveCfg = Debug|x86
+		{3B495DA8-B86F-4249-B94A-05B6FA01303F}.Debug|x86.Build.0 = Debug|x86
+		{3B495DA8-B86F-4249-B94A-05B6FA01303F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B495DA8-B86F-4249-B94A-05B6FA01303F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3B495DA8-B86F-4249-B94A-05B6FA01303F}.Release|x86.ActiveCfg = Release|x86
+		{3B495DA8-B86F-4249-B94A-05B6FA01303F}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
