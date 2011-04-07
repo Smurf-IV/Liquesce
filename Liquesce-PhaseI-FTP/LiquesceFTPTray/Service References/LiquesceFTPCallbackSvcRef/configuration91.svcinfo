@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<SavedWcfConfigurationInformation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="9.1" CheckSum="aH15zvi9uIse2GCDdVJimuQtUew=">
+<SavedWcfConfigurationInformation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="9.1" CheckSum="evHCmhkY1jgBi0u2hRBwg2KFUDQ=">
   <bindingConfigurations>
-    <bindingConfiguration bindingType="netTcpBinding" name="NetTcpBinding_ILiquesceCallBack">
+    <bindingConfiguration bindingType="netTcpBinding" name="NetTcpBinding_ILiquesceFTPCallBack">
       <properties>
         <property path="/name" isComplexType="false" isExplicitlyDefined="true" clrType="System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-          <serializedValue>NetTcpBinding_ILiquesceCallBack</serializedValue>
+          <serializedValue>NetTcpBinding_ILiquesceFTPCallBack</serializedValue>
         </property>
         <property path="/closeTimeout" isComplexType="false" isExplicitlyDefined="true" clrType="System.TimeSpan, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
           <serializedValue>00:01:00</serializedValue>
@@ -118,10 +118,10 @@
     </bindingConfiguration>
   </bindingConfigurations>
   <endpoints>
-    <endpoint name="NetTcpBinding_ILiquesceCallBack" contract="LiquesceCallbackSvcRef.ILiquesceCallBack" bindingType="netTcpBinding" address="net.tcp://localhost:41015/LiquesceCallBackFacade" bindingConfiguration="NetTcpBinding_ILiquesceCallBack">
+    <endpoint name="NetTcpBinding_ILiquesceFTPCallBack" contract="LiquesceFTPCallbackSvcRef.ILiquesceFTPCallBack" bindingType="netTcpBinding" address="net.tcp://localhost:41115/LiquesceFTPCallBackFacade" bindingConfiguration="NetTcpBinding_ILiquesceFTPCallBack">
       <properties>
         <property path="/address" isComplexType="false" isExplicitlyDefined="true" clrType="System.Uri, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-          <serializedValue>net.tcp://localhost:41015/LiquesceCallBackFacade</serializedValue>
+          <serializedValue>net.tcp://localhost:41115/LiquesceFTPCallBackFacade</serializedValue>
         </property>
         <property path="/behaviorConfiguration" isComplexType="false" isExplicitlyDefined="false" clrType="System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
           <serializedValue />
@@ -130,10 +130,10 @@
           <serializedValue>netTcpBinding</serializedValue>
         </property>
         <property path="/bindingConfiguration" isComplexType="false" isExplicitlyDefined="true" clrType="System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-          <serializedValue>NetTcpBinding_ILiquesceCallBack</serializedValue>
+          <serializedValue>NetTcpBinding_ILiquesceFTPCallBack</serializedValue>
         </property>
         <property path="/contract" isComplexType="false" isExplicitlyDefined="true" clrType="System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-          <serializedValue>LiquesceCallbackSvcRef.ILiquesceCallBack</serializedValue>
+          <serializedValue>LiquesceFTPCallbackSvcRef.ILiquesceFTPCallBack</serializedValue>
         </property>
         <property path="/headers" isComplexType="true" isExplicitlyDefined="false" clrType="System.ServiceModel.Configuration.AddressHeaderCollectionElement, System.ServiceModel, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
           <serializedValue>System.ServiceModel.Configuration.AddressHeaderCollectionElement</serializedValue>
@@ -193,7 +193,7 @@
           <serializedValue>False</serializedValue>
         </property>
         <property path="/name" isComplexType="false" isExplicitlyDefined="true" clrType="System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-          <serializedValue>NetTcpBinding_ILiquesceCallBack</serializedValue>
+          <serializedValue>NetTcpBinding_ILiquesceFTPCallBack</serializedValue>
         </property>
         <property path="/kind" isComplexType="false" isExplicitlyDefined="false" clrType="System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
           <serializedValue />
