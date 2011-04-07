@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <xs:schema xmlns:tns="http://tempuri.org/" elementFormDefault="qualified" targetNamespace="http://tempuri.org/" xmlns:xs="http://www.w3.org/2001/XMLSchema">
-  <xs:import schemaLocation="http://localhost:8731/Design_Time_Addresses/LiquesceSvc/LiquesceCallBackFacade/?xsd=xsd1" namespace="http://schemas.microsoft.com/2003/10/Serialization/" />
-  <xs:import schemaLocation="http://localhost:8731/Design_Time_Addresses/LiquesceSvc/LiquesceCallBackFacade/?xsd=xsd2" namespace="http://schemas.datacontract.org/2004/07/LiquesceFacade" />
+  <xs:import schemaLocation="http://localhost:8731/Design_Time_Addresses/LiquesceFTPSvc/LiquesceFTPCallBackFacade/?xsd=xsd1" namespace="http://schemas.microsoft.com/2003/10/Serialization/" />
+  <xs:import schemaLocation="http://localhost:8731/Design_Time_Addresses/LiquesceFTPSvc/LiquesceFTPCallBackFacade/?xsd=xsd2" namespace="http://schemas.datacontract.org/2004/07/LiquesceFTPFacade" />
   <xs:element name="Subscribe">
     <xs:complexType>
       <xs:sequence>
@@ -19,7 +19,7 @@
   <xs:element name="Update">
     <xs:complexType>
       <xs:sequence>
-        <xs:element xmlns:q3="http://schemas.datacontract.org/2004/07/LiquesceFacade" minOccurs="0" name="state" type="q3:LiquesceSvcState" />
+        <xs:element xmlns:q3="http://schemas.datacontract.org/2004/07/LiquesceFTPFacade" minOccurs="0" name="state" type="q3:LiquesceFTPSvcState" />
         <xs:element minOccurs="0" name="message" nillable="true" type="xs:string" />
       </xs:sequence>
     </xs:complexType>
