@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace LiquesceTray.Properties {
+namespace LiquesceFTPTray.Properties {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace LiquesceTray.Properties {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("LiquesceTray.Properties.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("LiquesceFTPTray.Properties.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -110,7 +110,7 @@ namespace LiquesceTray.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Liquesce service is Stopped.
+        ///   Looks up a localized string similar to Liquesce FTP service is Stopped.
         /// </summary>
         internal static string NotifyIconHandler_DoStatusCheck_Liquesce_service_is_Stopped {
             get {
@@ -146,7 +146,7 @@ namespace LiquesceTray.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Liquesce State In Error.
+        ///   Looks up a localized string similar to Liquesce FTP State In Error.
         /// </summary>
         internal static string NotifyIconHandler_SetState_Liquesce_State_In_Error {
             get {
@@ -155,7 +155,7 @@ namespace LiquesceTray.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Liquesce State Running.
+        ///   Looks up a localized string similar to Liquesce FTP State Running.
         /// </summary>
         internal static string NotifyIconHandler_SetState_Liquesce_State_Running {
             get {
@@ -164,7 +164,7 @@ namespace LiquesceTray.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Liquesce State Stopped.
+        ///   Looks up a localized string similar to Liquesce FTP State Stopped.
         /// </summary>
         internal static string NotifyIconHandler_SetState_Liquesce_State_Stopped {
             get {
@@ -173,7 +173,7 @@ namespace LiquesceTray.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Liquesce State Unknown.
+        ///   Looks up a localized string similar to Liquesce FTP State Unknown.
         /// </summary>
         internal static string NotifyIconHandler_SetState_Liquesce_State_Unknown {
             get {
@@ -182,7 +182,7 @@ namespace LiquesceTray.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Liquesce State Warning.
+        ///   Looks up a localized string similar to Liquesce FTP State Warning.
         /// </summary>
         internal static string NotifyIconHandler_SetState_Liquesce_State_Warning {
             get {

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Net;
-using LiquesceFacade;
+using LiquesceFTPFacade;
 using NLog;
 
 namespace LiquesceFTPSvc.FTP

@@ -8,8 +8,8 @@
     <ProjectGuid>{3B495DA8-B86F-4249-B94A-05B6FA01303F}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>LiquesceTray</RootNamespace>
-    <AssemblyName>LiquesceTray</AssemblyName>
+    <RootNamespace>LiquesceFTPTray</RootNamespace>
+    <AssemblyName>LiquesceFTPTray</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
@@ -130,7 +130,7 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Service References\LiquesceCallbackSvcRef\Reference.cs">
+    <Compile Include="Service References\LiquesceFTPCallbackSvcRef\Reference.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Reference.svcmap</DependentUpon>
@@ -180,16 +180,16 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <None Include="Service References\LiquesceCallbackSvcRef\item.xsd">
+    <None Include="Service References\LiquesceFTPCallbackSvcRef\item.xsd">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Service References\LiquesceCallbackSvcRef\item1.xsd">
+    <None Include="Service References\LiquesceFTPCallbackSvcRef\item1.xsd">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Service References\LiquesceCallbackSvcRef\item2.xsd">
+    <None Include="Service References\LiquesceFTPCallbackSvcRef\item2.xsd">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Service References\LiquesceCallbackSvcRef\LiquesceCallBackFacade.wsdl" />
+    <None Include="Service References\LiquesceFTPCallbackSvcRef\LiquesceFTPCallBackFacade.wsdl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Icons\backup.ico" />
@@ -197,13 +197,14 @@
     <Content Include="Icons\Config.ico" />
     <None Include="Icons\drop.ico" />
     <Content Include="Icons\Error.ico" />
-    <None Include="Service References\LiquesceCallbackSvcRef\Reference.svcmap">
+    <None Include="Service References\LiquesceFTPCallbackSvcRef\Reference.svcmap">
       <Generator>WCF Proxy Generator</Generator>
       <LastGenOutput>Reference.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </None>
-    <None Include="Service References\LiquesceCallbackSvcRef\configuration.svcinfo" />
-    <None Include="Service References\LiquesceCallbackSvcRef\configuration91.svcinfo" />
-    <None Include="Service References\LiquesceCallbackSvcRef\item.disco" />
+    <None Include="Service References\LiquesceFTPCallbackSvcRef\configuration.svcinfo" />
+    <None Include="Service References\LiquesceFTPCallbackSvcRef\configuration91.svcinfo" />
+    <None Include="Service References\LiquesceFTPCallbackSvcRef\item.disco" />
     <None Include="Icons\free_space.ico" />
     <Content Include="Icons\info.ico" />
     <Content Include="Icons\Liquesce.ico" />
@@ -241,16 +242,16 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <WCFMetadataStorage Include="Service References\LiquesceCallbackSvcRef\" />
+    <WCFMetadataStorage Include="Service References\LiquesceFTPCallbackSvcRef\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LiquesceFTPFacade\LiquesceFTPFacade.csproj">
       <Project>{CFE5DC7B-25FB-45C4-AF18-1963853375E1}</Project>
-      <Name>LiquesceFacade</Name>
+      <Name>LiquesceFTPFacade</Name>
     </ProjectReference>
     <ProjectReference Include="..\LiquesceFTPMgr\LiquesceFTPMgr.csproj">
       <Project>{74447D1D-F52F-485C-BDEE-66B114A45460}</Project>
-      <Name>Liquesce</Name>
+      <Name>LiquesceFTPMgr</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

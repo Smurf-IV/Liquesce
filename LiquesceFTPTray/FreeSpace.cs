@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Linq;
 using System.Windows.Forms;
-using LiquesceFacade;
+using LiquesceFTPFacade;
 using System.ServiceModel;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using System.IO;
 
 
-namespace LiquesceTray
+namespace LiquesceFTPTray
 {
    public partial class FreeSpace : Form
    {
@@ -92,8 +92,8 @@ namespace LiquesceTray
          bool value = true;
          try
          {
-            ChannelFactory<ILiquesce> factory = new ChannelFactory<ILiquesce>("LiquesceFacade");
-            ILiquesce remoteIF = factory.CreateChannel();
+            ChannelFactory<ILiquesceFTP> factory = new ChannelFactory<ILiquesceFTP>("LiquesceFTPFacade");
+            ILiquesceFTP remoteIF = factory.CreateChannel();
 
             config = remoteIF.ConfigDetails;
          }
@@ -500,12 +500,10 @@ namespace LiquesceTray
          ulong allAvailabel = 0;
          ulong allTotal = 0;
          long allRate = 0;
-         ulong allBackup = 0;
 
          int writePriority1Disk = -1;
          int writePriority2Disk = -1;
          ulong mostFreeSpace1 = 0;
-         ulong mostFreeSpace2 = 0;
 
          for (int i = 0; i < config.SourceLocations.Count(); i++)
          {
@@ -633,9 +631,9 @@ namespace LiquesceTray
 
          totalSpaceLiquesce.Text = FormatBytes((long)allTotal);
          freeSpaceLiquesce.Text = FormatBytes((long)allAvailabel);
-         dataLiquesce.Text = FormatBytes((long)(allTotal - allAvailabel - allBackup));
+         dataLiquesce.Text = FormatBytes((long)(allTotal - allAvailabel));
          barLiquesce.Maximum = BAR_SCALE;
-         barLiquesce.Value1 = (int)(((allTotal - allAvailabel - allBackup) * BAR_SCALE) / allTotal);
+         barLiquesce.Value1 = (int)(((allTotal - allAvailabel) * BAR_SCALE) / allTotal);
          barLiquesce.Value2 = (int)(((allTotal - allAvailabel) * BAR_SCALE) / allTotal);
 
          if (allRate < 0)

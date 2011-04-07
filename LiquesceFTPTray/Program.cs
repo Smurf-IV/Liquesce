@@ -6,10 +6,10 @@ using System.Reflection;
 using System.ServiceProcess;
 using System.Threading;
 using System.Windows.Forms;
-using LiquesceTray.Properties;
+using LiquesceFTPTray.Properties;
 using NLog;
 
-namespace LiquesceTray
+namespace LiquesceFTPTray
 {
    static class Program
    {

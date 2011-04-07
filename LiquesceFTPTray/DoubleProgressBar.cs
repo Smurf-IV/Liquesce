@@ -1,6 +1,6 @@
 ﻿using System.Windows.Forms;
 
-namespace LiquesceTray
+namespace LiquesceFTPTray
 {
     public partial class DoubleProgressBar : UserControl
     {

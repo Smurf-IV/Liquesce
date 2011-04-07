@@ -1,4 +1,4 @@
-﻿namespace Liquesce
+﻿namespace LiquesceFTPMgr
 {
    partial class GridAdvancedSettings
    {

@@ -2,10 +2,8 @@ using System;
 using System.Text;
 using System.Net;
 using System.Net.Sockets;
-using System.IO;
 using System.Collections;
 using System.Threading;
-using LiquesceSvc;
 using NLog;
 
 namespace LiquesceFTPSvc.FTP
@@ -17,10 +15,9 @@ namespace LiquesceFTPSvc.FTP
       #region Construction
 
       private DateTime ConnectedTime;
-      private DateTime LastInteraction;
 
       // Used inside PORT_Command method
-      IPEndPoint ClientEndPoint = null;
+      IPEndPoint ClientEndPoint;
       internal string SessionID
       {
          get
@@ -36,8 +33,8 @@ namespace LiquesceFTPSvc.FTP
       protected EndPoint LocalEndPoint { get; set; }
       protected bool abortReceived { get; set; }
 
-      bool DataTransferEnabled = false;
-      TcpListener DataListener = null;
+      bool DataTransferEnabled;
+      TcpListener DataListener;
 
       string Rename_FilePath;
 
@@ -104,10 +101,9 @@ namespace LiquesceFTPSvc.FTP
             Disconnect();
          }
 
-         LastInteraction = DateTime.Now;
          string CommandText = Encoding.ASCII.GetString(BufferData, 0, CommandSize).TrimStart(' ');
-         string CmdArguments = String.Empty, Command = null;
-         int End = 0;
+         string CmdArguments = String.Empty, Command;
+         int End;
          if ((End = CommandText.IndexOf(' ')) == -1)
             End = (CommandText = CommandText.Trim()).Length;
          else if (UseUTF8)
@@ -430,7 +426,7 @@ namespace LiquesceFTPSvc.FTP
 
       NetworkStream GetDataSocket()
       {
-         TcpClient DataSocket = null;
+         TcpClient DataSocket;
          try
          {
             if (DataTransferEnabled)

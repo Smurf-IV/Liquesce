@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.ServiceModel;
 
-namespace LiquesceFacade
+namespace LiquesceFTPFacade
 {
    [Serializable]
-   public enum LiquesceSvcState
+   public enum LiquesceFTPSvcState
    {
       Unknown,
       Running, // Used to indicate that all is well
@@ -15,7 +15,7 @@ namespace LiquesceFacade
    }
 
    [ServiceContract]
-   public interface ILiquesce
+   public interface ILiquesceFTP
    {
       [OperationContract(IsOneWay = true)]
       void Stop();
@@ -23,7 +23,7 @@ namespace LiquesceFacade
       [OperationContract(IsOneWay = true)]
       void Start();
 
-      LiquesceSvcState State
+      LiquesceFTPSvcState State
       {
          [OperationContract]
          get;

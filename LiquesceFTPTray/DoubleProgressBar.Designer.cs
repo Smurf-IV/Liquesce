@@ -1,7 +1,8 @@
 ﻿using System.Drawing;
 using System;
 using System.Windows.Forms;
-namespace LiquesceTray
+
+namespace LiquesceFTPTray
 {
     partial class DoubleProgressBar
     {

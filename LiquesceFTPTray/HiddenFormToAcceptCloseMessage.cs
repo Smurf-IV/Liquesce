@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 
-namespace LiquesceTray
+namespace LiquesceFTPTray
 {
    public partial class HiddenFormToAcceptCloseMessage : Form
    {

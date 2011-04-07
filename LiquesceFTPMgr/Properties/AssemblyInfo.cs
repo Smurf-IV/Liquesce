@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Liquesce")]
+[assembly: AssemblyTitle("LiquesceFTPMgr")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Smurf-IV")]
-[assembly: AssemblyProduct("Liquesce")]
+[assembly: AssemblyProduct("Liquesce FTP Manager")]
 [assembly: AssemblyCopyright("Copyright © Smurf-IV 2010")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("2011.4.5.658")]
-[assembly: AssemblyFileVersion("2011.4.5.658")]
+[assembly: AssemblyVersion("2011.4.7.668")]
+[assembly: AssemblyFileVersion("2011.4.7.668")]

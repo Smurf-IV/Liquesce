@@ -8,11 +8,32 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace LiquesceTray.LiquesceFTPCallbackSvcRef {
+namespace LiquesceFTPTray.LiquesceFTPCallbackSvcRef {
+    using System.Runtime.Serialization;
     
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Runtime.Serialization", "4.0.0.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name="LiquesceFTPSvcState", Namespace="http://schemas.datacontract.org/2004/07/LiquesceFTPFacade")]
+    public enum LiquesceFTPSvcState : int {
+        
+        [System.Runtime.Serialization.EnumMemberAttribute()]
+        Unknown = 0,
+        
+        [System.Runtime.Serialization.EnumMemberAttribute()]
+        Running = 1,
+        
+        [System.Runtime.Serialization.EnumMemberAttribute()]
+        InError = 2,
+        
+        [System.Runtime.Serialization.EnumMemberAttribute()]
+        InWarning = 3,
+        
+        [System.Runtime.Serialization.EnumMemberAttribute()]
+        Stopped = 4,
+    }
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("System.ServiceModel", "4.0.0.0")]
-    [System.ServiceModel.ServiceContractAttribute(ConfigurationName="LiquesceFTPCallbackSvcRef.ILiquesceFTPCallBack", CallbackContract=typeof(LiquesceTray.LiquesceFTPCallbackSvcRef.ILiquesceFTPCallBackCallback), SessionMode=System.ServiceModel.SessionMode.Required)]
+    [System.ServiceModel.ServiceContractAttribute(ConfigurationName="LiquesceFTPCallbackSvcRef.ILiquesceFTPCallBack", CallbackContract=typeof(LiquesceFTPTray.LiquesceFTPCallbackSvcRef.ILiquesceFTPCallBackCallback), SessionMode=System.ServiceModel.SessionMode.Required)]
     public interface ILiquesceFTPCallBack {
         
         [System.ServiceModel.OperationContractAttribute(IsOneWay=true, Action="http://tempuri.org/ILiquesceFTPCallBack/Subscribe")]
@@ -30,12 +51,12 @@ namespace LiquesceTray.LiquesceFTPCallbackSvcRef {
     }
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("System.ServiceModel", "4.0.0.0")]
-    public interface ILiquesceFTPCallBackChannel : LiquesceTray.LiquesceFTPCallbackSvcRef.ILiquesceFTPCallBack, System.ServiceModel.IClientChannel {
+    public interface ILiquesceFTPCallBackChannel : LiquesceFTPTray.LiquesceFTPCallbackSvcRef.ILiquesceFTPCallBack, System.ServiceModel.IClientChannel {
     }
     
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.CodeDom.Compiler.GeneratedCodeAttribute("System.ServiceModel", "4.0.0.0")]
-    public partial class LiquesceFTPCallBackClient : System.ServiceModel.DuplexClientBase<LiquesceTray.LiquesceFTPCallbackSvcRef.ILiquesceFTPCallBack>, LiquesceTray.LiquesceFTPCallbackSvcRef.ILiquesceFTPCallBack {
+    public partial class LiquesceFTPCallBackClient : System.ServiceModel.DuplexClientBase<LiquesceFTPTray.LiquesceFTPCallbackSvcRef.ILiquesceFTPCallBack>, LiquesceFTPTray.LiquesceFTPCallbackSvcRef.ILiquesceFTPCallBack {
         
         public LiquesceFTPCallBackClient(System.ServiceModel.InstanceContext callbackInstance) : 
                 base(callbackInstance) {

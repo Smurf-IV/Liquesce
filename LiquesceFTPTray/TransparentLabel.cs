@@ -2,7 +2,7 @@
 using System.Windows.Forms;
 
 
-namespace LiquesceTray
+namespace LiquesceFTPTray
 {
     public class TransparentLabel : Label
     {

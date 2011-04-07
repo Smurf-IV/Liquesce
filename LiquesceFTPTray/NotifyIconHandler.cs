@@ -3,16 +3,16 @@ using System.Diagnostics;
 using System.IO;
 using System.ServiceProcess;
 using System.Windows.Forms;
-using LiquesceFacade;
-using LiquesceTray.Properties;
+using LiquesceFTPFacade;
+using LiquesceFTPTray.Properties;
 using NLog;
 
-namespace LiquesceTray
+namespace LiquesceFTPTray
 {
    public partial class NotifyIconHandler : UserControl
    {
       private static readonly Logger Log = LogManager.GetCurrentClassLogger();
-      private LiquesceSvcState lastState = LiquesceSvcState.Unknown;
+      private LiquesceFTPSvcState lastState = LiquesceFTPSvcState.Unknown;
       private readonly StateChangeHandler stateChangeHandler = new StateChangeHandler();
 
       public NotifyIconHandler()
@@ -36,7 +36,7 @@ namespace LiquesceTray
          //Application.StartupPath;
          Process process = new Process { StartInfo = { 
                                             WorkingDirectory = Application.StartupPath,
-                                            FileName = "Liquesce.exe"
+                                            FileName = "LiquesceFTPMgr.exe"
          }
          };
 
@@ -53,28 +53,28 @@ namespace LiquesceTray
          notifyIcon1.ShowBalloonTip(5000);
       }
 
-      private void SetState(LiquesceSvcState state, string text)
+      private void SetState(LiquesceFTPSvcState state, string text)
       {
          notifyIcon1.BalloonTipText = text;
          switch (state)
          {
-            case LiquesceSvcState.InWarning:
+            case LiquesceFTPSvcState.InWarning:
                notifyIcon1.Text = Resources.NotifyIconHandler_SetState_Liquesce_State_Warning;
                notifyIcon1.BalloonTipIcon = ToolTipIcon.Warning;
                break;
-            case LiquesceSvcState.Unknown:
+            case LiquesceFTPSvcState.Unknown:
                notifyIcon1.Text = Resources.NotifyIconHandler_SetState_Liquesce_State_Unknown;
                notifyIcon1.BalloonTipIcon = ToolTipIcon.Warning;
                break;
-            case LiquesceSvcState.Running:
+            case LiquesceFTPSvcState.Running:
                notifyIcon1.Text = Resources.NotifyIconHandler_SetState_Liquesce_State_Running;
                notifyIcon1.BalloonTipIcon = ToolTipIcon.None;
                break;
-            case LiquesceSvcState.Stopped:
+            case LiquesceFTPSvcState.Stopped:
                notifyIcon1.Text = Resources.NotifyIconHandler_SetState_Liquesce_State_Stopped;
                notifyIcon1.BalloonTipIcon = ToolTipIcon.Info;
                break;
-            case LiquesceSvcState.InError:
+            case LiquesceFTPSvcState.InError:
                notifyIcon1.Text = Resources.NotifyIconHandler_SetState_Liquesce_State_In_Error;
                notifyIcon1.BalloonTipIcon = ToolTipIcon.Error;
                break;
@@ -101,10 +101,10 @@ namespace LiquesceTray
          {
             TimeSpan timeSpan = new TimeSpan(0, 0, 0, 0, milliseconds);
             serviceController1.WaitForStatus(ServiceControllerStatus.Running, timeSpan);
-            if (LiquesceSvcState.Running != lastState)
+            if (LiquesceFTPSvcState.Running != lastState)
             {
                notifyIcon1.Icon = Properties.Resources.OKIcon;
-               SetState(LiquesceSvcState.Running, String.Format(Resources.NotifyIconHandler_DoStatusCheck_Started____0_, DateTime.Now) );
+               SetState(LiquesceFTPSvcState.Running, String.Format(Resources.NotifyIconHandler_DoStatusCheck_Started____0_, DateTime.Now) );
                stateChangeHandler.CreateCallBack(SetState);
             }
          }
@@ -112,10 +112,10 @@ namespace LiquesceTray
          {
             stateChangeHandler.RemoveCallback();
             // Be nice to the log
-            if (LiquesceSvcState.InWarning != lastState)
+            if (LiquesceFTPSvcState.InWarning != lastState)
             {
                Log.WarnException("Service is not in a running state", tex);
-               SetState(LiquesceSvcState.InWarning, Resources.NotifyIconHandler_DoStatusCheck_Liquesce_service_is_Stopped);
+               SetState(LiquesceFTPSvcState.InWarning, Resources.NotifyIconHandler_DoStatusCheck_Liquesce_service_is_Stopped);
                notifyIcon1.Icon = Properties.Resources.StopIcon;
             }
          }
@@ -123,11 +123,11 @@ namespace LiquesceTray
          {
             stateChangeHandler.RemoveCallback();
             // Be nice to the log
-            if (LiquesceSvcState.InError != lastState)
+            if (LiquesceFTPSvcState.InError != lastState)
             {
-               Log.ErrorException("Liquesce service has a general exception", ex);
+               Log.ErrorException("Liquesce FTP service has a general exception", ex);
                notifyIcon1.Icon = Properties.Resources.ErrorIcon;
-               SetState(LiquesceSvcState.InError, ex.Message);
+               SetState(LiquesceFTPSvcState.InError, ex.Message);
             }
          }
       }
@@ -139,7 +139,7 @@ namespace LiquesceTray
             stopServiceToolStripMenuItem.Visible = visible;
             startServiceToolStripMenuItem.Visible = visible;
          }
-         showFreeDiskSpaceToolStripMenuItem.Enabled = (LiquesceSvcState.Running == lastState);
+         showFreeDiskSpaceToolStripMenuItem.Enabled = (LiquesceFTPSvcState.Running == lastState);
       }
 
       private void stopServiceToolStripMenuItem_Click(object sender, EventArgs e)
@@ -151,7 +151,7 @@ namespace LiquesceTray
                UseShellExecute = true,
                CreateNoWindow = true,
                WindowStyle = ProcessWindowStyle.Hidden,
-               FileName = Path.Combine(Application.StartupPath, @"LiquesceTrayHelper.exe"),
+               FileName = Path.Combine(Application.StartupPath, @"LiquesceFTPTrayHelper.exe"),
                Arguments = @"stop",
                // Two lines below make the UAC dialog modal to this app
                ErrorDialog = true,
@@ -182,7 +182,7 @@ namespace LiquesceTray
                UseShellExecute = true,
                CreateNoWindow  = true,
                WindowStyle = ProcessWindowStyle.Hidden,
-               FileName = Path.Combine(Application.StartupPath, @"LiquesceTrayHelper.exe"),
+               FileName = Path.Combine(Application.StartupPath, @"LiquesceFTPTrayHelper.exe"),
                Arguments = @"start",
                // Two lines below make the UAC dialog modal to this app
                ErrorDialog = true,

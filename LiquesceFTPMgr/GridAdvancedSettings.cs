@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Windows.Forms;
-using LiquesceFacade;
+using LiquesceFTPFacade;
 
-namespace Liquesce
+namespace LiquesceFTPMgr
 {
    public partial class GridAdvancedSettings : Form
    {

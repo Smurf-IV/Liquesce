@@ -1,15 +1,14 @@
 ﻿using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("LiquesceFacade")]
+[assembly: AssemblyTitle("LiquesceFTPFacade")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Smurf-IV")]
-[assembly: AssemblyProduct("LiquesceFacade")]
+[assembly: AssemblyProduct("LiquesceFTPFacade")]
 [assembly: AssemblyCopyright("Copyright © Smurf-IV 2010")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -32,5 +31,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("2011.4.5.466")]
-[assembly: AssemblyFileVersion("2011.4.5.466")]
+[assembly: AssemblyVersion("2011.4.7.475")]
+[assembly: AssemblyFileVersion("2011.4.7.475")]

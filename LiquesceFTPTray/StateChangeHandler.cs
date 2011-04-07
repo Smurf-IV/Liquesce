@@ -1,17 +1,17 @@
 ﻿using System;
 using System.ServiceModel;
-using LiquesceFacade;
+using LiquesceFTPFacade;
 using NLog;
 
-namespace LiquesceTray
+namespace LiquesceFTPTray
 {
-   public class StateChangeHandler : LiquesceCallbackSvcRef.ILiquesceCallBackCallback
+   public class StateChangeHandler : LiquesceFTPCallbackSvcRef.ILiquesceFTPCallBackCallback
    {
       private static readonly Logger Log = LogManager.GetCurrentClassLogger();
-      private LiquesceCallbackSvcRef.LiquesceCallBackClient client;
+      private LiquesceFTPCallbackSvcRef.LiquesceFTPCallBackClient client;
       private readonly Guid guid = Guid.NewGuid();
 
-      public delegate void SetStateDelegate(LiquesceSvcState state, string text);
+      public delegate void SetStateDelegate(LiquesceFTPSvcState state, string text);
       private SetStateDelegate setStateDelegate;
 
       public void CreateCallBack( SetStateDelegate newDelegate)
@@ -19,14 +19,14 @@ namespace LiquesceTray
          try
          {
             InstanceContext context = new InstanceContext(this);
-            client = new LiquesceCallbackSvcRef.LiquesceCallBackClient(context);
+            client = new LiquesceFTPCallbackSvcRef.LiquesceFTPCallBackClient(context);
             client.Subscribe(guid);
             setStateDelegate = newDelegate;
          }
          catch (Exception ex)
          {
             Log.ErrorException("CreateCallBack:", ex);
-            Update(LiquesceSvcState.InError, ex.Message);
+            Update(LiquesceFTPSvcState.InError, ex.Message);
             client = null;
             setStateDelegate = null;
          }
@@ -44,7 +44,7 @@ namespace LiquesceTray
          catch (Exception ex)
          {
             Log.ErrorException("RemoveCallback:", ex);
-            Update(LiquesceSvcState.InError, ex.Message);
+            Update(LiquesceFTPSvcState.InError, ex.Message);
          }
          finally
          {
@@ -53,9 +53,9 @@ namespace LiquesceTray
          }
       }
 
-      #region Implementation of ILiquesceCallback
+      #region Implementation of ILiquesceFTPCallback
 
-      public void Update(LiquesceSvcState state, string message)
+      public void Update(LiquesceFTPSvcState state, string message)
       {
          SetStateDelegate handler = setStateDelegate;
          if (handler != null)
@@ -63,5 +63,6 @@ namespace LiquesceTray
       }
 
       #endregion
+
    }
 }

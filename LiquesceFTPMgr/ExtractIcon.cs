@@ -3,7 +3,7 @@ using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace Liquesce
+namespace LiquesceFTPMgr
 {
    internal class ExtractIcon
    {

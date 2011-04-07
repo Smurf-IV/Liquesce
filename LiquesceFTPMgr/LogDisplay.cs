@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using NLog;
 
-namespace Liquesce
+namespace LiquesceFTPMgr
 {
    /// <summary>
    /// 

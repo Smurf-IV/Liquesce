@@ -8,8 +8,8 @@
     <ProjectGuid>{74447D1D-F52F-485C-BDEE-66B114A45460}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Liquesce</RootNamespace>
-    <AssemblyName>Liquesce</AssemblyName>
+    <RootNamespace>LiquesceFTPMgr</RootNamespace>
+    <AssemblyName>LiquesceFTPMgr</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
@@ -105,6 +105,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AdvancedPropertiesDisplay.cs" />
+    <Compile Include="DragDropItem.cs" />
+    <Compile Include="ExpectedDetailResult.cs" />
     <Compile Include="GridAdvancedSettings.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -112,8 +114,6 @@
       <DependentUpon>GridAdvancedSettings.cs</DependentUpon>
     </Compile>
     <Compile Include="LogDisplay.cs" />
-    <Compile Include="DragDropItem.cs" />
-    <Compile Include="ExpectedDetailResult.cs" />
     <Compile Include="ExtractIcon.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
@@ -162,10 +162,9 @@
   <ItemGroup>
     <ProjectReference Include="..\LiquesceFTPFacade\LiquesceFTPFacade.csproj">
       <Project>{CFE5DC7B-25FB-45C4-AF18-1963853375E1}</Project>
-      <Name>LiquesceFacade</Name>
+      <Name>LiquesceFTPFacade</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
     <Content Include="Liquesce.ico" />
     <Content Include="Resources\Liquesce.ico" />
@@ -173,7 +172,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="YearStamp.MonthStamp.DayStamp.Increment" BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" />
+      <UserProperties BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_UseGlobalSettings="False" BuildVersion_BuildVersioningStyle="YearStamp.MonthStamp.DayStamp.Increment" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
