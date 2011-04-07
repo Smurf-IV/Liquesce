@@ -1,9 +1,9 @@
 ﻿using System;
 using System.ComponentModel;
-using LiquesceFacade;
+using LiquesceFTPFacade;
 using NLog;
 
-namespace Liquesce
+namespace LiquesceFTPMgr
 {
     // ReSharper disable MemberCanBePrivate.Global
     // Needs to be global to allow the propertgrid reflector to the accessors

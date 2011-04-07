@@ -1,4 +1,4 @@
-﻿namespace Liquesce
+﻿namespace LiquesceFTPMgr
 {
    sealed partial class MainForm
    {
@@ -354,7 +354,7 @@
          // serviceController1
          // 
          this.serviceController1.MachineName = "127.0.0.1";
-         this.serviceController1.ServiceName = "LiquesceSvc";
+         this.serviceController1.ServiceName = "LiquesceFTPSvc";
          // 
          // MainForm
          // 
@@ -368,7 +368,7 @@
          this.MainMenuStrip = this.menuStrip1;
          this.MinimumSize = new System.Drawing.Size(778, 516);
          this.Name = "MainForm";
-         this.Text = "Liquesce Mount Management";
+         this.Text = "Liquesce FTP Mount Management";
          this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
          this.Shown += new System.EventHandler(this.MainForm_Shown);
          this.splitContainer1.Panel1.ResumeLayout(false);

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Liquesce
+namespace LiquesceFTPMgr
 {
    class ExpectedDetailResult : IComparable
    {

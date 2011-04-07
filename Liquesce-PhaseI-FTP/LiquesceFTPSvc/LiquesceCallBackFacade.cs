@@ -1,9 +1,9 @@
 ﻿using System;
 using System.ServiceModel;
-using LiquesceFacade;
+using LiquesceFTPFacade;
 using NLog;
 
-namespace LiquesceSvc
+namespace LiquesceFTPSvc
 {
    [ServiceBehavior(
       InstanceContextMode = InstanceContextMode.Single,
@@ -11,11 +11,11 @@ namespace LiquesceSvc
            IncludeExceptionDetailInFaults = true
            )
    ]
-   class LiquesceCallBackFacade : ILiquesceCallBack
+   class LiquesceFTPCallBackFacade : ILiquesceFTPCallBack
    {
       static private readonly Logger Log = LogManager.GetCurrentClassLogger();
 
-      public LiquesceCallBackFacade()
+      public LiquesceFTPCallBackFacade()
       {
          Log.Debug("Object Created");
       }

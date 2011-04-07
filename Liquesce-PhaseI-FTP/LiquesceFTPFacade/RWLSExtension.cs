@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 
-namespace LiquesceFacade
+namespace LiquesceFTPFacade
 {
    // Stolen from http://stackoverflow.com/questions/407238/readerwriterlockslim-vs-monitor
    //

@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.ServiceModel;
 using System.Threading;
-using LiquesceFacade;
+using LiquesceFTPFacade;
 using NLog;
 
-namespace LiquesceSvc
+namespace LiquesceFTPSvc
 {
    [ServiceBehavior(
       InstanceContextMode = InstanceContextMode.Single,
@@ -12,11 +12,11 @@ namespace LiquesceSvc
            IncludeExceptionDetailInFaults = true
            )
    ]
-   public class LiquesceFacade : ILiquesce
+   public class LiquesceFTPFacade : ILiquesceFTP
    {
       static private readonly Logger Log = LogManager.GetCurrentClassLogger();
 
-      public LiquesceFacade()
+      public LiquesceFTPFacade()
       {
          Log.Debug("Object Created");
       }
@@ -34,7 +34,7 @@ namespace LiquesceSvc
          ThreadPool.QueueUserWorkItem(ManagementLayer.Instance.Start);
       }
 
-      public LiquesceSvcState State
+      public LiquesceFTPSvcState State
       {
          get
          {

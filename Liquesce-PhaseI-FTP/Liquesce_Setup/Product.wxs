@@ -5,18 +5,18 @@
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
      >
 
-   <?define MgtSource=$(sys.SOURCEFILEDIR)..\Liquesce\bin\Release ?>
+   <?define MgtSource=$(sys.SOURCEFILEDIR)..\LiquesceFTPMgr\bin\Release ?>
    <?define SvcSource=$(sys.SOURCEFILEDIR)..\LiquesceFTPSvc\bin\Release ?>
-   <?define TraySource=$(sys.SOURCEFILEDIR)..\LiquesceTray\bin\Release ?>
+   <?define TraySource=$(sys.SOURCEFILEDIR)..\LiquesceFTPTray\bin\Release ?>
 
 
    <!-- do not change this ever !-->
-   <?define UpgradeCode = "F6F94F17-A05F-4824-8DD9-9F5E8267D783" ?>
+   <?define UpgradeCode = "F6F94F17-A05F-4824-8DD9-9F5E8267D784" ?>
 
    <!-- Change this when creating new release YY-MM-DD -->
    <?define Version = "11.03.23" ?>
    
-   <?define ProductName = "Liquesce Windows HDD Pooling Suite"?>
+   <?define ProductName = "Liquesce FTP Windows HDD Pooling Suite"?>
 
    <Product Version="$(var.Version)" Id="*" UpgradeCode="$(var.UpgradeCode)"
           Name="$(var.ProductName)" Language="1033" Manufacturer="http://liquesce.codeplex.com/" >
@@ -24,7 +24,7 @@
       <Package Id="*" Keywords='Installer'
                InstallScope='perMachine'
                Description="$(var.ProductName)"
-               Comments="Liquesce" InstallerVersion="301" Compressed="yes"
+               Comments="Liquesce FTP" InstallerVersion="301" Compressed="yes"
                AdminImage='no'
                Platform='x86'
                />
@@ -36,39 +36,15 @@
       <Property Id="ARPCOMMENTS" Value="http://liquesce.codeplex.com/discussions"/>
       <Property Id="ARPCONTACT" Value="Smurf-IV" />
       <Property Id="ARPURLINFOABOUT" Value="http://liquesce.codeplex.com/" />
-      <Icon Id="InstallerIcon" SourceFile="$(sys.SOURCEFILEDIR)..\Liquesce\Resources\Liquesce.ico" />
+      <Icon Id="InstallerIcon" SourceFile="$(sys.SOURCEFILEDIR)..\LiquesceFTPMgr\Resources\Liquesce.ico" />
       <Property Id="ARPPRODUCTICON" Value="InstallerIcon" />
 
       <!-- Properties to allow detection of .Net installation -->
       <PropertyRef Id="NETFRAMEWORK40FULL"/>
       <PropertyRef Id="NETFRAMEWORK40FULLINSTALLROOTDIR" />
 
-      <Property Id="DOKANINSTALLED" >
-         <RegistrySearch Id="IsDokanServiceInstalled" Root="HKLM" Key="SYSTEM\CurrentControlSet\services\Dokan" Name="DisplayName" Type="raw" />
-      </Property>
-
-      <Property Id="DOKANVERCHECK32">
-         <DirectorySearch Id="Dokan.sys.version" Path="[SystemFolder]\Drivers">
-            <!--Make sure that the min / max _straddle_ the actual version..  Check for 0.6.0 x32 Size -->
-            <!-- It appears that there is yet another version for Windows 7 x32 !! -->
-            <FileSearch Name="Dokan.sys" MinSize="91903" MaxSize="95745" />
-         </DirectorySearch>
-      </Property>
-      <Property Id="DOKANVERCHECK64">
-         <DirectorySearch Id="Dokan.sys64.version" Path="[System64Folder]\Drivers">
-            <!--Make sure that the min / max _straddle_ the actual version.. Check for 0.6.0 x64 Size -->
-            <FileSearch Name="Dokan.sys" MinSize="120407" MaxSize="120409" />
-         </DirectorySearch>
-      </Property>
-
-      <Condition Message="This application requires Dokan Ver 0.6.0.">
-         <![CDATA[Installed OR (DOKANVERCHECK64 AND VersionNT64) OR (DOKANVERCHECK32 AND NOT VersionNT64)]]>
-      </Condition>
 
       <!--Some test conditions to allow the installer to run-->
-      <Condition Message="Dokan.sys Driver Is Not Installed in the SYSTEM\CurrentControlSet\services registry correctly!">
-         <![CDATA[Installed OR DOKANINSTALLED]]>
-      </Condition>
       <Condition Message="[ProductName] Requires .NET Framework 4.0 Main profile to be installed">
          <![CDATA[Installed OR NETFRAMEWORK40FULL]]>
       </Condition>
@@ -76,24 +52,21 @@
          Privileged
       </Condition>
 
-      <!--<Condition Message="A later version of [ProductName] is already installed. Setup will now exit.">
-         <![CDATA[NOT NEWERVERSIONDETECTED OR Installed]]>
-      </Condition>-->
 
       <!--Allow 7z / zip compression to squeeze this tighter -->
       <Media Id="1" Cabinet="Setup.cab" EmbedCab="yes" CompressionLevel="high" />
 
       <Directory Id="TARGETDIR" Name="SourceDir">
          <Directory Id="ProgramFilesFolder">
-            <Directory Id="INSTALLDIR" Name="Liquesce">
-               <Directory Id="ClientDIR" Name="Liquesce Client">
+            <Directory Id="INSTALLDIR" Name="LiquesceFTP">
+               <Directory Id="ClientDIR" Name="Liquesce FTP Client">
                </Directory>
-               <Directory Id="ServiceDIR" Name="Liquesce Service">
+               <Directory Id="ServiceDIR" Name="Liquesce FTP Service">
                </Directory>
             </Directory>
          </Directory>
          <Directory Id="ProgramMenuFolder">
-            <Directory Id="ProgramMenuDir" Name="Liquesce"/>
+            <Directory Id="ProgramMenuDir" Name="Liquesce FTP"/>
             <Directory Id="StartupFolder" Name="Startup" />
          </Directory>
 
@@ -107,28 +80,28 @@
 
       <ComponentGroup Id="Client" >
          <Component Id="Client" Guid="5EBF3F29-9CF1-44FE-A94C-CC1B4FE09367" Directory="ClientDIR">
-            <File Id="InstallerIcon" Name="Liquesce.ico" Source="$(sys.SOURCEFILEDIR)..\Liquesce\Resources\Liquesce.ico" />
-            <File Id="Liquesce.exe" Name="Liquesce.exe" Source="$(var.MgtSource)\Liquesce.exe" KeyPath="yes">
+            <File Id="InstallerIcon" Name="Liquesce.ico" Source="$(sys.SOURCEFILEDIR)..\LiquesceFTPMgr\Resources\Liquesce.ico" />
+            <File Id="LiquesceFTPMgr.exe" Name="LiquesceFTPMgr.exe" Source="$(var.MgtSource)\LiquesceFTPMgr.exe" KeyPath="yes">
                <fire:FirewallException Id="LiquesceFWX1" Name="Liquesce Mount Management" Scope="localSubnet" IgnoreFailure="yes" />
             </File>
          </Component>
          <Component Id="ChangeLog" Directory="ClientDIR">
-            <File Source="$(sys.SOURCEFILEDIR)..\Liquesce\ChangeLog.rtf" KeyPath="yes" />
+            <File Source="$(sys.SOURCEFILEDIR)..\LiquesceFTPMgr\ChangeLog.rtf" KeyPath="yes" />
          </Component>
-         <Component Id="Liquesce.exe.config" Directory="ClientDIR">
-            <File Source="$(var.MgtSource)\Liquesce.exe.config" KeyPath="yes" />
+         <Component Id="LiquesceFTPMgr.exe.config" Directory="ClientDIR">
+            <File Source="$(var.MgtSource)\LiquesceFTPMgr.exe.config" KeyPath="yes" />
          </Component>
          <Component Id="C_NLog.dll" Directory="ClientDIR">
             <File Id="C_NLog.dll" Source="$(var.MgtSource)\NLog.dll" KeyPath="yes" />
          </Component>
-         <Component Id="C_LiquesceFacade.dll" Directory="ClientDIR">
-            <File Id="C_LiquesceFacade.dll" Source="$(var.MgtSource)\LiquesceFacade.dll" KeyPath="yes" />
+         <Component Id="C_LiquesceFTPFacade.dll" Directory="ClientDIR">
+            <File Id="C_LiquesceFTPFacade.dll" Source="$(var.MgtSource)\LiquesceFTPFacade.dll" KeyPath="yes" />
          </Component>
-         <Component Id="LiquesceTray.exe.config" Directory="ClientDIR">
-            <File Source="$(var.TraySource)\LiquesceTray.exe.config" KeyPath="yes" />
+         <Component Id="LiquesceFTPTray.exe.config" Directory="ClientDIR">
+            <File Source="$(var.TraySource)\LiquesceFTPTray.exe.config" KeyPath="yes" />
          </Component>
-         <Component Id="LiquesceTray.exe" Directory="ClientDIR">
-            <File Source="$(var.TraySource)\LiquesceTray.exe" KeyPath="yes" />
+         <Component Id="LiquesceFTPTray.exe" Directory="ClientDIR">
+            <File Source="$(var.TraySource)\LiquesceFTPTray.exe" KeyPath="yes" />
          </Component>
       </ComponentGroup>
       <ComponentGroup Id="Service">
@@ -141,8 +114,8 @@
             <File Id="LiquesceFTPSvc.exe.config.File" Name="LiquesceFTPSvc.exe.config" Source="$(var.SvcSource)\LiquesceFTPSvc.exe.config"/>
             <ServiceControl Id='LiquesceFTPSvcControl' Name='LiquesceFTPSvc' Start='install' Stop='both' Remove='uninstall' Wait='yes' />
          </Component>
-         <Component Id="LiquesceFacade.dll" Directory="ServiceDIR">
-            <File Source="$(var.SvcSource)\LiquesceFacade.dll" KeyPath="yes" />
+         <Component Id="LiquesceFTPFacade.dll" Directory="ServiceDIR">
+            <File Source="$(var.SvcSource)\LiquesceFTPFacade.dll" KeyPath="yes" />
          </Component>
          <Component Id="NLog.dll" Directory="ServiceDIR">
             <File Source="$(var.SvcSource)\NLog.dll" KeyPath="yes" />
@@ -150,17 +123,17 @@
       </ComponentGroup>
       <DirectoryRef Id="ProgramMenuDir">
          <Component Id="ProgramMenuDir2" Guid="11234567-7E98-44CE-B049-C477CC0A2B01">
-            <Shortcut Id="Liquesce_Shortcut" Name="Liquesce MGT" Description="Liquesce Management Application" Target="[ClientDIR]Liquesce.exe" WorkingDirectory="ClientDIR" Icon="InstallerIcon" IconIndex="0" />
-            <Shortcut Id="LiquesceTray_Shortcut" Name="Liquesce Tray" Description="Liquesce Tray Application" Target="[ClientDIR]LiquesceTray.exe" WorkingDirectory="ClientDIR" Icon="InstallerIcon" IconIndex="0" />
-            <Shortcut Id="LiquesceTray_Start" Name="Liquesce Tray" Directory="StartupFolder" Description="Liquesce Tray Application" Target="[ClientDIR]LiquesceTray.exe" WorkingDirectory="ClientDIR" Icon="InstallerIcon" IconIndex="0" />
+            <Shortcut Id="Liquesce_Shortcut" Name="Liquesce MGT" Description="Liquesce FTP Management Application" Target="[ClientDIR]LiquesceFTPMgr.exe" WorkingDirectory="ClientDIR" Icon="InstallerIcon" IconIndex="0" />
+            <Shortcut Id="LiquesceTray_Shortcut" Name="Liquesce FTP Tray" Description="Liquesce FTP Tray Application" Target="[ClientDIR]LiquesceFTPTray.exe" WorkingDirectory="ClientDIR" Icon="InstallerIcon" IconIndex="0" />
+            <Shortcut Id="LiquesceTray_Start" Name="Liquesce FTP Tray" Directory="StartupFolder" Description="Liquesce FTP Tray Application" Target="[ClientDIR]LiquesceFTPTray.exe" WorkingDirectory="ClientDIR" Icon="InstallerIcon" IconIndex="0" />
             <util:InternetShortcut Type="url" Id="Home" Name="Liquesce Forum" Target="[ARPHELPLINK]" />
             <util:InternetShortcut Type="link" Id="Change" Name="Change Log" Target="[ClientDIR]ChangeLog.rtf"/>
             <RemoveFolder Id="ProgramMenuDir" On="uninstall"/>
-            <RegistryValue Root="HKCU" Key="Software\Microsoft\Liquesce" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+            <RegistryValue Root="HKCU" Key="Software\Microsoft\LiquesceFTP" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
          </Component>
       </DirectoryRef>
 
-      <Feature Id="ProductFeature" Title="Liquesce_Setup" Level="1">
+      <Feature Id="ProductFeature" Title="Liquesce_FTP_Setup" Level="1">
          <ComponentGroupRef Id="Service" />
          <ComponentRef Id="DataDir" />
          <ComponentGroupRef Id="Client" />
@@ -187,10 +160,10 @@
       <CustomAction Id="LiquesceFTPSvc.uninstall" BinaryKey="WixCA" DllEntry="CAQuietExec" Execute="deferred" Impersonate="no" Return="check" />
 
       <!--Custom Actions to start stop Application tray-->
-      <CustomAction Id="StartTrayApp" FileKey="LiquesceTray.exe" ExeCommand="" Return="asyncNoWait" />
-      <util:CloseApplication CloseMessage="yes" Id="CloseServerTray" Target="LiquesceTray.exe" RebootPrompt="no"/>
-      <CustomAction Id="MgtApp" FileKey="Liquesce.exe" ExeCommand="" Return="asyncNoWait" />
-      <util:CloseApplication CloseMessage="yes" Id="CloseMgtAppTray" Target="Liquesce.exe" RebootPrompt="no"/>
+      <CustomAction Id="StartTrayApp" FileKey="LiquesceFTPTray.exe" ExeCommand="" Return="asyncNoWait" />
+      <util:CloseApplication CloseMessage="yes" Id="CloseServerTray" Target="LiquesceFTPTray.exe" RebootPrompt="no"/>
+      <CustomAction Id="MgtApp" FileKey="LiquesceFTPMgr.exe" ExeCommand="" Return="asyncNoWait" />
+      <util:CloseApplication CloseMessage="yes" Id="CloseMgtAppTray" Target="LiquesceFTPMgr.exe" RebootPrompt="no"/>
 
       <InstallUISequence>
          <Custom Action="WixCloseApplications" Before="LaunchConditions" />

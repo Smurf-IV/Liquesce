@@ -5,7 +5,7 @@ using System.Threading;
 using System.Windows.Forms;
 using NLog;
 
-namespace Liquesce
+namespace LiquesceFTPMgr
 {
    static class Program
    {

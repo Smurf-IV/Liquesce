@@ -2,19 +2,19 @@
 using System.Runtime.Serialization;
 using System.ServiceModel;
 
-namespace LiquesceFacade
+namespace LiquesceFTPFacade
 {
    public interface IStateChange
    {
       [OperationContract(IsOneWay = true)]
-      void Update(LiquesceSvcState state, string message);
+      void Update(LiquesceFTPSvcState state, string message);
    }
 
    [ServiceContract(
       CallbackContract = typeof(IStateChange),
       SessionMode = SessionMode.Required)
    ]
-   public interface ILiquesceCallBack
+   public interface ILiquesceFTPCallBack
    {
 
       [OperationContract(IsOneWay = true)]

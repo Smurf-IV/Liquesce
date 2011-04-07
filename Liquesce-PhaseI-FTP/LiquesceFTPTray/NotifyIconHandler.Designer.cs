@@ -1,4 +1,4 @@
-﻿namespace LiquesceTray
+﻿namespace LiquesceFTPTray
 {
    partial class NotifyIconHandler
    {
@@ -61,7 +61,7 @@
          // 
          // stopServiceToolStripMenuItem
          // 
-         this.stopServiceToolStripMenuItem.Image = global::LiquesceTray.Properties.Resources.Warning;
+         this.stopServiceToolStripMenuItem.Image = global::LiquesceFTPTray.Properties.Resources.Warning;
          this.stopServiceToolStripMenuItem.Name = "stopServiceToolStripMenuItem";
          this.stopServiceToolStripMenuItem.Size = new System.Drawing.Size(210, 30);
          this.stopServiceToolStripMenuItem.Text = "Stop Service";
@@ -70,7 +70,7 @@
          // 
          // startServiceToolStripMenuItem
          // 
-         this.startServiceToolStripMenuItem.Image = global::LiquesceTray.Properties.Resources.Config;
+         this.startServiceToolStripMenuItem.Image = global::LiquesceFTPTray.Properties.Resources.Config;
          this.startServiceToolStripMenuItem.Name = "startServiceToolStripMenuItem";
          this.startServiceToolStripMenuItem.Size = new System.Drawing.Size(210, 30);
          this.startServiceToolStripMenuItem.Text = "Start Service";
@@ -80,7 +80,7 @@
          // managementApp
          // 
          this.managementApp.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-         this.managementApp.Image = global::LiquesceTray.Properties.Resources.Liquesce;
+         this.managementApp.Image = global::LiquesceFTPTray.Properties.Resources.Liquesce;
          this.managementApp.Name = "managementApp";
          this.managementApp.Size = new System.Drawing.Size(210, 30);
          this.managementApp.Text = "&Management App..";
@@ -88,7 +88,7 @@
          // 
          // showFreeDiskSpaceToolStripMenuItem
          // 
-         this.showFreeDiskSpaceToolStripMenuItem.Image = global::LiquesceTray.Properties.Resources.free_space;
+         this.showFreeDiskSpaceToolStripMenuItem.Image = global::LiquesceFTPTray.Properties.Resources.free_space;
          this.showFreeDiskSpaceToolStripMenuItem.Name = "showFreeDiskSpaceToolStripMenuItem";
          this.showFreeDiskSpaceToolStripMenuItem.Size = new System.Drawing.Size(210, 30);
          this.showFreeDiskSpaceToolStripMenuItem.Text = "Show Free Disk Space";
@@ -96,7 +96,7 @@
          // 
          // repeatLastMessage
          // 
-         this.repeatLastMessage.Image = global::LiquesceTray.Properties.Resources.Question;
+         this.repeatLastMessage.Image = global::LiquesceFTPTray.Properties.Resources.Question;
          this.repeatLastMessage.Name = "repeatLastMessage";
          this.repeatLastMessage.Size = new System.Drawing.Size(210, 30);
          this.repeatLastMessage.Text = "&Repeat Last message...";
@@ -109,7 +109,7 @@
          // 
          // exitToolStripMenuItem
          // 
-         this.exitToolStripMenuItem.Image = global::LiquesceTray.Properties.Resources.Stop;
+         this.exitToolStripMenuItem.Image = global::LiquesceFTPTray.Properties.Resources.Stop;
          this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
          this.exitToolStripMenuItem.Size = new System.Drawing.Size(210, 30);
          this.exitToolStripMenuItem.Text = "&Exit";
@@ -117,7 +117,7 @@
          // 
          // serviceController1
          // 
-         this.serviceController1.ServiceName = "LiquesceSvc";
+         this.serviceController1.ServiceName = "LiquesceFTPSvc";
          // 
          // timer1
          // 
@@ -127,8 +127,8 @@
          // notifyIcon1
          // 
          this.notifyIcon1.ContextMenuStrip = this.rightClickContextMenu;
-         this.notifyIcon1.Icon = global::LiquesceTray.Properties.Resources.LiquesceIcon;
-         this.notifyIcon1.Text = "Liquesce Starting up";
+         this.notifyIcon1.Icon = global::LiquesceFTPTray.Properties.Resources.LiquesceIcon;
+         this.notifyIcon1.Text = "Liquesce FTP Starting up";
          this.notifyIcon1.Visible = true;
          this.notifyIcon1.DoubleClick += new System.EventHandler(this.notifyIcon1_DoubleClick);
          // 

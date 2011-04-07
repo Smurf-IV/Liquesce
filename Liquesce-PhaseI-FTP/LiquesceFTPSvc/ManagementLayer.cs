@@ -5,21 +5,20 @@ using System.Linq;
 using System.ServiceModel;
 using System.Threading;
 using System.Xml.Serialization;
-using LiquesceFacade;
-using LiquesceFTPSvc;
+using LiquesceFTPFacade;
 using LiquesceFTPSvc.FTP;
 using NLog;
 using NLog.Config;
 
-namespace LiquesceSvc
+namespace LiquesceFTPSvc
 {
    class ManagementLayer
    {
       static private readonly Logger Log = LogManager.GetCurrentClassLogger();
       private static ManagementLayer instance;
       private ConfigDetails currentConfigDetails;
-      private readonly string configFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "LiquesceSvc", Settings1.Default.ConfigFileName);
-      private LiquesceSvcState state = LiquesceSvcState.Stopped;
+      private readonly string configFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "LiquesceFTPSvc", Settings1.Default.ConfigFileName);
+      private LiquesceFTPSvcState state = LiquesceFTPSvcState.Stopped;
       private static readonly Dictionary<Client, IStateChange> subscribers = new Dictionary<Client, IStateChange>();
       private static readonly ReaderWriterLockSlim subscribersLock = new ReaderWriterLockSlim();
       internal static FTPServer FtpServer;
@@ -92,7 +91,7 @@ namespace LiquesceSvc
          {
                if (currentConfigDetails == null)
                   ReadConfigDetails();
-               FireStateChange(LiquesceSvcState.InError, "Starting up");
+               FireStateChange(LiquesceFTPSvcState.InError, "Starting up");
                if (currentConfigDetails == null)
                {
                   Log.Fatal("Unable to read the config details to allow this service to run. Will now exit");
@@ -103,7 +102,7 @@ namespace LiquesceSvc
                }
                SetNLogLevel(currentConfigDetails.ServiceLogLevel);
 
-               FireStateChange(LiquesceSvcState.Unknown, "Dokan initialised");
+               FireStateChange(LiquesceFTPSvcState.Unknown, "LiquesceFTPSvc initialised");
                FtpServer = new FTPServer(currentConfigDetails);
                IsRunning = FtpServer.Start(); 
 
@@ -206,7 +205,7 @@ namespace LiquesceSvc
          }
       }
 
-      internal void FireStateChange(LiquesceSvcState newState, string message)
+      internal void FireStateChange(LiquesceFTPSvcState newState, string message)
       {
          try
          {
@@ -230,7 +229,7 @@ namespace LiquesceSvc
          }
       }
 
-      public LiquesceSvcState State
+      public LiquesceFTPSvcState State
       {
          get { return state; }
       }
@@ -239,13 +238,13 @@ namespace LiquesceSvc
       {
          if (IsRunning)
          {
-            FireStateChange(LiquesceSvcState.Unknown, "Stop has been requested");
+            FireStateChange(LiquesceFTPSvcState.Unknown, "Stop has been requested");
             if ((FtpServer != null)
                && IsRunning)
             {
                FtpServer.Stop();
             }
-            FireStateChange(LiquesceSvcState.Stopped, "Dokan is not mounted");
+            FireStateChange(LiquesceFTPSvcState.Stopped, "Dokan is not mounted");
          }
       }
 

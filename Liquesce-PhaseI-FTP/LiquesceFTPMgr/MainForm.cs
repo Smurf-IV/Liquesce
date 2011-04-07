@@ -9,10 +9,10 @@ using System.ServiceModel;
 using System.ServiceProcess;
 using System.Threading;
 using System.Windows.Forms;
-using LiquesceFacade;
+using LiquesceFTPFacade;
 using NLog;
 
-namespace Liquesce
+namespace LiquesceFTPMgr
 {
    public sealed partial class MainForm : Form
    {
@@ -50,8 +50,8 @@ namespace Liquesce
          {
             try
             {
-               ChannelFactory<ILiquesce> factory = new ChannelFactory<ILiquesce>("LiquesceFacade");
-               ILiquesce remoteIF = factory.CreateChannel();
+               ChannelFactory<ILiquesceFTP> factory = new ChannelFactory<ILiquesceFTP>("LiquesceFTPFacade");
+               ILiquesceFTP remoteIF = factory.CreateChannel();
                cd = remoteIF.ConfigDetails;
             }
             catch (Exception ex)
@@ -661,8 +661,8 @@ namespace Liquesce
                   cd.SourceLocations.Add(node.Text);
                }
 
-               ChannelFactory<ILiquesce> factory = new ChannelFactory<ILiquesce>("LiquesceFacade");
-               ILiquesce remoteIF = factory.CreateChannel();
+               ChannelFactory<ILiquesceFTP> factory = new ChannelFactory<ILiquesceFTP>("LiquesceFTPFacade");
+               ILiquesceFTP remoteIF = factory.CreateChannel();
                Log.Info("Didn't go bang so stop");
                remoteIF.Stop();
                Log.Info("Send the new details");
@@ -701,12 +701,12 @@ namespace Liquesce
 
       private void userLogViewToolStripMenuItem_Click(object sender, EventArgs e)
       {
-         DisplayLog.LogDisplay(@"Liquesce\Logs");
+         DisplayLog.LogDisplay(@"LiquesceFTPMgr\Logs");
       }
 
       private void serviceLogViewToolStripMenuItem_Click(object sender, EventArgs e)
       {
-         DisplayLog.LogDisplay(@"LiquesceSvc\Logs");
+         DisplayLog.LogDisplay(@"LiquesceFTPSvc\Logs");
 
       }
 

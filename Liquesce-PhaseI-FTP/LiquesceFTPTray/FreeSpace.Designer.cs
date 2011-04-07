@@ -1,4 +1,4 @@
-﻿namespace LiquesceTray
+﻿namespace LiquesceFTPTray
 {
     partial class FreeSpace
     {
@@ -59,7 +59,7 @@
             this.MaximumSize = new System.Drawing.Size(807, 99999);
             this.MinimumSize = new System.Drawing.Size(807, 0);
             this.Name = "FreeSpace";
-            this.Text = "Liquesce Free Space";
+            this.Text = "Liquesce FTP Free Space";
             this.Load += new System.EventHandler(this.Form1_Load);
             this.ResumeLayout(false);
 

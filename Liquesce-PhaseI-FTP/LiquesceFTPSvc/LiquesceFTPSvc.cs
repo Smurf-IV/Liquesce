@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.ServiceModel;
 using System.ServiceProcess;
 using System.Threading;
-using LiquesceSvc;
 using NLog;
 
 namespace LiquesceFTPSvc
@@ -54,8 +53,8 @@ namespace LiquesceFTPSvc
          }
       }
 
-      private static ServiceHost _ILiquesceHost;
-      private static ServiceHost _ILiquesceHostCallBack;
+      private static ServiceHost _ILiquesceFTPHost;
+      private static ServiceHost _ILiquesceFTPHostCallBack;
 
       public void StartService(string[] args)
       {
@@ -86,10 +85,10 @@ namespace LiquesceFTPSvc
                      break;
                }
             }
-            _ILiquesceHost = new ServiceHost(typeof(LiquesceSvc.LiquesceFacade));
-            _ILiquesceHostCallBack = new ServiceHost(typeof(LiquesceCallBackFacade));
-            _ILiquesceHost.Open();
-            _ILiquesceHostCallBack.Open();
+            _ILiquesceFTPHost = new ServiceHost(typeof(LiquesceFTPFacade));
+            _ILiquesceFTPHostCallBack = new ServiceHost(typeof(LiquesceFTPCallBackFacade));
+            _ILiquesceFTPHost.Open();
+            _ILiquesceFTPHostCallBack.Open();
 
             if (RunningAsService)
             {
@@ -165,14 +164,14 @@ HTTP could not register URL http://+:8731/Design_Time_Addresses/LiquesceSvc/Liqu
 
 
             // Then stop the host calling in
-            if (_ILiquesceHost != null)
-               _ILiquesceHost.Close();
+            if (_ILiquesceFTPHost != null)
+               _ILiquesceFTPHost.Close();
             // Now stop the drives
             ManagementLayer.Instance.Stop();
 
             // Now stop the callbacks that would be firing out stating the stop has just occurred
-            if (_ILiquesceHostCallBack != null)
-               _ILiquesceHostCallBack.Close();
+            if (_ILiquesceFTPHostCallBack != null)
+               _ILiquesceFTPHostCallBack.Close();
 
             Log.Info("LiquesceFTPSvc stopped.");
          }
