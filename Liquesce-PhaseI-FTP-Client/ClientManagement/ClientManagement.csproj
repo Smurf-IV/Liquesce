@@ -118,12 +118,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\LiquesceFaçade\LiquesceFacade.csproj">
-      <Project>{CFE5DC7B-25FB-45C4-AF18-1963853375E1}</Project>
-      <Name>LiquesceFacade</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="Liquesce.ico" />
   </ItemGroup>
   <ItemGroup>
@@ -151,7 +145,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="YearStamp.MonthStamp.DayStamp.Increment" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UseGlobalSettings="False" />
+      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="YearStamp.MonthStamp.DayStamp.Increment" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
