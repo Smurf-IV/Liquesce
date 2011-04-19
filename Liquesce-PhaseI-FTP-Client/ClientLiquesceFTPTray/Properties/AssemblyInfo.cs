@@ -4,12 +4,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("ClientLiquesceTray")]
+[assembly: AssemblyTitle("ClientLiquesceFTPTray")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Smurf-IV")]
-[assembly: AssemblyProduct("ClientLiquesceTray")]
-[assembly: AssemblyCopyright("Copyright © Smurf-IV 2010")]
+[assembly: AssemblyProduct("ClientLiquesceFTPTray")]
+[assembly: AssemblyCopyright("Copyright © Smurf-IV 2011")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -31,5 +31,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("2011.3.23.11")]
-[assembly: AssemblyFileVersion("2011.3.23.11")]
+[assembly: AssemblyVersion("2011.4.19.15")]
+[assembly: AssemblyFileVersion("2011.4.19.15")]

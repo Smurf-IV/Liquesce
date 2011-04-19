@@ -3,7 +3,7 @@ using System.Reflection;
 using System.Windows.Forms;
 using NLog;
 
-namespace ClientLiquesceTray
+namespace ClientLiquesceFTPTray
 {
    static class Program
    {

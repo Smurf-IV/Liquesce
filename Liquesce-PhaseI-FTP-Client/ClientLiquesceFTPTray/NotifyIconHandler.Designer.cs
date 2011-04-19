@@ -1,4 +1,4 @@
-﻿namespace ClientLiquesceTray
+﻿namespace ClientLiquesceFTPTray
 {
    partial class NotifyIconHandler
    {

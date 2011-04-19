@@ -4,7 +4,7 @@ using System.ServiceProcess;
 using System.Windows.Forms;
 using NLog;
 
-namespace ClientLiquesceTray
+namespace ClientLiquesceFTPTray
 {
    public partial class NotifyIconHandler : UserControl
    {

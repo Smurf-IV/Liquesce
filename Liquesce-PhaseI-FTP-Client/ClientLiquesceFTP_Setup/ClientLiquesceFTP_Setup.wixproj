@@ -6,7 +6,7 @@
     <ProductVersion>3.5</ProductVersion>
     <ProjectGuid>{d748793e-341f-44e2-b872-a84259e51173}</ProjectGuid>
     <SchemaVersion>2.0</SchemaVersion>
-    <OutputName>ClientLiquesce_Setup</OutputName>
+    <OutputName>ClientLiquesceFTP_Setup</OutputName>
     <OutputType>Package</OutputType>
     <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
     <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
@@ -23,27 +23,51 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+    <SuppressAllWarnings>False</SuppressAllWarnings>
+    <Pedantic>True</Pedantic>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Product.wxs" />
   </ItemGroup>
   <ItemGroup>
-    <WixExtension Include="WixFirewallExtension">
-      <HintPath>C:\Program Files\Windows Installer XML v3.5\bin\WixFirewallExtension.dll</HintPath>
-      <Name>WixFirewallExtension</Name>
-    </WixExtension>
     <WixExtension Include="WixUtilExtension">
-      <HintPath>C:\Program Files\Windows Installer XML v3.5\bin\WixUtilExtension.dll</HintPath>
+      <HintPath>$(WixExtDir)\WixUtilExtension.dll</HintPath>
       <Name>WixUtilExtension</Name>
     </WixExtension>
     <WixExtension Include="WixUIExtension">
-      <HintPath>C:\Program Files\Windows Installer XML v3.5\bin\WixUIExtension.dll</HintPath>
+      <HintPath>$(WixExtDir)\WixUIExtension.dll</HintPath>
       <Name>WixUIExtension</Name>
     </WixExtension>
     <WixExtension Include="WixNetFxExtension">
-      <HintPath>C:\Program Files\Windows Installer XML v3.5\bin\WixNetFxExtension.dll</HintPath>
+      <HintPath>$(WixExtDir)\WixNetFxExtension.dll</HintPath>
       <Name>WixNetFxExtension</Name>
     </WixExtension>
+    <WixExtension Include="WixFirewallExtension">
+      <HintPath>$(WixExtDir)\WixFirewallExtension.dll</HintPath>
+      <Name>WixFirewallExtension</Name>
+    </WixExtension>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ClientLiquesceFTPTray\ClientLiquesceFTPTray.csproj">
+      <Name>ClientLiquesceFTPTray</Name>
+      <Project>{ef7f7bcb-c045-4fe2-84a7-318df573b148}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLLOCATION</RefTargetDir>
+    </ProjectReference>
+    <ProjectReference Include="..\ThirdParty\DokanNet\DokanNet.csproj">
+      <Name>DokanNet</Name>
+      <Project>{a09b408a-26a0-4ff8-83d5-6e1b1da5f63c}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLLOCATION</RefTargetDir>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Banner.bmp" />
+    <Content Include="GPL.rtf" />
   </ItemGroup>
   <Import Project="$(WixTargetsPath)" />
   <!--

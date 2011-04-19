@@ -1,11 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Net.NetworkInformation;
-using System.ServiceModel;
 using System.ServiceProcess;
 using System.Windows.Forms;
 using System.Xml.Serialization;
-using LiquesceFacade;
 using NLog;
 
 namespace ClientManagement

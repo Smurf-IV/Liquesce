@@ -5,19 +5,23 @@
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
      >
 
-   <?define UpgradeCode = "47ac796f-b05e-4b01-92d2-a53e13e4089b" ?>
-   <!-- do not change this ever !-->
-   <?define Version = "11.01.11" ?>
-   <!-- Change this when creating new release YY-MM-DD -->
-   <?define ProductName = "Liquesce Client Share Enabler"?>
+   <?define TraySource=$(sys.SOURCEFILEDIR)..\ClientLiquesceFTPTray\bin\Release ?>
 
-   <Product Version="$(var.Version)" Id="068d6e63-416a-4669-89d1-78e1247b00d0" UpgradeCode="$(var.UpgradeCode)"
+   <!-- do not change this ever !-->
+   <?define UpgradeCode = "F6F94F17-A05F-4824-8DD9-9F5E8267D785" ?>
+
+   <!-- Change this when creating new release YY-MM-DD -->
+   <?define Version = "11.04.07" ?>
+
+   <?define ProductName = "Liquesce FTP Drive Mapper"?>
+
+   <Product Version="$(var.Version)" Id="*" UpgradeCode="$(var.UpgradeCode)"
           Name="$(var.ProductName)" Language="1033" Manufacturer="http://liquesce.codeplex.com/" >
 
       <Package Id="*" Keywords='Installer'
                InstallScope='perMachine'
                Description="$(var.ProductName)"
-               Comments="Liquesce" InstallerVersion="301" Compressed="yes"
+               Comments="Liquesce FTP" InstallerVersion="301" Compressed="yes"
                AdminImage='no'
                Platform='x86'
                />
@@ -29,7 +33,7 @@
       <Property Id="ARPCOMMENTS" Value="http://liquesce.codeplex.com/discussions"/>
       <Property Id="ARPCONTACT" Value="Smurf-IV" />
       <Property Id="ARPURLINFOABOUT" Value="http://liquesce.codeplex.com/" />
-      <Icon Id="InstallerIcon" SourceFile="Z:\Liquesce\Liquesce\Resources\Liquesce.ico" />
+      <Icon Id="InstallerIcon" SourceFile="$(sys.SOURCEFILEDIR)..\ClientLiquesceFTPTray\Resources\Liquesce.ico" />
       <Property Id="ARPPRODUCTICON" Value="InstallerIcon" />
 
       <!-- Properties to allow detection of .Net installation -->
@@ -77,146 +81,100 @@
 
       <Directory Id="TARGETDIR" Name="SourceDir">
          <Directory Id="ProgramFilesFolder">
-            <Directory Id="INSTALLDIR" Name="Liquesce">
-               <Directory Id="ClientDIR" Name="Liquesce Client">
-               </Directory>
-               <Directory Id="ServiceDIR" Name="Client Liquesce Service">
-               </Directory>
+            <Directory Id="INSTALLDIR" Name="LiquesceFTP">
+               <Directory Id="ClientDIR" Name="Liquesce FTP Client" />
             </Directory>
          </Directory>
          <Directory Id="ProgramMenuFolder">
-            <Directory Id="ProgramMenuDir" Name="Liquesce"/>
+            <Directory Id="ProgramMenuDir" Name="Liquesce FTP"/>
             <Directory Id="StartupFolder" Name="Startup" />
-         </Directory>
-
-         <Directory Id="CommonAppDataFolder" Name="CommonAppData">
-            <Directory Id="LiquesceSvc_Data" Name="LiquesceSvc" >
-               <Component Id="DataDir" Guid="01234567-7E98-44CE-B049-C477CC0A2B02" KeyPath="yes" />
-            </Directory>
          </Directory>
       </Directory>
 
-      <DirectoryRef Id="ClientDIR">
-         <Component Id="Client.Component" Guid="5ebf3f29-9cf1-44fe-a94c-cc1b4fe09367">
-            <File Id="InstallerIcon" Name="Liquesce.ico" Source="Z:\Liquesce\Liquesce\Resources\Liquesce.ico" />
-            <File Id="ClientManagement.exe" Name="ClientManagement.exe" Source="Z:\Liquesce\ClientManagement\bin\Release\ClientManagement.exe" KeyPath="yes"/>
+      <ComponentGroup Id="Client" >
+         <Component Id="Client" Guid="5EBF3F29-9CF1-44FE-A94C-CC1B4FE09367" Directory="ClientDIR">
+            <File Id="InstallerIcon" Name="Liquesce.ico" Source="$(sys.SOURCEFILEDIR)..\ClientLiquesceFTPTray\Resources\Liquesce.ico" />
+            <File Id="ClientLiquesceFTPTray.exe" Name="ClientLiquesceFTPTray.exe" Source="$(var.TraySource)\ClientLiquesceFTPTray.exe" KeyPath="yes"/>
          </Component>
-         <Component Id="ClientManagement.exe.config.Component" >
-            <File Source="Z:\Liquesce\ClientManagement\bin\Release\ClientManagement.exe.config" KeyPath="yes" />
+         <Component Id="ChangeLog" Directory="ClientDIR">
+            <File Source="$(sys.SOURCEFILEDIR)..\ClientLiquesceFTPTray\ChangeLog.rtf" KeyPath="yes" />
          </Component>
-         <Component Id="C_NLog.dll.Component" >
-            <File Id="C_NLog.dll" Source="Z:\Liquesce\ClientManagement\bin\Release\NLog.dll" KeyPath="yes" />
+         <Component Id="ClientLiquesceFTPTray.exe.config" Directory="ClientDIR">
+            <File Source="$(var.TraySource)\ClientLiquesceFTPTray.exe.config" KeyPath="yes" />
          </Component>
-         <Component Id="C_LiquesceFacade.dll.Component" >
-            <File Id="C_LiquesceFacade.dll" Source="Z:\Liquesce\ClientManagement\bin\Release\LiquesceFacade.dll" KeyPath="yes" />
+         <Component Id="C_NLog.dll" Directory="ClientDIR">
+            <File Id="C_NLog.dll" Source="$(var.TraySource)\NLog.dll" KeyPath="yes" />
          </Component>
-         <!--<Component Id="ClientLiquesceTray.exe.config.Component" >
-               <File Source="Z:\Liquesce\ClientLiquesceTray\bin\Release\ClientLiquesceTray.exe.config" KeyPath="yes" />
-            </Component>
-            <Component Id="ClientLiquesceTray.exe.Component" >
-               <File Id="ClientLiquesceTray.exe" Source="Z:\Liquesce\ClientLiquesceTray\bin\Release\ClientLiquesceTray.exe" KeyPath="yes" />
-            </Component>-->
-      </DirectoryRef>
-      <DirectoryRef Id="ServiceDIR">
-         <Component Id="ClientLiquesceSvc.Component" Guid="Bebf3f29-9cf1-44fe-a94c-cc1b4fe09368">
-            <File Id="ClientLiquesceSvc.File" Name="ClientLiquesceSvc.exe" Source="Z:\Liquesce\ClientLiquesceSvc\bin\Release\ClientLiquesceSvc.exe" KeyPath="yes">
-               <fire:FirewallException Id="LiquesceFWX2" Name="LiquesceSvc" Scope="localSubnet" IgnoreFailure="yes" />
-               <!-- Why Use NGen ? http://msdn.microsoft.com/en-gb/magazine/cc163610.aspx -->
-               <netfx:NativeImage Id="ngen_LiquesceSvc.exe" Platform="32bit" Priority="1" AppBaseDirectory="ServiceDIR"/>
-            </File>
-            <File Id="ClientLiquesceSvc.exe.config.File" Name="ClientLiquesceSvc.exe.config" Source="Z:\Liquesce\ClientLiquesceSvc\bin\Release\ClientLiquesceSvc.exe.config"/>
-            <ServiceControl Id='ClientLiquesceSvcControl' Name='ClientLiquesceSvc' Start='install' Stop='both' Remove='uninstall' Wait='yes' />
-         </Component>
-         <Component Id="DokanNet.dll.Component" >
-            <File Source="Z:\Liquesce\ClientLiquesceSvc\bin\Release\DokanNet.dll" KeyPath="yes" />
-         </Component>
-         <Component Id="LiquesceFacade.dll.Component" >
-            <File Source="Z:\Liquesce\ClientLiquesceSvc\bin\Release\LiquesceFacade.dll" KeyPath="yes" />
-         </Component>
-         <Component Id="NLog.dll.Component" >
-            <File Source="Z:\Liquesce\ClientLiquesceSvc\bin\Release\NLog.dll" KeyPath="yes" />
-         </Component>
-      </DirectoryRef>
+      </ComponentGroup>
       <DirectoryRef Id="ProgramMenuDir">
          <Component Id="ProgramMenuDir2" Guid="11234567-7E98-44CE-B049-C477CC0A2B01">
-            <Shortcut Id="ClientLiquesce_Shortcut" Name="Client Liquesce MGT" Description="Client Liquesce Management Application" Target="[ClientDIR]ClientManagement.exe" WorkingDirectory="ClientDIR" Icon="InstallerIcon" IconIndex="0" />
-            <!--<Shortcut Id="ClientLiquesceTray_Shortcut" Name="Client Liquesce Tray" Description="Client Liquesce Tray Application" Target="[ClientDIR]ClientLiquesceTray.exe" WorkingDirectory="ClientDIR" Icon="InstallerIcon" IconIndex="0" />
-               <Shortcut Id="ClientLiquesceTray_Start" Name="Liquesce Tray" Directory="StartupFolder" Description="Client Liquesce Tray Application" Target="[ClientDIR]ClientLiquesceTray.exe" WorkingDirectory="ClientDIR" Icon="InstallerIcon" IconIndex="0" />-->
+            <Shortcut Id="LiquesceTray_Shortcut" Name="Liquesce FTP Tray" Description="Liquesce FTP Tray Application" Target="[ClientDIR]ClientLiquesceFTPTray.exe" WorkingDirectory="ClientDIR" Icon="InstallerIcon" IconIndex="0" />
+            <Shortcut Id="LiquesceTray_Start" Name="Liquesce FTP Tray" Directory="StartupFolder" Description="Liquesce FTP Tray Application" Target="[ClientDIR]ClientLiquesceFTPTray.exe" WorkingDirectory="ClientDIR" Icon="InstallerIcon" IconIndex="0" />
             <util:InternetShortcut Type="url" Id="Home" Name="Liquesce Forum" Target="[ARPHELPLINK]" />
+            <util:InternetShortcut Type="link" Id="Change" Name="Change Log" Target="[ClientDIR]ChangeLog.rtf"/>
             <RemoveFolder Id="ProgramMenuDir" On="uninstall"/>
-            <RegistryValue Root="HKCU" Key="Software\Microsoft\LiquesceClient" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+            <RegistryValue Root="HKCU" Key="Software\Microsoft\ClientLiquesceFTP" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
          </Component>
       </DirectoryRef>
 
-      <Feature Id="ProductFeature" Title="Liquesce_Setup" Level="1">
-         <ComponentRef Id="ClientLiquesceSvc.Component" />
-         <ComponentRef Id="DokanNet.dll.Component"/>
-         <ComponentRef Id="LiquesceFacade.dll.Component" />
-         <ComponentRef Id="NLog.dll.Component" />
-         <ComponentRef Id="DataDir" />
-
-         <ComponentRef Id="Client.Component" />
-         <ComponentRef Id="ClientManagement.exe.config.Component" />
-         <ComponentRef Id="C_NLog.dll.Component" />
-         <ComponentRef Id="C_LiquesceFacade.dll.Component" />
+      <Feature Id="ProductFeature" Title="Liquesce_FTP_Setup" Level="1">
+         <ComponentGroupRef Id="Client" />
          <ComponentRef Id='ProgramMenuDir2'/>
-
-         <!--<ComponentRef Id="ClientLiquesceTray.exe.Component" />
-            <ComponentRef Id="ClientLiquesceTray.exe.config.Component" />-->
       </Feature>
 
 
-      <!--Write custom actions to install, uninstall, commit and rollback the changes-->
-      <CustomAction Id="ClientLiquesceSvc.commit.SetProperty" Property="ClientLiquesceSvc.commit"
-        Value='"[NETFRAMEWORK40FULLINSTALLROOTDIR]InstallUtil.exe" /installtype=notransaction /action=commit /LogFile="[LiquesceSvc_Data]ClientLiquesceSvc.commit.log" /InstallStateDir="[CommonAppDataFolder]LiquesceSvc" "[#ClientLiquesceSvc.File]"' />
-
-      <CustomAction Id="ClientLiquesceSvc.rollback.SetProperty" Property="ClientLiquesceSvc.rollback"
-        Value='"[NETFRAMEWORK40FULLINSTALLROOTDIR]InstallUtil.exe" /installtype=notransaction /action=rollback /LogFile="[LiquesceSvc_Data]ClientLiquesceSvc.rollback.log" /InstallStateDir="[CommonAppDataFolder]LiquesceSvc" "[#ClientLiquesceSvc.File]"' />
-
-      <CustomAction Id="ClientLiquesceSvc.install.SetProperty" Property="ClientLiquesceSvc.install"
-        Value='"[NETFRAMEWORK40FULLINSTALLROOTDIR]InstallUtil.exe" /installtype=notransaction /action=install /LogFile="[LiquesceSvc_Data]ClientLiquesceSvc.install.log" /InstallStateDir="[CommonAppDataFolder]LiquesceSvc" "[#ClientLiquesceSvc.File]"' />
-
-      <CustomAction Id="ClientLiquesceSvc.uninstall.SetProperty" Property="ClientLiquesceSvc.uninstall"
-        Value='"[NETFRAMEWORK40FULLINSTALLROOTDIR]InstallUtil.exe" /installtype=notransaction /action=uninstall /LogFile="[LiquesceSvc_Data]ClientLiquesceSvc.uninstall.log" /InstallStateDir="[CommonAppDataFolder]LiquesceSvc" "[#ClientLiquesceSvc.File]"' />
-
-      <CustomAction Id="ClientLiquesceSvc.commit" BinaryKey="WixCA" DllEntry="CAQuietExec" Execute="commit" Impersonate="no" Return="check" />
-      <CustomAction Id="ClientLiquesceSvc.rollback" BinaryKey="WixCA" DllEntry="CAQuietExec" Execute="rollback" Impersonate="no" Return="check" />
-      <CustomAction Id="ClientLiquesceSvc.install" BinaryKey="WixCA" DllEntry="CAQuietExec" Execute="deferred" Impersonate="no" Return="check" />
-      <CustomAction Id="ClientLiquesceSvc.uninstall" BinaryKey="WixCA" DllEntry="CAQuietExec" Execute="deferred" Impersonate="no" Return="check" />
-
-      <CustomAction Id="StopService.SetProperty" Property="StopService" Value='"[System64Folder]Net.exe stop FRWinService"' />
-      <CustomAction Id="StopService" BinaryKey="WixCA" DllEntry="CAQuietExec" Execute="deferred" Impersonate="no" Return="check"/>
-
-      <CustomAction Id="StartService.SetProperty" Property="StartService" Value='"[System64Folder]Net.exe start FRWinService"' />
-      <CustomAction Id="StartService" BinaryKey="WixCA" DllEntry="CAQuietExec" Execute="deferred" Impersonate="no" Return="check"/>
-
       <!--Custom Actions to start stop Application tray-->
-      <!--<CustomAction Id="StartTrayApp" FileKey="LiquesceTray.exe" ExeCommand="" Return="asyncNoWait" />
-         <util:CloseApplication CloseMessage="yes" Id="CloseServerTray" Target="LiquesceTray.exe" RebootPrompt="no"/>
-         <CustomAction Id="MgtApp" FileKey="Liquesce.exe" ExeCommand="" Return="asyncNoWait" />
-         <util:CloseApplication CloseMessage="yes" Id="CloseMgtAppTray" Target="Liquesce.exe" RebootPrompt="no"/>
+      <CustomAction Id="StartTrayApp" FileKey="ClientLiquesceFTPTray.exe" ExeCommand="" Return="asyncNoWait" />
+      <util:CloseApplication CloseMessage="yes" Id="CloseFTPTray" Target="ClientLiquesceFTPTray.exe" RebootPrompt="no"/>
 
-         <InstallUISequence>
-            <Custom Action="WixCloseApplications" Before="LaunchConditions" />
-         </InstallUISequence>-->
+      <InstallUISequence>
+         <Custom Action="WixCloseApplications" Before="LaunchConditions" />
+      </InstallUISequence>
 
       <!-- Now to sequence these Custom Actions in the execute sequence -->
       <InstallExecuteSequence>
-         <!--<Custom Action="WixCloseApplications" Before="LaunchConditions" />-->
+         <Custom Action="WixCloseApplications" Before="LaunchConditions" />
 
-         <Custom Action="ClientLiquesceSvc.commit.SetProperty" After="InstallServices"><![CDATA[ $ClientLiquesceSvc.Component > 2 ]]></Custom>
-         <Custom Action="ClientLiquesceSvc.commit" After="ClientLiquesceSvc.commit.SetProperty"><![CDATA[ $ClientLiquesceSvc.Component > 2 ]]></Custom>
-
-         <Custom Action="ClientLiquesceSvc.rollback.SetProperty" After="ClientLiquesceSvc.commit"><![CDATA[ $ClientLiquesceSvc.Component > 2 ]]></Custom>
-         <Custom Action="ClientLiquesceSvc.rollback" After="ClientLiquesceSvc.rollback.SetProperty"><![CDATA[ $ClientLiquesceSvc.Component > 2 ]]></Custom>
-
-         <Custom Action="ClientLiquesceSvc.install.SetProperty" After="ClientLiquesceSvc.rollback"><![CDATA[ $ClientLiquesceSvc.Component > 2 ]]></Custom>
-         <Custom Action="ClientLiquesceSvc.install" After="ClientLiquesceSvc.install.SetProperty"><![CDATA[ $ClientLiquesceSvc.Component > 2 ]]></Custom>
-
-         <Custom Action="ClientLiquesceSvc.uninstall.SetProperty" After="MsiUnpublishAssemblies"><![CDATA[ $ClientLiquesceSvc.Component = 2 ]]></Custom>
-         <Custom Action="ClientLiquesceSvc.uninstall" After="ClientLiquesceSvc.uninstall.SetProperty"><![CDATA[ $ClientLiquesceSvc.Component = 2 ]]></Custom>
-         <!--<Custom Action="StartTrayApp" After="InstallFinalize">Not Installed</Custom>
-            <Custom Action="MgtApp" After="StartTrayApp">Not Installed</Custom>-->
+         <Custom Action="StartTrayApp" After="InstallFinalize">Not Installed</Custom>
       </InstallExecuteSequence>
+
+      <!-- Get the install to skip a few steps -->
+      <UIRef Id="WixUI_Common" />
+      <WixVariable Id="WixUIBannerBmp" Value="banner.bmp" />
+      <!-- This just adds 90K on top of the UI Extension.dll -->
+      <UI>
+         <Property Id="DefaultUIFont" Value="WixUI_Font_Normal" />
+         <TextStyle Id="WixUI_Font_Normal" FaceName="Tahoma" Size="8" />
+         <TextStyle Id="WixUI_Font_Bigger" FaceName="Tahoma" Size="12" />
+         <TextStyle Id="WixUI_Font_Title" FaceName="Tahoma" Size="9" Bold="yes" />
+
+         <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
+         <Property Id="ARPNOMODIFY" Value="1" />
+
+         <DialogRef Id="BrowseDlg" />
+         <DialogRef Id="DiskCostDlg" />
+         <DialogRef Id="ErrorDlg" />
+         <DialogRef Id="FatalError" />
+         <DialogRef Id="FilesInUse" />
+         <DialogRef Id="MsiRMFilesInUse" />
+         <DialogRef Id="PrepareDlg" />
+         <DialogRef Id="ProgressDlg" />
+         <DialogRef Id="ResumeDlg" />
+         <DialogRef Id="UserExit" />
+
+         <Publish Dialog="ExitDialog" Control="Finish" Event="EndDialog" Value="Return" Order="999">1</Publish>
+         <Publish Dialog="WelcomeEulaDlg" Control="Install" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+         <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="WelcomeEulaDlg" Order="1">NOT Installed</Publish>
+         <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="MaintenanceTypeDlg" Order="2">Installed</Publish>
+
+         <Publish Dialog="MaintenanceWelcomeDlg" Control="Next" Event="NewDialog" Value="MaintenanceTypeDlg">1</Publish>
+         <Publish Dialog="MaintenanceTypeDlg" Control="RepairButton" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+         <Publish Dialog="MaintenanceTypeDlg" Control="RemoveButton" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+         <Publish Dialog="MaintenanceTypeDlg" Control="Back" Event="NewDialog" Value="MaintenanceWelcomeDlg">1</Publish>
+
+      </UI>
+
+      <UIRef Id="WixUI_ErrorProgressText" />
+
    </Product>
 </Wix>
