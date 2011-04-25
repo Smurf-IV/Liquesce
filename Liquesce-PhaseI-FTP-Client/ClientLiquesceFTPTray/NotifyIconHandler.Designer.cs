@@ -31,13 +31,10 @@
          this.components = new System.ComponentModel.Container();
          this.rightClickContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
          this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-         this.serviceController1 = new System.ServiceProcess.ServiceController();
          this.timer1 = new System.Windows.Forms.Timer(this.components);
          this.managementApp = new System.Windows.Forms.ToolStripMenuItem();
          this.repeatLastMessage = new System.Windows.Forms.ToolStripMenuItem();
          this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-         this.stopServiceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-         this.startServiceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.notifyIcon1 = new System.Windows.Forms.NotifyIcon(this.components);
          this.rightClickContextMenu.SuspendLayout();
          this.SuspendLayout();
@@ -47,8 +44,6 @@
          this.rightClickContextMenu.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.rightClickContextMenu.ImageScalingSize = new System.Drawing.Size(24, 24);
          this.rightClickContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.stopServiceToolStripMenuItem,
-            this.startServiceToolStripMenuItem,
             this.managementApp,
             this.repeatLastMessage,
             this.toolStripSeparator1,
@@ -56,16 +51,11 @@
             });
          this.rightClickContextMenu.Name = "rightClickContextMenu";
          this.rightClickContextMenu.Size = new System.Drawing.Size(223, 182);
-         this.rightClickContextMenu.Opening += new System.ComponentModel.CancelEventHandler(this.rightClickContextMenu_Opening);
          // 
          // toolStripSeparator1
          // 
          this.toolStripSeparator1.Name = "toolStripSeparator1";
          this.toolStripSeparator1.Size = new System.Drawing.Size(219, 6);
-         // 
-         // serviceController1
-         // 
-         this.serviceController1.ServiceName = "LiquesceSvc";
          // 
          // timer1
          // 
@@ -94,22 +84,6 @@
          this.exitToolStripMenuItem.Text = "&Exit";
          this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
          // 
-         // stopServiceToolStripMenuItem
-         // 
-         this.stopServiceToolStripMenuItem.Name = "stopServiceToolStripMenuItem";
-         this.stopServiceToolStripMenuItem.Size = new System.Drawing.Size(222, 30);
-         this.stopServiceToolStripMenuItem.Text = "Stop Service";
-         this.stopServiceToolStripMenuItem.ToolTipText = "This will send a \"Stop\" signal to the service";
-         this.stopServiceToolStripMenuItem.Click += new System.EventHandler(this.stopServiceToolStripMenuItem_Click);
-         // 
-         // startServiceToolStripMenuItem
-         // 
-         this.startServiceToolStripMenuItem.Name = "startServiceToolStripMenuItem";
-         this.startServiceToolStripMenuItem.Size = new System.Drawing.Size(222, 30);
-         this.startServiceToolStripMenuItem.Text = "Start Service";
-         this.startServiceToolStripMenuItem.ToolTipText = "This will send a \"Start\" signal to the service";
-         this.startServiceToolStripMenuItem.Click += new System.EventHandler(this.startServiceToolStripMenuItem_Click);
-         // 
          // notifyIcon1
          // 
          this.notifyIcon1.ContextMenuStrip = this.rightClickContextMenu;
@@ -137,9 +111,6 @@
       private System.Windows.Forms.ToolStripMenuItem managementApp;
       private System.Windows.Forms.ToolStripMenuItem repeatLastMessage;
       private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
-      private System.ServiceProcess.ServiceController serviceController1;
       private System.Windows.Forms.Timer timer1;
-      private System.Windows.Forms.ToolStripMenuItem stopServiceToolStripMenuItem;
-      private System.Windows.Forms.ToolStripMenuItem startServiceToolStripMenuItem;
    }
 }

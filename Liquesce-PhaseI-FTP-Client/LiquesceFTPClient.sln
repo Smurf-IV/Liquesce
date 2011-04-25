@@ -9,11 +9,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ThirdParty", "ThirdParty", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DokanNet", "ThirdParty\DokanNet\DokanNet.csproj", "{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientManagement", "ClientManagement\ClientManagement.csproj", "{0860A6E1-DE6F-41C2-A89A-101DDD66CE3D}"
-EndProject
 Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "ClientLiquesceFTP_Setup", "ClientLiquesceFTP_Setup\ClientLiquesceFTP_Setup.wixproj", "{D748793E-341F-44E2-B872-A84259E51173}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientLiquesceFTPTray", "ClientLiquesceFTPTray\ClientLiquesceFTPTray.csproj", "{EF7F7BCB-C045-4FE2-84A7-318DF573B148}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Starksoft.Net.Ftp", "Starksoft.Net.Ftp\Starksoft.Net.Ftp.csproj", "{5F228FCD-54F1-491D-93CE-3D768655FADC}"
 EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
@@ -25,15 +25,15 @@ Global
 		SccProjectTopLevelParentUniqueName1 = LiquesceFTPClient.sln
 		SccProjectName1 = ThirdParty/DokanNet
 		SccLocalPath1 = ThirdParty\\DokanNet
-		SccProjectUniqueName2 = ClientManagement\\ClientManagement.csproj
-		SccProjectName2 = ClientManagement
-		SccLocalPath2 = ClientManagement
-		SccProjectUniqueName3 = ClientLiquesceFTP_Setup\\ClientLiquesceFTP_Setup.wixproj
-		SccProjectName3 = ClientLiquesceFTP_Setup
-		SccLocalPath3 = ClientLiquesceFTP_Setup
-		SccProjectUniqueName4 = ClientLiquesceFTPTray\\ClientLiquesceFTPTray.csproj
-		SccProjectName4 = ClientLiquesceFTPTray
-		SccLocalPath4 = ClientLiquesceFTPTray
+		SccProjectUniqueName2 = ClientLiquesceFTP_Setup\\ClientLiquesceFTP_Setup.wixproj
+		SccProjectName2 = ClientLiquesceFTP_Setup
+		SccLocalPath2 = ClientLiquesceFTP_Setup
+		SccProjectUniqueName3 = ClientLiquesceFTPTray\\ClientLiquesceFTPTray.csproj
+		SccProjectName3 = ClientLiquesceFTPTray
+		SccLocalPath3 = ClientLiquesceFTPTray
+		SccProjectUniqueName4 = Starksoft.Net.Ftp\\Starksoft.Net.Ftp.csproj
+		SccProjectName4 = Starksoft.Net.Ftp
+		SccLocalPath4 = Starksoft.Net.Ftp
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -44,8 +44,6 @@ Global
 		{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C}.Debug|x86.Build.0 = Debug|x86
 		{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C}.Release|x86.ActiveCfg = Release|x86
 		{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C}.Release|x86.Build.0 = Release|x86
-		{0860A6E1-DE6F-41C2-A89A-101DDD66CE3D}.Debug|x86.ActiveCfg = Debug|x86
-		{0860A6E1-DE6F-41C2-A89A-101DDD66CE3D}.Release|x86.ActiveCfg = Release|x86
 		{D748793E-341F-44E2-B872-A84259E51173}.Debug|x86.ActiveCfg = Debug|x86
 		{D748793E-341F-44E2-B872-A84259E51173}.Release|x86.ActiveCfg = Release|x86
 		{D748793E-341F-44E2-B872-A84259E51173}.Release|x86.Build.0 = Release|x86
@@ -53,6 +51,10 @@ Global
 		{EF7F7BCB-C045-4FE2-84A7-318DF573B148}.Debug|x86.Build.0 = Debug|x86
 		{EF7F7BCB-C045-4FE2-84A7-318DF573B148}.Release|x86.ActiveCfg = Release|x86
 		{EF7F7BCB-C045-4FE2-84A7-318DF573B148}.Release|x86.Build.0 = Release|x86
+		{5F228FCD-54F1-491D-93CE-3D768655FADC}.Debug|x86.ActiveCfg = Debug|x86
+		{5F228FCD-54F1-491D-93CE-3D768655FADC}.Debug|x86.Build.0 = Debug|x86
+		{5F228FCD-54F1-491D-93CE-3D768655FADC}.Release|x86.ActiveCfg = Release|x86
+		{5F228FCD-54F1-491D-93CE-3D768655FADC}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -61,8 +63,8 @@ Global
 		{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C} = {C1ADA293-B55A-4B33-AE5A-6FC40323FC39}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		BuildVersion_UseGlobalSettings = False
-		BuildVersion_AssemblyInfoFilename = ..\Liquesce\LiquesceSvc\Properties\AssemblyInfo.cs
 		BuildVersion_BuildVersioningStyle = YearStamp.MonthStamp.DayStamp.Increment
+		BuildVersion_AssemblyInfoFilename = ..\Liquesce\LiquesceSvc\Properties\AssemblyInfo.cs
+		BuildVersion_UseGlobalSettings = False
 	EndGlobalSection
 EndGlobal

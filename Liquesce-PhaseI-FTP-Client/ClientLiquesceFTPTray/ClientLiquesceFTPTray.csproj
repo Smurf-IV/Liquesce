@@ -70,11 +70,31 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ClientConfigDetails.cs" />
+    <Compile Include="ClientPropertiesDisplay.cs" />
+    <Compile Include="ClientShareDetail.cs" />
+    <Compile Include="Dokan\DokanManagement.cs" />
+    <Compile Include="Dokan\LiquesceOps.cs" />
+    <Compile Include="Dokan\RWLSExtension.cs" />
+    <Compile Include="Dokan\Utils.cs" />
+    <Compile Include="HandleMappingThread.cs" />
     <Compile Include="HiddenFormToAcceptCloseMessage.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="HiddenFormToAcceptCloseMessage.Designer.cs">
       <DependentUpon>HiddenFormToAcceptCloseMessage.cs</DependentUpon>
+    </Compile>
+    <Compile Include="LogDisplay.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="LogDisplay.designer.cs">
+      <DependentUpon>LogDisplay.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ManagementForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ManagementForm.Designer.cs">
+      <DependentUpon>ManagementForm.cs</DependentUpon>
     </Compile>
     <Compile Include="NotifyIconHandler.cs">
       <SubType>UserControl</SubType>
@@ -86,6 +106,12 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="HiddenFormToAcceptCloseMessage.resx">
       <DependentUpon>HiddenFormToAcceptCloseMessage.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="LogDisplay.resx">
+      <DependentUpon>LogDisplay.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ManagementForm.resx">
+      <DependentUpon>ManagementForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="NotifyIconHandler.resx">
       <DependentUpon>NotifyIconHandler.cs</DependentUpon>
@@ -135,14 +161,31 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Resources\Error.ico" />
+    <Content Include="Resources\info.ico" />
     <Content Include="Resources\Liquesce.ico" />
+    <Content Include="Resources\OK.ico" />
     <Content Include="Resources\Question.ico" />
     <Content Include="Resources\Stop.ico" />
+    <Content Include="Resources\Warning.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Starksoft.Net.Ftp\Starksoft.Net.Ftp.csproj">
+      <Project>{5F228FCD-54F1-491D-93CE-3D768655FADC}</Project>
+      <Name>Starksoft.Net.Ftp</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ThirdParty\DokanNet\DokanNet.csproj">
+      <Project>{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C}</Project>
+      <Name>DokanNet</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="FTP\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="YearStamp.MonthStamp.DayStamp.Increment" />
+      <UserProperties BuildVersion_BuildVersioningStyle="YearStamp.MonthStamp.DayStamp.Increment" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

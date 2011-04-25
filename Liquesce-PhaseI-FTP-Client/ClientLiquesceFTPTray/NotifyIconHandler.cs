@@ -15,7 +15,8 @@ namespace ClientLiquesceFTPTray
       public NotifyIconHandler()
       {
          InitializeComponent();
-         notifyIcon1.BalloonTipTitle = "Service Status";
+         notifyIcon1.Text = "Liquesce State Unknown";
+         notifyIcon1.BalloonTipIcon = ToolTipIcon.Warning;
          // Use last state to prevent balloon tip showing on start !
          //SetState(lastState, "Application tray is starting");
          DoStatusCheck(0);
@@ -30,14 +31,7 @@ namespace ClientLiquesceFTPTray
 
       private void managementApp_Click(object sender, EventArgs e)
       {
-         //Application.StartupPath;
-         Process process = new Process { StartInfo = { 
-                                            WorkingDirectory = Application.StartupPath,
-                                            FileName = "Liquesce.exe"
-         }
-         };
-
-         process.Start();
+         new ManagementForm().Show(this);
       }
 
       private void notifyIcon1_DoubleClick(object sender, EventArgs e)
@@ -96,8 +90,8 @@ namespace ClientLiquesceFTPTray
       {
          try
          {
-            TimeSpan timeSpan = new TimeSpan(0, 0, 0, 0, milliseconds);
-            serviceController1.WaitForStatus(ServiceControllerStatus.Running, timeSpan);
+            notifyIcon1.Icon = Properties.Resources.OKIcon;
+            // TimeSpan timeSpan = new TimeSpan(0, 0, 0, 0, milliseconds);
             //if (LiquesceSvcState.Running != lastState)
             //{
             //   notifyIcon1.Icon = Properties.Resources.OKIcon;
@@ -128,41 +122,6 @@ namespace ClientLiquesceFTPTray
             //}
          }
       }
-
-      private void rightClickContextMenu_Opening(object sender, System.ComponentModel.CancelEventArgs e)
-      {
-         bool visible = ((ModifierKeys & Keys.Control) == Keys.Control);
-         {
-            stopServiceToolStripMenuItem.Visible = visible;
-            startServiceToolStripMenuItem.Visible = visible;
-         }
-      }
-
-      private void stopServiceToolStripMenuItem_Click(object sender, EventArgs e)
-      {
-         try
-         {
-            serviceController1.Stop();
-         }
-         catch (Exception ex)
-         {
-            Log.ErrorException("stopServiceToolStripMenuItem_Click", ex);
-         }
-      }
-
-      private void startServiceToolStripMenuItem_Click(object sender, EventArgs e)
-      {
-         try
-         {
-            serviceController1.Start();
-         }
-         catch (Exception ex)
-         {
-            Log.ErrorException("stopServiceToolStripMenuItem_Click", ex);
-         }
-      }
-
-
 
    }
 }
