@@ -111,7 +111,9 @@ namespace DokanNet
                                                   UnlockFile = proxy.UnlockFileProxy,
                                                   GetDiskFreeSpace = proxy.GetDiskFreeSpaceProxy,
                                                   GetVolumeInformation = proxy.GetVolumeInformationProxy,
-                                                  Unmount = proxy.UnmountProxy
+                                                  Unmount = proxy.UnmountProxy,
+                                                  GetFileSecurity = proxy.GetFileSecurity,
+                                                  SetFileSecurity = proxy.SetFileSecurity
                                                };
 
          return DokanDll.DokanMain(ref dokanOptions, ref dokanOperations);
