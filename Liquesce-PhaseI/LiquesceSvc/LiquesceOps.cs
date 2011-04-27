@@ -70,6 +70,7 @@ namespace LiquesceSvc
             if (Directory.Exists(path))
             {
                actualErrorCode = OpenDirectory(filename, info);
+               info.IsDirectory = true;
                return actualErrorCode;
             }
             // Increment now in case there is an exception later
@@ -1131,7 +1132,7 @@ namespace LiquesceSvc
          return dokanReturn;
       }
 
-      public int SetFileSecurityNative(string file, ref SECURITY_INFORMATION rawSecurityInformation, ref SECURITY_DESCRIPTOR rawSecurityDescriptor, ref uint rawSecurityDescriptorLengthNeeded, DokanFileInfo info)
+      public int SetFileSecurityNative(string file, ref SECURITY_INFORMATION rawSecurityInformation, ref SECURITY_DESCRIPTOR rawSecurityDescriptor, uint rawSecurityDescriptorLength, DokanFileInfo info)
       {
          Log.Trace("Unmount IN SetFileSecurity[{0}]", info.ProcessId);
          int dokanReturn = Dokan.DOKAN_ERROR;

@@ -1,10 +1,10 @@
 {\rtf1\ansi\ansicpg1252\deff0{\fonttbl{\f0\fswiss\fprq2\fcharset0 Tahoma;}{\f1\fnil\fcharset0 Courier New;}{\f2\fmodern\fprq1\fcharset0 Courier New;}{\f3\fnil Courier New;}}
 {\colortbl ;\red0\green0\blue0;\red0\green0\blue255;}
-{\*\generator Msftedit 5.41.15.1515;}\viewkind4\uc1\pard\cf1\lang2057\ul\b\f0\fs20 Welcome to the \i Liquesce \i0 Changelog\cf0\ulnone\b0\f1\par
+{\*\generator Msftedit 5.41.21.2510;}\viewkind4\uc1\pard\cf1\lang2057\ul\b\f0\fs20 Welcome to the \i Liquesce \i0 Changelog\cf0\ulnone\b0\f1\par
 \cf1\f0\par
 Currently this is just a place holder for all the cool stuff that will be happening to this project :-)\par
 \par
-Keep an open eye on the \cf2\ul\b http://liquesce.codeplex.com/\cf1\ulnone\b0  site.\par
+Keep an open eye on the \cf2\ul\b{\field{\*\fldinst{HYPERLINK "http://liquesce.codeplex.com/"}}{\fldrslt{\ul\cf2 http://liquesce.codeplex.com/}}}\cf1\ulnone\b0\f0\fs20  site.\par
 \par
 \cf0\ul\b Some Helpful Information:\ulnone\b0\par
 \ul How to get an install log to send if you have a problem:\ulnone\par
@@ -22,11 +22,14 @@ Keep an open eye on the \cf2\ul\b http://liquesce.codeplex.com/\cf1\ulnone\b0  s
 \ulnone\b0 - Fix Issues\par
 \par
 \ul\b Issue\ulnone\b0\par
-- Win 7 (64) <-> win 7 (64) Maybe a Dokan bug see ticket http://code.google.com/p/dokan/issues/detail?id=168\par
+- Win 7 (64) <-> win 7 (64) Maybe a Dokan bug see ticket {\field{\*\fldinst{HYPERLINK "http://code.google.com/p/dokan/issues/detail?id=168"}}{\fldrslt{\ul\cf2 http://code.google.com/p/dokan/issues/detail?id=168}}}\f0\fs20\par
 \cf1\par
 \par
 \cf0\ul\b Done\par
 \par
+2011-04-27\par
+\ulnone\b0 - Add correction for IsDirectory in CreateFile open\par
+- Add in function usage of Set / Get File security (Not Tested)\ul\b\par
 \par
 2011-03-09 - Alpha\par
 \ulnone\b0 - SetFileTime fixes\par
@@ -54,14 +57,14 @@ Bring the code upto the changes needed to implement Dokan 0.6.0 \par
 Fix DriveLetter to mountPoint conversion \par
 Update Dokan.dll binary for dll referencing \par
 Implement the #etFileSecurity functions to route through to the Native API's \par
-Fix for http://code.google.com/p/dokan/issues/detail?id=198 \par
+Fix for {\field{\*\fldinst{HYPERLINK "http://code.google.com/p/dokan/issues/detail?id=198"}}{\fldrslt{\ul\cf2 http://code.google.com/p/dokan/issues/detail?id=198}}}\f0\fs20  \par
 Revert back to the char drive letter, Seems to be a bit more reliable (Needs proving) \par
 \par
 \par
 \ul\b 2010-11-25 \ulnone\b0\par
 - Fix Write at end of file logic \par
 - Start to test the code for the ShareEnabler \par
-- Use the Native Read / Write Kernel Api's so that memory is not duplicated in the system; See http://code.google.com/p/dokan/issues/detail?id=174 \par
+- Use the Native Read / Write Kernel Api's so that memory is not duplicated in the system; See {\field{\*\fldinst{HYPERLINK "http://code.google.com/p/dokan/issues/detail?id=174"}}{\fldrslt{\ul\cf2 http://code.google.com/p/dokan/issues/detail?id=174}}}\f0\fs20  \par
 - Fix the recreation of the share by forcing a delete first. \par
 - Changed the way the data is stored in the DokanNet proxy(By removing it !) \par
 - All CreateFiles will now increment the counter to try and find who did what \par
