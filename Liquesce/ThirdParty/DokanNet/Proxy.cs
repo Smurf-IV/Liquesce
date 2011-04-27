@@ -852,12 +852,12 @@ namespace DokanNet
           ref SECURITY_DESCRIPTOR rawSecurityDescriptor, uint rawSecurityDescriptorLength, ref DOKAN_FILE_INFO rawFileInfo);
 
       public int SetFileSecurity( IntPtr rawFileName, ref SECURITY_INFORMATION rawSecurityInformation,
-          ref SECURITY_DESCRIPTOR rawSecurityDescriptor, ref uint rawSecurityDescriptorLengthNeeded, ref DOKAN_FILE_INFO rawFileInfo)
+          ref SECURITY_DESCRIPTOR rawSecurityDescriptor, uint rawSecurityDescriptorLength, ref DOKAN_FILE_INFO rawFileInfo)
       {
          try
          {
             string file = GetFileName(rawFileName);
-            return operations.SetFileSecurityNative(file, ref rawSecurityInformation, ref rawSecurityDescriptor, ref rawSecurityDescriptorLengthNeeded, ConvertFileInfo(ref rawFileInfo));
+            return operations.SetFileSecurityNative(file, ref rawSecurityInformation, ref rawSecurityDescriptor, rawSecurityDescriptorLength, ConvertFileInfo(ref rawFileInfo));
          }
          catch (Exception ex)
          {
