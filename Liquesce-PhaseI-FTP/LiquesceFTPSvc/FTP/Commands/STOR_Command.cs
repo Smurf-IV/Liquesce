@@ -21,8 +21,7 @@ namespace LiquesceFTPSvc.FTP
          }
          Stream FS;
 
-         string Path = ConnectedUser.StartUpDirectory + GetExactPath(CmdArguments);
-         Path = Path.Substring(0, Path.Length - 1);
+         string Path = GetExactPath(CmdArguments);
 
          try
          {

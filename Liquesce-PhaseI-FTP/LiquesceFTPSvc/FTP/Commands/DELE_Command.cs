@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.InteropServices;
+using DeleteToRecycleBin;
 
 namespace LiquesceFTPSvc.FTP
 {
@@ -21,20 +23,15 @@ namespace LiquesceFTPSvc.FTP
             {
                if (ConnectedUser.CanDeleteFiles)
                {
-                  //if (ApplicationSettings.MoveDeletedFilesToRecycleBin)
-                  //{
-                  //    //Microsoft.VisualBasic.FileIO.FileSystem.DeleteFile(Path,
-                  //    //    Microsoft.VisualBasic.FileIO.UIOption.OnlyErrorDialogs,
-                  //    //    Microsoft.VisualBasic.FileIO.RecycleOption.SendToRecycleBin);
-
-                  //    string RecycleBinPath = Path.Substring(0, 2) + "\\RECYCLER\\";
-                  //    if (!Directory.Exists(RecycleBinPath))
-                  //        Directory.CreateDirectory(RecycleBinPath);
-                  //    File.Move(Path, RecycleBinPath + System.IO.Path.GetFileName(Path));
-                  //}
-                  //else
                   FI.Attributes = FileAttributes.Normal;
-                  FI.Delete();
+                  if (Settings1.Default.MoveDeletedFilesToRecycleBin)
+                  {
+                     RecybleBin.SendSilent(FI.FullName); 
+                  }
+                  else
+                  {
+                     FI.Delete();
+                  }
                   SendOnControlStream("250 File deleted.");
                }
                else 
@@ -49,6 +46,29 @@ namespace LiquesceFTPSvc.FTP
          }
       }
 
- 
+
+      [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto, Pack = 1)]
+      public struct SHFILEOPSTRUCT
+      {
+         public IntPtr hwnd;
+         [MarshalAs(UnmanagedType.U4)]
+         public int wFunc;
+         public string pFrom;
+         public string pTo;
+         public short fFlags;
+         [MarshalAs(UnmanagedType.Bool)]
+         public bool fAnyOperationsAborted;
+         public IntPtr hNameMappings;
+         public string lpszProgressTitle;
+
+      }
+
+      [DllImport("shell32.dll", CharSet = CharSet.Auto)]
+      static extern int SHFileOperation(ref SHFILEOPSTRUCT FileOp);
+      const int FO_DELETE = 3;
+      const int FOF_ALLOWUNDO = 0x40;
+      const int FOF_NOCONFIRMATION = 0x10;    //No prompt dialogs 
+
+
    }
 }

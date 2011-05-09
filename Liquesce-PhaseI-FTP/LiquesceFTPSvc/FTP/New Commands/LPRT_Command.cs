@@ -15,7 +15,7 @@ namespace LiquesceFTPSvc.FTP
       /// <param name="cmdArguments"></param>
       private void LPRT_Command(string cmdArguments)
       {
-         SendOnControlStream("500 Command Not Implemented.");
+         SendOnControlStream("502 Command Not Implemented.");
       }
 
       private static void LPRT_Support(FTPClientCommander thisClient)

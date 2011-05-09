@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using DeleteToRecycleBin;
 
 namespace LiquesceFTPSvc.FTP
 {
@@ -18,16 +19,27 @@ namespace LiquesceFTPSvc.FTP
             return;
          }
 
-         string Path = ConnectedUser.StartUpDirectory + GetExactPath(CmdArguments);
+         string Path = GetExactPath(CmdArguments);
 
-         if (Directory.Exists(Path))
+         DirectoryInfo DI = new DirectoryInfo(Path);
+         if (DI.Exists)
          {
             try
             {
-               Directory.Delete(Path, true);
+               if (Settings1.Default.MoveDeletedFilesToRecycleBin)
+               {
+                  RecybleBin.SendSilent(DI.FullName);
+               }
+               else
+               {
+                  DI.Delete(true);
+               }
                SendOnControlStream("250 \"" + Path + "\" deleted.");
             }
-            catch (Exception Ex) { SendOnControlStream("550 " + Ex.Message); }
+            catch (Exception Ex) 
+            { 
+               SendOnControlStream("550 " + Ex.Message); 
+            }
          }
          else SendOnControlStream("550 Folder dose not exist.");
       }

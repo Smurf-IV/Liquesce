@@ -18,7 +18,7 @@
       private void MFF_Command(string cmdArguments)
       {
          // TODO: Can I Be bothered :-)
-         SendOnControlStream("500 Command Not Implemented.");
+         SendOnControlStream("502 Command Not Implemented.");
       }
 
       private static void MFF_Support(FTPClientCommander thisClient)

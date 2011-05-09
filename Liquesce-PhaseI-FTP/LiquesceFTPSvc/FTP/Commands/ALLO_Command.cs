@@ -1,4 +1,7 @@
-﻿namespace LiquesceFTPSvc.FTP
+﻿using System.IO;
+using System.Runtime.InteropServices;
+
+namespace LiquesceFTPSvc.FTP
 {
    partial class FTPClientCommander
    {
@@ -10,8 +13,17 @@
       /// <param name="cmdArguments"></param>
       private void ALLO_Command(string cmdArguments)
       {
-         SendOnControlStream("500 Command Not Implemented.");
+         ulong freeBytesAvailable;
+         ulong totalBytes;
+         ulong totalFreeBytes;
+         GetDiskFreeSpaceEx(ConnectedUser.StartUpDirectory, out freeBytesAvailable, out totalBytes, out totalFreeBytes);
+         SendOnControlStream(string.Format("202-freeBytesAvailable[{0}], totalBytes[{1}], totalFreeBytes[{2}]", freeBytesAvailable, totalBytes, totalFreeBytes));
+         SendOnControlStream("202 Command not implemented, superfluous at this site.");
       }
+
+      [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+      private static extern bool GetDiskFreeSpaceEx(string lpDirectoryName, out ulong lpFreeBytesAvailable,
+         out ulong lpTotalNumberOfBytes, out ulong lpTotalNumberOfFreeBytes);
 
    }
 }

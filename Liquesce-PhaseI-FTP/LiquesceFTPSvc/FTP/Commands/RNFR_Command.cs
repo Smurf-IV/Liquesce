@@ -18,7 +18,7 @@ namespace LiquesceFTPSvc.FTP
             return; 
          }
 
-         string Path = ConnectedUser.StartUpDirectory + GetExactPath(CmdArguments);
+         string Path = GetExactPath(CmdArguments);
 
          if (Directory.Exists(Path) || File.Exists(Path))
          {

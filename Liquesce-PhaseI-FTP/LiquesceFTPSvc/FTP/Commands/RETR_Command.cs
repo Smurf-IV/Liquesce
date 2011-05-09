@@ -26,14 +26,16 @@ namespace LiquesceFTPSvc.FTP
 
          FileStream FS = null;
          NetworkStream DataSocket = null;
-         string path;
          try
          {
-            path = ConnectedUser.StartUpDirectory + GetExactPath(CmdArguments);
-            path = path.Substring(0, path.Length - 1);
+            string path = GetExactPath(CmdArguments);
+            
+            FileInfo info = new FileInfo(path);
 
-            if (!ConnectedUser.CanViewHiddenFiles
-               && ((File.GetAttributes(path) & FileAttributes.Hidden) == FileAttributes.Hidden)
+            if( ((info.Attributes & FileAttributes.System) == FileAttributes.System)
+               || (!ConnectedUser.CanViewHiddenFolders
+                  && ((info.Attributes & FileAttributes.Hidden) == FileAttributes.Hidden)
+                  )
                )
             {
                SendOnControlStream("550 Access Denied or invalid path.");
@@ -62,13 +64,6 @@ namespace LiquesceFTPSvc.FTP
          {
 
             byte[] data = new byte[(FS.Length > readSize) ? readSize : (int)FS.Length];
-
-            //while (DataSocket.Send(data, 0, FS.Read(data, 0, data.Length), SocketFlags.None) != 0)
-            //{
-            //   Log.Trace("Sent[{0}] from {1}", FS.Position, path);
-            //   if ( abortReceived )
-            //      break;
-            //}
 
             do
             {

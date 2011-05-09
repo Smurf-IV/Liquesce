@@ -13,14 +13,14 @@ namespace LiquesceFTPSvc.FTP
       /// http://tools.ietf.org/html/rfc3659#page-14
       /// </summary>
       /// <remarks>
-      /// Some clients use this command with a 0 for an aurgument as an Init style sequence 
+      /// Some clients use this command with a 0 for an argument as an Init style sequence 
       /// (i.e. will not be setting up a transfer or stor)
       /// </remarks>
       /// <param name="cmdArguments"></param>
       private void REST_Command(string cmdArguments)
       {
          startOffset = 0;
-         if (int.TryParse(cmdArguments, out startOffset))
+         if (long.TryParse(cmdArguments, out startOffset))
          {
             SendOnControlStream("350 Restarting at " + startOffset + ". Send STORe or RETRieve.");
          }

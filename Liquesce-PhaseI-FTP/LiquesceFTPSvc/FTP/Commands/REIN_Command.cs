@@ -9,6 +9,7 @@
       /// </summary>
       private void REIN_Command()
       {
+         // TODO: This is a mandatory command so will need the support it requires
          SendOnControlStream("500 Command Not Implemented.");
       }
 

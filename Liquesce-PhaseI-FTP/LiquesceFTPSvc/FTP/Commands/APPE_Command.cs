@@ -1,4 +1,6 @@
-﻿namespace LiquesceFTPSvc.FTP
+﻿using System.IO;
+
+namespace LiquesceFTPSvc.FTP
 {
    partial class FTPClientCommander
    {
@@ -11,7 +13,22 @@
       void APPE_Command(string CmdArguments)
       {
          // Append the file if exists or create a new file.
-         SendOnControlStream("500 This functionality is currently Unavailable.");
+         if (!ConnectedUser.CanStoreFiles)
+         {
+            SendOnControlStream("426 Access Denied.");
+            return;
+         }
+         FileInfo fi = new FileInfo(GetExactPath(CmdArguments));
+         if ( fi.Exists )
+         {
+            startOffset = fi.Length;
+         }
+         else
+         {
+            fi.Create();
+            startOffset = 0;
+         }
+         STOR_Command(CmdArguments);
       }
 
  

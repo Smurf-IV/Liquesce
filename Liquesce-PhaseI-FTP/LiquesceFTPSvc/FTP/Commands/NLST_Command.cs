@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
@@ -16,7 +17,7 @@ namespace LiquesceFTPSvc.FTP
       /// <param name="CmdArguments"></param>
       void NLST_Command(string CmdArguments)
       {
-         string Path = ConnectedUser.StartUpDirectory + GetExactPath(CmdArguments);
+         string Path = GetExactPath(CmdArguments);
          DirectoryInfo dirInfo = new DirectoryInfo(Path);
          if (!dirInfo.Exists)
          {
@@ -34,18 +35,34 @@ namespace LiquesceFTPSvc.FTP
          {
             using (StreamWriter sw = new StreamWriter(DataSocket, UseUTF8 ? Encoding.UTF8 : Encoding.ASCII))
             {
-               FileInfo[] FoldersList = dirInfo.GetFiles("*.*", SearchOption.TopDirectoryOnly);
-               for (int index = 0; index < FoldersList.Length; index++)
+               FileInfo[] foldersList = dirInfo.GetFiles("*.*", SearchOption.TopDirectoryOnly);
+               foreach (FileSystemInfo info in
+                  foldersList.Where(info2 => ((info2.Attributes & FileAttributes.System) != FileAttributes.System)
+                        && (ConnectedUser.CanViewHiddenFolders
+                           || ((info2.Attributes & FileAttributes.Hidden) != FileAttributes.Hidden))
+                           )
+                     )
                {
-                  sw.Write(FoldersList[index].Name);
+                  sw.Write(info.Name);
                }
             }
             DataSocket.Flush();
             DataSocket.Close(15);
             SendOnControlStream("226 Transfer Complete.");
          }
-         catch
+         catch (DirectoryNotFoundException ex)
          {
+            Log.ErrorException("LIST_Command: ", ex);
+            SendOnControlStream("550 Invalid path specified." + ex.Message);
+         }
+         catch (UnauthorizedAccessException uaex)
+         {
+            Log.ErrorException("LIST_Command: ", uaex);
+            SendOnControlStream("550 Requested action not taken. permission denied. " + uaex.Message);
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException("LIST_Command: ", ex);
             SendOnControlStream("426 Connection closed; transfer aborted.");
          }
       }

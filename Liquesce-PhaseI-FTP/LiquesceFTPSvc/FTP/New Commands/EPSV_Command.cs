@@ -11,7 +11,7 @@ namespace LiquesceFTPSvc.FTP
       /// <param name="cmdArguments"></param>
       private void EPSV_Command(string cmdArguments)
       {
-         SendOnControlStream("500 Command Not Implemented.");
+         SendOnControlStream("502 Command Not Implemented.");
       }
 
       private static void EPSV_Support(FTPClientCommander thisClient)

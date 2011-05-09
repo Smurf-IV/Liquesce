@@ -1,19 +1,23 @@
 ﻿using System.Net.Sockets;
 using System.Text;
+using NLog;
 
 namespace LiquesceFTPSvc.FTP
 {
    internal static class UTF8PathNames
    {
-      private static readonly byte[] CRLN = Encoding.UTF8.GetBytes("\r\n");
-      public static void WriteCRLN(this NetworkStream stream)
+      static private readonly Logger Log = LogManager.GetCurrentClassLogger();
+
+      private static readonly byte[] CRLN = Encoding.ASCII.GetBytes("\r\n");
+
+      private static void WriteCRLN(this NetworkStream stream)
       {
          stream.WriteBuffer(CRLN);
       }
 
-      public static void WriteInfoCRLN(this NetworkStream stream, string info)
+      public static void WriteAsciiInfoCRLN(this NetworkStream stream, string info)
       {
-         stream.WriteInfo(info);
+         stream.WriteAsciiInfo(info);
          stream.WriteCRLN();
       }
 
@@ -23,18 +27,21 @@ namespace LiquesceFTPSvc.FTP
          stream.WriteCRLN();
       }
 
-      internal static void WriteBuffer(this NetworkStream stream, byte[] buffer)
+      private static void WriteBuffer(this NetworkStream stream, byte[] buffer)
       {
          stream.Write(buffer, 0, buffer.Length);
       }
 
-      internal static void WriteInfo(this NetworkStream stream, string info)
+      internal static NetworkStream WriteAsciiInfo(this NetworkStream stream, string info)
       {
-         stream.WriteBuffer(Encoding.UTF8.GetBytes(info));
+         stream.WriteBuffer(Encoding.ASCII.GetBytes(info));
+         return stream;
       }
 
-      internal static void WritePathName(this NetworkStream stream, bool useUTF8, string name)
+      private static void WritePathName(this NetworkStream stream, bool useUTF8, string name)
       {
+         if (Log.IsTraceEnabled)
+            Log.Trace(useUTF8 ? Encoding.UTF8.GetBytes(name) : Encoding.ASCII.GetBytes(name));
          stream.WriteBuffer(useUTF8 ? Encoding.UTF8.GetBytes(name) : Encoding.ASCII.GetBytes(name));
       }
    }

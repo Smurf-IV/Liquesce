@@ -1,7 +1,7 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using System.Net.Sockets;
-using System.Text;
 
 namespace LiquesceFTPSvc.FTP
 {
@@ -15,17 +15,28 @@ namespace LiquesceFTPSvc.FTP
    {
       void LIST_Command(string CmdArguments)
       {
-         // TODO: Deal with -a -l -la options to this command
-         string Path = ConnectedUser.StartUpDirectory + GetExactPath(CmdArguments);
-
-         DirectoryInfo dirInfo = new DirectoryInfo(Path);
-
-         if (!ConnectedUser.CanViewHiddenFolders
-            && ((dirInfo.Attributes & FileAttributes.Hidden) == FileAttributes.Hidden)
-            )
+         DirectoryInfo dirInfo = null;
+         try
          {
-            SendOnControlStream("550 Invalid path specified.");
-            return;
+            // TODO: Deal with -a -l -la options to this command
+            string Path = GetExactPath(CmdArguments);
+
+            dirInfo = new DirectoryInfo(Path);
+
+            if (((dirInfo.Attributes & FileAttributes.System) == FileAttributes.System)
+               || (!ConnectedUser.CanViewHiddenFolders
+                  && ((dirInfo.Attributes & FileAttributes.Hidden) == FileAttributes.Hidden)
+                  )
+               )
+            {
+               SendOnControlStream("550 Invalid path specified.");
+               return;
+            }
+
+         }
+         catch (Exception ex)
+         {
+            SendOnControlStream("550 Invalid path specified: " + ex.Message);
          }
 
          NetworkStream DataSocket = GetDataSocket();
@@ -36,27 +47,40 @@ namespace LiquesceFTPSvc.FTP
 
          try
          {
-            FileSystemInfo[] infos = dirInfo.GetFileSystemInfos("*.*", SearchOption.TopDirectoryOnly);
-
-            foreach (FileSystemInfo info in
-               infos.Where(info => ConnectedUser.CanViewHiddenFolders || ((info.Attributes & FileAttributes.Hidden) != FileAttributes.Hidden)))
+            if (dirInfo != null)
             {
-               DataSocket.WriteInfo(info.CreationTimeUtc.ToString("MM-dd-yy hh:mmtt"));
-               DataSocket.WriteInfo(((info.Attributes & FileAttributes.Directory) == FileAttributes.Directory)
-                                       ? " <DIR> "
-                                       : string.Format(" {0} ", ((FileInfo)info).Length)
-                  );
-               DataSocket.WritePathNameCRLN(UseUTF8, info.Name);
+               FileSystemInfo[] foldersList = dirInfo.GetFileSystemInfos("*.*", SearchOption.TopDirectoryOnly);
+
+                  foreach (FileSystemInfo info in
+                     foldersList.Where(info2 => ((info2.Attributes & FileAttributes.System) != FileAttributes.System)
+                           && (ConnectedUser.CanViewHiddenFolders
+                              || ((info2.Attributes & FileAttributes.Hidden) != FileAttributes.Hidden))
+                              )
+                        )
+                  {
+                  DataSocket.WriteAsciiInfo(info.CreationTimeUtc.ToString("MM-dd-yy hh:mmtt"));
+                  DataSocket.WriteAsciiInfo(((info.Attributes & FileAttributes.Directory) == FileAttributes.Directory)
+                                               ? " <DIR> "
+                                               : string.Format(" {0} ", ((FileInfo) info).Length)
+                     ).WritePathNameCRLN(UseUTF8, info.Name);
+               }
             }
             DataSocket.Flush();
             SendOnControlStream("226 Transfer Complete.");
          }
-         catch (DirectoryNotFoundException)
+         catch (DirectoryNotFoundException ex)
          {
-            SendOnControlStream("550 Invalid path specified.");
+            Log.ErrorException("LIST_Command: ", ex);
+            SendOnControlStream("550 Invalid path specified." + ex.Message);
          }
-         catch
+         catch (UnauthorizedAccessException uaex)
          {
+            Log.ErrorException("LIST_Command: ", uaex);
+            SendOnControlStream("550 Requested action not taken. permission denied. " + uaex.Message);
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException("LIST_Command: ", ex);
             SendOnControlStream("426 Connection closed; transfer aborted.");
          }
          finally

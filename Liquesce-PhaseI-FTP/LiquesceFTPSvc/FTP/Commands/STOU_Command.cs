@@ -11,6 +11,7 @@
       /// <param name="cmdArguments"></param>
       private void STOU_Command(string cmdArguments)
       {
+         // TODO: This is a mandatory command so will need the support it requires
          SendOnControlStream("500 Command Not Implemented.");
       }
 

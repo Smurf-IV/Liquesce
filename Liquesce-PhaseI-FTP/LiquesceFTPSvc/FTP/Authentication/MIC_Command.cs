@@ -9,7 +9,7 @@
       /// <param name="cmdArguments"></param>
       private void MIC_Command(string cmdArguments)
       {
-         SendOnControlStream("500 Command Not Implemented.");
+         SendOnControlStream("502 Command Not Implemented.");
       }
 
       private static void MIC_Support(FTPClientCommander thisClient)

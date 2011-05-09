@@ -14,9 +14,7 @@ namespace LiquesceFTPSvc.FTP
       /// <param name="cmdArguments"></param>
       private void HASH_Command(string cmdArguments)
       {
-         string[] args = cmdArguments.Split(',');
-         string Path = ConnectedUser.StartUpDirectory + GetExactPath(args[0]);
-         Path = Path.Substring(0, Path.Length - 1);
+         string Path = GetExactPath(cmdArguments);
          FileInfo fi = new FileInfo(Path);
          if (fi.Exists)
          {

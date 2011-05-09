@@ -9,7 +9,7 @@
       /// <param name="cmdArguments"></param>
       private void HELP_Command(string cmdArguments)
       {
-         SendOnControlStream("500 Command Not Implemented.");
+         SendOnControlStream("200 Command Not Implemented.");
       }
 
       
