@@ -16,12 +16,21 @@ namespace LiquesceFTPSvc.FTP
       ///   EP = Ending Point in bytes (where to stop CRC calculating) 
       /// http://help.globalscape.com/help/eft6/FileIntegrityChecking.htm
       /// </summary>
+      /// <example>
+      /// FTP Client Log Example 
+      /// COMMAND:> XCRC "/Program Files/MSN Gaming Zone/Windows/chkrzm.exe" 0 42575 
+      /// </example>
       /// <param name="cmdArguments"></param>
       private void XCRC_Command(string cmdArguments)
       {
+         // TODO: Sort out usage of UTF8 and the quotes etc.
          string[] args = cmdArguments.Split(',');
-         string Path = ConnectedUser.StartUpDirectory + GetExactPath(args[0]);
-         UseHash(args, Path.Substring(0, Path.Length - 1), new Crc32());
+         UseHash(args, GetExactPath(args[0]), new Crc32());
+      }
+
+      private static void XCRC_Support(FTPClientCommander thisClient)
+      {
+         // thisClient.SendOnControlStream(" XCRC");
       }
 
       private void UseHash(IList<string> args, string Path, HashAlgorithm hashAlgorithm)
@@ -80,10 +89,6 @@ namespace LiquesceFTPSvc.FTP
             SendOnControlStream("550 File does not exist.");
       }
 
-      private static void XCRC_Support(FTPClientCommander thisClient)
-      {
-         thisClient.SendOnControlStream(" XCRC");
-      }
    }
 
 

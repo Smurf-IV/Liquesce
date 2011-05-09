@@ -19,7 +19,7 @@ namespace LiquesceFTPSvc.FTP
             return;
          }
 
-         string Path = ConnectedUser.StartUpDirectory + GetExactPath(CmdArguments);
+         string Path = GetExactPath(CmdArguments);
 
          if (Directory.Exists(Path) || File.Exists(Path))
             SendOnControlStream("550 File or folder with the same name already exists.");

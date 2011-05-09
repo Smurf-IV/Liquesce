@@ -1,4 +1,6 @@
-﻿namespace LiquesceFTPSvc.FTP
+﻿using System.IO;
+
+namespace LiquesceFTPSvc.FTP
 {
    partial class FTPClientCommander
    {
@@ -8,7 +10,8 @@
       /// </summary>
       private void PWD_Command()
       {
-         SendOnControlStream("257 \"" + ConnectedUser.CurrentWorkingDirectory.Replace('\\', '/') + "\"");
+         string pwd = Path.DirectorySeparatorChar + ConnectedUser.CurrentWorkingDirectory.Substring(ConnectedUser.StartUpDirectory.Length);
+         ClientSocket.WriteAsciiInfo("257 ").WritePathNameCRLN(UseUTF8, pwd);
       }
 
       

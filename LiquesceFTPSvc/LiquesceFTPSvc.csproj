@@ -117,6 +117,10 @@
     <Compile Include="FTP\Authentication\MIC_Command.cs" />
     <Compile Include="FTP\Authentication\PBSZ_Command.cs" />
     <Compile Include="FTP\Authentication\PROT_Command.cs" />
+    <Compile Include="FTP\New Commands\AVBL_Command.cs" />
+    <Compile Include="FTP\New Commands\CLNT_Command.cs" />
+    <Compile Include="FTP\New Commands\CSID_Command.cs" />
+    <Compile Include="FTP\New Commands\DSIZ_Command.cs" />
     <Compile Include="FTP\New Commands\HASH_Command.cs" />
     <Compile Include="FTP\New Commands\MDTM_Command.cs" />
     <Compile Include="FTP\Commands\MODE_Command.cs" />
@@ -156,6 +160,7 @@
     <Compile Include="FTP\Commands\RNFR_Command.cs" />
     <Compile Include="FTP\Commands\RNTO_Command.cs" />
     <Compile Include="FTP\Commands\SITE_Command.cs" />
+    <Compile Include="FTP\New Commands\RMDA_Command.cs" />
     <Compile Include="FTP\New Commands\SIZE_Command.cs" />
     <Compile Include="FTP\Commands\SMNT_Command.cs" />
     <Compile Include="FTP\Commands\STAT_Command.cs" />
@@ -165,11 +170,19 @@
     <Compile Include="FTP\Commands\SYST_Command.cs" />
     <Compile Include="FTP\Commands\TYPE_Command.cs" />
     <Compile Include="FTP\Commands\USER_Command.cs" />
-    <Compile Include="FTP\New Commands\XCRC_Command.cs" />
-    <Compile Include="FTP\New Commands\XMD5_Command.cs" />
-    <Compile Include="FTP\New Commands\XSHA1_Command.cs" />
-    <Compile Include="FTP\New Commands\XSHA256_Command.cs" />
-    <Compile Include="FTP\New Commands\XSHA512_Command.cs" />
+    <Compile Include="FTP\New Commands\THMB_Command.cs" />
+    <Compile Include="FTP\X Commands\XCRC_Command.cs" />
+    <Compile Include="FTP\X Commands\XCUP_Command.cs" />
+    <Compile Include="FTP\X Commands\XCWD_Command.cs" />
+    <Compile Include="FTP\X Commands\XDEL_Command.cs" />
+    <Compile Include="FTP\X Commands\XMD5_Command.cs" />
+    <Compile Include="FTP\X Commands\XMKD_Command.cs" />
+    <Compile Include="FTP\X Commands\XRMD_Command.cs" />
+    <Compile Include="FTP\X Commands\XPWD_Command.cs" />
+    <Compile Include="FTP\X Commands\XSHA1_Command.cs" />
+    <Compile Include="FTP\X Commands\XSHA256_Command.cs" />
+    <Compile Include="FTP\X Commands\XSHA512_Command.cs" />
+    <Compile Include="FTP\RecybleBin.cs" />
     <Compile Include="FTP\UTF8PathNames.cs" />
     <Compile Include="Installer1.cs">
       <SubType>Component</SubType>

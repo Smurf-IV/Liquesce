@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
+﻿using System.IO;
 
 namespace LiquesceFTPSvc.FTP
 {
@@ -16,11 +12,23 @@ namespace LiquesceFTPSvc.FTP
       /// <param name="cmdArguments"></param>
       private void SIZE_Command(string cmdArguments)
       {
-         string Path = ConnectedUser.StartUpDirectory + GetExactPath(cmdArguments);
-         Path = Path.Substring(0, Path.Length - 1);
-         FileInfo fi = new FileInfo(Path);
-         if (fi.Exists)
-            SendOnControlStream("213 " + fi.Length);
+         string Path = GetExactPath(cmdArguments);
+         FileInfo info = new FileInfo(Path);
+         if (info.Exists)
+         {
+            if (((info.Attributes & FileAttributes.System) == FileAttributes.System)
+                || (!ConnectedUser.CanViewHiddenFolders
+                    && ((info.Attributes & FileAttributes.Hidden) == FileAttributes.Hidden)
+                   )
+               )
+            {
+               SendOnControlStream("550 Invalid File given");
+            }
+            else
+            {
+               SendOnControlStream("213 " + info.Length);
+            }
+         }
          else
             SendOnControlStream("550 File does not exist.");
       }

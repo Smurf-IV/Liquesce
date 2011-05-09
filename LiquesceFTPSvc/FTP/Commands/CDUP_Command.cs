@@ -8,17 +8,7 @@
       /// </summary>
       void CDUP_Command()
       {
-         string[] pathParts = ConnectedUser.CurrentWorkingDirectory.Split('\\');
-         if (pathParts.Length > 1)
-         {
-            ConnectedUser.CurrentWorkingDirectory = "";
-            for (int i = 0; i < (pathParts.Length - 2); i++)
-            {
-               ConnectedUser.CurrentWorkingDirectory += pathParts[i] + "\\";
-            }
-         }
-
-         SendOnControlStream("250 CDUP_Command command successful.");
+         CWD_Command("..");
       }
 
  

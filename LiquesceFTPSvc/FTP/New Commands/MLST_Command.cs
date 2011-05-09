@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Net.Sockets;
 using System.Text;
 using Microsoft.Win32;
 
@@ -19,18 +18,19 @@ namespace LiquesceFTPSvc.FTP
       private void MLST_Command(string cmdArguments)
       {
          FileSystemInfo info;
-         string Path = ConnectedUser.StartUpDirectory + GetExactPath(cmdArguments);
+         string Path = GetExactPath(cmdArguments);
          if (string.IsNullOrEmpty(cmdArguments))
          {
             info = new DirectoryInfo(Path);
          }
          else
          {
-            Path = Path.Substring(0, Path.Length - 1);
             info = new FileInfo(Path); 
          }
-         if (!ConnectedUser.CanViewHiddenFolders
-            && ((info.Attributes & FileAttributes.Hidden) == FileAttributes.Hidden)
+         if (((info.Attributes & FileAttributes.System) == FileAttributes.System)
+            || (!ConnectedUser.CanViewHiddenFolders
+               && ((info.Attributes & FileAttributes.Hidden) == FileAttributes.Hidden)
+               )
             )
          {
             SendOnControlStream("550 Invalid path specified.");
@@ -40,11 +40,11 @@ namespace LiquesceFTPSvc.FTP
          else
          {
             SendOnControlStream("250-Details for: [" + cmdArguments + "]");
-            ClientSocket.WriteInfo(" ");
-            ClientSocket.WriteInfo(((info.Attributes & FileAttributes.Directory) == FileAttributes.Directory)
-               ? SendDirectory(info)
-               : SendFile(info));
-            ClientSocket.WritePathNameCRLN(UseUTF8, info.Name);
+            ClientSocket.WriteAsciiInfo(" ")
+               .WriteAsciiInfo(((info.Attributes & FileAttributes.Directory) == FileAttributes.Directory)
+                  ? SendDirectory(info)
+                  : SendFile(info)
+               ).WritePathNameCRLN(UseUTF8, info.Name);
             SendOnControlStream("250 Completed.");
          }
       }

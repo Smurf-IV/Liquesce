@@ -16,11 +16,16 @@ namespace LiquesceFTPSvc.FTP
       /// mm is the minute from 00 to 59, and 
       /// ss is the second from 00 to 59. 
       /// </summary>
+      /// <remarks>
+      /// There is a means of setting the last-modified timestamp on files via the FTP server. 
+      /// This is possible by implementing a hack of MDTM - using this to set timestamps is an abuse of RFC 3659
+      /// How would one reverse engineer the UTF8 stuff ?
+      /// http://forum.filezilla-project.org/viewtopic.php?f=1&t=15686
+      /// </remarks>
       /// <param name="cmdArguments"></param>
       private void MDTM_Command(string cmdArguments)
       {
-         string Path = ConnectedUser.StartUpDirectory + GetExactPath(cmdArguments);
-         Path = Path.Substring(0, Path.Length - 1);
+         string Path = GetExactPath(cmdArguments);
          FileInfo fi = new FileInfo(Path);
          if (fi.Exists)
             SendOnControlStream("213 " + GetFormattedTime(fi.LastWriteTimeUtc));

@@ -262,7 +262,7 @@ namespace LiquesceFTPSvc
          {
             InitialiseToDefault();
             XmlSerializer x = new XmlSerializer(currentConfigDetails.GetType());
-            Log.Info("Attempting to read Dokan Drive details from: [{0}]", configFile);
+            Log.Info("Attempting to read Merge Drive details from: [{0}]", configFile);
             using (TextReader textReader = new StreamReader(configFile))
             {
                currentConfigDetails = x.Deserialize(textReader) as ConfigDetails;

@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Text;
 using System.Net;
 using System.Net.Sockets;
@@ -39,7 +40,7 @@ namespace LiquesceFTPSvc.FTP
       string Rename_FilePath;
 
       byte[] BufferData = new byte[1024];
-      private int startOffset;
+      private long startOffset;
 
       internal FTPClientCommander(TcpClient newClientSocket)
       {
@@ -266,6 +267,18 @@ namespace LiquesceFTPSvc.FTP
                      break;
 #endregion
 #region New Commands
+                  case "AVBL":
+                     AVBL_Command(CmdArguments);
+                     break;
+                  case "CLNT":
+                     CLNT_Command(CmdArguments);
+                     break;
+                  case "CSID":
+                     CSID_Command(CmdArguments);
+                     break;
+                  case "DSIZ":
+                     DSIZ_Command(CmdArguments);
+                     break;
                   case "EPRT":
                      EPRT_Command(CmdArguments);
                      break;
@@ -308,14 +321,40 @@ namespace LiquesceFTPSvc.FTP
                   case "OPTS":
                      OPTS_Command(CmdArguments);
                      break;
+                  case "RMDA":
+                     RMDA_Command(CmdArguments);
+                     break;
                   case "SIZE":
                      SIZE_Command(CmdArguments);
                      break;
+                  case "THMB":
+                     THMB_Command(CmdArguments);
+                     break;
+#endregion
+#region X Commands
                   case "XCRC":
                      XCRC_Command(CmdArguments);
                      break;
+                  case "XCUP":
+                     XCUP_Command();
+                     break;
+                  case "XCWD":
+                     XCWD_Command(CmdArguments);
+                     break;
+                  case "XDEL":
+                     XDEL_Command(CmdArguments);
+                     break;
                   case "XMD5":
                      XMD5_Command(CmdArguments);
+                     break;
+                  case "XMKD":
+                     XMKD_Command(CmdArguments);
+                     break;
+                  case "XPWD":
+                     XPWD_Command();
+                     break;
+                  case "XRMD":
+                     XRMD_Command(CmdArguments);
                      break;
                   case "XSHA1":
                      XSHA1_Command(CmdArguments);
@@ -328,7 +367,7 @@ namespace LiquesceFTPSvc.FTP
                      break;
 #endregion
                   default:
-                     SendOnControlStream("500 Unknown Command.");
+                     SendOnControlStream("502 Unknown Command.");
                      break;
 
                }
@@ -350,15 +389,29 @@ namespace LiquesceFTPSvc.FTP
       internal void Disconnect()
       {
          Log.Warn("Disconnect called");
-         if ( ClientSocket != null)
+         if (ClientSocket != null)
          {
-            ClientSocket.Flush();
-            ClientSocket.Close(15);
+            try
+            {
+               ClientSocket.Flush();
+               ClientSocket.Close(15);
+            }
+            finally
+            {
+               ClientSocket = null;
+            }
          }
-         ClientSocket = null;
-         if (DataListener != null) 
-            DataListener.Stop(); 
-         DataListener = null;
+         if (DataListener != null)
+         {
+            try
+            {
+               DataListener.Stop();
+            }
+            finally
+            {
+               DataListener = null;
+            }
+         }
          ClientEndPoint = null;
          ConnectedUser = null;
 
@@ -378,7 +431,7 @@ namespace LiquesceFTPSvc.FTP
                && ClientSocket.CanWrite
                )
             {
-               ClientSocket.WriteInfoCRLN(Data);
+               ClientSocket.WriteAsciiInfoCRLN(Data);
             }
          }
          catch ( Exception ex )
@@ -388,40 +441,36 @@ namespace LiquesceFTPSvc.FTP
          }
       }
 
-      string GetExactPath(string Path)
+      /// <summary>
+      /// Returns TVFS aware result
+      /// </summary>
+      /// <param name="path">passed in argument for an FTP command</param>
+      /// <returns>The absolute result of the intended location</returns>
+      string GetExactPath(string path)
       {
-         if (Path == null) 
-            Path = String.Empty;
+         if ( string.IsNullOrWhiteSpace(path)) 
+            return ConnectedUser.CurrentWorkingDirectory;
+         
+         // TODO: Need to work out if this works with both ASCII and UTF8 encoded strings over the wire.
 
-         string dir = Path.Replace("/", "\\");
+         string dir = path.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar).TrimEnd(Path.DirectorySeparatorChar);
 
-         if (!dir.EndsWith("\\")) 
-            dir += "\\";
-
-         if (!Path.StartsWith("/")) 
-            dir = ConnectedUser.CurrentWorkingDirectory + dir;
-
-         ArrayList pathParts = new ArrayList();
-         dir = dir.Replace("\\\\", "\\");
-         string[] p = dir.Split('\\');
-         pathParts.AddRange(p);
-
-         for (int i = 0; i < pathParts.Count; i++)
+         if (string.IsNullOrEmpty(dir))
          {
-            if (pathParts[i].ToString() == "..")
-            {
-               if (i > 0)
-               {
-                  pathParts.RemoveAt(i - 1);
-                  i--;
-               }
-
-               pathParts.RemoveAt(i);
-               i--;
-            }
+            // the above has trimmed the request for the startup direcoty out to make this an empty string
+            dir = ConnectedUser.StartUpDirectory;
          }
-
-         return dir.Replace("\\\\", "\\");
+         else if (dir[0] == Path.DirectorySeparatorChar)
+         {
+            // Test to see if this is TVFS StartUpDirectory related
+            dir = Path.Combine(ConnectedUser.StartUpDirectory, dir.TrimStart(Path.DirectorySeparatorChar));
+         }
+         else
+         {
+            // All others are treated as offsets from the CurrentWorkingDirectory
+            dir = Path.Combine(ConnectedUser.CurrentWorkingDirectory, dir);
+         }
+         return Path.GetFullPath(dir);
       }
 
       NetworkStream GetDataSocket()

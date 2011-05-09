@@ -1,4 +1,6 @@
-﻿namespace LiquesceFTPSvc.FTP
+﻿using System.Threading;
+
+namespace LiquesceFTPSvc.FTP
 {
    partial class FTPClientCommander
    {
@@ -8,8 +10,16 @@
       /// </summary>
       private void QUIT_Command()
       {
-         SendOnControlStream("221 FTP server signing off.");
-         Disconnect();
+         try
+         {
+            abortReceived = true;
+            Thread.Yield();
+            ClientSocket.WriteAsciiInfo("221 FTP server signing off.\r\n");
+         }
+         finally
+         {
+            Disconnect();
+         } 
       }
 
    }

@@ -18,10 +18,12 @@ namespace LiquesceFTPSvc.FTP
       /// <param name="cmdArguments"></param>
       private void MLSD_Command(string cmdArguments)
       {
-         string Path = ConnectedUser.StartUpDirectory + GetExactPath(cmdArguments);
+         string Path = GetExactPath(cmdArguments);
          DirectoryInfo dirInfo = new DirectoryInfo(Path);
-         if (!ConnectedUser.CanViewHiddenFolders
-            && ((dirInfo.Attributes & FileAttributes.Hidden) == FileAttributes.Hidden)
+         if (((dirInfo.Attributes & FileAttributes.System) == FileAttributes.System)
+            || (!ConnectedUser.CanViewHiddenFolders
+               && ((dirInfo.Attributes & FileAttributes.Hidden) == FileAttributes.Hidden)
+               )
             )
          {
             SendOnControlStream("550 Invalid path specified.");
@@ -37,18 +39,20 @@ namespace LiquesceFTPSvc.FTP
             }
             try
             {
-               FileSystemInfo[] infos = dirInfo.GetFileSystemInfos("*.*", SearchOption.TopDirectoryOnly);
-               DataSocket.WriteInfoCRLN(string.Format("150 Details for: [{0}] with [{1}] entries.", cmdArguments, infos.Length));
+               FileSystemInfo[] foldersList = dirInfo.GetFileSystemInfos("*.*", SearchOption.TopDirectoryOnly);
+               DataSocket.WriteAsciiInfoCRLN(string.Format("150 Details for: [{0}] with [{1}] entries.", cmdArguments, foldersList.Length));
+
                foreach (FileSystemInfo info in
-                  infos.Where(
-                     info =>
-                     ConnectedUser.CanViewHiddenFolders ||
-                     ((info.Attributes & FileAttributes.Hidden) != FileAttributes.Hidden)))
+                  foldersList.Where(info2 => ((info2.Attributes & FileAttributes.System) != FileAttributes.System) 
+                        && (ConnectedUser.CanViewHiddenFolders 
+                           || ((info2.Attributes & FileAttributes.Hidden) != FileAttributes.Hidden))
+                           )
+                     )
                {
-                  DataSocket.WriteInfo(((info.Attributes & FileAttributes.Directory) == FileAttributes.Directory)
-                              ? SendDirectory(info)
-                              : SendFile(info));
-                  DataSocket.WritePathNameCRLN(UseUTF8, info.Name);
+                  DataSocket.WriteAsciiInfo(((info.Attributes & FileAttributes.Directory) == FileAttributes.Directory)
+                                               ? SendDirectory(info)
+                                               : SendFile(info))
+                     .WritePathNameCRLN(UseUTF8, info.Name);
                }
                DataSocket.Flush();
                SendOnControlStream("226 Transfer Complete.");
@@ -57,6 +61,11 @@ namespace LiquesceFTPSvc.FTP
             {
                Log.ErrorException("MLSD_Command: ", ex);
                SendOnControlStream("550 Invalid path specified." + ex.Message);
+            }
+            catch (UnauthorizedAccessException uaex)
+            {
+               Log.ErrorException("MLSD_Command: ", uaex);
+               SendOnControlStream("550 Requested action not taken. permission denied. " + uaex.Message);
             }
             catch (Exception ex)
             {

@@ -14,5 +14,8 @@
     <Setting Name="MaxPassvPort" Type="System.UInt16" Scope="Application">
       <Value Profile="(Default)">7000</Value>
     </Setting>
+    <Setting Name="MoveDeletedFilesToRecycleBin" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

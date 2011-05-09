@@ -18,7 +18,7 @@ namespace LiquesceFTPSvc.FTP
             return;
          }
 
-         string Path = ConnectedUser.StartUpDirectory + GetExactPath(CmdArguments);
+         string Path = GetExactPath(CmdArguments);
 
          if (Directory.Exists(Path) || File.Exists(Path))
             SendOnControlStream("550 A file or folder with the same name already exists.");
@@ -27,10 +27,11 @@ namespace LiquesceFTPSvc.FTP
             try
             {
                Directory.CreateDirectory(Path);
-               SendOnControlStream("257 \"" + Path + "\" directory created.");
+               ClientSocket.WriteAsciiInfo("257 Created: ").WritePathNameCRLN(UseUTF8, CmdArguments);
             }
             catch (Exception Ex) 
-            { 
+            {
+               Log.ErrorException("MKD: ", Ex);
                SendOnControlStream("550 " + Ex.Message + "."); 
             }
          }

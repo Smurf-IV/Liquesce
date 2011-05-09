@@ -9,7 +9,7 @@
       /// <param name="cmdArguments"></param>
       private void CONF_Command(string cmdArguments)
       {
-         SendOnControlStream("500 Command Not Implemented.");
+         SendOnControlStream("502 Command Not Implemented.");
       }
 
       private static void CONF_Support(FTPClientCommander thisClient)

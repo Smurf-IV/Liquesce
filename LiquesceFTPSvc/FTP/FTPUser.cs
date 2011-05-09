@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using NLog;
 
 namespace LiquesceFTPSvc.FTP
@@ -8,12 +9,13 @@ namespace LiquesceFTPSvc.FTP
       static private readonly Logger Log = LogManager.GetCurrentClassLogger();
 
       internal bool CanDeleteFiles, CanDeleteFolders, CanRenameFiles,
-           CanRenameFolders, CanStoreFiles, CanStoreFolder, CanViewHiddenFiles,
+           CanRenameFolders, CanStoreFiles, CanStoreFolder,
            CanViewHiddenFolders, CanCopyFiles;
 
       internal string UserName;
-      internal string StartUpDirectory = @"C:\";
-      internal string CurrentWorkingDirectory = "\\";
+      // TODO: This needs some serious thought on how to populate this directory
+      internal string StartUpDirectory = @"C:\Blam";
+      internal string CurrentWorkingDirectory = Path.DirectorySeparatorChar.ToString();
       internal bool IsAuthenticated = false;
       string Password;
 
@@ -34,7 +36,6 @@ namespace LiquesceFTPSvc.FTP
             CanDeleteFiles = true;
             CanDeleteFolders = true;
             CanCopyFiles = true;
-            CanViewHiddenFiles = true;
             CanViewHiddenFolders = true;
 
             //XmlNodeList Users = ApplicationSettings.GetUserList();
@@ -55,7 +56,6 @@ namespace LiquesceFTPSvc.FTP
             //    CanDeleteFiles = Permissions[4] == '1';
             //    CanDeleteFolders = Permissions[5] == '1';
             //    CanCopyFiles = Permissions[6] == '1';                    
-            //    CanViewHiddenFiles = Permissions[7] == '1';
             //    CanViewHiddenFolders = Permissions[8] == '1';
 
             //    break;
@@ -75,10 +75,24 @@ namespace LiquesceFTPSvc.FTP
          return (IsAuthenticated = (password == Password));
       }
 
-      internal bool ChangeDirectory(string Dir)
+      internal bool ChangeDirectory(string absPath)
       {
-         CurrentWorkingDirectory = Dir;
-         return true;
+         bool success = false;
+         try
+         {
+            if (absPath.StartsWith(StartUpDirectory))
+            {
+               // need to leave the start seperator
+               CurrentWorkingDirectory = absPath;
+               success = true;
+            }
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException("ChangeDirectory -> CurrentWorkingDirectory;", ex );
+            success = false;
+         }
+         return success;
       }
    }
 }

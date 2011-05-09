@@ -18,11 +18,10 @@ namespace LiquesceFTPSvc.FTP
 
          try
          {
-            string Path = ConnectedUser.StartUpDirectory + GetExactPath(filename);
+            string Path = GetExactPath(filename);
             FileSystemInfo info = new DirectoryInfo(Path);
             if (!info.Exists)
             {
-               Path = Path.Substring(0, Path.Length - 1);
                info = new FileInfo(Path);
             }
 
