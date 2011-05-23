@@ -11,7 +11,8 @@
     <RootNamespace>ClientLiquesceFTPTray</RootNamespace>
     <AssemblyName>ClientLiquesceFTPTray</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
     <SccProjectName>SAK</SccProjectName>
     <SccLocalPath>SAK</SccLocalPath>
@@ -66,10 +67,12 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CacheHelper.cs" />
     <Compile Include="ClientConfigDetails.cs" />
     <Compile Include="ClientPropertiesDisplay.cs" />
     <Compile Include="ClientShareDetail.cs" />
@@ -77,6 +80,12 @@
     <Compile Include="Dokan\LiquesceOps.cs" />
     <Compile Include="Dokan\RWLSExtension.cs" />
     <Compile Include="Dokan\Utils.cs" />
+    <Compile Include="FTP\DirectoryFTPInfo.cs" />
+    <Compile Include="FTP\FileFTPInfo.cs" />
+    <Compile Include="FTP\FileStreamFTP.cs" />
+    <Compile Include="FTP\FileSystemFTPInfo.cs" />
+    <Compile Include="FTP\FtpClientExt.cs" />
+    <Compile Include="FTP\MlstCollection.cs" />
     <Compile Include="HandleMappingThread.cs" />
     <Compile Include="HiddenFormToAcceptCloseMessage.cs">
       <SubType>Form</SubType>
@@ -179,9 +188,7 @@
       <Name>DokanNet</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="FTP\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>

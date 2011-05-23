@@ -24,8 +24,6 @@
  */
 
 using System;
-using System.IO;
-using System.Text;
 
 namespace Starksoft.Net.Ftp
 {
@@ -86,16 +84,7 @@ namespace Starksoft.Net.Ftp
     /// </remarks>
 	public class FtpItem 
 	{
-        private string _name;
-        private DateTime _modified;
-        private long _size;
-        private string _symbolicLink;
-        private FtpItemType _itemType;
-        private string _attributes;
-        private string _rawText;
-        private string _parentPath;
-
-        /// <summary>
+       /// <summary>
         /// Constructor to create a new ftp item.
         /// </summary>
         /// <param name="name">Name of the item.</param>
@@ -107,87 +96,62 @@ namespace Starksoft.Net.Ftp
         /// <param name="rawText">The raw text of the item.</param>
         public FtpItem(string name, DateTime modified, long size, string symbolicLink, string attributes, FtpItemType itemType, string rawText)
 		{
-            _name = name;
-            _modified = modified;
-            _size = size;
-            _symbolicLink = symbolicLink;
-            _attributes = attributes;
-            _itemType = itemType;
-            _rawText = rawText;
+            Name = name;
+            Modified = modified;
+            Size = size;
+            SymbolicLink = symbolicLink;
+            Attributes = attributes;
+            ItemType = itemType;
+            RawText = rawText;
 		}
 
-        /// <summary>
-        /// Item name.  All FTP servers should report a name value for the FTP item.
-        /// </summary>
-		public string Name
-		{
-			get	{ return _name;	}
-		}
+       /// <summary>
+       /// Item name.  All FTP servers should report a name value for the FTP item.
+       /// </summary>
+       public string Name { get; private set; }
 
-        /// <summary>
-        /// Permissions text for the item.  Many FTP servers will report file permission information.
-        /// </summary>
-        public string Attributes
-        {
-            get { return _attributes; }
-        }
+       /// <summary>
+       /// Permissions text for the item.  Many FTP servers will report file permission information.
+       /// </summary>
+       public string Attributes { get; private set; }
 
-        /// <summary>
-        /// Modified date and possibly time for the ftp item.
-        /// </summary>
-        public DateTime Modified
-        {
-            get { return _modified ; }
-        }
+       /// <summary>
+       /// Modified date and possibly time for the ftp item.
+       /// </summary>
+       public DateTime Modified { get; private set; }
 
-        /// <summary>
-        /// The size of the ftp item as reported by the FTP server.
-        /// </summary>
-        public long Size
-        {
-            get { return _size; }
-        }
+       /// <summary>
+       /// The size of the ftp item as reported by the FTP server.
+       /// </summary>
+       public long Size { get; private set; }
 
-        /// <summary>
-        /// The symbolic link name if the item is of itemType symbolic link.
-        /// </summary>
-        public string SymbolicLink
-        {
-            get { return _symbolicLink; }
-        }
+       /// <summary>
+       /// The symbolic link name if the item is of itemType symbolic link.
+       /// </summary>
+       public string SymbolicLink { get; private set; }
 
-        /// <summary>
-        /// The itemType of the ftp item.
-        /// </summary>
-        public FtpItemType ItemType
-        {
-            get { return _itemType; }
-        }
+       /// <summary>
+       /// The itemType of the ftp item.
+       /// </summary>
+       public FtpItemType ItemType { get; private set; }
 
-        /// <summary>
-        /// The raw textual line information as reported by the FTP server.  This can be useful for examining exotic FTP formats and for debugging
-        /// a custom ftp item parser.
-        /// </summary>
-        public string RawText
-        {
-            get { return _rawText; }
-        }
+       /// <summary>
+       /// The raw textual line information as reported by the FTP server.  This can be useful for examining exotic FTP formats and for debugging
+       /// a custom ftp item parser.
+       /// </summary>
+       public string RawText { get; private set; }
 
-        /// <summary>
-        /// Path to the parent directory.
-        /// </summary>
-        public string ParentPath
-        {
-            get { return _parentPath; }
-            set { _parentPath = value; }
-        }
+       /// <summary>
+       /// Path to the parent directory.
+       /// </summary>
+       public string ParentPath { get; set; }
 
-        /// <summary>
+       /// <summary>
         /// Item full path.
         /// </summary>
         public string FullPath
         {
-            get { return _parentPath == "/" || _parentPath == "//" ? String.Format("{0}{1}", _parentPath, _name) : String.Format("{0}/{1}", _parentPath, _name); }
+            get { return ParentPath == "/" || ParentPath == "//" ? String.Format("{0}{1}", ParentPath, Name) : String.Format("{0}/{1}", ParentPath, Name); }
         }
 
 	}

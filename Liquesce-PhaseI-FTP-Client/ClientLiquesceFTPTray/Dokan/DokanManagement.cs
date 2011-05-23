@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using ClientLiquesceFTPTray.FTP;
 using DokanNet;
 using NLog;
 using Starksoft.Net.Ftp;
@@ -11,7 +12,7 @@ namespace ClientLiquesceFTPTray.Dokan
       static private readonly Logger Log = LogManager.GetCurrentClassLogger();
       private char mountedDriveLetter;
       private LiquesceOps dokanOperations;
-      private FtpClient ftpInstance;
+      private FtpClientExt ftpInstance;
 
       /// <summary>
       /// Invokes DokanNet.DokanMain function to mount a drive. 
@@ -53,7 +54,7 @@ namespace ClientLiquesceFTPTray.Dokan
                   VolumeLabel = csd.VolumeLabel
                };
 
-               ftpInstance = new FtpClient(csd.TargetMachineName, csd.Port, csd.SecurityProtocol);
+               ftpInstance = new FtpClientExt( new FtpClient(csd.TargetMachineName, csd.Port, csd.SecurityProtocol) );
                ftpInstance.Open(csd.UserName, csd.Password);
 
                dokanOperations = new LiquesceOps(csd, ftpInstance);

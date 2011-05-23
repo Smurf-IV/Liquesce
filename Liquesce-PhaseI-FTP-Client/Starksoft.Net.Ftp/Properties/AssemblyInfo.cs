@@ -11,8 +11,8 @@ using System;
 [assembly: AssemblyCopyright("Copyright 2009,2010")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
-[assembly: AssemblyVersion("1.0.158.0")]
-[assembly: AssemblyFileVersion("1.0.158.0")]
+[assembly: AssemblyVersion("2011.5.2.3")]
+[assembly: AssemblyFileVersion("2011.5.2.3")]
 [assembly: AssemblyDelaySign(false)]
 [assembly: AssemblyKeyName("")]
 

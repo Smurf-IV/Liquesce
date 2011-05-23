@@ -153,13 +153,13 @@ namespace DokanNet
       public const uint CREATE_NEW = 1;
       public const uint CREATE_ALWAYS = 2;
       public const uint OPEN_EXISTING = 3;
-      private const uint OPEN_ALWAYS = 4;
+      public const uint OPEN_ALWAYS = 4;
       public const uint TRUNCATE_EXISTING = 5;
 
       private const uint FILE_ATTRIBUTE_READONLY           =  0x00000001;
       private const uint FILE_ATTRIBUTE_HIDDEN             =  0x00000002;
       private const uint FILE_ATTRIBUTE_SYSTEM             =  0x00000004;
-      private const uint FILE_ATTRIBUTE_DIRECTORY          =  0x00000010;
+      public const uint FILE_ATTRIBUTE_DIRECTORY          =  0x00000010;
       private const uint FILE_ATTRIBUTE_ARCHIVE            =  0x00000020;
       private const uint FILE_ATTRIBUTE_ENCRYPTED          =  0x00000040;
       private const uint FILE_ATTRIBUTE_NORMAL             =  0x00000080;
@@ -398,7 +398,7 @@ namespace DokanNet
                rawHandleFileInformation.nFileSizeHigh = (uint)(fi.Length >> 32);
                rawHandleFileInformation.dwNumberOfLinks = 1;
                rawHandleFileInformation.nFileIndexHigh = 0;
-               rawHandleFileInformation.nFileIndexLow = (uint)fi.FileName.GetHashCode();
+               rawHandleFileInformation.nFileIndexLow = (uint)file.GetHashCode();
             }
 
             return ret;
@@ -787,7 +787,9 @@ namespace DokanNet
             //#define FILE_CASE_PRESERVED_NAMES       0x00000002  
             //#define FILE_UNICODE_ON_DISK            0x00000004  
             //#define FILE_PERSISTENT_ACLS            0x00000008  // This sends the data to the Recycler and not Recycled
-            // See http://msdn.microsoft.com/en-us/library/aa364993%28VS.85%29.aspx for more flags
+            //#define FILE_SUPPORTS_REMOTE_STORAGE    0x00000100
+
+            // See http://msdn.microsoft.com/en-us/library/cc232101%28v=prot.10%29.aspx for more flags
             //
             // FILE_FILE_COMPRESSION      0x00000010     // Don't do this.. It causes lot's of problems later on
             // And the Dokan code does not support it
@@ -795,9 +797,9 @@ namespace DokanNet
             //            //DbgPrint("FileStreamInformation\n");
             //            status = STATUS_NOT_IMPLEMENTED;
             //            break;
-            rawFileSystemFlags = 0x0f;
+            rawFileSystemFlags = 0x107;
 
-            byte[] sys = Encoding.Unicode.GetBytes("DOKAN");
+            byte[] sys = Encoding.Unicode.GetBytes("ClientLiquesceFTP");
             length = sys.Length;
             byte[] sysNull = new byte[length + 2];
             Array.Copy(sys, sysNull, length);
@@ -852,12 +854,12 @@ namespace DokanNet
           ref SECURITY_DESCRIPTOR rawSecurityDescriptor, uint rawSecurityDescriptorLength, ref DOKAN_FILE_INFO rawFileInfo);
 
       public int SetFileSecurity( IntPtr rawFileName, ref SECURITY_INFORMATION rawSecurityInformation,
-          ref SECURITY_DESCRIPTOR rawSecurityDescriptor, ref uint rawSecurityDescriptorLengthNeeded, ref DOKAN_FILE_INFO rawFileInfo)
+          ref SECURITY_DESCRIPTOR rawSecurityDescriptor, uint rawSecurityDescriptorLength, ref DOKAN_FILE_INFO rawFileInfo)
       {
          try
          {
             string file = GetFileName(rawFileName);
-            return operations.SetFileSecurityNative(file, ref rawSecurityInformation, ref rawSecurityDescriptor, ref rawSecurityDescriptorLengthNeeded, ConvertFileInfo(ref rawFileInfo));
+            return operations.SetFileSecurityNative(file, ref rawSecurityInformation, ref rawSecurityDescriptor, rawSecurityDescriptorLength, ConvertFileInfo(ref rawFileInfo));
          }
          catch (Exception ex)
          {

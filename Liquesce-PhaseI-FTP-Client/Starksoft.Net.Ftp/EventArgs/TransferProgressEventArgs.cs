@@ -24,61 +24,61 @@ using System;
 
 namespace Starksoft.Net.Ftp
 {
-    /// <summary>
-    /// Event arguments to facilitate the transfer progress event.
-    /// </summary>
-    public class TransferProgressEventArgs : EventArgs
-    {
+   /// <summary>
+   /// Event arguments to facilitate the transfer progress event.
+   /// </summary>
+   public class TransferProgressEventArgs : EventArgs
+   {
 
-        private int _bytesTransferred;
-        private int _bytesPerSecond;
-        private TimeSpan _elapsedTime;
+      private readonly uint _bytesTransferred;
+      private readonly uint _bytesPerSecond;
+      private readonly TimeSpan _elapsedTime;
 
-        /// <summary>
-        /// Constructor.
-        /// </summary>
-        /// <param name="bytesTransferred">The number of bytes transferred.</param>
-        /// <param name="bytesPerSecond">The data transfer speed in bytes per second.</param>
-        /// <param name="elapsedTime">The time that has elapsed since the data transfer started.</param>
-        public TransferProgressEventArgs(int bytesTransferred, int bytesPerSecond, TimeSpan elapsedTime)
-        {
-            _bytesTransferred = bytesTransferred;
-            _bytesPerSecond = bytesPerSecond;
-            _elapsedTime = elapsedTime;
-        }
+      /// <summary>
+      /// Constructor.
+      /// </summary>
+      /// <param name="bytesTransferred">The number of bytes transferred.</param>
+      /// <param name="bytesPerSecond">The data transfer speed in bytes per second.</param>
+      /// <param name="elapsedTime">The time that has elapsed since the data transfer started.</param>
+      public TransferProgressEventArgs(uint bytesTransferred, uint bytesPerSecond, TimeSpan elapsedTime)
+      {
+         _bytesTransferred = bytesTransferred;
+         _bytesPerSecond = bytesPerSecond;
+         _elapsedTime = elapsedTime;
+      }
 
-        /// <summary>
-        /// The number of bytes transferred.
-        /// </summary>
-        public int BytesTransferred
-        {
-            get { return _bytesTransferred; }
-        }
+      /// <summary>
+      /// The number of bytes transferred.
+      /// </summary>
+      public uint BytesTransferred
+      {
+         get { return _bytesTransferred; }
+      }
 
-        /// <summary>
-        /// Gets the data transfer speed in bytes per second.
-        /// </summary>
-        public int BytesPerSecond
-        {
-            get { return _bytesPerSecond; }
-        }
+      /// <summary>
+      /// Gets the data transfer speed in bytes per second.
+      /// </summary>
+      public uint BytesPerSecond
+      {
+         get { return _bytesPerSecond; }
+      }
 
-        /// <summary>
-        /// Gets the data transfer speed in kilobytes per second.
-        /// </summary>
-        public int KilobytesPerSecond
-        {
-            get { return _bytesPerSecond / 1024; }
-        }
+      /// <summary>
+      /// Gets the data transfer speed in kilobytes per second.
+      /// </summary>
+      public uint KilobytesPerSecond
+      {
+         get { return _bytesPerSecond / 1024; }
+      }
 
-        /// <summary>
-        /// Gets the time that has elapsed since the data transfer started.
-        /// </summary>
-        public TimeSpan ElapsedTime
-        {
-            get { return _elapsedTime; }
-        }
+      /// <summary>
+      /// Gets the time that has elapsed since the data transfer started.
+      /// </summary>
+      public TimeSpan ElapsedTime
+      {
+         get { return _elapsedTime; }
+      }
 
 
-    }
+   }
 }

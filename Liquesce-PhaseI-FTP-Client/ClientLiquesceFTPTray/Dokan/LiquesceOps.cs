@@ -6,10 +6,10 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using ClientLiquesceFTPTray.FTP;
 using DokanNet;
 using Microsoft.Win32.SafeHandles;
 using NLog;
-using Starksoft.Net.Ftp;
 using FILETIME = System.Runtime.InteropServices.ComTypes.FILETIME;
 
 namespace ClientLiquesceFTPTray.Dokan
@@ -18,24 +18,24 @@ namespace ClientLiquesceFTPTray.Dokan
    {
       static private readonly string PathDirectorySeparatorChar = Path.DirectorySeparatorChar.ToString();
       static private readonly Logger Log = LogManager.GetCurrentClassLogger();
-      private readonly ClientShareDetail configDetails;
-      private readonly FtpClient ftpInstance;
+      private readonly ClientShareDetail csd;
+      private readonly FtpClientExt ftpCmdInstance;
 
       // currently open files...
       // last key
-      static private UInt64 openFilesLastKey;
+      private UInt64 openFilesLastKey;
       // lock
-      static private readonly ReaderWriterLockSlim openFilesSync = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
+      private readonly ReaderWriterLockSlim openFilesSync = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
       // dictionary of all open files
-      static private readonly Dictionary<UInt64, FileStreamName> openFiles = new Dictionary<UInt64, FileStreamName>();
+      private readonly Dictionary<UInt64, FileStreamFTP> openFiles = new Dictionary<UInt64, FileStreamFTP>();
 
-      private readonly Dictionary<string, List<string>> foundDirectories = new Dictionary<string, List<string>>();
-      private readonly ReaderWriterLockSlim foundDirectoriesSync = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
+      private readonly ReaderWriterLockSlim cacheInfoLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
+      private readonly Dictionary<string, FileSystemFTPInfo> cachedFileSystemFTPInfo = new Dictionary<string, FileSystemFTPInfo>();
 
-      public LiquesceOps(ClientShareDetail csd, FtpClient ftpInstance)
+      public LiquesceOps(ClientShareDetail csd, FtpClientExt ftpCmdInstance)
       {
-         configDetails = csd;
-         this.ftpInstance = ftpInstance;
+         this.csd = csd;
+         this.ftpCmdInstance = ftpCmdInstance;
       }
 
       #region IDokanOperations Implementation
@@ -45,111 +45,88 @@ namespace ClientLiquesceFTPTray.Dokan
       /// This is what the Win OS suystem is expecting http://msdn.microsoft.com/en-us/library/aa363858%28VS.85%29.aspx
       /// So.. Everything succeeds but the Return code is ERROR_ALREADY_EXISTS
       /// </summary>
-      /// <param name="filename"></param>
+      /// <param name="dokanFilename"></param>
       /// <param name="rawFlagsAndAttributes"></param>
       /// <param name="info"></param>
       /// <param name="rawAccessMode"></param>
       /// <param name="rawShare"></param>
       /// <param name="rawCreationDisposition"></param>
       /// <returns></returns>
-      public int CreateFile(string filename, uint rawAccessMode, uint rawShare, uint rawCreationDisposition, uint rawFlagsAndAttributes, DokanFileInfo info)
+      public int CreateFile(string dokanFilename, uint rawAccessMode, uint rawShare, uint rawCreationDisposition, uint rawFlagsAndAttributes, DokanFileInfo info)
       {
          int actualErrorCode = DokanNet.Dokan.DOKAN_SUCCESS;
          try
          {
             Log.Debug(
-               "CreateFile IN filename [{0}], rawAccessMode[{1}], rawShare[{2}], rawCreationDisposition[{3}], rawFlagsAndAttributes[{4}], ProcessId[{5}]",
-               filename, rawAccessMode, rawShare, rawCreationDisposition, rawFlagsAndAttributes, info.ProcessId);
-            throw new NotImplementedException("WriteFile");
-            //string path = roots.GetPath(filename, (rawCreationDisposition == Proxy.CREATE_NEW) || (rawCreationDisposition == Proxy.CREATE_ALWAYS));
+               "CreateFile IN dokanFilename [{0}], rawAccessMode[{1}], rawShare[{2}], rawCreationDisposition[{3}], rawFlagsAndAttributes[{4}], ProcessId[{5}]",
+               dokanFilename, rawAccessMode, rawShare, rawCreationDisposition, rawFlagsAndAttributes, info.ProcessId);
+            string path = GetPath(dokanFilename);
 
-            //if (Directory.Exists(path))
-            //{
-            //   actualErrorCode = OpenDirectory(filename, info);
-            //   return actualErrorCode;
-            //}
-            //// Increment now in case there is an exception later
-            //++openFilesLastKey; // never be Zero !
-            //// Stop using exceptions to throw ERROR_FILE_NOT_FOUND
-            //bool fileExists = File.Exists(path);
-            //switch (rawCreationDisposition)
-            //{
-            //   //case FileMode.Create:
-            //   //case FileMode.OpenOrCreate:
-            //   //   if (fileExists)
-            //   //      actualErrorCode = Dokan.ERROR_ALREADY_EXISTS;
-            //   //   break;
-            //   //case FileMode.CreateNew:
-            //   //   if (fileExists)
-            //   //      return Dokan.ERROR_FILE_EXISTS;
-            //   //   break;
-            //   case Proxy.OPEN_EXISTING:
-            //   //case FileMode.Append:
-            //   case Proxy.TRUNCATE_EXISTING:
-            //      if (!fileExists)
-            //      {
-            //         Log.Debug("filename [{0}] ERROR_FILE_NOT_FOUND", filename);
-            //         // Probably someone has removed this on the actual drive
-            //         roots.RemoveFromLookup(filename);
-            //         actualErrorCode = DokanNet.Dokan.ERROR_FILE_NOT_FOUND;
-            //         return actualErrorCode;
-            //      }
-            //      break;
-            //}
-            ////if (!fileExists)
-            ////{
-            ////   if (fileAccess == FileAccess.Read)
-            ////   {
-            ////      actualErrorCode = Dokan.ERROR_FILE_NOT_FOUND;
-            ////   }
-            ////}
+            using (cacheInfoLock.UpgradableReadLock())
+            {
+               FileSystemFTPInfo foundFileInfo;
+               if (!cachedFileSystemFTPInfo.TryGetValue(path, out foundFileInfo))
+               {
+                  FileFTPInfo fileInfo = new FileFTPInfo(ftpCmdInstance, path);
+                  if (!fileInfo.Exists)
+                  {
+                     foundFileInfo = new DirectoryFTPInfo(ftpCmdInstance, path);
+                     if (foundFileInfo.Exists)
+                     {
+                        actualErrorCode = OpenDirectory(dokanFilename, info);
+                        return actualErrorCode;
+                     }
+                  }
+                  // If the directory existed it would have returned
+                  using (cacheInfoLock.WriteLock())
+                  {
+                     foundFileInfo = fileInfo;
+                     cachedFileSystemFTPInfo[path] = foundFileInfo;
+                  }
+               }
+               bool fileExists = foundFileInfo.Exists;
+               if (foundFileInfo is DirectoryFTPInfo)
+               {
+                  if (fileExists)
+                  {
+                     info.IsDirectory = true;
+                     actualErrorCode = DokanNet.Dokan.DOKAN_SUCCESS;
+                  }
+                  else
+                     actualErrorCode = DokanNet.Dokan.ERROR_PATH_NOT_FOUND;
+                  return actualErrorCode;
+               }
+               // Stop using exceptions to throw ERROR_FILE_NOT_FOUND
+               // http://msdn.microsoft.com/en-us/library/aa363858%28v=vs.85%29.aspx
+               switch (rawCreationDisposition)
+               {
+                  case Proxy.CREATE_NEW:
+                     if (fileExists)
+                        return actualErrorCode = DokanNet.Dokan.ERROR_FILE_EXISTS;
+                     break;
+                  case Proxy.CREATE_ALWAYS:
+                  case Proxy.OPEN_ALWAYS:
+                     // Notepad and wordpad do not like this error code when they are writing back the file contents
+                     //if (fileExists)
+                     //   actualErrorCode = DokanNet.Dokan.ERROR_ALREADY_EXISTS;
+                     break;
+                  case Proxy.OPEN_EXISTING:
+                  case Proxy.TRUNCATE_EXISTING:
+                     if (!fileExists)
+                     {
+                        Log.Debug("dokanFilename [{0}] ERROR_FILE_NOT_FOUND", dokanFilename);
+                        return actualErrorCode = DokanNet.Dokan.ERROR_FILE_NOT_FOUND;
+                     }
+                     break;
+               }
 
-            //bool writeable = (((rawAccessMode & Proxy.FILE_WRITE_DATA) == Proxy.FILE_WRITE_DATA));
-
-            //if (!fileExists && writeable)
-            //{
-            //   Log.Trace("We want to create a new file in: [{0}]", path);
-
-            //   if (String.IsNullOrWhiteSpace(path))
-            //   {
-            //      actualErrorCode = DokanNet.Dokan.ERROR_ACCESS_DENIED;
-            //      Log.Trace("Got no path!!!");
-            //      return actualErrorCode;
-            //   }
-
-            //   Log.Trace("Check if directory exists: [{0}]", FileManager.GetLocationFromFilePath(path));
-            //   if (!Directory.Exists(FileManager.GetLocationFromFilePath(path)))
-            //   {
-            //      Log.Trace("Have to create this directory.");
-            //      Directory.CreateDirectory(FileManager.GetLocationFromFilePath(path));
-            //   }
-            //}
-            //// TODO: The DokanFileInfo structure has the following extra things that need to be mapped tothe file open
-            ////public bool PagingIo;
-            ////public bool SynchronousIo;
-            ////public bool Nocache;
-            //// See http://msdn.microsoft.com/en-us/library/aa363858%28VS.85%29.aspx#caching_behavior
-            //if (info.PagingIo)
-            //   rawFlagsAndAttributes |= Proxy.FILE_FLAG_RANDOM_ACCESS;
-            //if (info.Nocache)
-            //   rawFlagsAndAttributes |= Proxy.FILE_FLAG_WRITE_THROUGH; // | Proxy.FILE_FLAG_NO_BUFFERING;
-            //// FILE_FLAG_NO_BUFFERING flag requires that all I/O operations on the file handle be in multiples of the sector size, 
-            //// AND that the I/O buffers also be aligned on addresses which are multiples of the sector size
-
-            //if (info.SynchronousIo)
-            //   rawFlagsAndAttributes |= Proxy.FILE_FLAG_SEQUENTIAL_SCAN;
-            //SafeFileHandle handle = CreateFile(path, rawAccessMode, rawShare, IntPtr.Zero, rawCreationDisposition, rawFlagsAndAttributes, IntPtr.Zero);
-
-            //if (handle.IsInvalid)
-            //{
-            //   Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error(), new IntPtr(-1));
-            //}
-            //FileStreamName fs = new FileStreamName(path, handle, writeable ? FileAccess.ReadWrite : FileAccess.Read, (int)configDetails.BufferReadSize);
-            //using (openFilesSync.WriteLock())
-            //{
-            //   info.refFileHandleContext = openFilesLastKey; // never be Zero !
-            //   openFiles.Add(openFilesLastKey, fs);
-            //}
+               using (openFilesSync.WriteLock())
+               {
+                  // Increment now in case there is an exception later
+                  info.refFileHandleContext = ++openFilesLastKey; // never be Zero !
+                  openFiles.Add(openFilesLastKey, new FileStreamFTP(csd, rawCreationDisposition, foundFileInfo as FileFTPInfo));
+               }
+            }
          }
          catch (Exception ex)
          {
@@ -163,42 +140,37 @@ namespace ClientLiquesceFTPTray.Dokan
          return actualErrorCode;
       }
 
-      public int OpenDirectory(string filename, DokanFileInfo info)
+      private string GetPath(string dokanFilename)
+      {
+         return csd.TargetShareName + dokanFilename;
+      }
+
+      public int OpenDirectory(string dokanFilename, DokanFileInfo info)
       {
          int dokanError = DokanNet.Dokan.DOKAN_ERROR;
          try
          {
             Log.Trace("OpenDirectory IN DokanProcessId[{0}]", info.ProcessId);
-            throw new NotImplementedException("WriteFile");
-            ////string path = roots.GetPath(filename);
-            ////int start = path.IndexOf(Path.DirectorySeparatorChar);
-            ////path = start > 0 ? path.Substring(start) : PathDirectorySeparatorChar;
-
-            //List<string> currentMatchingDirs = new List<string>(configDetails.SourceLocations.Count);
-            //foreach (string newTarget in
-            //           configDetails.SourceLocations.Select(sourceLocation => sourceLocation + filename))
-            //{
-            //   Log.Trace("Try and OpenDirectory from [{0}]", newTarget);
-            //   if (Directory.Exists(newTarget))
-            //   {
-            //      Log.Trace("Directory.Exists[{0}] Adding details", newTarget);
-            //      currentMatchingDirs.Add(newTarget);
-            //   }
-            //}
-            //if (currentMatchingDirs.Count > 0)
-            //{
-            //   info.IsDirectory = true;
-            //   using (foundDirectoriesSync.WriteLock())
-            //      foundDirectories[filename] = currentMatchingDirs;
-            //   dokanError = DokanNet.Dokan.DOKAN_SUCCESS;
-            //}
-            //else
-            //{
-            //   Log.Warn("Probably someone has removed this from the actual mounts.");
-            //   roots.RemoveFromLookup(filename);
-            //   dokanError = DokanNet.Dokan.ERROR_PATH_NOT_FOUND;
-            //}
-
+            string path = GetPath(dokanFilename);
+            FileSystemFTPInfo foundDirInfo;
+            using (cacheInfoLock.UpgradableReadLock())
+            {
+               if (!cachedFileSystemFTPInfo.TryGetValue(path, out foundDirInfo))
+               {
+                  foundDirInfo = new DirectoryFTPInfo(ftpCmdInstance, path);
+                  using (cacheInfoLock.WriteLock())
+                  {
+                     cachedFileSystemFTPInfo[path] = foundDirInfo;
+                  }
+               }
+               if (foundDirInfo.Exists)
+               {
+                  info.IsDirectory = true;
+                  dokanError = DokanNet.Dokan.DOKAN_SUCCESS;
+               }
+               else
+                  dokanError = DokanNet.Dokan.ERROR_PATH_NOT_FOUND;
+            }
          }
          finally
          {
@@ -208,30 +180,36 @@ namespace ClientLiquesceFTPTray.Dokan
       }
 
 
-      public int CreateDirectory(string filename, DokanFileInfo info)
+      public int CreateDirectory(string dokanFilename, DokanFileInfo info)
       {
          int dokanError = DokanNet.Dokan.DOKAN_ERROR;
 
          try
          {
-            string path;
-            throw new NotImplementedException("WriteFile");
-            //Log.Trace("CreateDirectory IN DokanProcessId[{0}]", info.ProcessId);
-            //path = roots.GetPath(filename, true);
-            //if (!Directory.Exists(path))
-            //{
-            //   Directory.CreateDirectory(path);
-            //}
-            //Log.Debug("By the time it gets here the dir should exist, or have existed by another method / thread");
-            //info.IsDirectory = true;
-            //roots.TrimAndAddUnique(path);
-            ////if (configDetails.AllocationMode == ConfigDetails.AllocationModes.mirror)
-            ////{
-            ////   string mirrorpath = Roots.GetNewRoot(Roots.GetRoot(path), 0, filename) + Path.DirectorySeparatorChar + Roots.HIDDEN_MIRROR_FOLDER + filename;
-            ////   MirrorToDo todo = new MirrorToDo();
-            ////   FileManager.AddMirrorToDo(todo.CreateFolderCreate(filename, path, mirrorpath));
-            ////}
-            //dokanError = DokanNet.Dokan.DOKAN_SUCCESS;
+            Log.Trace("CreateDirectory IN DokanProcessId[{0}]", info.ProcessId);
+            string path = GetPath(dokanFilename);
+            FileSystemFTPInfo foundDirInfo;
+            using (cacheInfoLock.UpgradableReadLock())
+            {
+               if (!cachedFileSystemFTPInfo.TryGetValue(path, out foundDirInfo))
+               {
+                  foundDirInfo = new DirectoryFTPInfo(ftpCmdInstance, path);
+                  using (cacheInfoLock.WriteLock())
+                  {
+                     cachedFileSystemFTPInfo[path] = foundDirInfo;
+                  }
+               }
+               if (!foundDirInfo.Exists)
+               {
+                  ((DirectoryFTPInfo)foundDirInfo).Create();
+                  dokanError = DokanNet.Dokan.DOKAN_SUCCESS;
+               }
+               else
+               {
+                  dokanError = DokanNet.Dokan.ERROR_ALREADY_EXISTS;
+               }
+               info.IsDirectory = true;
+            }
          }
          catch (Exception ex)
          {
@@ -257,46 +235,31 @@ namespace ClientLiquesceFTPTray.Dokan
       /// <summary>
       /// When info->DeleteOnClose is true, you must delete the file in Cleanup.
       /// </summary>
-      /// <param name="filename"></param>
+      /// <param name="dokanFilename"></param>
       /// <param name="info"></param>
       /// <returns></returns>
-      public int Cleanup(string filename, DokanFileInfo info)
+      public int Cleanup(string dokanFilename, DokanFileInfo info)
       {
          try
          {
-            Log.Trace("Cleanup IN DokanProcessId[{0}] with filename [{1}]", info.ProcessId, filename);
+            Log.Trace("Cleanup IN DokanProcessId[{0}] with dokanFilename [{1}]", info.ProcessId, dokanFilename);
             CloseAndRemove(info);
-            throw new NotImplementedException("WriteFile");
-            //if (info.DeleteOnClose)
-            //{
-            //   if (info.IsDirectory)
-            //   {
-            //      Log.Trace("DeleteOnClose Directory");
-            //      using (foundDirectoriesSync.UpgradableReadLock())
-            //      {
-            //         // Only delete the directories that this knew about before the delet was called 
-            //         // (As the user may be moving files into the sources from the mount !!)
-            //         List<string> targetDeletes = foundDirectories[filename];
-            //         if (targetDeletes != null)
-            //            for (int index = 0; index < targetDeletes.Count; index++)
-            //            {
-            //               // Use an index for speed (It all counts !)
-            //               string fullPath = targetDeletes[index];
-            //               Log.Trace("Deleting matched dir [{0}]", fullPath);
-            //               Directory.Delete(fullPath, false);
-            //            }
-            //         using (foundDirectoriesSync.WriteLock())
-            //            foundDirectories.Remove(filename);
-            //      }
-            //   }
-            //   else
-            //   {
-            //      Log.Trace("DeleteOnClose File");
-            //      string path = roots.GetPath(filename);
-            //      File.Delete(path);
-            //   }
-            //   roots.RemoveFromLookup(filename);
-            //}
+            if (info.DeleteOnClose)
+            {
+               string path = GetPath(dokanFilename);
+               FileSystemFTPInfo foundInfo;
+               using (cacheInfoLock.UpgradableReadLock())
+               {
+                  if (cachedFileSystemFTPInfo.TryGetValue(path, out foundInfo))
+                  {
+                     using (cacheInfoLock.WriteLock())
+                     {
+                        cachedFileSystemFTPInfo.Remove(path);
+                        foundInfo.Delete();
+                     }
+                  }
+               }
+            }
          }
          catch (Exception ex)
          {
@@ -310,7 +273,7 @@ namespace ClientLiquesceFTPTray.Dokan
          return DokanNet.Dokan.DOKAN_SUCCESS;
       }
 
-      public int CloseFile(string filename, DokanFileInfo info)
+      public int CloseFile(string dokanFilename, DokanFileInfo info)
       {
          try
          {
@@ -330,48 +293,49 @@ namespace ClientLiquesceFTPTray.Dokan
       }
 
 
-      public int ReadFileNative(string filename, IntPtr rawBuffer, uint rawBufferLength, ref uint rawReadLength, long rawOffset, DokanFileInfo info)
+      public int ReadFileNative(string dokanFilename, IntPtr rawBuffer, uint rawBufferLength, ref uint rawReadLength, long rawOffset, DokanFileInfo info)
       {
          int errorCode = DokanNet.Dokan.DOKAN_SUCCESS;
-         bool closeOnReturn = false;
-         FileStream fileStream = null;
+         bool closeOpenedContext = false;
          try
          {
             Log.Debug("ReadFile IN offset=[{1}] DokanProcessId[{0}]", info.ProcessId, rawOffset);
-            throw new NotImplementedException("WriteFile");
-            //rawReadLength = 0;
-            //if (info.refFileHandleContext == 0)
-            //{
-            //   string path = roots.GetPath(filename);
-            //   Log.Warn("No context handle for [" + path + "]");
-            //   fileStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, (int)configDetails.BufferReadSize);
-            //   closeOnReturn = true;
-            //}
-            //else
-            //{
-            //   Log.Trace("info.refFileHandleContext [{0}]", info.refFileHandleContext);
-            //   using (openFilesSync.ReadLock())
-            //      fileStream = openFiles[info.refFileHandleContext];
-            //}
-            //if (rawOffset > fileStream.Length)
-            //{
-            //   errorCode = DokanNet.Dokan.DOKAN_ERROR;
-            //}
-            //else
-            //{
-            //   fileStream.Seek(rawOffset, SeekOrigin.Begin);
-            //   // readBytes = (uint)fileStream.Read(buffer, 0, buffer.Length);
-            //   if (0 == ReadFile(fileStream.SafeFileHandle, rawBuffer, rawBufferLength, out rawReadLength, IntPtr.Zero))
-            //   {
-            //      Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error(), new IntPtr(-1));
-            //   }
-            //   //else if ( rawReadLength == 0 )
-            //   //{
-            //   //   // ERROR_HANDLE_EOF 38 (0x26)
-            //   //   if (fileStream.Position == fileStream.Length)
-            //   //      errorCode = -38;
-            //   //}
-            //}
+            rawReadLength = 0;
+            if (info.refFileHandleContext == 0)
+            {
+               // Some applications (like Notepad) come in "under the wire" and not via the CreateFile to perform a read
+               using (openFilesSync.WriteLock())
+               {
+                  // Increment now in case there is an exception later
+                  info.refFileHandleContext = ++openFilesLastKey; // never be Zero !
+                  openFiles.Add(openFilesLastKey,
+                                new FileStreamFTP(csd, (uint) FileMode.Open, new FileFTPInfo(ftpCmdInstance,GetPath(dokanFilename)))
+                                );
+                  closeOpenedContext = true;
+               }
+            }
+
+            using (openFilesSync.ReadLock())
+            {
+               FileStreamFTP fileStream = openFiles[info.refFileHandleContext];
+               if (rawOffset > fileStream.Length)
+               {
+                  errorCode = DokanNet.Dokan.DOKAN_ERROR;
+               }
+               else
+               {
+                  fileStream.Seek(rawOffset, SeekOrigin.Begin);
+
+                  byte[] buf = new Byte[rawBufferLength];
+                  uint readLength = fileStream.Read(buf, rawBufferLength);
+                  if (readLength != 0)
+                  {
+                     rawReadLength = readLength;
+                     Marshal.Copy(buf, 0, rawBuffer, (int)rawBufferLength);
+                  }
+                  errorCode = DokanNet.Dokan.DOKAN_SUCCESS;
+               }
+            }
          }
          catch (Exception ex)
          {
@@ -380,50 +344,52 @@ namespace ClientLiquesceFTPTray.Dokan
          }
          finally
          {
-            try
-            {
-               if (closeOnReturn
-                  && (fileStream != null)
-                  )
-                  fileStream.Close();
-            }
-            catch (Exception ex)
-            {
-               Log.ErrorException("closeOnReturn threw: ", ex);
-            }
+            if ( closeOpenedContext )
+               try
+               {
+                  CloseAndRemove(info);
+               }
+               catch (Exception)
+               {
+                  
+                  throw;
+               }
             Log.Debug("ReadFile OUT readBytes=[{0}], errorCode[{1}]", rawReadLength, errorCode);
          }
          return errorCode;
       }
 
-      public int WriteFileNative(string filename, IntPtr rawBuffer, uint rawNumberOfBytesToWrite, ref uint rawNumberOfBytesWritten, long rawOffset, DokanFileInfo info)
+      public int WriteFileNative(string dokanFilename, IntPtr rawBuffer, uint rawNumberOfBytesToWrite, ref uint rawNumberOfBytesWritten, long rawOffset, DokanFileInfo info)
       {
          int errorCode = DokanNet.Dokan.DOKAN_SUCCESS;
          rawNumberOfBytesWritten = 0;
          try
          {
             Log.Trace("WriteFile IN DokanProcessId[{0}]", info.ProcessId);
-            throw new NotImplementedException("WriteFile");
-            //if (info.refFileHandleContext != 0)
-            //{
-            //   Log.Trace("info.refFileHandleContext [{0}]", info.refFileHandleContext);
-            //   FileStreamName fileStream;
-            //   using (openFilesSync.ReadLock())
-            //      fileStream = openFiles[info.refFileHandleContext];
-            //   fileStream.fsi = null;
-            //   if (!info.WriteToEndOfFile)//  If true, write to the current end of file instead of Offset parameter.
-            //      fileStream.Seek(rawOffset, SeekOrigin.Begin);
-            //   else
-            //      fileStream.Seek(0, SeekOrigin.End);
-            //   if (0 == WriteFile(fileStream.SafeFileHandle, rawBuffer, rawNumberOfBytesToWrite, out rawNumberOfBytesWritten, IntPtr.Zero))
-            //   {
-            //      Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error(), new IntPtr(-1));
-            //   }
-            //}
-            //else
-            //{
-            //   errorCode = DokanNet.Dokan.ERROR_FILE_NOT_FOUND;
-            //}
+            using (openFilesSync.ReadLock())
+            {
+               FileStreamFTP fileStream = openFiles[info.refFileHandleContext];
+               if (info.WriteToEndOfFile)       //  If true, write to the current end of file instead of Offset parameter.
+                  rawOffset = fileStream.Length;
+
+               if (rawOffset > fileStream.Length)
+               {
+                  errorCode = DokanNet.Dokan.DOKAN_ERROR;
+               }
+               else
+               {
+                  fileStream.Seek(rawOffset, SeekOrigin.Begin);
+
+                  byte[] buf = new Byte[rawNumberOfBytesToWrite];
+                  Marshal.Copy(rawBuffer, buf, 0, (int)rawNumberOfBytesToWrite);
+
+                  if ( fileStream.Write(buf, rawNumberOfBytesToWrite))
+                  {
+                     rawNumberOfBytesWritten = rawNumberOfBytesToWrite;
+                     errorCode = DokanNet.Dokan.DOKAN_SUCCESS;
+                  }
+               }
+            }
          }
          catch (Exception ex)
          {
@@ -438,82 +404,53 @@ namespace ClientLiquesceFTPTray.Dokan
       }
 
 
-      public int FlushFileBuffers(string filename, DokanFileInfo info)
+      public int FlushFileBuffers(string dokanFilename, DokanFileInfo info)
       {
-         try
-         {
-            Log.Trace("FlushFileBuffers IN DokanProcessId[{0}]", info.ProcessId);
-            if (info.refFileHandleContext != 0)
-            {
-               Log.Trace("info.refFileHandleContext [{0}]", info.refFileHandleContext);
-               using (openFilesSync.ReadLock())
-                  openFiles[info.refFileHandleContext].Flush();
-            }
-            else
-            {
-               return DokanNet.Dokan.ERROR_FILE_NOT_FOUND;
-            }
-         }
-         catch (Exception ex)
-         {
-            Log.ErrorException("FlushFileBuffers threw: ", ex);
-            return Utils.BestAttemptToWin32(ex);
-         }
-         finally
-         {
-            Log.Trace("FlushFileBuffers OUT");
-         }
+         // TODO: Will probably be useful for Asynch operations
          return DokanNet.Dokan.DOKAN_SUCCESS;
       }
 
-      public int GetFileInformation(string filename, ref FileInformation fileinfo, DokanFileInfo info)
+      public int GetFileInformation(string dokanFilename, ref FileInformation fileinfo, DokanFileInfo info)
       {
          int dokanReturn = DokanNet.Dokan.ERROR_FILE_NOT_FOUND;
          try
          {
             Log.Trace("GetFileInformation IN DokanProcessId[{0}]", info.ProcessId);
-            FileSystemInfo fsi = null;
-            using (openFilesSync.ReadLock())
+            string path = GetPath(dokanFilename);
+
+            FileSystemFTPInfo fsi = null;
+            using (cacheInfoLock.UpgradableReadLock())
             {
-               if (info.refFileHandleContext != 0)
+               FileFTPInfo foundFileInfo;
+               if (!cachedFileSystemFTPInfo.TryGetValue(path, out fsi))
                {
-                  Log.Trace("info.refFileHandleContext [{0}]", info.refFileHandleContext);
-                  fsi = openFiles[info.refFileHandleContext].fsi;
-               }
-               if (fsi == null)
-               {
-                  throw new NotImplementedException("WriteFile");
-                  //string path = roots.GetPath(filename);
-                  //if (File.Exists(path))
-                  //{
-                  //   fsi = new FileInfo(path);
-                  //}
-                  //else if (Directory.Exists(path))
-                  //{
-                  //   fsi = new DirectoryInfo(path);
-                  //   info.IsDirectory = true;
-                  //}
-                  //// Store the fsi away, as ALL calls for _any_ information will be routed through this API.
-                  //if ((fsi != null)
-                  //    && (info.refFileHandleContext != 0)
-                  //   )
-                  //{
-                  //   openFiles[info.refFileHandleContext].fsi = fsi;
-                  //}
+                  foundFileInfo = new FileFTPInfo(ftpCmdInstance, path);
+                  bool fileExists = foundFileInfo.Exists;
+                  if (!fileExists)
+                  {
+                     DirectoryFTPInfo foundDirInfo = new DirectoryFTPInfo(ftpCmdInstance, path);
+                     if (foundDirInfo.Exists)
+                     {
+                        OpenDirectory(dokanFilename, info);
+                        fsi = foundDirInfo;
+                     }
+                     else
+                     {
+                        using (cacheInfoLock.WriteLock())
+                        {
+                           cachedFileSystemFTPInfo[path] = foundFileInfo;
+                        }
+                     }
+                  }
+                  else
+                     fsi = foundFileInfo;
                }
             }
-            if (fsi != null)
+            if ((fsi != null)
+               && fsi.Exists
+               )
             {
-               // Prevent expensive time spent allowing indexing == FileAttributes.NotContentIndexed
-               // Prevent the system from timing out due to slow access through the driver == FileAttributes.Offline
-               fileinfo.Attributes = fsi.Attributes | FileAttributes.NotContentIndexed;
-               if (Log.IsTraceEnabled)
-                  fileinfo.Attributes |= FileAttributes.Offline;
-               fileinfo.CreationTime = fsi.CreationTime;
-               fileinfo.LastAccessTime = fsi.LastAccessTime;
-               fileinfo.LastWriteTime = fsi.LastWriteTime;
-               fileinfo.FileName = fsi.Name; // <- this is not used in the structure that is passed back to Dokan !
-               fileinfo.Length = info.IsDirectory ? 0L : ((FileInfo)fsi).Length;
+               fileinfo = ConvertToDokan(fsi, info.IsDirectory);
                dokanReturn = DokanNet.Dokan.DOKAN_SUCCESS;
             }
 
@@ -530,40 +467,35 @@ namespace ClientLiquesceFTPTray.Dokan
          return dokanReturn;
       }
 
-      public int FindFilesWithPattern(string filename, string pattern, out FileInformation[] files, DokanFileInfo info)
+      public int FindFilesWithPattern(string dokanFilename, string pattern, out FileInformation[] files, DokanFileInfo info)
       {
-         return FindFiles(filename, out files, pattern);
+         throw new NotImplementedException("FindFilesWithPattern");
       }
 
-      public int FindFiles(string filename, out FileInformation[] files, DokanFileInfo info)
+      public int FindFiles(string dokanFilename, out FileInformation[] files, DokanFileInfo info)
       {
-         return FindFiles(filename, out files);
+         return FindFiles(dokanFilename, out files);
       }
 
-      private int FindFiles(string filename, out FileInformation[] files, string pattern = "*")
+      private int FindFiles(string dokanFilename, out FileInformation[] files, string pattern = "*")
       {
          files = null;
          try
          {
-            Log.Debug("FindFiles IN [{0}], pattern[{1}]", filename, pattern);
-            if ((filename != PathDirectorySeparatorChar)
-               && filename.EndsWith(PathDirectorySeparatorChar)
-               )
+            Log.Debug("FindFiles IN [{0}], pattern[{1}]", dokanFilename, pattern);
+            List<FileInformation> uniqueFiles = new List<FileInformation>();
+            DirectoryFTPInfo dirInfo = new DirectoryFTPInfo(ftpCmdInstance, GetPath(dokanFilename));
+            if (dirInfo.Exists)
             {
-               // Win 7 uses this to denote a remote connection over the share
-               filename = filename.TrimEnd(Path.DirectorySeparatorChar);
-               Log.Debug("Will attempt to find share details for [{0}]", filename);
+               FileSystemFTPInfo[] fileSystemInfos = dirInfo.GetFileSystemInfos(pattern, SearchOption.TopDirectoryOnly);
+               foreach (FileSystemFTPInfo info2 in fileSystemInfos)
+               {
+                  AddToUniqueLookup(info2, uniqueFiles);
+               }
             }
-            Dictionary<string, FileInformation> uniqueFiles = new Dictionary<string, FileInformation>();
-            // Do this in reverse, so that the preferred refreences overwrite the older files
-            //for (int i = configDetails.SourceLocations.Count - 1; i >= 0; i--)
-            //{
-            //   AddFiles(configDetails.SourceLocations[i] + filename, uniqueFiles, pattern);
-            //}
 
-            files = new FileInformation[uniqueFiles.Values.Count];
-            uniqueFiles.Values.CopyTo(files, 0);
-            throw new NotImplementedException("WriteFile");
+            files = new FileInformation[uniqueFiles.Count];
+            uniqueFiles.CopyTo(files, 0);
          }
          catch (Exception ex)
          {
@@ -591,16 +523,16 @@ namespace ClientLiquesceFTPTray.Dokan
          return DokanNet.Dokan.DOKAN_SUCCESS;
       }
 
-      public int SetFileAttributes(string filename, FileAttributes attr, DokanFileInfo info)
+      public int SetFileAttributes(string dokanFilename, FileAttributes attr, DokanFileInfo info)
       {
          try
          {
             Log.Trace("SetFileAttributes IN DokanProcessId[{0}]", info.ProcessId);
-               throw new NotImplementedException("WriteFile");
-               //string path = roots.GetPath(filename);
-               //// This uses  if (!Win32Native.SetFileAttributes(fullPathInternal, (int) fileAttributes))
-               //// And can throw PathTOOLong
-               //File.SetAttributes(path, attr);
+            throw new NotImplementedException("WriteFile");
+            //string path = GetPath(dokanFilename);
+            //// This uses  if (!Win32Native.SetFileAttributes(fullPathInternal, (int) fileAttributes))
+            //// And can throw PathTOOLong
+            //File.SetAttributes(path, attr);
          }
          catch (Exception ex)
          {
@@ -614,7 +546,7 @@ namespace ClientLiquesceFTPTray.Dokan
          return DokanNet.Dokan.DOKAN_SUCCESS;
       }
 
-      public int SetFileTimeNative(string filename, ref FILETIME rawCreationTime, ref FILETIME rawLastAccessTime,
+      public int SetFileTimeNative(string dokanFilename, ref FILETIME rawCreationTime, ref FILETIME rawLastAccessTime,
           ref FILETIME rawLastWriteTime, DokanFileInfo info)
       {
          SafeFileHandle safeFileHandle = null;
@@ -635,7 +567,7 @@ namespace ClientLiquesceFTPTray.Dokan
             //      // Workaround the dir set
             //      // ERROR LiquesceSvc.LiquesceOps: SetFileTime threw:  System.UnauthorizedAccessException: Access to the path 'G:\_backup\Kylie Minogue\Dir1' is denied.
             //      // To create a handle to a directory, you have to use FILE_FLAG_BACK_SEMANTICS.
-            //      string path = roots.GetPath(filename);
+            //      string path = GetPath(dokanFilename);
             //      const uint rawAccessMode = Proxy.GENERIC_READ | Proxy.GENERIC_WRITE;
             //      const uint rawShare = Proxy.FILE_SHARE_READ | Proxy.FILE_SHARE_WRITE;
             //      const uint rawCreationDisposition = Proxy.OPEN_EXISTING;
@@ -689,17 +621,17 @@ namespace ClientLiquesceFTPTray.Dokan
       // FileInfo->DeleteOnClose set TRUE, you delete the file.
       //
       /// </summary>
-      /// <param name="filename"></param>
+      /// <param name="dokanFilename"></param>
       /// <param name="info"></param>
       /// <returns></returns>
-      public int DeleteFile(string filename, DokanFileInfo info)
+      public int DeleteFile(string dokanFilename, DokanFileInfo info)
       {
          int dokanReturn = DokanNet.Dokan.DOKAN_ERROR;
          try
          {
             Log.Trace("DeleteFile IN DokanProcessId[{0}]", info.ProcessId);
             throw new NotImplementedException("WriteFile");
-            // dokanReturn = (File.Exists(roots.GetPath(filename)) ? DokanNet.Dokan.DOKAN_SUCCESS : DokanNet.Dokan.ERROR_FILE_NOT_FOUND);
+            // dokanReturn = (File.Exists(GetPath(dokanFilename)) ? DokanNet.Dokan.DOKAN_SUCCESS : DokanNet.Dokan.ERROR_FILE_NOT_FOUND);
          }
          catch (Exception ex)
          {
@@ -713,14 +645,14 @@ namespace ClientLiquesceFTPTray.Dokan
          return dokanReturn;
       }
 
-      public int DeleteDirectory(string filename, DokanFileInfo info)
+      public int DeleteDirectory(string dokanFilename, DokanFileInfo info)
       {
          int dokanReturn = DokanNet.Dokan.DOKAN_ERROR;
          try
          {
             Log.Trace("DeleteDirectory IN DokanProcessId[{0}]", info.ProcessId);
             throw new NotImplementedException("WriteFile");
-            //string path = roots.GetPath(filename);
+            //string path = GetPath(dokanFilename);
             //DirectoryInfo dirInfo = new DirectoryInfo(path);
             //if (dirInfo.Exists)
             //{
@@ -744,17 +676,17 @@ namespace ClientLiquesceFTPTray.Dokan
       }
 
 
-      public int MoveFile(string filename, string newname, bool replaceIfExisting, DokanFileInfo info)
+      public int MoveFile(string dokanFilename, string newname, bool replaceIfExisting, DokanFileInfo info)
       {
          try
          {
             Log.Trace("MoveFile IN DokanProcessId[{0}]", info.ProcessId);
             throw new NotImplementedException("WriteFile");
-            //Log.Info("MoveFile replaceIfExisting [{0}] filename: [{1}] newname: [{2}]", replaceIfExisting, filename, newname);
-            //if (filename == newname)   // This is some weirdness that SyncToy tries to pull !!
+            //Log.Info("MoveFile replaceIfExisting [{0}] dokanFilename: [{1}] newname: [{2}]", replaceIfExisting, dokanFilename, newname);
+            //if (dokanFilename == newname)   // This is some weirdness that SyncToy tries to pull !!
             //   return DokanNet.Dokan.DOKAN_SUCCESS;
 
-            //string pathTarget = roots.GetPath(newname, true);
+            //string pathTarget = GetPath(newname, true);
 
             //if (!info.IsDirectory)
             //{
@@ -765,7 +697,7 @@ namespace ClientLiquesceFTPTray.Dokan
             //      if (fileHandle != null)
             //         fileHandle.Close();
             //   }
-            //   string pathSource = roots.GetPath(filename);
+            //   string pathSource = GetPath(dokanFilename);
             //   Log.Info("MoveFile pathSource: [{0}] pathTarget: [{1}]", pathSource, pathTarget);
             //   XMoveFile(pathSource, pathTarget, replaceIfExisting);
             //   roots.RemoveTargetFromLookup(pathSource);
@@ -774,10 +706,10 @@ namespace ClientLiquesceFTPTray.Dokan
             //{
 
             //   // getting all paths of the source location
-            //   List<string> allDirSources = roots.GetAllPaths(filename);
+            //   List<string> allDirSources = roots.GetAllPaths(dokanFilename);
             //   if (allDirSources.Count == 0)
             //   {
-            //      Log.Error("MoveFile: Could not find directory [{0}]", filename);
+            //      Log.Error("MoveFile: Could not find directory [{0}]", dokanFilename);
             //      return DokanNet.Dokan.DOKAN_ERROR;
             //   }
             //   // rename every 
@@ -800,153 +732,49 @@ namespace ClientLiquesceFTPTray.Dokan
          return DokanNet.Dokan.DOKAN_SUCCESS;
       }
 
-      public int SetEndOfFile(string filename, long length, DokanFileInfo info)
+      public int SetEndOfFile(string dokanFilename, long length, DokanFileInfo info)
       {
-         int dokanReturn = DokanNet.Dokan.DOKAN_ERROR;
-         try
-         {
             Log.Trace("SetEndOfFile IN DokanProcessId[{0}]", info.ProcessId);
-            throw new NotImplementedException("WriteFile");
-
-            //dokanReturn = SetAllocationSize(filename, length, info);
-            //if (dokanReturn == DokanNet.Dokan.ERROR_FILE_NOT_FOUND)
-            //{
-            //   string path = roots.GetPath(filename);
-            //   using (Stream stream = File.Open(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
-            //   {
-            //      stream.SetLength(length);
-            //   }
-            //   dokanReturn = DokanNet.Dokan.DOKAN_SUCCESS;
-            //}
-         }
-         catch (Exception ex)
-         {
-            Log.ErrorException("SetEndOfFile threw: ", ex);
-            dokanReturn = Utils.BestAttemptToWin32(ex);
-         }
-         finally
-         {
-            Log.Trace("SetEndOfFile OUT", dokanReturn);
-         }
-         return dokanReturn;
+            return DokanNet.Dokan.DOKAN_SUCCESS;
       }
 
-      public int SetAllocationSize(string filename, long length, DokanFileInfo info)
+      public int SetAllocationSize(string dokanFilename, long length, DokanFileInfo info)
       {
-         try
-         {
             Log.Trace("SetAllocationSize IN DokanProcessId[{0}]", info.ProcessId);
-            if (info.refFileHandleContext != 0)
-            {
-               Log.Trace("info.refFileHandleContext [{0}]", info.refFileHandleContext);
-               using (openFilesSync.ReadLock())
-                  openFiles[info.refFileHandleContext].SetLength(length);
-            }
-            else
-            {
-               // Setting file pointers positions is done with open handles !
-               return DokanNet.Dokan.ERROR_FILE_NOT_FOUND;
-            }
+            return DokanNet.Dokan.DOKAN_SUCCESS;
+      }
 
-         }
-         catch (Exception ex)
-         {
-            Log.ErrorException("SetAllocationSize threw: ", ex);
-            return Utils.BestAttemptToWin32(ex);
-         }
-         finally
-         {
-            Log.Trace("SetAllocationSize OUT");
-         }
+      public int LockFile(string dokanFilename, long offset, long length, DokanFileInfo info)
+      {
+         Log.Trace("LockFile IN DokanProcessId[{0}]", info.ProcessId);
          return DokanNet.Dokan.DOKAN_SUCCESS;
       }
 
-      public int LockFile(string filename, long offset, long length, DokanFileInfo info)
+      public int UnlockFile(string dokanFilename, long offset, long length, DokanFileInfo info)
       {
-         try
-         {
-            Log.Trace("LockFile IN DokanProcessId[{0}]", info.ProcessId);
-            if (length < 0)
-            {
-               Log.Warn("Resetting length to [0] from [{0}]", length);
-               length = 0;
-            }
-            if (info.refFileHandleContext != 0)
-            {
-               Log.Trace("info.refFileHandleContext [{0}]", info.refFileHandleContext);
-               using (openFilesSync.ReadLock())
-                  openFiles[info.refFileHandleContext].Lock(offset, length);
-            }
-            else
-            {
-               return DokanNet.Dokan.ERROR_FILE_NOT_FOUND;
-            }
-
-         }
-         catch (Exception ex)
-         {
-            Log.ErrorException("LockFile threw: ", ex);
-            return Utils.BestAttemptToWin32(ex);
-         }
-         finally
-         {
-            Log.Trace("LockFile OUT");
-         }
-         return DokanNet.Dokan.DOKAN_SUCCESS;
-      }
-
-      public int UnlockFile(string filename, long offset, long length, DokanFileInfo info)
-      {
-         try
-         {
-            Log.Trace("UnlockFile IN DokanProcessId[{0}]", info.ProcessId);
-            if (length < 0)
-            {
-               Log.Warn("Resetting length to [0] from [{0}]", length);
-               length = 0;
-            }
-            if (info.refFileHandleContext != 0)
-            {
-               Log.Trace("info.refFileHandleContext [{0}]", info.refFileHandleContext);
-               using (openFilesSync.ReadLock())
-                  openFiles[info.refFileHandleContext].Unlock(offset, length);
-            }
-            else
-            {
-               return DokanNet.Dokan.ERROR_FILE_NOT_FOUND;
-            }
-
-         }
-         catch (Exception ex)
-         {
-            Log.ErrorException("UnlockFile threw: ", ex);
-            return Utils.BestAttemptToWin32(ex);
-         }
-         finally
-         {
-            Log.Trace("UnlockFile OUT");
-         }
+         Log.Trace("UnlockFile IN DokanProcessId[{0}]", info.ProcessId);
          return DokanNet.Dokan.DOKAN_SUCCESS;
       }
 
       public int GetDiskFreeSpace(ref ulong freeBytesAvailable, ref ulong totalBytes, ref ulong totalFreeBytes, DokanFileInfo info)
       {
+         int dokanReturn = DokanNet.Dokan.DOKAN_ERROR;
          try
          {
             Log.Trace("GetDiskFreeSpace IN DokanProcessId[{0}]", info.ProcessId);
-            ulong localFreeBytesAvailable = 0, localTotalBytes = 0, localTotalFreeBytes = 0;
-            throw new NotImplementedException("WriteFile");
+            ftpCmdInstance.GetDiskFreeSpace( csd.BufferWireTransferSize, ref freeBytesAvailable, ref totalBytes, ref totalFreeBytes);
+            dokanReturn = DokanNet.Dokan.DOKAN_SUCCESS;
          }
          catch (Exception ex)
          {
             Log.ErrorException("UnlockFile threw: ", ex);
-            return Utils.BestAttemptToWin32(ex);
+            dokanReturn = Utils.BestAttemptToWin32(ex);
          }
          finally
          {
-            Log.Trace("GetDiskFreeSpace OUT");
+            Log.Trace("DeleteDirectory OUT dokanReturn[(0}]", dokanReturn);
          }
-         return DokanNet.Dokan.DOKAN_SUCCESS;
+         return dokanReturn;
       }
 
       public int Unmount(DokanFileInfo info)
@@ -954,7 +782,7 @@ namespace ClientLiquesceFTPTray.Dokan
          Log.Trace("Unmount IN DokanProcessId[{0}]", info.ProcessId);
          using (openFilesSync.WriteLock())
          {
-            foreach (FileStreamName obj2 in openFiles.Values)
+            foreach (FileStreamFTP obj2 in openFiles.Values)
             {
                try
                {
@@ -979,7 +807,7 @@ namespace ClientLiquesceFTPTray.Dokan
          throw new NotImplementedException();
       }
 
-      public int SetFileSecurityNative(string file, ref SECURITY_INFORMATION rawSecurityInformation, ref SECURITY_DESCRIPTOR rawSecurityDescriptor, ref uint rawSecurityDescriptorLengthNeeded, DokanFileInfo info)
+      public int SetFileSecurityNative(string file, ref SECURITY_INFORMATION rawSecurityInformation, ref SECURITY_DESCRIPTOR rawSecurityDescriptor, uint rawSecurityDescriptorLength, DokanFileInfo info)
       {
          throw new NotImplementedException();
       }
@@ -987,45 +815,35 @@ namespace ClientLiquesceFTPTray.Dokan
       #endregion
 
 
-      private void AddFiles(string path, Dictionary<string, FileInformation> files, string pattern)
-      {
-         Log.Trace("AddFiles IN path[{0}] pattern[{1}]", path, pattern);
-         try
-         {
-            DirectoryInfo dirInfo = new DirectoryInfo(path);
-            if (dirInfo.Exists)
-            {
-               FileSystemInfo[] fileSystemInfos = dirInfo.GetFileSystemInfos(pattern, SearchOption.TopDirectoryOnly);
-               foreach (FileSystemInfo info2 in fileSystemInfos)
-               {
-                  AddToUniqueLookup(info2, files);
-               }
-            }
-         }
-         catch (Exception ex)
-         {
-            Log.ErrorException("AddFiles threw: ", ex);
-         }
-      }
-
-      private void AddToUniqueLookup(FileSystemInfo info2, Dictionary<string, FileInformation> files)
+      private void AddToUniqueLookup(FileSystemFTPInfo info2, List<FileInformation> files)
       {
          bool isDirectoy = (info2.Attributes & FileAttributes.Directory) == FileAttributes.Directory;
-         FileInformation item = new FileInformation
-                                   {
-                                      // Prevent expensive time spent allowing indexing == FileAttributes.NotContentIndexed
-                                      // Prevent the system from timing out due to slow access through the driver == FileAttributes.Offline
-                                      Attributes = info2.Attributes | FileAttributes.NotContentIndexed,
-                                      CreationTime = info2.CreationTime,
-                                      LastAccessTime = info2.LastAccessTime,
-                                      LastWriteTime = info2.LastWriteTime,
-                                      Length = (isDirectoy) ? 0L : ((FileInfo)info2).Length,
-                                      FileName = info2.Name
-                                   };
+         using (cacheInfoLock.WriteLock())
+         {
+            cachedFileSystemFTPInfo[info2.FullName] = info2;
+         }
+
+         FileInformation item = ConvertToDokan(info2, isDirectoy);
          if (Log.IsTraceEnabled)
             item.Attributes |= FileAttributes.Offline;
-         throw new NotImplementedException("WriteFile");
-         //files[roots.TrimAndAddUnique(info2.FullName)] = item;
+         files.Add(item);
+      }
+
+      private FileInformation ConvertToDokan(FileSystemFTPInfo info2, bool isDirectoy)
+      {
+         // The NTFS file system records times on disk in UTC
+         // see http://msdn.microsoft.com/en-us/library/ms724290%28v=vs.85%29.aspx
+         return new FileInformation
+                   {
+                      // Prevent expensive time spent allowing indexing == FileAttributes.NotContentIndexed
+                      // Prevent the system from timing out due to slow access through the driver == FileAttributes.Offline
+                      Attributes = info2.Attributes | FileAttributes.NotContentIndexed | ((Log.IsTraceEnabled) ? FileAttributes.Offline : 0),
+                      CreationTime = info2.CreationTimeUtc,
+                      LastAccessTime = info2.LastWriteTimeUtc, // Not supported by FTP
+                      LastWriteTime = info2.LastWriteTimeUtc,
+                      Length = (isDirectoy) ? 0L : info2.Length,
+                      FileName = info2.Name
+                   };
       }
 
       private void CloseAndRemove(DokanFileInfo info)
@@ -1036,7 +854,7 @@ namespace ClientLiquesceFTPTray.Dokan
             using (openFilesSync.UpgradableReadLock())
             {
                // The File can be closed by the remote client via Delete (as it does not know to close first!)
-               FileStreamName fileStream;
+               FileStreamFTP fileStream;
                if (openFiles.TryGetValue(info.refFileHandleContext, out fileStream))
                {
                   using (openFilesSync.WriteLock())
@@ -1045,7 +863,6 @@ namespace ClientLiquesceFTPTray.Dokan
                   }
                   Log.Trace("CloseAndRemove [{0}] info.refFileHandleContext[{1}]", fileStream.Name,
                             info.refFileHandleContext);
-                  fileStream.Flush();
                   fileStream.Close();
                }
                else
@@ -1056,145 +873,6 @@ namespace ClientLiquesceFTPTray.Dokan
             info.refFileHandleContext = 0;
          }
       }
-
-
-      #region For the ShareEnabler
-
-      /// <summary>
-      /// Will only return tha actual readbytes array size, May be null or zero bytes long
-      /// </summary>
-      /// <param name="filename"></param>
-      /// <param name="buffer"></param>
-      /// <param name="requestedReadLength"></param>
-      /// <param name="actualReadLength"></param>
-      /// <param name="offset"></param>
-      /// <param name="info"></param>
-      /// <returns></returns>
-      internal int ReadFile(string filename, out byte[] buffer, int requestedReadLength, out int actualReadLength, long offset, DokanFileInfo info)
-      {
-         int errorCode = DokanNet.Dokan.DOKAN_SUCCESS;
-         actualReadLength = 0;
-         buffer = null;
-         bool closeOnReturn = false;
-         FileStream fileStream = null;
-         try
-         {
-            Log.Debug("ReadFile IN offset=[{1}] DokanProcessId[{0}]", info.ProcessId, offset);
-            throw new NotImplementedException("WriteFile");
-
-            //if (info.refFileHandleContext == 0)
-            //{
-            //   string path = roots.GetPath(filename);
-            //   Log.Warn("No context handle for [" + path + "]");
-            //   fileStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, (int)configDetails.BufferReadSize);
-            //   closeOnReturn = true;
-            //}
-            //else
-            //{
-            //   Log.Trace("info.refFileHandleContext [{0}]", info.refFileHandleContext);
-            //   using (openFilesSync.ReadLock())
-            //      fileStream = openFiles[info.refFileHandleContext];
-            //}
-            //fileStream.Seek(offset, SeekOrigin.Begin);
-            //byte[] internalBuffer = new byte[requestedReadLength];
-            //actualReadLength = fileStream.Read(internalBuffer, 0, requestedReadLength);
-            //if (actualReadLength != requestedReadLength)
-            //   Array.Resize(ref internalBuffer, actualReadLength);
-            //buffer = internalBuffer;
-         }
-         catch (Exception ex)
-         {
-            Log.ErrorException("ReadFile threw: ", ex);
-            errorCode = Utils.BestAttemptToWin32(ex);
-         }
-         finally
-         {
-            try
-            {
-               if (closeOnReturn
-                  && (fileStream != null)
-                  )
-                  fileStream.Close();
-            }
-            catch (Exception ex)
-            {
-               Log.ErrorException("ReadFile closing filestream threw: ", ex);
-            }
-            Log.Debug("ReadFile OUT readBytes=[{0}], errorCode[{1}]", actualReadLength, errorCode);
-         }
-         return errorCode;
-      }
-
-      public int WriteFile(string filename, byte[] buffer, long offset, DokanFileInfo info)
-      {
-         int errorCode = DokanNet.Dokan.DOKAN_ERROR;
-         bool closeOnReturn = false;
-         FileStream fileStream = null;
-         try
-         {
-            Log.Trace("WriteFile IN DokanProcessId[{0}]", info.ProcessId);
-            throw new NotImplementedException("WriteFile");
-            //if (info.refFileHandleContext == 0)
-            //{
-            //   string path = roots.GetPath(filename);
-            //   Log.Warn("No context handle for [" + path + "]");
-            //   fileStream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Write, (int)configDetails.BufferReadSize);
-            //   closeOnReturn = true;
-            //}
-            //else
-            //{
-            //   Log.Trace("info.refFileHandleContext [{0}]", info.refFileHandleContext);
-            //   using (openFilesSync.ReadLock())
-            //      fileStream = openFiles[info.refFileHandleContext];
-            //   ((FileStreamName)fileStream).fsi = null;
-            //}
-            //if (!info.WriteToEndOfFile)//  If true, write to the current end of file instead of Offset parameter.
-            //   fileStream.Seek(offset, SeekOrigin.Begin);
-            //else
-            //   fileStream.Seek(0, SeekOrigin.End);
-            //fileStream.Write(buffer, 0, buffer.Length);
-            //errorCode = DokanNet.Dokan.DOKAN_SUCCESS;
-         }
-         catch (Exception ex)
-         {
-            Log.ErrorException("WriteFile threw: ", ex);
-            errorCode = Utils.BestAttemptToWin32(ex);
-         }
-         finally
-         {
-            try
-            {
-               if (closeOnReturn
-                  && (fileStream != null)
-                  )
-                  fileStream.Close();
-            }
-            catch (Exception ex)
-            {
-               Log.ErrorException("WriteFile closing filestream threw: ", ex);
-            }
-            Log.Trace("WriteFile OUT errorCode[{0}]", errorCode);
-         }
-         return errorCode;
-      }
-
-      #endregion
-
-
    }
 
-   // This is used for tracking what file is in the store
-   // If the code never looks for name, then it might be jitted out
-   internal class FileStreamName : FileStream
-   {
-      public new string Name { get; private set; }
-
-      public FileSystemInfo fsi { get; set; }
-
-      public FileStreamName(string name, SafeFileHandle handle, FileAccess access, int bufferSize)
-         : base(handle, access, bufferSize)
-      {
-         Name = name;
-      }
-   }
 }

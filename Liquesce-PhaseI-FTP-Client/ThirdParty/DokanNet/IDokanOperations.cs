@@ -39,7 +39,7 @@ namespace DokanNet
    {
       int CreateFile(string filename, uint rawAccessMode, uint rawShare, uint rawCreationDisposition, uint rawFlagsAndAttributes, DokanFileInfo info);
 
-      int OpenDirectory( string filename, DokanFileInfo info);
+      int OpenDirectory( string dokanFilename, DokanFileInfo info);
 
       int CreateDirectory( string filename, DokanFileInfo info);
 
@@ -84,6 +84,6 @@ namespace DokanNet
 
       int GetFileSecurityNative(string file, ref SECURITY_INFORMATION rawRequestedInformation, ref SECURITY_DESCRIPTOR rawSecurityDescriptor, uint rawSecurityDescriptorLength, ref uint rawSecurityDescriptorLengthNeeded, DokanFileInfo info);
 
-      int SetFileSecurityNative(string file, ref SECURITY_INFORMATION rawSecurityInformation, ref SECURITY_DESCRIPTOR rawSecurityDescriptor, ref uint rawSecurityDescriptorLengthNeeded, DokanFileInfo info);
+      int SetFileSecurityNative(string file, ref SECURITY_INFORMATION rawSecurityInformation, ref SECURITY_DESCRIPTOR rawSecurityDescriptor, uint rawSecurityDescriptorLength, DokanFileInfo info);
    }
 }

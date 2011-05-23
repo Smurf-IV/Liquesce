@@ -33,8 +33,8 @@ namespace Starksoft.Net.Ftp
     public class TransferCompleteEventArgs : EventArgs
     {
 
-        private long _bytesTransferred;
-        private int _bytesPerSecond;
+       private UInt64 _bytesTransferred;
+        private uint _bytesPerSecond;
         private TimeSpan _elapsedTime;
 
         /// <summary>
@@ -43,7 +43,7 @@ namespace Starksoft.Net.Ftp
         /// <param name="bytesTransferred">The total number of bytes transferred.</param>
         /// <param name="bytesPerSecond">The data transfer speed in bytes per second.</param>
         /// <param name="elapsedTime">The time that has elapsed since the data transfer started.</param>
-        public TransferCompleteEventArgs(long bytesTransferred, int bytesPerSecond, TimeSpan elapsedTime)
+        public TransferCompleteEventArgs(UInt64 bytesTransferred, uint bytesPerSecond, TimeSpan elapsedTime)
         {
             _bytesTransferred = bytesTransferred;
             _bytesPerSecond = bytesPerSecond;
@@ -53,7 +53,7 @@ namespace Starksoft.Net.Ftp
         /// <summary>
         /// The total number of bytes transferred.
         /// </summary>
-        public long BytesTransferred
+        public UInt64 BytesTransferred
         {
             get { return _bytesTransferred; }
         }
@@ -61,7 +61,7 @@ namespace Starksoft.Net.Ftp
         /// <summary>
         /// Gets the data transfer speed in bytes per second.
         /// </summary>
-        public int BytesPerSecond
+        public uint BytesPerSecond
         {
             get { return _bytesPerSecond; }
         }
@@ -69,7 +69,7 @@ namespace Starksoft.Net.Ftp
         /// <summary>
         /// Gets the data transfer speed in kilobytes per second.
         /// </summary>
-        public int KilobytesPerSecond
+        public uint KilobytesPerSecond
         {
             get { return _bytesPerSecond / 1024; }
         }

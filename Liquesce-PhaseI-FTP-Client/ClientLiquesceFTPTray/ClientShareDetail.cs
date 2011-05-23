@@ -28,7 +28,7 @@ namespace ClientLiquesceFTPTray
       // Used to send data over the wire, this is not recommended to be over int.maxvalue / 2
       // In here as different targets may have different capabilities
       // Set the minimum to be 4096 bytes
-      public UInt32 BufferWireTransferSize = UInt16.MaxValue;
+      public UInt32 BufferWireTransferSize = 8192;
 
       // ReSharper restore MemberCanBePrivate.Global
       // ReSharper restore UnusedAutoPropertyAccessor.Global

@@ -5,7 +5,7 @@ namespace DokanNet
 {
    public class DokanOptions
    {
-      public ushort Version; 
+      public ushort Version;
       public ushort ThreadCount;
       public bool DebugMode;
       public bool UseStdErr;
@@ -22,9 +22,9 @@ namespace DokanNet
    {
       static private readonly Logger Log = LogManager.GetCurrentClassLogger();
 
-// ReSharper disable InconsistentNaming
+      // ReSharper disable InconsistentNaming
 #pragma warning disable 169
-      #region File Operation Errors 
+      #region File Operation Errors
       // From WinError.h -> http://msdn.microsoft.com/en-us/library/ms819773.aspx
       public const int ERROR_FILE_NOT_FOUND = -2;  // MessageText: The system cannot find the file specified.
       public const int ERROR_PATH_NOT_FOUND = -3;  // MessageText: The system cannot find the path specified.
@@ -59,14 +59,14 @@ namespace DokanNet
       private const uint DOKAN_OPTION_REMOVABLE = 32;
       #endregion
 #pragma warning restore 169
-// ReSharper restore InconsistentNaming
+      // ReSharper restore InconsistentNaming
 
 
 
       public static int DokanMain(DokanOptions options, IDokanOperations operations)
       {
          Log.Info("Start DokanMain");
-         if (String.IsNullOrEmpty(options.VolumeLabel) )
+         if (String.IsNullOrEmpty(options.VolumeLabel))
          {
             options.VolumeLabel = "DOKAN";
          }
@@ -99,7 +99,7 @@ namespace DokanNet
                                                   FlushFileBuffers = proxy.FlushFileBuffersProxy,
                                                   GetFileInformation = proxy.GetFileInformationProxy,
                                                   FindFiles = proxy.FindFilesProxy,
-                                                  FindFilesWithPattern = proxy.FindFilesWithPatternProxy,
+                                                  //FindFilesWithPattern = proxy.FindFilesWithPatternProxy,
                                                   SetFileAttributes = proxy.SetFileAttributesProxy,
                                                   SetFileTime = proxy.SetFileTimeProxy,
                                                   DeleteFile = proxy.DeleteFileProxy,
@@ -112,6 +112,8 @@ namespace DokanNet
                                                   GetDiskFreeSpace = proxy.GetDiskFreeSpaceProxy,
                                                   GetVolumeInformation = proxy.GetVolumeInformationProxy,
                                                   Unmount = proxy.UnmountProxy
+                                                  //,GetFileSecurity = proxy.GetFileSecurity
+                                                  //,SetFileSecurity = proxy.SetFileSecurity
                                                };
 
          return DokanDll.DokanMain(ref dokanOptions, ref dokanOperations);
