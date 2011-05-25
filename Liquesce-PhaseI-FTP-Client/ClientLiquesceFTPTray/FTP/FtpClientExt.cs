@@ -179,8 +179,24 @@ designed to display the last-write time.
       {
          lock (commandLock)
          {
-            CheckConnected();
-            ftpInstance.GetFile(path, memStream, false);
+            FtpResponseCollection response = null;
+            try
+            {
+               CheckConnected();
+               FtpRequest request = new FtpRequest(FtpRequest.BuildCommandText("RETR", ftpInstance.CharacterEncoding, new string[] { path }));
+               ftpInstance.TransferData(TransferDirection.ToClient, request, memStream);
+               response = ftpInstance.LastResponseList;
+            }
+            catch( Exception ex )
+            {
+               if ((response == null)
+                  && (memStream.Position != memStream.Length)
+                  )
+               {
+                  // This means that the expected read of the fragment did not complete and aborted for another reason
+                  throw;
+               }
+            }
          }
       }
 

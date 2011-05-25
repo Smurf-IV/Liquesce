@@ -331,7 +331,7 @@ namespace ClientLiquesceFTPTray.Dokan
                   if (readLength != 0)
                   {
                      rawReadLength = readLength;
-                     Marshal.Copy(buf, 0, rawBuffer, (int)rawBufferLength);
+                     Marshal.Copy(buf, 0, rawBuffer, (int)rawReadLength);
                   }
                   errorCode = DokanNet.Dokan.DOKAN_SUCCESS;
                }

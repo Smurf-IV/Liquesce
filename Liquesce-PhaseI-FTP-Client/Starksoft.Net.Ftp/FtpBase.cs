@@ -73,7 +73,7 @@ namespace Starksoft.Net.Ftp
    /// <summary>
    /// The data transfer directory.
    /// </summary>
-   internal enum TransferDirection
+   public enum TransferDirection
    {
       /// <summary>
       /// Transfer data from server to client.
@@ -1326,7 +1326,7 @@ namespace Starksoft.Net.Ftp
 
       }
 
-      internal void TransferData(TransferDirection direction, FtpRequest request, Stream data)
+      public void TransferData(TransferDirection direction, FtpRequest request, Stream data)
       {
          TransferData(direction, request, data, 0);
       }
@@ -1510,12 +1510,12 @@ namespace Starksoft.Net.Ftp
 
       private void TransferBytes(Stream input, Stream output, uint maxBytesPerSecond)
       {
-         long bufferSize = (_tcpBufferSize > maxBytesPerSecond && maxBytesPerSecond != 0) ? maxBytesPerSecond : _tcpBufferSize;
-         long targetLength = ( input is NetworkStream) ? output.Length: input.Length;
+         ulong bufferSize = (_tcpBufferSize > maxBytesPerSecond && maxBytesPerSecond != 0) ? maxBytesPerSecond : _tcpBufferSize;
+         ulong targetLength = (ulong)((input is NetworkStream) ? output.Length : input.Length);
          if ( targetLength > 0 )
             bufferSize = Math.Min(targetLength, bufferSize);
          byte[] buffer = new byte[bufferSize];
-         UInt64 bytesTotal = 0;
+         ulong bytesTotal = 0;
          DateTime start = DateTime.Now;
          TimeSpan elapsed = new TimeSpan(0);
          uint bytesPerSec = 0;
@@ -1528,7 +1528,17 @@ namespace Starksoft.Net.Ftp
                break;
 
             bytesTotal += bytesRead;
-            output.Write(buffer, 0, (int) bytesRead);
+            if ( (targetLength > 0)
+               && (bytesTotal > targetLength)
+               )
+            {
+               // Do not overwrite the fixed length buffer (Record / page / etc)
+               output.Write(buffer, 0, (int)(targetLength - (ulong) output.Position));
+            }
+            else
+            {
+               output.Write(buffer, 0, (int)bytesRead);
+            }
 
             // calculate some statistics
             elapsed = DateTime.Now.Subtract(start);
@@ -1544,7 +1554,7 @@ namespace Starksoft.Net.Ftp
                throw new FtpAsynchronousOperationException("Asynchronous operation canceled by user.");
 
             if ( (targetLength > 0)
-               && (bytesTotal >= (ulong)targetLength)
+               && (bytesTotal >= targetLength)
                )
                break;
             // throttle the transfer if necessary
