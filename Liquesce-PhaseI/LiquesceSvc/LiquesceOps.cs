@@ -76,7 +76,12 @@ namespace LiquesceSvc
             // Increment now in case there is an exception later
             ++openFilesLastKey; // never be Zero !
             // Stop using exceptions to throw ERROR_FILE_NOT_FOUND
-            bool fileExists = File.Exists(path);
+
+            // *** NTh Change ***
+            // FileExists is not needed, less GC usage to reclaim it in exchange of one more condition
+
+            //bool fileExists = File.Exists(path);               
+
             switch (rawCreationDisposition)
             {
                //case FileMode.Create:
@@ -84,14 +89,19 @@ namespace LiquesceSvc
                //   if (fileExists)
                //      actualErrorCode = Dokan.ERROR_ALREADY_EXISTS;
                //   break;
-               //case FileMode.CreateNew:
-               //   if (fileExists)
-               //      return Dokan.ERROR_FILE_EXISTS;
-               //   break;
+               // *** NTh Change ***
+               // Fix the parameter invalid when trying to replace an existing file
+               case Proxy.CREATE_ALWAYS:
+                  //Ignore the existing of the file, at this time the OS is trying to overwrite it                
+                  break;
+               case Proxy.CREATE_NEW:
+                  if (File.Exists(path))
+                     return Dokan.ERROR_FILE_EXISTS;
+                  break;
                case Proxy.OPEN_EXISTING:
-               //case FileMode.Append:
+               //case FileMode.Append:                    
                case Proxy.TRUNCATE_EXISTING:
-                  if (!fileExists)
+                  if (!File.Exists(path))
                   {
                      Log.Debug("filename [{0}] ERROR_FILE_NOT_FOUND", filename);
                      // Probably someone has removed this on the actual drive
@@ -109,9 +119,12 @@ namespace LiquesceSvc
             //   }
             //}
 
-            bool writeable = (((rawAccessMode & Proxy.FILE_WRITE_DATA) == Proxy.FILE_WRITE_DATA));
-
-            if (!fileExists && writeable)
+            bool writeable = ((rawAccessMode & Proxy.FILE_WRITE_DATA) == Proxy.FILE_WRITE_DATA);
+            // *** NTh Change ***
+            // The Condition that eliminates the variable fileExists
+            if (((rawAccessMode & Proxy.CREATE_NEW) == Proxy.CREATE_NEW
+              || (rawAccessMode & Proxy.CREATE_ALWAYS) == Proxy.CREATE_ALWAYS)
+            && writeable)
             {
                Log.Trace("We want to create a new file in: [{0}]", path);
 
@@ -326,9 +339,13 @@ namespace LiquesceSvc
                }
                else
                {
+                  // *** NTh Change ***
+                  // Get all copies of the same file in other sources and delete them
                   Log.Trace("DeleteOnClose File");
-                  string path = roots.GetPath(filename);
-                  File.Delete(path);
+                  foreach (string path in roots.GetAllFilePaths(filename))
+                  {
+                     File.Delete(path);
+                  }
                }
                roots.RemoveFromLookup(filename);
             }
@@ -378,7 +395,7 @@ namespace LiquesceSvc
             {
                string path = roots.GetPath(filename);
                Log.Warn("No context handle for [" + path + "]");
-               fileStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, (int)configDetails.BufferReadSize);
+               fileStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Inheritable, (int)configDetails.BufferReadSize);
                closeOnReturn = true;
             }
             else
@@ -387,25 +404,29 @@ namespace LiquesceSvc
                using (openFilesSync.ReadLock())
                   fileStream = openFiles[info.refFileHandleContext];
             }
-            if (rawOffset > fileStream.Length)
+            // *** NTh Change ***
+            // ToCheck on other PCs: If the function return error in this check there are some programs that fails when reading the file
+            // Commented the check of rawOffset being off the size of the file.
+            //if (rawOffset > fileStream.Length)
+            //{
+            //   errorCode = Dokan.DOKAN_ERROR;
+            //}
+            //else
+            //{
+            fileStream.Seek(rawOffset, SeekOrigin.Begin);
+            // readBytes = (uint)fileStream.Read(buffer, 0, buffer.Length);
+            if (0 == ReadFile(fileStream.SafeFileHandle, rawBuffer, rawBufferLength, out rawReadLength, IntPtr.Zero))
             {
-               errorCode = Dokan.DOKAN_ERROR;
+               Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error(), new IntPtr(-1));
             }
-            else
-            {
-               fileStream.Seek(rawOffset, SeekOrigin.Begin);
-               // readBytes = (uint)fileStream.Read(buffer, 0, buffer.Length);
-               if (0 == ReadFile(fileStream.SafeFileHandle, rawBuffer, rawBufferLength, out rawReadLength, IntPtr.Zero))
-               {
-                  Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error(), new IntPtr(-1));
-               }
-               //else if ( rawReadLength == 0 )
-               //{
-               //   // ERROR_HANDLE_EOF 38 (0x26)
-               //   if (fileStream.Position == fileStream.Length)
-               //      errorCode = -38;
-               //}
-            }
+            Log.Debug("Bytes Read" + rawReadLength.ToString());
+            //else if ( rawReadLength == 0 )
+            //{
+            //   // ERROR_HANDLE_EOF 38 (0x26)
+            //   if (fileStream.Position == fileStream.Length)
+            //      errorCode = -38;
+            //}
+            //}
          }
          catch (Exception ex)
          {
@@ -552,7 +573,7 @@ namespace LiquesceSvc
          }
          catch (Exception ex)
          {
-            Log.ErrorException("FlushFileBuffers threw: ", ex);
+            Log.ErrorException("GetFileInformation threw: ", ex);
             dokanReturn = Utils.BestAttemptToWin32(ex);
          }
          finally
@@ -862,10 +883,10 @@ namespace LiquesceSvc
                //}
             }
 
-            // NORMAL mode
-            string pathTarget = roots.GetPath(newname, true);
+            // *** NTh Change ***
+            // Optimization in the Move process, in my opinion, we should try to keep the file on the same physical disk
 
-            //            CloseAndRemove(info);
+            // NORMAL mode
 
             if (!info.IsDirectory)
             {
@@ -876,10 +897,29 @@ namespace LiquesceSvc
                   if (fileHandle != null)
                      fileHandle.Close();
                }
-               string pathSource = roots.GetPath(filename);
-               Log.Info("MoveFile pathSource: [{0}] pathTarget: [{1}]", pathSource, pathTarget);
-               XMoveFile(pathSource, pathTarget, replaceIfExisting);
-               roots.RemoveTargetFromLookup(pathSource);
+
+               string pathSource = string.Empty;
+               string pathTarget = string.Empty;
+               // *** NTh Change ***
+               // Check to see if there are more copies of the same file and move them to the same location
+               foreach (string path in roots.GetAllFilePaths(filename))
+               {
+                  pathSource = roots.GetPath(filename);
+                  pathTarget = pathSource.Substring(0, pathSource.LastIndexOf(filename)) + newname;
+                  // Check to see if the destination directory exists
+                  if (!Directory.Exists(pathTarget.Substring(0, pathTarget.LastIndexOf("\\"))))
+                  {
+                     // *** NTh Change ***
+                     // This function creates all the tree path from root to the child directory
+                     Directory.CreateDirectory(pathTarget.Substring(0, pathTarget.LastIndexOf("\\")));
+                  }
+                  Log.Info("MoveFile pathSource: [{0}] pathTarget: [{1}]", pathSource, pathTarget);
+                  XMoveFile(pathSource, pathTarget, replaceIfExisting);
+                  roots.RemoveTargetFromLookup(pathSource);
+                  // *** NTh Change ***
+                  // Don't know if this is necessary....
+                  roots.TrimAndAddUnique(pathTarget);
+               }
             }
             else
             {
@@ -1100,7 +1140,7 @@ namespace LiquesceSvc
       public int GetFileSecurityNative(string file, ref SECURITY_INFORMATION rawRequestedInformation, ref SECURITY_DESCRIPTOR rawSecurityDescriptor, uint rawSecurityDescriptorLength, ref uint rawSecurityDescriptorLengthNeeded, DokanFileInfo info)
       {
          Log.Trace("Unmount IN GetFileSecurity[{0}]", info.ProcessId);
-         int dokanReturn = Dokan.DOKAN_ERROR;
+         int dokanReturn = Dokan.DOKAN_SUCCESS;
          try
          {
             string objectPath;
@@ -1109,14 +1149,31 @@ namespace LiquesceSvc
                Log.Trace("info.refFileHandleContext [{0}]", info.refFileHandleContext);
                using (openFilesSync.ReadLock())
                   objectPath = openFiles[info.refFileHandleContext].Name;
+               int RequestedInfo = (int)rawRequestedInformation;
+               int SizeNeeded = 0;
+               if (0 != GetUserObjectSecurity((int)info.refFileHandleContext, ref RequestedInfo, ref rawSecurityDescriptor, (int)rawSecurityDescriptorLength, ref SizeNeeded))
+               {
+                  // *** NTh Change ***
+                  // Tryed to make a workarround so the GetFileSecurity had the buffer that it requested but some times the service simply closes without errors...
+                  if (rawSecurityDescriptorLength < SizeNeeded)
+                  {
+                     return Dokan.ERROR_INSUFFICIENT_BUFFER;
+
+                     //if (!GetFileSecurity(objectPath, rawRequestedInformation, ref rawSecurityDescriptor, rawSecurityDescriptorLengthNeeded, ref rawSecurityDescriptorLengthNeeded))
+                     //{
+                     //    Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error(), new IntPtr(-1));
+                     //}
+                  }
+                  else
+                  {
+                     Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error(), new IntPtr(-1));
+                  }
+               }
             }
             else
             {
-               objectPath = roots.GetPath(file);
-            }
-            if ( !GetFileSecurity( objectPath, rawRequestedInformation, ref rawSecurityDescriptor, rawSecurityDescriptorLength, ref rawSecurityDescriptorLengthNeeded ) )
-            {
-               Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error(), new IntPtr(-1));
+               return Dokan.DOKAN_ERROR;
+               //objectPath = roots.GetPath(file);
             }
 
          }
@@ -1135,7 +1192,7 @@ namespace LiquesceSvc
       public int SetFileSecurityNative(string file, ref SECURITY_INFORMATION rawSecurityInformation, ref SECURITY_DESCRIPTOR rawSecurityDescriptor, uint rawSecurityDescriptorLength, DokanFileInfo info)
       {
          Log.Trace("Unmount IN SetFileSecurity[{0}]", info.ProcessId);
-         int dokanReturn = Dokan.DOKAN_ERROR;
+         int dokanReturn = Dokan.DOKAN_SUCCESS;
          try
          {
             string objectPath;
@@ -1149,7 +1206,7 @@ namespace LiquesceSvc
             {
                objectPath = roots.GetPath(file);
             }
-            if ( !SetFileSecurity( objectPath, rawSecurityInformation, ref rawSecurityDescriptor))
+            if (!SetFileSecurity(objectPath, rawSecurityInformation, ref rawSecurityDescriptor))
             {
                Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error(), new IntPtr(-1));
             }
@@ -1490,13 +1547,15 @@ namespace LiquesceSvc
       /// <param name="length">[in] Specifies the size, in bytes, of the buffer pointed to by the pSecurityDescriptor parameter.</param>
       /// <param name="lengthNeeded">[out] Pointer to the variable that receives the number of bytes necessary to store the complete security descriptor. If the returned number of bytes is less than or equal to nLength, the entire security descriptor is returned in the output buffer; otherwise, none of the descriptor is returned.</param>
       /// <returns></returns>
-      [DllImport("AdvAPI32.DLL", CharSet = CharSet.Auto, SetLastError = true, CallingConvention=CallingConvention.Winapi )]
-      private static extern bool GetFileSecurity(string lpFileName, SECURITY_INFORMATION requestedInformation, ref SECURITY_DESCRIPTOR pSecurityDescriptor, 
+      [DllImport("AdvAPI32.DLL", CharSet = CharSet.Auto, SetLastError = true, CallingConvention = CallingConvention.Winapi)]
+      private static extern bool GetFileSecurity(string lpFileName, SECURITY_INFORMATION requestedInformation, ref SECURITY_DESCRIPTOR pSecurityDescriptor,
          uint length, ref uint lengthNeeded);
+      [DllImport("user32", CharSet = CharSet.Auto, SetLastError = true, CallingConvention = CallingConvention.Winapi)]
+      public static extern int GetUserObjectSecurity(int hObj, ref int pSIRequested, ref SECURITY_DESCRIPTOR pSd, int nLength, ref int lpnLengthNeeded);
 
-      [DllImport("advapi32.dll", CharSet = CharSet.Auto, SetLastError = true, CallingConvention=CallingConvention.Winapi )]
+      [DllImport("advapi32.dll", CharSet = CharSet.Auto, SetLastError = true, CallingConvention = CallingConvention.Winapi)]
       [return: MarshalAs(UnmanagedType.Bool)]
-      private static extern bool SetFileSecurity( string pFileName, SECURITY_INFORMATION SecurityInformation, ref SECURITY_DESCRIPTOR pSecurityDescriptor );
+      private static extern bool SetFileSecurity(string pFileName, SECURITY_INFORMATION SecurityInformation, ref SECURITY_DESCRIPTOR pSecurityDescriptor);
 
       #endregion
 
