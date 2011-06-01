@@ -43,7 +43,7 @@ namespace DokanNet
    /// Check http://msdn.microsoft.com/en-us/library/cc230369%28v=prot.13%29.aspx
    /// and usage http://msdn.microsoft.com/en-us/library/ff556635%28v=vs.85%29.aspx
    /// </summary>
-   [Flags] 
+   [Flags]
    public enum SECURITY_INFORMATION : uint
    {
       /// <summary>
@@ -156,22 +156,22 @@ namespace DokanNet
       private const uint OPEN_ALWAYS = 4;
       public const uint TRUNCATE_EXISTING = 5;
 
-      private const uint FILE_ATTRIBUTE_READONLY           =  0x00000001;
-      private const uint FILE_ATTRIBUTE_HIDDEN             =  0x00000002;
-      private const uint FILE_ATTRIBUTE_SYSTEM             =  0x00000004;
-      private const uint FILE_ATTRIBUTE_DIRECTORY          =  0x00000010;
-      private const uint FILE_ATTRIBUTE_ARCHIVE            =  0x00000020;
-      private const uint FILE_ATTRIBUTE_ENCRYPTED          =  0x00000040;
-      private const uint FILE_ATTRIBUTE_NORMAL             =  0x00000080;
-      private const uint FILE_ATTRIBUTE_TEMPORARY          =  0x00000100;
-      private const uint FILE_ATTRIBUTE_SPARSE_FILE        =  0x00000200;
-      private const uint FILE_ATTRIBUTE_REPARSE_POINT      =  0x00000400;
-      private const uint FILE_ATTRIBUTE_COMPRESSED         =  0x00000800;
-      private const uint FILE_ATTRIBUTE_OFFLINE            =  0x00001000;
+      private const uint FILE_ATTRIBUTE_READONLY = 0x00000001;
+      private const uint FILE_ATTRIBUTE_HIDDEN = 0x00000002;
+      private const uint FILE_ATTRIBUTE_SYSTEM = 0x00000004;
+      private const uint FILE_ATTRIBUTE_DIRECTORY = 0x00000010;
+      private const uint FILE_ATTRIBUTE_ARCHIVE = 0x00000020;
+      private const uint FILE_ATTRIBUTE_ENCRYPTED = 0x00000040;
+      private const uint FILE_ATTRIBUTE_NORMAL = 0x00000080;
+      private const uint FILE_ATTRIBUTE_TEMPORARY = 0x00000100;
+      private const uint FILE_ATTRIBUTE_SPARSE_FILE = 0x00000200;
+      private const uint FILE_ATTRIBUTE_REPARSE_POINT = 0x00000400;
+      private const uint FILE_ATTRIBUTE_COMPRESSED = 0x00000800;
+      private const uint FILE_ATTRIBUTE_OFFLINE = 0x00001000;
       private const uint FILE_ATTRIBUTE_NOT_CONTENT_INDEXED = 0x00002000;
-      private const uint FILE_ATTRIBUTE_VIRTUAL            =  0x00010000;
-         
-         //
+      private const uint FILE_ATTRIBUTE_VIRTUAL = 0x00010000;
+
+      //
       // File creation flags must start at the high end since they
       // are combined with the attributes
       //
@@ -701,6 +701,13 @@ namespace DokanNet
          {
             string file = GetFileName(rawFileName);
             string newfile = GetFileName(rawNewFileName);
+            // *** NTh Change ***
+            // Found that dokan some times in the rawNewFileName it has part of the rawFileName directory, so we should try to fix that in 
+            // .net or in the driver... for now we fix this here... :)
+            if (file.LastIndexOf("\\") > 0)
+            {
+               newfile = newfile.Substring(newfile.IndexOf(file.Substring(0, file.LastIndexOf("\\"))) + file.Substring(0, file.LastIndexOf("\\")).Length);
+            }
 
             return operations.MoveFile(file, newfile, (rawReplaceIfExisting != 0), ConvertFileInfo(ref rawFileInfo));
          }
@@ -767,6 +774,30 @@ namespace DokanNet
          }
       }
 
+      [Flags]
+      public enum FILE_SYSTEM_FLAGS : uint
+      {
+         FILE_CASE_PRESERVED_NAMES = 0x00000002,
+         FILE_CASE_SENSITIVE_SEARCH = 0x00000001,
+         FILE_FILE_COMPRESSION = 0x00000010,
+         FILE_NAMED_STREAMS = 0x00040000,
+         FILE_PERSISTENT_ACLS = 0x00000008,
+         FILE_READ_ONLY_VOLUME = 0x00080000,
+         FILE_SEQUENTIAL_WRITE_ONCE = 0x00100000,
+         FILE_SUPPORTS_ENCRYPTION = 0x00020000,
+         FILE_SUPPORTS_EXTENDED_ATTRIBUTES = 0x00800000,
+         FILE_SUPPORTS_HARD_LINKS = 0x00400000,
+         FILE_SUPPORTS_OBJECT_IDS = 0x00010000,
+         FILE_SUPPORTS_OPEN_BY_FILE_ID = 0x01000000,
+         FILE_SUPPORTS_REPARSE_POINTS = 0x00000080,
+         FILE_SUPPORTS_SPARSE_FILES = 0x00000040,
+         FILE_SUPPORTS_TRANSACTIONS = 0x00200000,
+         FILE_SUPPORTS_USN_JOURNAL = 0x02000000,
+         FILE_UNICODE_ON_DISK = 0x00000004,
+         FILE_VOLUME_IS_COMPRESSED = 0x00008000,
+         FILE_VOLUME_QUOTAS = 0x00000020
+      }
+
       public delegate int GetVolumeInformationDelegate(IntPtr rawVolumeNameBuffer, uint rawVolumeNameSize, ref uint rawVolumeSerialNumber,
           ref uint rawMaximumComponentLength, ref uint rawFileSystemFlags, IntPtr rawFileSystemNameBuffer, uint rawFileSystemNameSize, ref DOKAN_FILE_INFO rawFileInfo);
 
@@ -795,9 +826,21 @@ namespace DokanNet
             //            //DbgPrint("FileStreamInformation\n");
             //            status = STATUS_NOT_IMPLEMENTED;
             //            break;
-            rawFileSystemFlags = 0x0f;
+            //rawFileSystemFlags = 0x0f;
+            //rawFileSystemFlags = FILE_CASE_SENSITIVE_SEARCH | FILE_CASE_PRESERVED_NAMES | FILE_UNICODE_ON_DISK;
 
-            byte[] sys = Encoding.Unicode.GetBytes("DOKAN");
+            rawFileSystemFlags = (uint)(FILE_SYSTEM_FLAGS.FILE_CASE_PRESERVED_NAMES
+               | FILE_SYSTEM_FLAGS.FILE_CASE_SENSITIVE_SEARCH
+               | FILE_SYSTEM_FLAGS.FILE_NAMED_STREAMS
+               | FILE_SYSTEM_FLAGS.FILE_SEQUENTIAL_WRITE_ONCE
+               | FILE_SYSTEM_FLAGS.FILE_SUPPORTS_EXTENDED_ATTRIBUTES
+               | FILE_SYSTEM_FLAGS.FILE_SUPPORTS_HARD_LINKS
+               | FILE_SYSTEM_FLAGS.FILE_SUPPORTS_USN_JOURNAL
+               | FILE_SYSTEM_FLAGS.FILE_UNICODE_ON_DISK
+               | FILE_SYSTEM_FLAGS.FILE_PERSISTENT_ACLS
+               | FILE_SYSTEM_FLAGS.FILE_VOLUME_QUOTAS);
+
+            byte[] sys = Encoding.Unicode.GetBytes("Dokan");
             length = sys.Length;
             byte[] sysNull = new byte[length + 2];
             Array.Copy(sys, sysNull, length);
@@ -828,11 +871,11 @@ namespace DokanNet
          }
       }
 
-      public delegate int GetFileSecurityDelegate( IntPtr rawFileName, ref SECURITY_INFORMATION rawRequestedInformation,
+      public delegate int GetFileSecurityDelegate(IntPtr rawFileName, ref SECURITY_INFORMATION rawRequestedInformation,
           ref SECURITY_DESCRIPTOR rawSecurityDescriptor, uint rawSecurityDescriptorLength, ref uint rawSecurityDescriptorLengthNeeded,
           ref DOKAN_FILE_INFO rawFileInfo);
 
-      public int GetFileSecurity( IntPtr rawFileName, ref SECURITY_INFORMATION rawRequestedInformation,
+      public int GetFileSecurity(IntPtr rawFileName, ref SECURITY_INFORMATION rawRequestedInformation,
           ref SECURITY_DESCRIPTOR rawSecurityDescriptor, uint rawSecurityDescriptorLength, ref uint rawSecurityDescriptorLengthNeeded,
           ref DOKAN_FILE_INFO rawFileInfo)
       {
@@ -848,10 +891,10 @@ namespace DokanNet
          }
       }
 
-      public delegate int SetFileSecurityDelegate( IntPtr rawFileName, ref SECURITY_INFORMATION rawSecurityInformation,
+      public delegate int SetFileSecurityDelegate(IntPtr rawFileName, ref SECURITY_INFORMATION rawSecurityInformation,
           ref SECURITY_DESCRIPTOR rawSecurityDescriptor, uint rawSecurityDescriptorLength, ref DOKAN_FILE_INFO rawFileInfo);
 
-      public int SetFileSecurity( IntPtr rawFileName, ref SECURITY_INFORMATION rawSecurityInformation,
+      public int SetFileSecurity(IntPtr rawFileName, ref SECURITY_INFORMATION rawSecurityInformation,
           ref SECURITY_DESCRIPTOR rawSecurityDescriptor, uint rawSecurityDescriptorLength, ref DOKAN_FILE_INFO rawFileInfo)
       {
          try
