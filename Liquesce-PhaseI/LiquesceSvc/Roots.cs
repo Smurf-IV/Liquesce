@@ -201,16 +201,16 @@ namespace LiquesceSvc
       // Get the paths of all the copies of the file
       public List<string> GetAllFilePaths(string file_name)
       {
-         List<string> paths = new List<string>();
+          List<string> paths = new List<string>();
 
-         for (int i = 0; i < configDetails.SourceLocations.Count; i++)
-         {
-            string current = configDetails.SourceLocations[i] + file_name;
-            if (File.Exists(current))
-               paths.Add(current);
-         }
+          for (int i = 0; i < configDetails.SourceLocations.Count; i++)
+          {
+              string current = configDetails.SourceLocations[i] + file_name;
+              if (File.Exists(current))
+                  paths.Add(current);
+          }
 
-         return paths;
+          return paths;
       }
 
 
