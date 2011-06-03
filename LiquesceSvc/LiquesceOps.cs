@@ -88,16 +88,10 @@ namespace LiquesceSvc
 
             // *** NTh Change ***
             // FileExists is not needed, less GC usage to reclaim it in exchange of one more condition
-
             //bool fileExists = File.Exists(path);               
 
             switch (rawCreationDisposition)
             {
-               //case FileMode.Create:
-               //case FileMode.OpenOrCreate:
-               //   if (fileExists)
-               //      actualErrorCode = Dokan.ERROR_ALREADY_EXISTS;
-               //   break;
                // *** NTh Change ***
                // Fix the parameter invalid when trying to replace an existing file
                case Proxy.CREATE_ALWAYS:
@@ -105,7 +99,13 @@ namespace LiquesceSvc
                     break;
                case Proxy.CREATE_NEW:
                     if (File.Exists(path))
-                        return Dokan.ERROR_FILE_EXISTS;
+                    {
+                       Log.Debug("filename [{0}] CREATE_NEW File Exists !", filename);
+                        // Probably someone has removed this on the actual drive
+                        roots.RemoveFromLookup(filename);
+                        actualErrorCode = Dokan.ERROR_FILE_EXISTS;
+                        return actualErrorCode;
+                    }
                     break;               
                case Proxy.OPEN_EXISTING:
                //case FileMode.Append:                    
@@ -131,7 +131,10 @@ namespace LiquesceSvc
             bool writeable = (((rawAccessMode & Proxy.FILE_WRITE_DATA) == Proxy.FILE_WRITE_DATA));
             // *** NTh Change ***
             // The Condition that eliminates the variable fileExists
-            if (((rawAccessMode & Proxy.CREATE_NEW) == Proxy.CREATE_NEW || (rawAccessMode & Proxy.CREATE_ALWAYS) == Proxy.CREATE_ALWAYS) && writeable)
+            if ( ((rawAccessMode & Proxy.CREATE_NEW) == Proxy.CREATE_NEW 
+               || (rawAccessMode & Proxy.CREATE_ALWAYS) == Proxy.CREATE_ALWAYS) 
+               && writeable
+               )
             {
                Log.Trace("We want to create a new file in: [{0}]", path);
 
@@ -1233,6 +1236,7 @@ namespace LiquesceSvc
 
             // *** NTh Change ***
             // I'm trying to make this work but it is making a good fight!!
+            // Code review: You cannot use unsafe construct in safe context.. find another way !
             IntPtr p = Marshal.AllocHGlobal(sizeof(SECURITY_INFORMATION));
             
             Marshal.StructureToPtr(rawSecurityDescriptor, p, false);
