@@ -132,23 +132,25 @@ namespace LiquesceTray
          }
       }
 
+      private void notifyIcon1_MouseDown(object sender, MouseEventArgs e)
+      {
+         if (e.Button == MouseButtons.Right)
+         {
+            bool visible = ((ModifierKeys & Keys.Control) == Keys.Control);
+            notifyIcon1.ContextMenuStrip = visible ? rightClickContextMenuService : rightClickContextMenuNormal;
+         }
+      }
+
       private void rightClickContextMenu_Opening(object sender, System.ComponentModel.CancelEventArgs e)
       {
-         bool visible = ((ModifierKeys & Keys.Control) == Keys.Control);
-         {
-            stopServiceToolStripMenuItem.Visible = visible;
-            startServiceToolStripMenuItem.Visible = visible;
-         }
          if (LiquesceSvcState.Running == lastState)
          {
              showFreeDiskSpaceToolStripMenuItem.Enabled = true;
-             backupConsistencyCheckerToolStripMenuItem.Enabled = true;
              dropperToolStripMenuItem.Enabled = true;
          }
          else
          {
              showFreeDiskSpaceToolStripMenuItem.Enabled = false;
-             backupConsistencyCheckerToolStripMenuItem.Enabled = false;
              dropperToolStripMenuItem.Enabled = false;
          }
       }
@@ -231,21 +233,6 @@ namespace LiquesceTray
 
       }
 
-      private Backup backupForm = null;
-      private void backupConsistencyCheckerToolStripMenuItem_Click(object sender, EventArgs e)
-      {
-          if (backupForm != null)
-          {
-              backupForm.Dispose();
-          }
-          backupForm = new Backup();
-          backupForm.Activate();
-          backupForm.Show();
-          backupForm.Focus();
-          backupForm.BringToFront();
-
-      }
-
       private DropZone dropperForm = null;
       private void dropperToolStripMenuItem_Click(object sender, EventArgs e)
       {
@@ -260,6 +247,8 @@ namespace LiquesceTray
           dropperForm.BringToFront();
 
       }
+
+
 
    }
 }

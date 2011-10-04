@@ -110,13 +110,6 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Backup.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Backup.Designer.cs">
-      <DependentUpon>Backup.cs</DependentUpon>
-    </Compile>
-    <Compile Include="BackupFileManager.cs" />
     <Compile Include="DropZone.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -158,9 +151,6 @@
     <Compile Include="TransparentLabel.cs">
       <SubType>Component</SubType>
     </Compile>
-    <EmbeddedResource Include="Backup.resx">
-      <DependentUpon>Backup.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="DoubleProgressBar.resx">
       <DependentUpon>DoubleProgressBar.cs</DependentUpon>
     </EmbeddedResource>
@@ -279,7 +269,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="YearStamp.MonthStamp.DayStamp.Increment" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UseGlobalSettings="False" />
+      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="YearStamp.MonthStamp.DayStamp.Increment" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
