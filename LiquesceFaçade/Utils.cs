@@ -65,7 +65,8 @@ System.Security.SecurityException: The caller does not have the required permiss
                      return Dokan.ERROR_DISK_FULL;
                }
             }
-            return (HiWord(HrForException) == 0x8007) ? -LoWord(HrForException) : Dokan.ERROR_EXCEPTION_IN_SERVICE;
+            // Check http://msdn.microsoft.com/en-us/library/ms819772.aspx (WinError.h) for error codes
+            return (HiWord(HrForException) == -32761/*0x8007*/) ? -LoWord(HrForException) : Dokan.ERROR_EXCEPTION_IN_SERVICE;
          }
       }
 

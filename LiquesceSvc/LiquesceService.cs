@@ -61,7 +61,6 @@ namespace LiquesceSvc
 
       private static ServiceHost _ILiquesceHost;
       private static ServiceHost _ILiquesceHostCallBack;
-      private static ServiceHost _IShareEnablerHost;
 
       public void StartService(string[] args)
       { 
@@ -94,10 +93,8 @@ namespace LiquesceSvc
             }
             _ILiquesceHost = new ServiceHost(typeof(LiquesceFacade));
             _ILiquesceHostCallBack = new ServiceHost(typeof(LiquesceCallBackFacade));
-            _IShareEnablerHost = new ServiceHost(typeof(ShareEnabler)) { CloseTimeout = TimeSpan.MaxValue };
             _ILiquesceHost.Open();
             _ILiquesceHostCallBack.Open();
-            _IShareEnablerHost.Open();
 
             if (RunningAsService)
             {
@@ -170,10 +167,6 @@ HTTP could not register URL http://+:8731/Design_Time_Addresses/LiquesceSvc/Liqu
             Log.Info("Stop the ManagementLayer and remove");
             if (RunningAsService)
                RequestAdditionalTime(30000);
-            
-            // Stop the share first
-            if (_IShareEnablerHost != null)
-               _IShareEnablerHost.Close();
             
             // Then stop the host calling in
             if ( _ILiquesceHost != null )

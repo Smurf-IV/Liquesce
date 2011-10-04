@@ -13,16 +13,13 @@ namespace LiquesceSvc
    // for file/folder creation.
    class Roots
    {
-      public const string NO_PATH_TO_FILTER = "?";
-      public const string HIDDEN_MIRROR_FOLDER = "_mirror";
-      public const string HIDDEN_BACKUP_FOLDER = "_backup";
-
       private readonly string PathDirectorySeparatorChar = Path.DirectorySeparatorChar.ToString();
       private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
-      // This would normally be static, but then there should only ever be one of these classes present from the Dokan Lib callback.
-      static private readonly ReaderWriterLockSlim rootPathsSync = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
-      static private readonly Dictionary<string, string> rootPaths = new Dictionary<string, string>();
+      private readonly CacheHelper<string, FileSystemInfo> cachedRootPathsSystemInfo;
+
+      private readonly Dictionary<string, List<string>> foundDirectories = new Dictionary<string, List<string>>();
+      private readonly ReaderWriterLockSlim foundDirectoriesSync = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
 
 
       private static ConfigDetails configDetails;
@@ -31,142 +28,81 @@ namespace LiquesceSvc
       public Roots(ConfigDetails configDetailsTemp)
       {
          configDetails = configDetailsTemp;
+         cachedRootPathsSystemInfo = new CacheHelper<string, FileSystemInfo>(configDetails.CacheLifetimeSeconds);
       }
 
 
-      public string GetPath(string filename, bool isCreate = false)
+      public FileSystemInfo GetPath(string filename, bool isCreate = false)
       {
-         string foundPath;
-
-         if ((configDetails.AllocationMode == ConfigDetails.AllocationModes.backup)
-            && IsBackup(filename)
-            )
-         {
-            string originalrelative = FilterDirFromPath(filename, HIDDEN_BACKUP_FOLDER);
-            string originalpath = GetPath(originalrelative);
-            // if folder backup found in the original directory then stop this!
-            foundPath = GetNewRoot(Directory.Exists(originalpath) ? GetRoot(originalpath) : NO_PATH_TO_FILTER, 0, filename);
-         }
-         else
-            foundPath = GetNewRoot(NO_PATH_TO_FILTER, 0, filename);
-
-
+         FileSystemInfo fsi = null;
          try
          {
-            if (!String.IsNullOrWhiteSpace(filename) // Win 7 (x64) passes in a blank
-               && (filename != PathDirectorySeparatorChar)
-               )
+            if (String.IsNullOrWhiteSpace(filename))
             {
-               using (rootPathsSync.UpgradableReadLock())
+               Log.Trace("Win 7 (x64) sometimes passes in a blank");
+               filename = PathDirectorySeparatorChar;
+            }
+
+            if (cachedRootPathsSystemInfo.TryGetValue(filename, out fsi))
+            {
+               Log.Trace("Found in cache");
+               return fsi;
+            }
+            string foundPath = FindAllocationRootPath(filename);
+            if (filename == PathDirectorySeparatorChar)
+            {
+               Log.Trace("Assuming Home directory so add new to cache and return");
+               fsi = new DirectoryInfo(foundPath);
+               cachedRootPathsSystemInfo[filename] = fsi;
+               return fsi;
+            }
+
+            string searchFilename = filename.Trim(Path.DirectorySeparatorChar);
+            if (String.IsNullOrWhiteSpace(filename))
+               throw new ArgumentNullException(filename, "Not allowed to pass this length 2");
+
+            if (!CheckAndGetType(filename, Path.Combine(foundPath, searchFilename), out fsi))
+            {
+               // if (configDetails.SourceLocations != null)
+               if (configDetails.SourceLocations.Select(sourceLocation => Path.Combine(sourceLocation, searchFilename)).Any(newTarget => CheckAndGetType(filename, newTarget, out fsi)))
                {
-                  bool isAShare = false;
-                  if (!filename.StartsWith(PathDirectorySeparatorChar))
+                  Log.Trace("Found in source list");
+                  return fsi;
+               }
+            }
+            else
+            {
+               Log.Trace("Not found in 1st mode source");
+               return fsi;
+            }
+            if (configDetails.KnownSharePaths != null)
+            {
+               foreach (string sharePath in configDetails.KnownSharePaths)
+               {
+                  string newPath = Path.Combine(sharePath, searchFilename);
+                  string relPath = newPath.Replace(Path.GetPathRoot(newPath), String.Empty);
+                  if (!CheckAndGetType(newPath, Path.Combine(foundPath, relPath), out fsi))
                   {
-                     isAShare = true;
-                     filename = Path.DirectorySeparatorChar + filename;
+                     // if (configDetails.SourceLocations != null)
+                     if ( configDetails.SourceLocations.Select(sourceLocation => Path.Combine(sourceLocation, relPath)).
+                           Any(newTarget => CheckAndGetType(newPath, newTarget, out fsi)))
+                     {
+                        Log.Trace("Found in source list");
+                        return fsi;
+                     }
                   }
-                  if (filename.EndsWith(PathDirectorySeparatorChar))
-                     isAShare = true;
-
-                  filename = filename.TrimEnd(Path.DirectorySeparatorChar);
-
-                  if (!rootPaths.TryGetValue(filename, out foundPath))
+                  else
                   {
-                     bool found = false;
-                     if (String.IsNullOrWhiteSpace(filename))
-                        throw new ArgumentNullException(filename, "Not allowed to pass this length 2");
-                     if (filename[0] != Path.DirectorySeparatorChar)
-                        filename = PathDirectorySeparatorChar + filename;
-
-                     if (!isAShare && (configDetails.SourceLocations != null))
-                     {
-                        foreach (string newTarget in
-                           configDetails.SourceLocations.Select(sourceLocation => sourceLocation + filename))
-                        {
-                           Log.Trace("Try and GetPath from [{0}]", newTarget);
-                           //Now here's a kicker.. The User might have copied a file directly onto one of the drives while
-                           // this has been running, So this ought to try and find if it exists that way.
-                           if (Directory.Exists(newTarget) || File.Exists(newTarget))
-                           {
-                              TrimAndAddUnique(newTarget);
-                              found = rootPaths.TryGetValue(filename, out foundPath);
-                              break;
-                           }
-                        }
-                     }
-                     else if (isAShare && (configDetails.KnownSharePaths != null))
-                     {
-                        found = configDetails.KnownSharePaths.Exists(delegate(string sharePath)
-                        {
-                           Log.Trace("Try and find from [{0}][{1}]", sharePath, filename);
-                           return rootPaths.TryGetValue(sharePath + filename, out foundPath);
-                        });
-                     }
-
-                     //-------------------------------------
-                     // file/folder not found!!!
-                     // let's see if we should create a new one...
-                     if (!found)
-                     {
-                        //Log.Trace("was this a failed redirect thing from a network share ? [{0}]", filename);
-                        if (isCreate)
-                        {
-                           // new file in folder mode
-                           if (configDetails.AllocationMode == ConfigDetails.AllocationModes.folder)
-                           {
-                              Log.Trace("Perform search for path: {0}", filename);
-                              foundPath = GetNewRoot(NO_PATH_TO_FILTER, configDetails.HoldOffBufferBytes, filename) + filename;
-                              Log.Trace("Now make sure it can be found when it tries to reopen via the share");
-                              TrimAndAddUnique(foundPath);
-                           }
-
-                           // new file in .backup mode and it is a backup!
-                           else if ((configDetails.AllocationMode == ConfigDetails.AllocationModes.backup)
-                              && IsBackup(filename)
-                              )
-                           {
-                              Log.Trace("Seems that we got a backup relative path to create [{0}]", filename);
-
-                              string originalrelative = FilterDirFromPath(filename, HIDDEN_BACKUP_FOLDER);
-                              string originalpath = GetPath(originalrelative);
-                              // if folder backup found in the original directory then stop this!
-                              if (Directory.Exists(originalpath) || File.Exists(originalpath))
-                              {
-                                 foundPath = GetNewRoot(GetRoot(originalpath), 0, filename) + filename;
-                                 Log.Trace("Seems that we got a backup path [{0}]", foundPath);
-                              }
-                              else
-                              {
-                                 // strict backup
-                                 //foundPath = String.Empty;
-
-                                 foundPath = GetNewRoot(NO_PATH_TO_FILTER, 0, filename) + filename;
-                              }
-                           }
-
-                           // new file in other modes priority, balanced, .backup mode
-                           else
-                           {
-                              foundPath = GetNewRoot(NO_PATH_TO_FILTER, 0, filename) + filename;
-                           }
-                           // Need to solve the issue with Synctoy performing moves into unknown / unused space
-                           // MoveFile pathSource: [F:\_backup\Kylie Minogue\FSP01FA0CF932F74BF5AE5C217F4AE6626B.tmp] pathTarget: [G:\_backup\Kylie Minogue\(2010) Aphrodite\12 - Can't Beat The Feeling.mp3] 
-                           // MoveFile threw:  System.IO.DirectoryNotFoundException: The system cannot find the path specified. (Exception from HRESULT: 0x80070003)
-                           string newDir = Path.GetDirectoryName(foundPath);
-                           if (!String.IsNullOrWhiteSpace(newDir)
-                              && !Directory.Exists(newDir)
-                              )
-                           {
-                              Log.Info("Creating base directory for the Move Target [{0}]", newDir);
-                              Directory.CreateDirectory(newDir);
-                           }
-                        }
-                        else
-                           foundPath = String.Empty; // This is used when not creating new directory / file
-                     }
+                     return fsi;
                   }
                }
             }
+
+            //-------------------------------------
+            Log.Trace("file/folder not found");
+            // So create a holder for the return and do not store
+            fsi = new FileInfo(Path.Combine(foundPath, searchFilename));
+            cachedRootPathsSystemInfo[filename] = fsi;
          }
          catch (Exception ex)
          {
@@ -174,43 +110,48 @@ namespace LiquesceSvc
          }
          finally
          {
-            if (!String.IsNullOrWhiteSpace(foundPath))
-               Log.Debug("GetPath from [{0}] found [{1}]", filename, foundPath);
+            if (fsi != null)
+               Log.Debug("GetPath from [{0}] found [{1}]", filename, fsi.FullName);
             else
+            {
                Log.Debug("GetPath found nothing for [{0}]. isCreate=[{1}]", filename, isCreate);
+            }
          }
-         return foundPath;
+         return fsi;
+      }
+
+      private bool CheckAndGetType(string filename, string newTarget, out FileSystemInfo fsi)
+      {
+         if (cachedRootPathsSystemInfo.TryGetValue(newTarget, out fsi))
+         {
+            Log.Trace("Found in check cache");
+            return true;
+         }
+         Log.Trace("Try and GetPath from [{0}]", newTarget);
+         //Now here's a kicker.. The User might have copied a file directly onto one of the drives while
+         // this has been running, So this ought to try and find if it exists that way.
+         fsi = new FileInfo(newTarget);
+         if (!fsi.Exists)
+            fsi = new DirectoryInfo(newTarget);
+         if (fsi.Exists)
+         {
+            cachedRootPathsSystemInfo[filename] = fsi;
+            return true;
+         }
+         return false;
       }
 
 
-      public List<string> GetAllPaths(string relativefolder)
+      public static string[] GetAllPaths(string relativefolder)
       {
-         List<string> paths = new List<string>();
-
-         for (int i = 0; i < configDetails.SourceLocations.Count; i++)
-         {
-            string current = configDetails.SourceLocations[i] + relativefolder;
-            if (Directory.Exists(current))
-               paths.Add(current);
-         }
-
-         return paths;
+         return configDetails.SourceLocations.Select(t => t + relativefolder).Where(Directory.Exists).ToArray();
       }
 
       // *** NTh Change ***
       // Get the paths of all the copies of the file
-      public List<string> GetAllFilePaths(string file_name)
+      public static string[] GetAllFilePaths(string file_name)
       {
-          List<string> paths = new List<string>();
-
-          for (int i = 0; i < configDetails.SourceLocations.Count; i++)
-          {
-              string current = configDetails.SourceLocations[i] + file_name;
-              if (File.Exists(current))
-                  paths.Add(current);
-          }
-
-          return paths;
+         return configDetails.SourceLocations.Select(t => t + file_name).Where(File.Exists).ToArray();
       }
 
 
@@ -235,123 +176,102 @@ namespace LiquesceSvc
 
 
       // this method returns a path (real physical path) of a place where the next folder/file root can be.
-      // filesize should be the size of the file which one wans to create on the disk
-      public static string GetNewRoot(string FilterThisPath, UInt64 filesize, string relativeFolder)
+      private static string FindAllocationRootPath(string relativeFolder)
       {
+         string foundRoot;
          switch (configDetails.AllocationMode)
          {
             case ConfigDetails.AllocationModes.folder:
-               return GetFromFolder(relativeFolder, FilterThisPath, filesize);
+               foundRoot = GetSourceThatMatchesThisFolderWithSpace(relativeFolder);
+               if (string.IsNullOrEmpty(foundRoot))
+                  goto case ConfigDetails.AllocationModes.priority;
+               break;
 
             case ConfigDetails.AllocationModes.priority:
-               return GetHighestPriority(FilterThisPath, filesize);
+               foundRoot = GetHighestPrioritySourceWithSpace();
+               if (string.IsNullOrEmpty(foundRoot))
+                  goto case ConfigDetails.AllocationModes.balanced;
+               break;
 
             case ConfigDetails.AllocationModes.balanced:
-               return GetWithMostFreeSpace(FilterThisPath, filesize);
-
-            //case ConfigDetails.AllocationModes.mirror:
-            //    return GetWithMostFreeSpace(FilterThisPath, filesize);
-
-            case ConfigDetails.AllocationModes.backup:
-               return GetWithMostFreeSpace(FilterThisPath, filesize);
+               foundRoot = GetSourceWithMostFreeSpace();
+               break;
 
             default:
-               return GetHighestPriority(NO_PATH_TO_FILTER, filesize);
+               foundRoot = GetSourceWithMostFreeSpace();
+               break;
          }
+         return foundRoot;
       }
 
 
       // returns the root for:
       //  1. the first disk where relativeFolder exists and there is enough free space
       //  2. priority mode
-      private static string GetFromFolder(string relativeFolder, string FilterThisPath, UInt64 filesize)
+      private static string GetSourceThatMatchesThisFolderWithSpace(string relativeFolder)
       {
-         // if no disk with enough free space and an existing relativeFolder
-         // then fall back to priority mode
-         string rootForPriority = String.Empty;
-
          // remove the last \ to delete the last directory
          relativeFolder = relativeFolder.TrimEnd(new char[] { Path.DirectorySeparatorChar });
 
          // for every source location
-         foreach (string t in configDetails.SourceLocations.Where(t => !t.Contains(FilterThisPath)))
+         foreach (string t in configDetails.SourceLocations)
          {
             // first get free space
-            ulong num, num2, num3;
-            if (GetDiskFreeSpaceEx(t, out num, out num2, out num3))
+            ulong lpFreeBytesAvailable, num2, num3;
+            if (GetDiskFreeSpaceEx(t, out lpFreeBytesAvailable, out num2, out num3))
             {
                // see if enough space
-               if (num > filesize)
+               if (lpFreeBytesAvailable > configDetails.HoldOffBufferBytes)
                {
                   string testpath = t + relativeFolder;
 
                   // check if relativeFolder is on this disk
                   if (Directory.Exists(testpath))
                      return t;
-
-                  // mark as highest priority if first disk
-                  if (String.IsNullOrEmpty(rootForPriority))
-                     rootForPriority = t;
                }
             }
          }
-         return (String.IsNullOrEmpty(rootForPriority)) ? GetWithMostFreeSpace(FilterThisPath, 0) : rootForPriority;
+         return string.Empty;
       }
 
 
       // returns the next root with the highest priority
-      private static string GetHighestPriority(string FilterThisPath, UInt64 filesize)
+      private static string GetHighestPrioritySourceWithSpace()
       {
-         ulong num = 0, num2, num3;
+         ulong lpFreeBytesAvailable = 0, num2, num3;
          foreach (string t in from t in configDetails.SourceLocations
-                              where !t.Contains(FilterThisPath)
-                              where GetDiskFreeSpaceEx(t, out num, out num2, out num3)
-                              where num > configDetails.HoldOffBufferBytes && num > filesize
+                              where GetDiskFreeSpaceEx(t, out lpFreeBytesAvailable, out num2, out num3)
+                              where lpFreeBytesAvailable > configDetails.HoldOffBufferBytes
                               select t)
          {
             return t;
          }
-
-         // if all drives are full (exepting the HoldOffBuffers) choose that one with the most free space
-         return GetWithMostFreeSpace(FilterThisPath, filesize);
+         return string.Empty;
       }
 
 
       // returns the root with the most free space
-      private static string GetWithMostFreeSpace(string FilterThisPath, UInt64 filesize)
+      private static string GetSourceWithMostFreeSpace()
       {
-         ulong HighestFreeSpace = 0;
-         string PathWithMostFreeSpace = String.Empty;
+         ulong highestFreeSpace = 0;
+         string sourceWithMostFreeSpace = string.Empty;
 
          configDetails.SourceLocations.ForEach(str =>
          {
-            // if the path shouldn't be filtered or there is no filter
-            if (!str.Contains(FilterThisPath))
+            ulong num, num2, num3;
+            if (GetDiskFreeSpaceEx(str, out num, out num2, out num3))
             {
-               ulong num, num2, num3;
-               if (GetDiskFreeSpaceEx(str, out num, out num2, out num3))
+               if (highestFreeSpace < num)
                {
-                  if (HighestFreeSpace < num)
-                  {
-                     HighestFreeSpace = num;
-                     PathWithMostFreeSpace = str;
-                  }
+                  highestFreeSpace = num;
+                  sourceWithMostFreeSpace = str;
                }
             }
          });
 
-         // if the file fits on the disk
-         return (HighestFreeSpace > filesize) ? PathWithMostFreeSpace : String.Empty;
+         // return the largest regardless
+         return sourceWithMostFreeSpace;
       }
-
-
-
-      public static bool IsBackup(string path)
-      {
-         return path.Contains(HIDDEN_BACKUP_FOLDER);
-      }
-
-
 
       public static bool RelativeFileExists(string relative)
       {
@@ -386,48 +306,44 @@ namespace LiquesceSvc
 
 
 
-      // adds the root path to rootPaths dicionary for a specific file
-      public string TrimAndAddUnique(string fullFilePath)
+      // adds the root path to cachedRootPathsSystemInfo dicionary for a specific file
+      public string TrimAndAddUnique(FileSystemInfo fsi)
       {
-         int index = configDetails.SourceLocations.FindIndex(fullFilePath.StartsWith);
-         if (index >= 0)
+         string fullFilePath = fsi.FullName;
+         string key = findOffsetPath(fullFilePath);
+         if (!string.IsNullOrEmpty(key))
          {
-            string key = fullFilePath.Remove(0, configDetails.SourceLocations[index].Length);
             Log.Trace("Adding [{0}] to [{1}]", key, fullFilePath);
-            using (rootPathsSync.WriteLock())
-            {
-               // TODO: Add the collisions / duplicate feedback from here
-               rootPaths[key] = fullFilePath;
-            }
+            cachedRootPathsSystemInfo[key] = fsi;
             return key;
          }
          throw new ArgumentException("Unable to find BelongTo Path: " + fullFilePath, fullFilePath);
       }
 
+      private string findOffsetPath(string fullFilePath)
+      {
+         int index = configDetails.SourceLocations.FindIndex(fullFilePath.StartsWith);
+         if (index >= 0)
+         {
+            return fullFilePath.Remove(0, configDetails.SourceLocations[index].Length);
+         }
+         return string.Empty;
+      }
 
       // removes a root from root lookup
       public void RemoveTargetFromLookup(string realFilename)
       {
-         using (rootPathsSync.UpgradableReadLock())
+         string key = findOffsetPath(realFilename);
+         if (string.IsNullOrEmpty(key))
          {
-            string key = string.Empty;
-            foreach (KeyValuePair<string, string> kvp in rootPaths.Where(kvp => kvp.Value == realFilename))
-            {
-               key = kvp.Key;
-               break;
-            }
-            if (!String.IsNullOrEmpty(key))
-            {
-               RemoveFromLookup(key);
-            }
+            RemoveFromLookup(key);
          }
       }
 
       // removes a path from root lookup
       public void RemoveFromLookup(string filename)
       {
-         using (rootPathsSync.WriteLock())
-            rootPaths.Remove(filename);
+         cachedRootPathsSystemInfo.Remove(filename);
       }
 
 
@@ -438,5 +354,38 @@ namespace LiquesceSvc
       private static extern bool GetDiskFreeSpaceEx(string lpDirectoryName, out ulong lpFreeBytesAvailable, out ulong lpTotalNumberOfBytes, out ulong lpTotalNumberOfFreeBytes);
 
       #endregion
+
+      public void DeleteDirectory(string filename)
+      {
+         using (foundDirectoriesSync.UpgradableReadLock())
+         {
+            // Only delete the directories that this knew about before the delete was called 
+            // (As the user may be moving files into the sources from the mount !!)
+            List<string> targetDeletes = foundDirectories[filename];
+            if (targetDeletes != null)
+               for (int index = 0; index < targetDeletes.Count; index++)
+               {
+                  // Use an index for speed (It all counts !)
+                  string fullPath = targetDeletes[index];
+                  Log.Trace("Deleting matched dir [{0}]", fullPath);
+                  Directory.Delete(fullPath, false);
+               }
+            using (foundDirectoriesSync.WriteLock())
+               foundDirectories.Remove(filename);
+            RemoveFromLookup(filename);
+         }
+      }
+
+      public void DeleteFile(string filename)
+      {
+         // *** NTh Change ***
+         // Get all copies of the same file in other sources and delete them
+         Log.Trace("DeleteOnClose File");
+         foreach (string path in GetAllFilePaths(filename))
+         {
+            File.Delete(path);
+         }
+         RemoveFromLookup(filename);
+      }
    }
 }

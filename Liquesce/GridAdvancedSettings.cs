@@ -42,6 +42,7 @@ namespace Liquesce
             cd.HoldOffBufferBytes = (apd.HoldOffMBytes * (1024 * 1024));
             cd.BufferReadSize = (apd.BufferReadSizeKBytes * 1024);
             cd.ServiceLogLevel = apd.ServiceLogLevel;
+            cd.CacheLifetimeSeconds = apd.CacheLifetimeSeconds;
          }
       }
 

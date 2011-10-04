@@ -319,16 +319,6 @@ namespace LiquesceSvc
          return (LanManShareHandler.MatchDriveLanManShares(currentConfigDetails.DriveLetter));
       }
 
-      //public MirrorToDoList ConsumeMirrorToDo()
-      //{
-      //    return FileManager.ConsumeMirrorToDo();
-      //}
-
-      public MirrorToDoList MirrorToDo
-      {
-         get { return FileManager.ConsumeMirrorToDo(); }
-      }
-
       private void ReadConfigDetails()
       {
          try

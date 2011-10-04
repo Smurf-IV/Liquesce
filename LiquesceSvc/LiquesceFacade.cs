@@ -50,23 +50,6 @@ namespace LiquesceSvc
       }
 
        
-      //public MirrorToDoList ConsumeMirrorToDo()
-      //{
-      //    Log.Debug("Calling ConsumeMirrorToDo");
-      //    return ManagementLayer.Instance.ConsumeMirrorToDo();
-      //}
-
-      public MirrorToDoList MirrorToDo
-      {
-          get
-          {
-              Log.Debug("Calling State");
-              return ManagementLayer.Instance.MirrorToDo;
-          }
-      }
-
-
-
       public ConfigDetails ConfigDetails
       {
          get

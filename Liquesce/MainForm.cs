@@ -64,7 +64,7 @@ namespace Liquesce
             }
             catch (Exception ex)
             {
-               Log.ErrorException("Unable to attach to the service, even tho it is running", ex);
+               Log.ErrorException("MainForm_Shown: Unable to attach to the service, even tho it is running", ex);
                UseWaitCursor = false;
                Enabled = true;
                MessageBox.Show(this, ex.Message, "Has the firewall blocked the communications ?", MessageBoxButtons.OK,
@@ -257,7 +257,7 @@ namespace Liquesce
          UseWaitCursor = true;
          try
          {
-            Log.Debug("Remove the placeholder node.");
+            Log.Debug("driveAndDirTreeView_BeforeExpand");
             DirectoryInfo root = e.Node.Tag as DirectoryInfo;
             if (root != null)
             {
@@ -578,7 +578,7 @@ namespace Liquesce
          try
          {
             SetProgressBarStyle(ProgressBarStyle.Marquee);
-            Log.Debug("Remove the placeholder node.");
+            Log.Debug("expectedTreeView_BeforeExpand");
             string root = e.Node.Tag as string;
             if (!String.IsNullOrEmpty(root))
             {
@@ -705,7 +705,7 @@ namespace Liquesce
          }
          catch (Exception ex)
          {
-            Log.ErrorException("Unable to attach to the service, even tho it is running", ex);
+            Log.ErrorException("commitToolStripMenuItem_Click: Unable to attach to the service, even tho it is running", ex);
             MessageBox.Show(this, ex.Message, "Has the firewall blocked the communications ?", MessageBoxButtons.OK,
                             MessageBoxIcon.Stop);
          }
