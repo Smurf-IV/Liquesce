@@ -1,4 +1,19 @@
-﻿using System;
+﻿#region Copyright (C)
+// ---------------------------------------------------------------------------------------------------------------
+//  <copyright file="ShellAPI.cs" company="Smurf-IV">
+// 
+//  This program is free software: you can redistribute it and/or modify
+// 
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+//  </copyright>
+//  <summary>
+//  Url: http://www.codeproject.com/KB/shell/csdoesshell2.aspx
+//  </summary>
+// --------------------------------------------------------------------------------------------------------------------
+#endregion
+using System;
 using System.Text;
 using System.Runtime.InteropServices;
 

@@ -1,4 +1,23 @@
-﻿using System;
+﻿#region Copyright (C)
+// ---------------------------------------------------------------------------------------------------------------
+//  <copyright file="CacheHelper.cs" company="Smurf-IV">
+// 
+//  Copyright (C) 2010-2011 Smurf-IV
+// 
+//  This program is free software: you can redistribute it and/or modify.
+// 
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// 
+//  </copyright>
+//  <summary>
+//  Url: http://liquesce.wordpress.com/2011/06/07/c-dictionary-cache-that-has-a-timeout-on-its-values/
+//  Email: http://www.codeplex.com/site/users/view/smurfiv
+//  </summary>
+// --------------------------------------------------------------------------------------------------------------------
+#endregion
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
