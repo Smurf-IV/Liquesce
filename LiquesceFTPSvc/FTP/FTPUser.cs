@@ -15,7 +15,7 @@ namespace LiquesceFTPSvc.FTP
       internal string UserName;
       // TODO: This needs some serious thought on how to populate this directory
       internal string StartUpDirectory = @"C:\Blam";
-      internal string CurrentWorkingDirectory = Path.DirectorySeparatorChar.ToString();
+      internal string CurrentWorkingDirectory = @"C:\Blam";
       internal bool IsAuthenticated = false;
       string Password;
 

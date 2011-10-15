@@ -117,11 +117,14 @@
     <Compile Include="FTP\Authentication\MIC_Command.cs" />
     <Compile Include="FTP\Authentication\PBSZ_Command.cs" />
     <Compile Include="FTP\Authentication\PROT_Command.cs" />
+    <Compile Include="FTP\New Commands\APSV.cs" />
     <Compile Include="FTP\New Commands\AVBL_Command.cs" />
     <Compile Include="FTP\New Commands\CLNT_Command.cs" />
     <Compile Include="FTP\New Commands\CSID_Command.cs" />
+    <Compile Include="FTP\Authentication\DIGT.cs" />
     <Compile Include="FTP\New Commands\DSIZ_Command.cs" />
     <Compile Include="FTP\New Commands\HASH_Command.cs" />
+    <Compile Include="FTP\New Commands\HOST.cs" />
     <Compile Include="FTP\New Commands\MDTM_Command.cs" />
     <Compile Include="FTP\Commands\MODE_Command.cs" />
     <Compile Include="FTP\New Commands\EPRT_Command.cs" />

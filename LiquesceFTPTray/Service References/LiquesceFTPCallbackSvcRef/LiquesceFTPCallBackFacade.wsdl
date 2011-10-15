@@ -10,9 +10,9 @@
   </wsp:Policy>
   <wsdl:types>
     <xsd:schema targetNamespace="http://tempuri.org/Imports">
-      <xsd:import schemaLocation="http://localhost:8731/Design_Time_Addresses/LiquesceFTPSvc/LiquesceFTPCallBackFacade/?xsd=xsd0" namespace="http://tempuri.org/" />
-      <xsd:import schemaLocation="http://localhost:8731/Design_Time_Addresses/LiquesceFTPSvc/LiquesceFTPCallBackFacade/?xsd=xsd1" namespace="http://schemas.microsoft.com/2003/10/Serialization/" />
-      <xsd:import schemaLocation="http://localhost:8731/Design_Time_Addresses/LiquesceFTPSvc/LiquesceFTPCallBackFacade/?xsd=xsd2" namespace="http://schemas.datacontract.org/2004/07/LiquesceFacade" />
+      <xsd:import schemaLocation="http://localhost:8831/Design_Time_Addresses/LiquesceFTPSvc/LiquesceFTPCallBackFacade/?xsd=xsd0" namespace="http://tempuri.org/" />
+      <xsd:import schemaLocation="http://localhost:8831/Design_Time_Addresses/LiquesceFTPSvc/LiquesceFTPCallBackFacade/?xsd=xsd1" namespace="http://schemas.microsoft.com/2003/10/Serialization/" />
+      <xsd:import schemaLocation="http://localhost:8831/Design_Time_Addresses/LiquesceFTPSvc/LiquesceFTPCallBackFacade/?xsd=xsd2" namespace="http://schemas.datacontract.org/2004/07/LiquesceFacade" />
     </xsd:schema>
   </wsdl:types>
   <wsdl:message name="ILiquesceFTPCallBack_Subscribe_InputMessage">
