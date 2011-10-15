@@ -135,12 +135,8 @@
     <Reference Include="System" />
     <Reference Include="System.Configuration.Install" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Management" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.ServiceProcess" />
     <Reference Include="System.Xml" />
@@ -148,6 +144,8 @@
   <ItemGroup>
     <Compile Include="CacheHelper.cs" />
     <Compile Include="FileManager.cs" />
+    <Compile Include="ProcessExtensions.cs" />
+    <Compile Include="ProcessIdentity.cs" />
     <Compile Include="Roots.cs" />
     <Compile Include="LiquesceCallBackFacade.cs" />
     <Compile Include="LiquesceFacade.cs" />

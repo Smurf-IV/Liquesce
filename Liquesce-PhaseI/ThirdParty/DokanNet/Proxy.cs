@@ -47,36 +47,64 @@ namespace DokanNet
    public enum SECURITY_INFORMATION : uint
    {
       /// <summary>
-      /// Structure taken from http://www.pinvoke.net/default.aspx/Enums/SECURITY_INFORMATION.html
+      /// Enums found @ http://msdn.microsoft.com/en-us/library/windows/desktop/aa379579(v=vs.85).aspx
       /// </summary>
-      OWNER_SECURITY_INFORMATION = 0x00000001,
-      GROUP_SECURITY_INFORMATION = 0x00000002,
-      DACL_SECURITY_INFORMATION = 0x00000004,
-      SACL_SECURITY_INFORMATION = 0x00000008,
-      // Dokan may not be passing Label ?? 0x00000010
-      UNPROTECTED_SACL_SECURITY_INFORMATION = 0x10000000,
-      UNPROTECTED_DACL_SECURITY_INFORMATION = 0x20000000,
-      PROTECTED_SACL_SECURITY_INFORMATION = 0x40000000,
-      PROTECTED_DACL_SECURITY_INFORMATION = 0x80000000
+      OWNER_SECURITY_INFORMATION       = 0x00000001,
+      GROUP_SECURITY_INFORMATION       = 0x00000002,
+      DACL_SECURITY_INFORMATION        = 0x00000004,
+      SACL_SECURITY_INFORMATION        = 0x00000008,
+      LABEL_SECURITY_INFORMATION       = 0x00000010,
+      ATTRIBUTE_SECURITY_INFORMATION   = 0x00000020,
+      SCOPE_SECURITY_INFORMATION       = 0x00000040,
+      UNPROTECTED_SACL_SECURITY_INFORMATION  = 0x10000000,
+      UNPROTECTED_DACL_SECURITY_INFORMATION  = 0x20000000,
+      PROTECTED_SACL_SECURITY_INFORMATION    = 0x40000000,
+      PROTECTED_DACL_SECURITY_INFORMATION    = 0x80000000
+      /*
+ATTRIBUTE_SECURITY_INFORMATION      The security property of the object being referenced.
+
+BACKUP_SECURITY_INFORMATION         The backup properties of the object being referenced.
+
+DACL_SECURITY_INFORMATION           The DACL of the object is being referenced.
+
+GROUP_SECURITY_INFORMATION          The primary group identifier of the object is being referenced.
+
+LABEL_SECURITY_INFORMATION          The mandatory integrity label is being referenced.
+                                    The mandatory integrity label is an ACE in the SACL of the object.
+
+OWNER_SECURITY_INFORMATION          The owner identifier of the object is being referenced.
+
+PROTECTED_DACL_SECURITY_INFORMATION The DACL cannot inherit access control entries (ACEs).
+
+PROTECTED_SACL_SECURITY_INFORMATION The SACL cannot inherit ACEs.
+
+SACL_SECURITY_INFORMATION           The SACL of the object is being referenced.
+
+SCOPE_SECURITY_INFORMATION          The Central Access Policy (CAP) identifier applicable on the object that is being referenced. Each CAP identifier is stored in a SYSTEM_SCOPED_POLICY_ID_ACE type in the SACL of the SD.
+
+UNPROTECTED_DACL_SECURITY_INFORMATION  The DACL inherits ACEs from the parent object.
+
+UNPROTECTED_SACL_SECURITY_INFORMATION  The SACL inherits ACEs from the parent object.
+       * */
    }
 
    ///// <summary>
    ///// See http://www.pinvoke.net/search.aspx?search=SECURITY_DESCRIPTOR&namespace=[All]
    ///// </summary>
-   //[StructLayoutAttribute(LayoutKind.Sequential, Pack = 4)]
-   //public struct SECURITY_DESCRIPTOR
-   //{
-   //   /// <summary>
-   //   /// Structure taken from http://msdn.microsoft.com/en-us/library/ff556610%28v=vs.85%29.aspx
-   //   /// </summary>
-   //   public byte revision;
-   //   public byte size;
-   //   public short control;   // == SECURITY_DESCRIPTOR_CONTROL
-   //   public IntPtr owner;    // == PSID  
-   //   public IntPtr group;    // == PSID  
-   //   public IntPtr sacl;     // == PACL  
-   //   public IntPtr dacl;     // == PACL  
-   //}
+   [StructLayoutAttribute(LayoutKind.Sequential, Pack = 4)]
+   public struct SECURITY_DESCRIPTOR
+   {
+      /// <summary>
+      /// Structure taken from http://msdn.microsoft.com/en-us/library/ff556610%28v=vs.85%29.aspx
+      /// </summary>
+      public byte revision;
+      public byte size;
+      public short control;   // == SECURITY_DESCRIPTOR_CONTROL
+      public IntPtr owner;    // == PSID  
+      public IntPtr group;    // == PSID  
+      public IntPtr sacl;     // == PACL  
+      public IntPtr dacl;     // == PACL  
+   }
 
    public class Proxy
    {
@@ -122,33 +150,35 @@ namespace DokanNet
       #region Win32 Constants fro file controls
       // ReSharper disable InconsistentNaming
 #pragma warning disable 169
-      public const uint GENERIC_READ = 0x80000000;
-      public const uint GENERIC_WRITE = 0x40000000;
-      private const uint GENERIC_EXECUTE = 0x20000000;
+      public const uint GENERIC_READ      = 0x80000000;
+      public const uint GENERIC_WRITE     = 0x40000000;
+      private const uint GENERIC_EXECUTE  = 0x20000000;
 
-      private const uint FILE_READ_DATA = 0x00000001;
-      public const uint FILE_WRITE_DATA = 0x00000002;
-      private const uint FILE_APPEND_DATA = 0x00000004;
-      private const uint FILE_READ_EA = 0x00000008;
-      private const uint FILE_WRITE_EA = 0x00000010;
-      private const uint FILE_EXECUTE = 0x00000020;
-      private const uint FILE_READ_ATTRIBUTES = 0x00000080;
-      private const uint FILE_WRITE_ATTRIBUTES = 0x00000100;
-      private const uint DELETE = 0x00010000;
-      private const uint READ_CONTROL = 0x00020000;
-      private const uint WRITE_DAC = 0x00040000;
-      private const uint WRITE_OWNER = 0x00080000;
-      private const uint SYNCHRONIZE = 0x00100000;
+      private const uint FILE_READ_DATA            = 0x00000001;
+      public const uint FILE_WRITE_DATA            = 0x00000002;
+      private const uint FILE_APPEND_DATA          = 0x00000004;
+      private const uint FILE_READ_EA              = 0x00000008;
+      private const uint FILE_WRITE_EA             = 0x00000010;
+      private const uint FILE_EXECUTE              = 0x00000020;
+      private const uint FILE_READ_ATTRIBUTES      = 0x00000080;
+      private const uint FILE_WRITE_ATTRIBUTES     = 0x00000100;
+      private const uint DELETE                    = 0x00010000;
+      private const uint READ_CONTROL              = 0x00020000;
+      private const uint WRITE_DAC                 = 0x00040000;
+      private const uint WRITE_OWNER               = 0x00080000;
+      private const uint SYNCHRONIZE               = 0x00100000;
+      private const uint STANDARD_RIGHTS_REQUIRED  = 0x000F0000;
 
-      private const uint STANDARD_RIGHTS_REQUIRED = 0x000F0000;
+      // Common rawAccessMode values
+      // From XP to a shareaccess point [1048704] == 0x0010,0080 = SYNCHRONIZE | FILE_READ_ATTRIBUTES
 
       private const uint STANDARD_RIGHTS_READ = READ_CONTROL;
       private const uint STANDARD_RIGHTS_WRITE = READ_CONTROL;
       private const uint STANDARD_RIGHTS_EXECUTE = READ_CONTROL;
 
-      public const uint FILE_SHARE_READ = 0x00000001;
-      public const uint FILE_SHARE_WRITE = 0x00000002;
-      private const uint FILE_SHARE_DELETE = 0x00000004;
+      public const uint FILE_SHARE_READ      = 0x00000001;
+      public const uint FILE_SHARE_WRITE     = 0x00000002;
+      private const uint FILE_SHARE_DELETE   = 0x00000004;
 
       public const uint CREATE_NEW = 1;
       public const uint CREATE_ALWAYS = 2;
@@ -156,37 +186,34 @@ namespace DokanNet
       private const uint OPEN_ALWAYS = 4;
       public const uint TRUNCATE_EXISTING = 5;
 
-      private const uint FILE_ATTRIBUTE_READONLY = 0x00000001;
-      private const uint FILE_ATTRIBUTE_HIDDEN = 0x00000002;
-      private const uint FILE_ATTRIBUTE_SYSTEM = 0x00000004;
-      private const uint FILE_ATTRIBUTE_DIRECTORY = 0x00000010;
-      private const uint FILE_ATTRIBUTE_ARCHIVE = 0x00000020;
-      private const uint FILE_ATTRIBUTE_ENCRYPTED = 0x00000040;
-      private const uint FILE_ATTRIBUTE_NORMAL = 0x00000080;
-      private const uint FILE_ATTRIBUTE_TEMPORARY = 0x00000100;
-      private const uint FILE_ATTRIBUTE_SPARSE_FILE = 0x00000200;
-      private const uint FILE_ATTRIBUTE_REPARSE_POINT = 0x00000400;
-      private const uint FILE_ATTRIBUTE_COMPRESSED = 0x00000800;
-      private const uint FILE_ATTRIBUTE_OFFLINE = 0x00001000;
+      private const uint FILE_ATTRIBUTE_READONLY            = 0x00000001;
+      private const uint FILE_ATTRIBUTE_HIDDEN              = 0x00000002;
+      private const uint FILE_ATTRIBUTE_SYSTEM              = 0x00000004;
+      private const uint FILE_ATTRIBUTE_DIRECTORY           = 0x00000010;
+      private const uint FILE_ATTRIBUTE_ARCHIVE             = 0x00000020;
+      private const uint FILE_ATTRIBUTE_ENCRYPTED           = 0x00000040;
+      private const uint FILE_ATTRIBUTE_NORMAL              = 0x00000080;
+      private const uint FILE_ATTRIBUTE_TEMPORARY           = 0x00000100;
+      private const uint FILE_ATTRIBUTE_SPARSE_FILE         = 0x00000200;
+      private const uint FILE_ATTRIBUTE_REPARSE_POINT       = 0x00000400;
+      private const uint FILE_ATTRIBUTE_COMPRESSED          = 0x00000800;
+      private const uint FILE_ATTRIBUTE_OFFLINE             = 0x00001000;
       private const uint FILE_ATTRIBUTE_NOT_CONTENT_INDEXED = 0x00002000;
-      private const uint FILE_ATTRIBUTE_VIRTUAL = 0x00010000;
+      private const uint FILE_ATTRIBUTE_VIRTUAL             = 0x00010000;
 
-      //
-      // File creation flags must start at the high end since they
-      // are combined with the attributes
-      //
+      // !!! File creation flags must start at the high end since they are combined with the attributes !!!
+      public const uint FILE_FLAG_WRITE_THROUGH          = 0x80000000;
+      public const uint FILE_FLAG_OVERLAPPED             = 0x40000000;
+      public const uint FILE_FLAG_NO_BUFFERING           = 0x20000000;
+      public const uint FILE_FLAG_RANDOM_ACCESS          = 0x10000000;
+      public const uint FILE_FLAG_SEQUENTIAL_SCAN        = 0x08000000;
+      private const uint FILE_FLAG_DELETE_ON_CLOSE       = 0x04000000;
+      public const uint FILE_FLAG_BACKUP_SEMANTICS       = 0x02000000;
+      private const uint FILE_FLAG_POSIX_SEMANTICS       = 0x01000000;
+      private const uint FILE_FLAG_OPEN_REPARSE_POINT    = 0x00200000;
+      private const uint FILE_FLAG_OPEN_NO_RECALL        = 0x00100000;
+      private const uint FILE_FLAG_FIRST_PIPE_INSTANCE   = 0x00080000;
 
-      public const uint FILE_FLAG_WRITE_THROUGH = 0x80000000;
-      public const uint FILE_FLAG_OVERLAPPED = 0x40000000;
-      public const uint FILE_FLAG_NO_BUFFERING = 0x20000000;
-      public const uint FILE_FLAG_RANDOM_ACCESS = 0x10000000;
-      public const uint FILE_FLAG_SEQUENTIAL_SCAN = 0x08000000;
-      private const uint FILE_FLAG_DELETE_ON_CLOSE = 0x04000000;
-      public const uint FILE_FLAG_BACKUP_SEMANTICS = 0x02000000;
-      private const uint FILE_FLAG_POSIX_SEMANTICS = 0x01000000;
-      private const uint FILE_FLAG_OPEN_REPARSE_POINT = 0x00200000;
-      private const uint FILE_FLAG_OPEN_NO_RECALL = 0x00100000;
-      private const uint FILE_FLAG_FIRST_PIPE_INSTANCE = 0x00080000;
 #pragma warning restore 169
       // ReSharper restore InconsistentNaming
       #endregion
@@ -892,10 +919,10 @@ namespace DokanNet
       }
 
       public delegate int SetFileSecurityDelegate(IntPtr rawFileName, ref SECURITY_INFORMATION rawSecurityInformation,
-          IntPtr /*ref SECURITY_DESCRIPTOR*/ rawSecurityDescriptor, uint rawSecurityDescriptorLength, ref DOKAN_FILE_INFO rawFileInfo);
+           IntPtr /*ref SECURITY_DESCRIPTOR*/ rawSecurityDescriptor, uint rawSecurityDescriptorLength, ref DOKAN_FILE_INFO rawFileInfo);
 
       public int SetFileSecurity(IntPtr rawFileName, ref SECURITY_INFORMATION rawSecurityInformation,
-          IntPtr /*ref SECURITY_DESCRIPTOR*/ rawSecurityDescriptor, uint rawSecurityDescriptorLength, ref DOKAN_FILE_INFO rawFileInfo)
+           IntPtr /*ref SECURITY_DESCRIPTOR*/ rawSecurityDescriptor, uint rawSecurityDescriptorLength, ref DOKAN_FILE_INFO rawFileInfo)
       {
          try
          {

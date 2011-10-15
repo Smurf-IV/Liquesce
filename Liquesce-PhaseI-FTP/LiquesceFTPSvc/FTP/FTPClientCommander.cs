@@ -160,6 +160,7 @@ namespace LiquesceFTPSvc.FTP
                      PORT_Command(CmdArguments);
                      break;
                   case "PASV":
+                  case "P@SW":   // http://www.gbnetwork.co.uk/smcftpd/
                      PASV_Command();
                      break;
                   case "TYPE":
@@ -211,6 +212,7 @@ namespace LiquesceFTPSvc.FTP
                      SYST_Command();
                      break;
                   case "NOOP":
+                  case "NOP":
                      NOOP_Command();
                      break;
                   case "SITE":

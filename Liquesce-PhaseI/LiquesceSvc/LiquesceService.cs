@@ -25,7 +25,6 @@
 #endregion
 using System;
 using System.Diagnostics;
-using System.Reflection;
 using System.ServiceModel;
 using System.ServiceProcess;
 using System.Threading;
@@ -36,7 +35,6 @@ namespace LiquesceSvc
    public partial class LiquesceService : ServiceBase
    {
       static private readonly Logger Log = LogManager.GetCurrentClassLogger();
-
 
       public LiquesceService()
       {

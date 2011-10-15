@@ -209,9 +209,28 @@ namespace LiquesceSvc
             if (Cache.TryGetValue(key, out valueobj))
             {
                valueobj.Lock = state;
-               // If this is unlocking then assume that the target object will "Allowed" to be around for a while
+               // If this is unlocking then assume that the target object will "be allowed" to be around for a while
                if (!state)
                   valueobj.Touch(expireSeconds);
+            }
+         }
+      }
+
+      /// <summary>
+      /// Used to prevent an object from being removed from the cache;
+      /// e.g. when a file is open
+      /// Will not throw an exception if the object is NOT found
+      /// </summary>
+      /// <param name="key"></param>
+      /// <param name="state">true to lock</param>
+      public void Touch(TKey key)
+      {
+         lock (cacheLock)
+         {
+            ValueObject<TValue> valueobj;
+            if (Cache.TryGetValue(key, out valueobj))
+            {
+               valueobj.Touch(expireSeconds);
             }
          }
       }
