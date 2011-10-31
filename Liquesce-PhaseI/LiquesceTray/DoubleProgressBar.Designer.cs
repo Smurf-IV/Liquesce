@@ -125,9 +125,6 @@ namespace LiquesceTray
             ToolTip_panel1 = new System.Windows.Forms.ToolTip();
             ToolTip_panel1.SetToolTip(this.panel1, "Data");
 
-            ToolTip_panel2 = new System.Windows.Forms.ToolTip();
-            ToolTip_panel2.SetToolTip(this.panel2, "Backup");
-
             ToolTip_free = new System.Windows.Forms.ToolTip();
             ToolTip_free.SetToolTip(this, "Free Space");
 
@@ -471,7 +468,6 @@ namespace LiquesceTray
         private Panel panel1;
         private Panel panel2;
         ToolTip ToolTip_panel1;
-        ToolTip ToolTip_panel2;
         ToolTip ToolTip_free;
         private TransparentLabel labelChange; 
 

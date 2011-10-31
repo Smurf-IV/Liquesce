@@ -28,49 +28,51 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DropZone));
-            this.textBox1 = new System.Windows.Forms.TextBox();
-            this.listBox1 = new System.Windows.Forms.ListBox();
-            this.SuspendLayout();
-            // 
-            // textBox1
-            // 
-            this.textBox1.Location = new System.Drawing.Point(12, 12);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(547, 20);
-            this.textBox1.TabIndex = 0;
-            // 
-            // listBox1
-            // 
-            this.listBox1.FormattingEnabled = true;
-            this.listBox1.Location = new System.Drawing.Point(12, 38);
-            this.listBox1.Name = "listBox1";
-            this.listBox1.Size = new System.Drawing.Size(547, 95);
-            this.listBox1.TabIndex = 1;
-            // 
-            // DropZone
-            // 
-            this.AllowDrop = true;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(571, 145);
-            this.Controls.Add(this.listBox1);
-            this.Controls.Add(this.textBox1);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.MaximizeBox = false;
-            this.MinimizeBox = false;
-            this.Name = "DropZone";
-            this.Opacity = 0.75D;
-            this.ShowInTaskbar = false;
-            this.Text = "DropZone - Drag and drop your files or folders here to see on which disks they ar" +
-                "e!";
-            this.TopMost = true;
-            this.Load += new System.EventHandler(this.DropZone_Load);
-            this.DragDrop += new System.Windows.Forms.DragEventHandler(this.Dropper_DragDrop);
-            this.DragEnter += new System.Windows.Forms.DragEventHandler(this.Dropper_DragEnter);
-            this.ResumeLayout(false);
-            this.PerformLayout();
+         System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DropZone));
+         this.textBox1 = new System.Windows.Forms.TextBox();
+         this.listBox1 = new System.Windows.Forms.ListBox();
+         this.SuspendLayout();
+         // 
+         // textBox1
+         // 
+         this.textBox1.Location = new System.Drawing.Point(14, 13);
+         this.textBox1.Name = "textBox1";
+         this.textBox1.Size = new System.Drawing.Size(637, 22);
+         this.textBox1.TabIndex = 0;
+         // 
+         // listBox1
+         // 
+         this.listBox1.FormattingEnabled = true;
+         this.listBox1.ItemHeight = 14;
+         this.listBox1.Location = new System.Drawing.Point(14, 41);
+         this.listBox1.Name = "listBox1";
+         this.listBox1.Size = new System.Drawing.Size(637, 102);
+         this.listBox1.TabIndex = 1;
+         // 
+         // DropZone
+         // 
+         this.AllowDrop = true;
+         this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 14F);
+         this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+         this.ClientSize = new System.Drawing.Size(666, 156);
+         this.Controls.Add(this.listBox1);
+         this.Controls.Add(this.textBox1);
+         this.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+         this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+         this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+         this.MaximizeBox = false;
+         this.MinimizeBox = false;
+         this.Name = "DropZone";
+         this.Opacity = 0.75D;
+         this.ShowInTaskbar = false;
+         this.Text = "DropZone - Drag and drop your files or folders here to see on which disks they ar" +
+    "e!";
+         this.TopMost = true;
+         this.Load += new System.EventHandler(this.DropZone_Load);
+         this.DragDrop += new System.Windows.Forms.DragEventHandler(this.Dropper_DragDrop);
+         this.DragEnter += new System.Windows.Forms.DragEventHandler(this.Dropper_DragEnter);
+         this.ResumeLayout(false);
+         this.PerformLayout();
 
         }
 

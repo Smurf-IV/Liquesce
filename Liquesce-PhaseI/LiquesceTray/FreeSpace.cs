@@ -52,9 +52,6 @@ namespace LiquesceTray
         private const int COLUMN_FREE_SIZE = 80;
         private const int COLUMN_FREE_INDEX = 4;
 
-        private const int COLUMN_BACKUP_SIZE = 80;
-        private const int COLUMN_BACKUP_INDEX = 3;
-
         private const int COLUMN_DATA_SIZE = 80;
         private const int COLUMN_DATA_INDEX = 2;
 
@@ -66,7 +63,7 @@ namespace LiquesceTray
         private const int COLUMN_CHECK_2_SIZE = 200;
         private const int COLUMN_CHECK_2_INDEX = 6;
 
-        private const int TABLE_SIZE = COLUMN_NAME_SIZE + COLUMN_TOTAL_SIZE + COLUMN_FREE_SIZE + COLUMN_BACKUP_SIZE + COLUMN_DATA_SIZE + COLUMN_BAR_SIZE + 24;
+        private const int TABLE_SIZE = COLUMN_NAME_SIZE + COLUMN_TOTAL_SIZE + COLUMN_FREE_SIZE + COLUMN_DATA_SIZE + COLUMN_BAR_SIZE + 24;
         private const int TABLE_CELL_CNT = 6;
 
         private const int BAR_SCALE = 1000;
@@ -111,7 +108,7 @@ namespace LiquesceTray
                 Close();
             // Review comment:
             // Are you sure calling close in the form OnLoad actually closes the form.. The only way to do this with 
-            // garanteed resiults is to call it in the OnShown style calback
+            // garanteed results is to call it in the OnShown style callback
         }
 
 
@@ -158,7 +155,6 @@ namespace LiquesceTray
            tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, COLUMN_NAME_SIZE));
             tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, COLUMN_TOTAL_SIZE));
             tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_FREE_SIZE));
-            tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_BACKUP_SIZE));
             tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_DATA_SIZE));
             tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_CHECK_1_SIZE));
             tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_CHECK_2_SIZE));
@@ -221,22 +217,6 @@ namespace LiquesceTray
             leftSpace += 83;
 
             // 
-            // labelBackup
-            // 
-            Label labelBackup = new Label
-            {
-                Location =
-                   new System.Drawing.Point(CONTROL_OFFSET_LEFT + leftSpace,
-                                            CONTROL_OFFSET_TOP + 2),
-                Name = "labelBackup",
-                Size = new System.Drawing.Size(80, CONTROL_OFFSET_TOP_LABEL),
-                Text = "Backup Size:",
-                Anchor = AnchorStyles.Bottom
-            };
-            tableLayout.Controls.Add(labelBackup, COLUMN_BACKUP_INDEX, 0);
-            leftSpace += 83;
-
-            // 
             // labelData
             // 
             Label labelData = new Label
@@ -258,8 +238,7 @@ namespace LiquesceTray
             scaledMode = new CheckBox
             {
                 AutoSize = true,
-                Location =
-                   new System.Drawing.Point(CONTROL_OFFSET_LEFT + leftSpace, CONTROL_OFFSET_TOP),
+                Location = new System.Drawing.Point(CONTROL_OFFSET_LEFT + leftSpace, CONTROL_OFFSET_TOP),
                 Name = "scaledMode",
                 Size = new System.Drawing.Size(123, CONTROL_OFFSET_TOP_LABEL),
                 TabIndex = 0,
@@ -276,14 +255,13 @@ namespace LiquesceTray
             rightAligned = new CheckBox
             {
                 AutoSize = true,
-                Location =
-                   new System.Drawing.Point(CONTROL_OFFSET_LEFT + leftSpace, CONTROL_OFFSET_TOP),
+                Location = new System.Drawing.Point(CONTROL_OFFSET_LEFT + leftSpace, CONTROL_OFFSET_TOP),
                 Name = "rightAligned",
                 Size = new System.Drawing.Size(123, CONTROL_OFFSET_TOP_LABEL),
                 TabIndex = 0,
                 Text = "Right Aligned",
                 UseVisualStyleBackColor = true,
-                Checked = true,
+                Checked = false,
                 Anchor = (AnchorStyles.Right | AnchorStyles.Bottom)
             };
             tableLayout.Controls.Add(rightAligned, COLUMN_CHECK_2_INDEX, 0);
@@ -301,7 +279,6 @@ namespace LiquesceTray
            tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, COLUMN_NAME_SIZE));
             tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, COLUMN_TOTAL_SIZE));
             tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_FREE_SIZE));
-            tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_BACKUP_SIZE));
             tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_DATA_SIZE));
             tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_BAR_SIZE));
             tableLayout.Location = new System.Drawing.Point(3, 3);
@@ -404,14 +381,16 @@ namespace LiquesceTray
             // 
             // seperatorPanel
             // 
-            System.Windows.Forms.Panel seperatorPanel = new Panel();
-            seperatorPanel.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            seperatorPanel.Location = new System.Drawing.Point(0, 0);
-            seperatorPanel.Name = "seperatorPanel";
-            seperatorPanel.Size = new System.Drawing.Size(TABLE_SIZE, 4);
-            seperatorPanel.TabIndex = 0;
+           Panel seperatorPanel = new Panel
+                                     {
+                                        BorderStyle = BorderStyle.Fixed3D,
+                                        Location = new System.Drawing.Point(0, 0),
+                                        Name = "seperatorPanel",
+                                        Size = new System.Drawing.Size(TABLE_SIZE, 4),
+                                        TabIndex = 0
+                                     };
 
-            flowLayout.Controls.Add(seperatorPanel);
+           flowLayout.Controls.Add(seperatorPanel);
 
 
 
@@ -429,7 +408,6 @@ namespace LiquesceTray
                 tableLayouts[i].ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, COLUMN_NAME_SIZE));
                 tableLayouts[i].ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, COLUMN_TOTAL_SIZE));
                 tableLayouts[i].ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_FREE_SIZE));
-                tableLayouts[i].ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_BACKUP_SIZE));
                 tableLayouts[i].ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_DATA_SIZE));
                 tableLayouts[i].ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, COLUMN_BAR_SIZE));
                 tableLayouts[i].Location = new System.Drawing.Point(3, 3);
@@ -550,7 +528,6 @@ namespace LiquesceTray
             int writePriority1Disk = -1;
             int writePriority2Disk = -1;
             ulong mostFreeSpace1 = 0;
-            ulong mostFreeSpace2 = 0;
 
             for (int i = 0; i < config.SourceLocations.Count(); i++)
             {
