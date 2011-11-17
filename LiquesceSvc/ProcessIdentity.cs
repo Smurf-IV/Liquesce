@@ -40,20 +40,35 @@ namespace LiquesceSvc
          Process[] processesByName = Process.GetProcessesByName("system");
          if (processesByName.Length > 0)
             return (uint) processesByName[0].Id;
-         throw new SystemException("Unable to identify System.exx process ID");
+         throw new SystemException("Unable to identify System.exe process ID");
       }
 
       /// <summary>
-      /// Pass in the processID from Dokan and the Anonymouse delegate Action
+      /// Pass in the processID from Dokan and the Anonymouse delegate Action.
       /// </summary>
       /// <param name="processId"></param>
       /// <param name="act"></param>
+      /// <remarks>
+      /// If the process is the Syste.exe, then this has probably come over the SMB2 or other network protocol.
+      /// Which means that it will have checked the access permissions for whatever the action is going to be.
+      /// http://msdn.microsoft.com/en-us/library/gg465326%28v=PROT.10%29.aspx
+      /// </remarks>
       static public void Invoke(uint processId, Action act)
       {
-         if (systemProcessId == processId)
+         if (CouldBeSMB(processId))
             act();
          else
             InvokeHelper((int)processId, act);
+      }
+
+      /// <summary>
+      /// Does the processID match the system ID ?
+      /// </summary>
+      /// <param name="processId"></param>
+      /// <returns></returns>
+      public static bool CouldBeSMB(uint processId)
+      {
+         return (systemProcessId == processId);
       }
 
       private static void InvokeHelper(int processId, Action act)

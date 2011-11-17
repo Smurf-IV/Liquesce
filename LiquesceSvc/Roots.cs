@@ -23,31 +23,29 @@
 //  </summary>
 // --------------------------------------------------------------------------------------------------------------------
 #endregion
+
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Runtime.InteropServices;
 using LiquesceFacade;
 using NLog;
 
 namespace LiquesceSvc
 {
-   // this class delivers the current physical root of the disk which should be used next
-   // for file/folder creation.
-   class Roots
+   /// <summary>
+   /// this class delivers the current physical root of the disk which should be used next 
+   /// for file/folder creation.
+   /// It also handles a few other fileName operations like detection, and deletion.
+   /// </summary>
+   internal class Roots
    {
-      private readonly string PathDirectorySeparatorChar = Path.DirectorySeparatorChar.ToString();
+      public static readonly string PathDirectorySeparatorChar = Path.DirectorySeparatorChar.ToString();
       private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
       private readonly CacheHelper<string, FileSystemInfo> cachedRootPathsSystemInfo;
 
-      private readonly Dictionary<string, List<string>> foundDirectories = new Dictionary<string, List<string>>();
-      private readonly ReaderWriterLockSlim foundDirectoriesSync = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
-
-
-      private static ConfigDetails configDetails;
+      private readonly ConfigDetails configDetails;
 
       // constructor
       public Roots(ConfigDetails configDetailsTemp)
@@ -57,7 +55,7 @@ namespace LiquesceSvc
       }
 
 
-      public FileSystemInfo GetPath(string filename, bool isCreate = false)
+      public FileSystemInfo GetPath(string filename, ulong spaceRequired = 0)
       {
          FileSystemInfo fsi = null;
          try
@@ -73,12 +71,11 @@ namespace LiquesceSvc
                Log.Trace("Found in cache");
                return fsi;
             }
-            string foundPath = FindAllocationRootPath(filename);
+            string foundPath = FindAllocationRootPath(filename, spaceRequired);
             if (filename == PathDirectorySeparatorChar)
             {
                Log.Trace("Assuming Home directory so add new to cache and return");
                fsi = new DirectoryInfo(foundPath);
-               cachedRootPathsSystemInfo[filename] = fsi;
                return fsi;
             }
 
@@ -100,16 +97,55 @@ namespace LiquesceSvc
                Log.Trace("Not found in 1st mode source");
                return fsi;
             }
+
+            //-------------------------------------
+            Log.Trace("file/folder not found");
+            // So create a holder for the return and do not store
+            fsi = new FileInfo(Path.Combine(foundPath, searchFilename));
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException("GetPath threw: ", ex);
+         }
+         finally
+         {
+            if (fsi != null)
+            {
+               Log.Debug("GetPath from [{0}] found [{1}]", filename, fsi.FullName);
+               cachedRootPathsSystemInfo[filename] = fsi;
+            }
+            else
+            {
+               Log.Debug("GetPath found nothing for [{0}].", filename);
+            }
+         }
+         return fsi;
+      }
+
+      /// <summary>
+      /// Takes the SMB offset name and attempt to match against a knwon location.
+      /// This is indended to be used for the MoveFile workaround
+      /// </summary>
+      /// <param name="searchOffsetFilename"></param>
+      /// <param name="spaceRequired"></param>
+      /// <returns>will return string.Empty if not found</returns>
+      public FileSystemInfo GetPathRelatedtoShare(string searchOffsetFilename, ulong spaceRequired)
+      {
+         FileSystemInfo fsi = null;
+         try
+         {
             if (configDetails.KnownSharePaths != null)
             {
+               string foundPath = FindAllocationRootPath(PathDirectorySeparatorChar, spaceRequired);
+
                foreach (string sharePath in configDetails.KnownSharePaths)
                {
-                  string newPath = Path.Combine(sharePath, searchFilename);
+                  string newPath = Path.Combine(sharePath, searchOffsetFilename);
                   string relPath = newPath.Replace(Path.GetPathRoot(newPath), String.Empty);
                   if (!CheckAndGetType(newPath, Path.Combine(foundPath, relPath), out fsi))
                   {
                      // if (configDetails.SourceLocations != null)
-                     if ( configDetails.SourceLocations.Select(sourceLocation => Path.Combine(sourceLocation, relPath)).
+                     if (configDetails.SourceLocations.Select(sourceLocation => Path.Combine(sourceLocation, relPath)).
                            Any(newTarget => CheckAndGetType(newPath, newTarget, out fsi)))
                      {
                         Log.Trace("Found in source list");
@@ -122,25 +158,10 @@ namespace LiquesceSvc
                   }
                }
             }
-
-            //-------------------------------------
-            Log.Trace("file/folder not found");
-            // So create a holder for the return and do not store
-            fsi = new FileInfo(Path.Combine(foundPath, searchFilename));
-            cachedRootPathsSystemInfo[filename] = fsi;
          }
          catch (Exception ex)
          {
             Log.ErrorException("GetPath threw: ", ex);
-         }
-         finally
-         {
-            if (fsi != null)
-               Log.Debug("GetPath from [{0}] found [{1}]", filename, fsi.FullName);
-            else
-            {
-               Log.Debug("GetPath found nothing for [{0}]. isCreate=[{1}]", filename, isCreate);
-            }
          }
          return fsi;
       }
@@ -158,29 +179,24 @@ namespace LiquesceSvc
          fsi = new FileInfo(newTarget);
          if (!fsi.Exists)
             fsi = new DirectoryInfo(newTarget);
-         if (fsi.Exists)
-         {
-            cachedRootPathsSystemInfo[filename] = fsi;
-            return true;
-         }
-         return false;
+         return fsi.Exists;
       }
 
 
-      public static string[] GetAllPaths(string relativefolder)
+      public string[] GetAllPaths(string relativefolder)
       {
          return configDetails.SourceLocations.Select(t => t + relativefolder).Where(Directory.Exists).ToArray();
       }
 
       // *** NTh Change ***
       // Get the paths of all the copies of the file
-      public static string[] GetAllFilePaths(string file_name)
+      public string[] GetAllFilePaths(string file_name)
       {
          return configDetails.SourceLocations.Select(t => t + file_name).Where(File.Exists).ToArray();
       }
 
 
-      public static string GetRoot(string path)
+      public string GetRoot(string path)
       {
          if (!String.IsNullOrEmpty(path))
             foreach (string t in configDetails.SourceLocations.Where(path.Contains))
@@ -193,7 +209,7 @@ namespace LiquesceSvc
 
 
       // return the path from a inputpath seen relative from the root
-      public static string GetRelative(string path)
+      public string GetRelative(string path)
       {
          return path.Replace(GetRoot(path), String.Empty);
       }
@@ -201,29 +217,29 @@ namespace LiquesceSvc
 
 
       // this method returns a path (real physical path) of a place where the next folder/file root can be.
-      private static string FindAllocationRootPath(string relativeFolder)
+      private string FindAllocationRootPath(string relativeFolder, ulong spaceRequired)
       {
          string foundRoot;
          switch (configDetails.AllocationMode)
          {
             case ConfigDetails.AllocationModes.folder:
-               foundRoot = GetSourceThatMatchesThisFolderWithSpace(relativeFolder);
+               foundRoot = GetSourceThatMatchesThisFolderWithSpace(relativeFolder, spaceRequired);
                if (string.IsNullOrEmpty(foundRoot))
                   goto case ConfigDetails.AllocationModes.priority;
                break;
 
             case ConfigDetails.AllocationModes.priority:
-               foundRoot = GetHighestPrioritySourceWithSpace();
+               foundRoot = GetHighestPrioritySourceWithSpace(spaceRequired);
                if (string.IsNullOrEmpty(foundRoot))
                   goto case ConfigDetails.AllocationModes.balanced;
                break;
 
             case ConfigDetails.AllocationModes.balanced:
-               foundRoot = GetSourceWithMostFreeSpace();
+               foundRoot = GetSourceWithMostFreeSpace(spaceRequired);
                break;
 
             default:
-               foundRoot = GetSourceWithMostFreeSpace();
+               foundRoot = GetSourceWithMostFreeSpace(spaceRequired);
                break;
          }
          return foundRoot;
@@ -233,7 +249,7 @@ namespace LiquesceSvc
       // returns the root for:
       //  1. the first disk where relativeFolder exists and there is enough free space
       //  2. priority mode
-      private static string GetSourceThatMatchesThisFolderWithSpace(string relativeFolder)
+      private string GetSourceThatMatchesThisFolderWithSpace(string relativeFolder, ulong spaceRequired)
       {
          // remove the last \ to delete the last directory
          relativeFolder = relativeFolder.TrimEnd(new char[] { Path.DirectorySeparatorChar });
@@ -246,7 +262,7 @@ namespace LiquesceSvc
             if (GetDiskFreeSpaceEx(t, out lpFreeBytesAvailable, out num2, out num3))
             {
                // see if enough space
-               if (lpFreeBytesAvailable > configDetails.HoldOffBufferBytes)
+               if (lpFreeBytesAvailable > spaceRequired)
                {
                   string testpath = t + relativeFolder;
 
@@ -261,12 +277,12 @@ namespace LiquesceSvc
 
 
       // returns the next root with the highest priority
-      private static string GetHighestPrioritySourceWithSpace()
+      private string GetHighestPrioritySourceWithSpace(ulong spaceRequired)
       {
          ulong lpFreeBytesAvailable = 0, num2, num3;
          foreach (string t in from t in configDetails.SourceLocations
                               where GetDiskFreeSpaceEx(t, out lpFreeBytesAvailable, out num2, out num3)
-                              where lpFreeBytesAvailable > configDetails.HoldOffBufferBytes
+                              where lpFreeBytesAvailable > spaceRequired
                               select t)
          {
             return t;
@@ -276,7 +292,7 @@ namespace LiquesceSvc
 
 
       // returns the root with the most free space
-      private static string GetSourceWithMostFreeSpace()
+      private string GetSourceWithMostFreeSpace(ulong spaceRequired)
       {
          ulong highestFreeSpace = 0;
          string sourceWithMostFreeSpace = string.Empty;
@@ -294,42 +310,13 @@ namespace LiquesceSvc
             }
          });
 
-         // return the largest regardless
-         return sourceWithMostFreeSpace;
+         return (highestFreeSpace < spaceRequired) ? string.Empty : sourceWithMostFreeSpace;
       }
 
-      public static bool RelativeFileExists(string relative)
+      public bool RelativeFileExists(string relative)
       {
          return configDetails.SourceLocations.Any(t => File.Exists(t + relative));
       }
-
-
-      public static bool RelativeFolderExists(string relative)
-      {
-         return configDetails.SourceLocations.Any(t => Directory.Exists(t + relative));
-      }
-
-
-      public static string FilterDirFromPath(string path, string filterdir)
-      {
-         return path.Replace("\\" + filterdir, String.Empty);
-      }
-
-
-
-      // for debugging to print all disks and it's availabel space
-      private static void LogToString()
-      {
-         Log.Trace("Printing all disks:");
-         ulong num = 0, num2, num3;
-         foreach (string t in
-            configDetails.SourceLocations.Where(t => GetDiskFreeSpaceEx(t, out num, out num2, out num3)))
-         {
-            Log.Trace("root[{0}], space[{1}]", t, num);
-         }
-      }
-
-
 
       // adds the root path to cachedRootPathsSystemInfo dicionary for a specific file
       public string TrimAndAddUnique(FileSystemInfo fsi)
@@ -348,11 +335,12 @@ namespace LiquesceSvc
       private string findOffsetPath(string fullFilePath)
       {
          int index = configDetails.SourceLocations.FindIndex(fullFilePath.StartsWith);
-         if (index >= 0)
-         {
-            return fullFilePath.Remove(0, configDetails.SourceLocations[index].Length);
-         }
-         return string.Empty;
+         return index >= 0 ? fullFilePath.Remove(0, configDetails.SourceLocations[index].Length) : string.Empty;
+      }
+
+      public string ReturnMountFileName(string actualFilename)
+      {
+         return string.Concat(configDetails.DriveLetter, ":", findOffsetPath(actualFilename));
       }
 
       // removes a root from root lookup
@@ -382,23 +370,12 @@ namespace LiquesceSvc
 
       public void DeleteDirectory(string filename)
       {
-         using (foundDirectoriesSync.UpgradableReadLock())
+         foreach (string path in GetAllFilePaths(filename))
          {
-            // Only delete the directories that this knew about before the delete was called 
-            // (As the user may be moving files into the sources from the mount !!)
-            List<string> targetDeletes = foundDirectories[filename];
-            if (targetDeletes != null)
-               for (int index = 0; index < targetDeletes.Count; index++)
-               {
-                  // Use an index for speed (It all counts !)
-                  string fullPath = targetDeletes[index];
-                  Log.Trace("Deleting matched dir [{0}]", fullPath);
-                  Directory.Delete(fullPath, false);
-               }
-            using (foundDirectoriesSync.WriteLock())
-               foundDirectories.Remove(filename);
-            RemoveFromLookup(filename);
+            Log.Trace("Deleting matched dir [{0}]", path);
+            Directory.Delete(path, false);
          }
+         RemoveFromLookup(filename);
       }
 
       public void DeleteFile(string filename)
@@ -408,6 +385,7 @@ namespace LiquesceSvc
          Log.Trace("DeleteOnClose File");
          foreach (string path in GetAllFilePaths(filename))
          {
+            Log.Trace("Deleting matched dir [{0}]", path);
             File.Delete(path);
          }
          RemoveFromLookup(filename);

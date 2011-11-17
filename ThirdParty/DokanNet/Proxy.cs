@@ -9,19 +9,22 @@ using ComTypes = System.Runtime.InteropServices.ComTypes;
 
 namespace DokanNet
 {
+   /// <summary>
+   /// http://msdn.microsoft.com/en-us/library/aa363788%28VS.85%29.aspx
+   /// </summary>
    [StructLayout(LayoutKind.Sequential, Pack = 4)]
    public struct BY_HANDLE_FILE_INFORMATION
    {
-      public uint dwFileAttributes;
-      public ComTypes.FILETIME ftCreationTime;
-      public ComTypes.FILETIME ftLastAccessTime;
-      public ComTypes.FILETIME ftLastWriteTime;
+      private uint dwFileAttributes;
+      private ComTypes.FILETIME ftCreationTime;
+      private ComTypes.FILETIME ftLastAccessTime;
+      private ComTypes.FILETIME ftLastWriteTime;
       internal uint dwVolumeSerialNumber;
       public uint nFileSizeHigh;
       public uint nFileSizeLow;
-      internal uint dwNumberOfLinks;
-      internal uint nFileIndexHigh;
-      internal uint nFileIndexLow;
+      private uint dwNumberOfLinks;
+      private uint nFileIndexHigh;
+      private uint nFileIndexLow;
    }
 
    [StructLayout(LayoutKind.Sequential, Pack = 4)]
@@ -402,31 +405,12 @@ UNPROTECTED_SACL_SECURITY_INFORMATION  The SACL inherits ACEs from the parent ob
          {
             string file = GetFileName(rawFileName);
 
-            FileInformation fi = new FileInformation();
+            DokanFileInfo info = ConvertFileInfo(ref rawFileInfo);
 
-            int ret = operations.GetFileInformation(file, ref fi, ConvertFileInfo(ref rawFileInfo));
-
-            if (ret == 0)
-            {
-               rawHandleFileInformation.dwFileAttributes = (uint)fi.Attributes/* + FILE_ATTRIBUTE_VIRTUAL*/;
-
-               rawHandleFileInformation.ftCreationTime.dwHighDateTime = (int)(fi.CreationTime.ToFileTime() >> 32);
-               rawHandleFileInformation.ftCreationTime.dwLowDateTime = (int)(fi.CreationTime.ToFileTime() & 0xffffffff);
-
-               rawHandleFileInformation.ftLastAccessTime.dwHighDateTime = (int)(fi.LastAccessTime.ToFileTime() >> 32);
-               rawHandleFileInformation.ftLastAccessTime.dwLowDateTime = (int)(fi.LastAccessTime.ToFileTime() & 0xffffffff);
-
-               rawHandleFileInformation.ftLastWriteTime.dwHighDateTime = (int)(fi.LastWriteTime.ToFileTime() >> 32);
-               rawHandleFileInformation.ftLastWriteTime.dwLowDateTime = (int)(fi.LastWriteTime.ToFileTime() & 0xffffffff);
-
+            int ret = operations.GetFileInformationNative(file, ref rawHandleFileInformation, info);
+            rawFileInfo.IsDirectory = Convert.ToByte(info.IsDirectory);
+            if ( ret == 0 )
                rawHandleFileInformation.dwVolumeSerialNumber = volumeSerialNumber;
-
-               rawHandleFileInformation.nFileSizeLow = (uint)(fi.Length & 0xffffffff);
-               rawHandleFileInformation.nFileSizeHigh = (uint)(fi.Length >> 32);
-               rawHandleFileInformation.dwNumberOfLinks = 1;
-               rawHandleFileInformation.nFileIndexHigh = 0;
-               rawHandleFileInformation.nFileIndexLow = (uint)fi.FileName.GetHashCode();
-            }
 
             return ret;
          }
@@ -536,9 +520,9 @@ UNPROTECTED_SACL_SECURITY_INFORMATION  The SACL inherits ACEs from the parent ob
                   {
                      StringBuilder sb = new StringBuilder();
                      sb.AppendLine();
-                     for (int index = 0; index < files.Length; index++)
+                     // It's an Array, so a foreach is easier to read
+                     foreach (FileInformation fileInformation in files)
                      {
-                        FileInformation fileInformation = files[index];
                         sb.AppendLine(fileInformation.FileName);
                      }
                      Log.Trace(sb.ToString());
@@ -554,12 +538,10 @@ UNPROTECTED_SACL_SECURITY_INFORMATION  The SACL inherits ACEs from the parent ob
                && (files != null)
                )
             {
-               // ReSharper disable ForCanBeConvertedToForeach
-               // Used a single entry call to speed up the "enumeration" of the list
-               for (int index = 0; index < files.Length; index++)
-               // ReSharper restore ForCanBeConvertedToForeach
+               // It's an Array, so a foreach is easier to read
+               foreach (FileInformation t in files)
                {
-                  Addto(fill, ref rawFileInfo, files[index]);
+                  Addto(fill, ref rawFileInfo, t);
                }
             }
             return ret;
@@ -728,14 +710,7 @@ UNPROTECTED_SACL_SECURITY_INFORMATION  The SACL inherits ACEs from the parent ob
          {
             string file = GetFileName(rawFileName);
             string newfile = GetFileName(rawNewFileName);
-            // *** NTh Change ***
-            // Found that dokan some times in the rawNewFileName it has part of the rawFileName directory, so we should try to fix that in 
-            // .net or in the driver... for now we fix this here... :)
-            if (file.LastIndexOf("\\") > 0)
-            {
-               newfile = newfile.Substring(newfile.IndexOf(file.Substring(0, file.LastIndexOf("\\"))) + file.Substring(0, file.LastIndexOf("\\")).Length);
-            }
-
+            Log.Trace("MoveFileProxy replaceIfExisting [{0}] file: [{1}] newfile: [{2}]", rawReplaceIfExisting, file, newfile);
             return operations.MoveFile(file, newfile, (rawReplaceIfExisting != 0), ConvertFileInfo(ref rawFileInfo));
          }
          catch (Exception ex)

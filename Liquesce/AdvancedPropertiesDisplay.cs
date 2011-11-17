@@ -131,8 +131,7 @@ namespace Liquesce
       [DescriptionAttribute("The allocation strategy how new files or folders are placed on the storage disks:\n" +
           "folder = try to keep files together on one disk (classic behavior)\n" +
           "priority = strict one disk after the other method\n" +
-          "balanced = balance the availabel space on all storage disks\n" +
-          "backup = balanced with a \"_backup\" folder to get a secure allocated backup"
+          "balanced = balance the availabel space on all storage disks"
           ),
       DisplayName("Disk Allocation Mode")
       , TypeConverter(typeof(AllocationModeValues))

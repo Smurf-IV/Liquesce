@@ -172,6 +172,7 @@
       <DependentUpon>Settings1.settings</DependentUpon>
     </Compile>
     <Compile Include="ShellAPI.cs" />
+    <Compile Include="ShellChangeNotify.cs" />
     <Compile Include="XMoveDirectory.cs" />
     <Compile Include="XMoveFile.cs" />
   </ItemGroup>
@@ -231,7 +232,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="YearStamp.MonthStamp.DayStamp.Increment" />
+      <UserProperties BuildVersion_BuildVersioningStyle="YearStamp.MonthStamp.DayStamp.Increment" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

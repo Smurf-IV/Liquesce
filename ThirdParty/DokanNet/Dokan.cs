@@ -35,7 +35,7 @@ namespace DokanNet
       public const int ERROR_INSUFFICIENT_BUFFER = -122;
       public const int ERROR_INVALID_NAME = -123;
       public const int ERROR_DIR_NOT_EMPTY = -145; // MessageText: The directory is not empty.
-      public const int ERROR_ALREADY_EXISTS = -183;// MessageText: Cannot create a file when that file already exists.
+      public const int ERROR_ALREADY_EXISTS = -183;// MessageText: Cannot create a file / Directory when that file already exists.
       public const int ERROR_EXCEPTION_IN_SERVICE = -1064;//  An exception occurred in the service when handling thecontrol request.
 
       #endregion

@@ -154,6 +154,7 @@ namespace LiquesceSvc
                {
                   Log.Info("DokanVersion:[{0}], DokanDriverVersion[{1}]", Dokan.DokanVersion(), Dokan.DokanDriverVersion());
                   Dokan.DokanUnmount(mountedDriveLetter);
+                  ShellChangeNotify.Unmount(mountedDriveLetter);
                }
                catch (Exception ex)
                {
@@ -335,6 +336,7 @@ namespace LiquesceSvc
          {
             FireStateChange(LiquesceSvcState.Unknown, "Stop has been requested");
             int retVal = Dokan.DokanUnmount(mountedDriveLetter);
+            ShellChangeNotify.Unmount(mountedDriveLetter);
             Log.Info("Stop returned[{0}]", retVal);
          }
       }
