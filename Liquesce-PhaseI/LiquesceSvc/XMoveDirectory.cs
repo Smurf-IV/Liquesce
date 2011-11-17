@@ -45,14 +45,7 @@ namespace LiquesceSvc
             string fileSource = Path.Combine( pathSource.FullName, filein.Name);
             string fileTarget = Path.Combine( pathTarget.FullName, filein.Name);
 
-            // test whole liquesce drive and not only one physical drive
-            bool fileIsInTarget = Roots.RelativeFileExists(Roots.GetRelative(fileTarget));
-
-            // if replace activated or file is not availabel on target
-            if (replaceIfExisting || !fileIsInTarget)
-            {
-               File.Move(fileSource, fileTarget);
-            }
+            XMoveFile.MoveFileEx(fileSource, fileTarget, replaceIfExisting);
          }
 
          // for every subfolder recurse

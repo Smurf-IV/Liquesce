@@ -53,7 +53,7 @@ namespace DokanNet
 
       int FlushFileBuffers( string filename, DokanFileInfo info);
 
-      int GetFileInformation( string filename, ref FileInformation fileinfo, DokanFileInfo info);
+      int GetFileInformationNative( string filename, ref BY_HANDLE_FILE_INFORMATION rawHandleFileInformation, DokanFileInfo info);
 
       int FindFiles(string filename, out FileInformation[] files, DokanFileInfo info);
 
