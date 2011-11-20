@@ -45,13 +45,38 @@ namespace LiquesceSvc
       /// <param name="newName">FullPath to new</param>
       /// <param name="replaceIfExisting"></param>
       /// <param name="info"></param>
-      public static void Move(Roots roots, string oldName, string newName, bool replaceIfExisting, DokanFileInfo info)
+      public static void Move(Roots roots, string oldName, string newName, bool replaceIfExisting, bool isDirectory, uint processID)
       {
          Log.Info("MoveFile replaceIfExisting [{0}] filename: [{1}] newname: [{2}]", replaceIfExisting, oldName, newName);
 
-         if (!info.IsDirectory)
+         FileSystemInfo pathSource = roots.GetPath(oldName);
+         ulong pathSource_Length = (ulong) (isDirectory?0:(pathSource as FileInfo).Length);
+         FileSystemInfo pathTarget;
+         // Got to handle defect / Issue "http://code.google.com/p/dokan/issues/detail?id=238" 
+         if (ProcessIdentity.CouldBeSMB(processID)
+            && (600 == Dokan.DokanVersion())
+            )
          {
-            FileInfo pathSource = roots.GetPath(oldName) as FileInfo;
+            Log.Warn("ProcessID indicates that this could be an SMB redirect. Workaround dokan issue 238!");
+            int lastIndex = oldName.LastIndexOf(Roots.PathDirectorySeparatorChar);
+            string offsetPath = (lastIndex > -1) ? newName.Remove(0, lastIndex + 1) : newName;
+            pathTarget = roots.GetPathRelatedtoShare(offsetPath, 0);
+            newName = roots.GetRelative(pathTarget.FullName);
+
+         }
+         // Now check to see if this has enough space to make a "Copy" before the atomic delete of MoveFileEX
+         pathTarget = roots.GetPath(newName, pathSource_Length);
+         string pathTarget_FullName = pathTarget.FullName;
+         // Now check to see if this file exists, or exists in another location (Due to share redirect)
+         if (pathTarget.Exists 
+            && !replaceIfExisting
+            )
+         {
+            throw new System.ComponentModel.Win32Exception(Dokan.ERROR_ALREADY_EXISTS* -1); // Need to remove the Dokan -ve, It will be put back in the catch
+         }
+
+         if (!isDirectory)
+         {
             //1 Same directory Rename Scenario:
             //   MoveFileProxy replaceIfExisting [0] file: [\Test1\ds\New Text Document (2).txt] newfile: [\Test1\ds\test.txt] 
             //
@@ -82,53 +107,32 @@ namespace LiquesceSvc
             //   MoveFile Should be used to go to the Recycler dependent on the Drive Format Type and ACL Status
             //
 
-            FileSystemInfo pathTarget;
-            // Got to handle defect / Issue "http://code.google.com/p/dokan/issues/detail?id=238" 
-            if (ProcessIdentity.CouldBeSMB(info.ProcessId)
-               && (600 == Dokan.DokanVersion())
-               )
-            {
-               Log.Warn("ProcessID indicates that this could be an SMB redirect. Workaround dokan issue 238!");
-               int lastIndex = oldName.LastIndexOf(Roots.PathDirectorySeparatorChar);
-               string offsetPath = (lastIndex > -1) ? newName.Remove(0,lastIndex+1) : newName;
-               pathTarget = roots.GetPathRelatedtoShare(offsetPath, (ulong)pathSource.Length);
-            }
-            else
-            {
-               // Now check to see if this has enough space to make a "Copy" before the atomic delete of MoveFileEX
-               pathTarget = roots.GetPath(newName, (ulong) pathSource.Length);
-            }
-            string pathTarget_FullName = pathTarget.FullName;
-            if ( pathTarget.Exists
-               || (roots.GetRelative(pathSource.FullName) == roots.GetRelative(pathTarget_FullName))
-               )
-            {
-               if (!replaceIfExisting)
-               {
-                  int lastWin32Error = Dokan.ERROR_ALREADY_EXISTS;
-                  lastWin32Error *= -1; // Need to remove the Dokan -ve, It will be put back in the catch
-                  Marshal.ThrowExceptionForHR(lastWin32Error & (int) ushort.MaxValue | -2147024896, new IntPtr(-1));
-               }
-            }
             // The new target might be on a different drive, so re-create the folder path to the new location
             int lastPathIndex = pathTarget_FullName.LastIndexOf(Roots.PathDirectorySeparatorChar);
             string newPath = (lastPathIndex > -1) ? pathTarget_FullName.Remove(lastPathIndex) : pathTarget_FullName;
             if ( !string.IsNullOrEmpty( newPath ) )
                Directory.CreateDirectory(newPath);
             MoveFileEx(pathSource.FullName, pathTarget_FullName, replaceIfExisting);
-            // While we are here, remove 
-            roots.RemoveTargetFromLookup(oldName); // File has been removed
-            roots.RemoveTargetFromLookup(newName); // Not a null file anymore
          }
          else
          {
-            // getting all paths of the source location and then rename every 
-            foreach (string dirSource in roots.GetAllPaths(oldName))
+            // Cannot use MoveFileEx, as this app needs to remove the old cached values.
+            // So call a function to move each file, and subdir recusively via XMoveDirectory
+            // Repeat the file tests above, but use directories instead.
+            string[] allPossibleTargets = roots.GetAllPaths(oldName);
+            // Now do them backwards so that overwrites are done correctly
+            Array.Reverse(allPossibleTargets);
+            XMoveDirectory dirMover = new XMoveDirectory();
+            // newName will already be calculated as the relative offset (Should have starting '\')
+            foreach (string dirSource in allPossibleTargets)
             {
-               string dirTarget = roots.GetRoot(dirSource) + newName;
-               XMoveDirectory.Move(roots, dirSource, dirTarget, replaceIfExisting);
+               string currentNewTarget = Path.GetFullPath(roots.GetRoot(dirSource) + newName);
+               dirMover.Move(roots, dirSource, currentNewTarget, replaceIfExisting);
             }
          }
+         // While we are here, remove 
+         roots.RemoveTargetFromLookup(oldName); // File has been removed
+         roots.RemoveTargetFromLookup(newName); // Not a null file anymore
       }
 
       internal static void MoveFileEx(string pathSource, string pathTarget, bool replaceIfExisting)
@@ -149,14 +153,14 @@ namespace LiquesceSvc
 
          Log.Trace("MoveFileExW(pathSource[{0}], pathTarget[{1}], dwFlags[{2}])", pathSource, pathTarget, dwFlags);
          if (!MoveFileExW(pathSource, pathTarget, dwFlags))
-            Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error(), new IntPtr(-1));
+            throw new System.ComponentModel.Win32Exception();
       }
 
       /// <summary>
       /// http://pinvoke.net/default.aspx/Enums/MoveFileFlags.html
       /// </summary>
       [Flags]
-      enum MoveFileFlags
+      public enum MoveFileFlags
       {
          MOVEFILE_REPLACE_EXISTING = 0x00000001,
          MOVEFILE_COPY_ALLOWED = 0x00000002,

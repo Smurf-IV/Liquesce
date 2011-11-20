@@ -108,10 +108,11 @@ namespace LiquesceSvc
                updateWith |= HChangeNotifyEventID.SHCNE_ATTRIBUTES;
             if ((type & UpdateType.Size) == UpdateType.Size)
                updateWith |= HChangeNotifyEventID.SHCNE_FREESPACE;
+            
             using (ConvertStringToIntPtr str = new ConvertStringToIntPtr(actualFilename))
                SHChangeNotify(updateWith,
-                              HChangeNotifyFlags.SHCNF_PATHW | HChangeNotifyFlags.SHCNF_FLUSHNOWAIT, str.Ptr,
-                              IntPtr.Zero);
+                              HChangeNotifyFlags.SHCNF_PATHW | HChangeNotifyFlags.SHCNF_FLUSHNOWAIT, 
+                              str.Ptr, IntPtr.Zero);
          }
 
       }

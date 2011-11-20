@@ -23,6 +23,7 @@
 //  </summary>
 // --------------------------------------------------------------------------------------------------------------------
 #endregion
+
 using System;
 using System.ComponentModel;
 using LiquesceFacade;
@@ -39,35 +40,17 @@ namespace Liquesce
          if (cd != null)
          {
             ThreadCount = cd.ThreadCount;
-            LockTimeoutmSec = cd.LockTimeout;
             DokanDebugMode = cd.DebugMode;
             AllocationMode = cd.AllocationMode.ToString();
             HoldOffMBytes = cd.HoldOffBufferBytes / (1024 * 1024);
-            BufferReadSizeKBytes = cd.BufferReadSize / 1024;
             ServiceLogLevel = cd.ServiceLogLevel;
             CacheLifetimeSeconds = cd.CacheLifetimeSeconds;
          }
       }
 
-      private uint bufferReadSizeKBytes;
-
-      [DescriptionAttribute("The number of KBytes allocated to buffered    file reading (4KB is the OS default!).\rRange 1 <-> 256"),
-      DisplayName("Buffer Read Size")
-      , CategoryAttribute("File")
-      ]
-      public uint BufferReadSizeKBytes
-      {
-         get { return bufferReadSizeKBytes; }
-         set
-         {
-            if (value >= 1
-            && value <= 256) bufferReadSizeKBytes = value;
-         }
-      }
-
       private ulong holdOffMBytes;
 
-      [DescriptionAttribute("Number of free MegaBytes to leave, before attempting to use another drive to write to.\rRange 1 <-> 1024000"),
+      [DescriptionAttribute("Number of free MegaBytes to leave, before attempting to use another drive to write to.\rUsed in Priority and Folder modes.\rRange 1 <-> 1024000"),
       DisplayName("Hold Off Buffer")
       , CategoryAttribute("File")
       ]
@@ -81,27 +64,11 @@ namespace Liquesce
          }
       }
 
-      [DescriptionAttribute("Later on will allow Dokan Debug information to be captured into the Service log."),
+      [DescriptionAttribute("Turn Dokan Debug information on, to all it to be captured in an appropriate app."),
       DisplayName("Dokan Debug Mode")
       , CategoryAttribute("Dokan")
       ]
       public bool DokanDebugMode { get; set; }
-
-      private int lockTimeoutmSec;
-
-      [DescriptionAttribute("Useful if you are getting file overwrites in some applications that perform quick creation deletion / creation of files, and multiple threads - Can be set to -1 for infinite.\rRange -1 <-> 100000"),
-      DisplayName("File Lock Timeout (mSec)")
-      , CategoryAttribute("File")
-      ]
-      public int LockTimeoutmSec
-      {
-         get { return lockTimeoutmSec; }
-         set
-         {
-            if (value >= -1
-               && value <= 100000) lockTimeoutmSec = value;
-         }
-      }
 
       private ushort threadCount;
 
@@ -128,10 +95,11 @@ namespace Liquesce
       public string ServiceLogLevel { get; set; }
 
 
-      [DescriptionAttribute("The allocation strategy how new files or folders are placed on the storage disks:\n" +
-          "folder = try to keep files together on one disk (classic behavior)\n" +
-          "priority = strict one disk after the other method\n" +
-          "balanced = balance the availabel space on all storage disks"
+      [DescriptionAttribute("The allocation strategy applied to new files or folders on how they are placed on the storage disks:\r" +
+          "Folder = try to keep files together on one disk (classic behavior)\r" +
+          "Priority = strict one disk after the other method\r" +
+          "Balanced = balance the available space on all storage disks; Whichever disc has the most space will be used\n" +
+          "See http://liquesce.codeplex.com/wikipage?title=How%20are%20the%20files%20spread%20across%20the%20drives%20%3f"
           ),
       DisplayName("Disk Allocation Mode")
       , TypeConverter(typeof(AllocationModeValues))

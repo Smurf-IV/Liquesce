@@ -1,8 +1,8 @@
 {\rtf1\ansi\ansicpg1252\deff0{\fonttbl{\f0\fswiss\fprq2\fcharset0 Tahoma;}{\f1\fnil\fcharset0 Courier New;}{\f2\fmodern\fprq1\fcharset0 Courier New;}{\f3\fnil Courier New;}{\f4\fnil Consolas;}{\f5\fnil\fcharset0 Consolas;}}
-{\colortbl ;\red0\green0\blue0;\red0\green0\blue255;\red0\green128\blue0;}
+{\colortbl ;\red0\green0\blue0;\red0\green0\blue255;\red192\green80\blue77;\red0\green128\blue0;}
 {\*\generator Msftedit 5.41.21.2510;}\viewkind4\uc1\pard\cf1\lang2057\ul\b\f0\fs20 Welcome to the \i Liquesce \i0 Changelog\cf0\ulnone\b0\f1\par
 \cf1\f0\par
-Currently this is just a place holder for all the cool stuff that will be happening to this project :-)\par
+Currently this is just a place holder for all the cool stuff that has happened to this project :-)\par
 \par
 Keep an open eye on the \cf0\b{\field{\*\fldinst{HYPERLINK "http://liquesce.codeplex.com/"}}{\fldrslt{\ul\cf2 http://liquesce.codeplex.com/}}}\cf1\b0\f0\fs20  site.\par
 \par
@@ -19,21 +19,42 @@ Keep an open eye on the \cf0\b{\field{\*\fldinst{HYPERLINK "http://liquesce.code
 \f0\fs20 Service logs will go into \f3\fs19 "\cf2 $\{specialfolder:folder=CommonApplicationData\}/LiquesceSvc/Logs\cf0 "\par
 \f0\fs20\par
 \ul\b TODO\par
-\ulnone\b0 - Fix Issues\par
+\cf3\ulnone\b0 - Fix Issues\par
 - Change the space usage to be a table with scrollbars to give better layout options (And sorting etc.)\par
-\par
-\ul\b Issue\ulnone\b0\par
-- Win 7 (64) <-> win 7 (64) Maybe a Dokan bug see ticket {\field{\*\fldinst{HYPERLINK "http://code.google.com/p/dokan/issues/detail?id=168"}}{\fldrslt{\ul\cf2 http://code.google.com/p/dokan/issues/detail?id=168}}}\f0\fs20\par
-\cf1\par
-\par
+- Detect Drive Format of "FAT" and remove from the selection list\par
+- PureSync does not work due to issues with the dokan Driver\par
+- Teracopy 2.2 does not copy from Liquesce shares\par
+- 0.6.0 Sharing on x64 Host Locks up network on Host\par
+- Error 1450: Insufficient System Resources for Service\par
+- The TrayHelper GPF's when trying to start a service that is already started\par
+- In XP, the System Volume Information is explorable\par
+- On initial install, New Drive N shows in Management App\par
+- Default startup value needs to be set to Min value\par
+- The License warning in the installer needs to change\par
+- Messages sent to Application Tray fail for some users and on some OS's\par
+- Dokan Move A directory to its parent (Over a share) does not pass correct information to UserSpace\par
+\cf0\par
+\ul\b\par
+\cf1\ulnone\b0\par
 \cf0\ul\b Done\par
 \par
+2011-11-##\par
+\ulnone\b0 - Creating a directory - when that dir name already exists - can make the directory appear twice in explorer\par
+- Rename directory (Folder mode) will not rename all sources of that directory (via a share)\par
+- Remove the Stream usage for File API's\par
+- Removed C# File and now use Native API's for all file access\par
+- Use the Native handle as much as possible to speed up access to those API's\par
+- Use Transaction (And emulation for FAT32) for Directory renames\par
+- Make sure the Files are not actually moved (remain on source drive) during directory rename / move\par
+- Removed unused BufferSize, and LockTieout values\par
+\par
+\ul\b\par
 2011-11-17\par
-\ulnone\b0 - Switch to using for the \f4\fs19 GetFileInformationByHandle\f5 () \f0\fs20 for speed (Probably) and direct return of uptodate information from the native file system.\par
+\ulnone\b0 - Switch to using for the \f4\fs19 GetFileInformationByHandle\f5 () \f0\fs20 for speed (Probably) and direct return of upto date information from the native file system.\par
 - Fix the "Left over" text for the backup in the space display.\par
 - Re-focused the need for security on the GetFileInformation and SetFile operations.\par
 - Add code to inform explorer (And other Apps via OS) that things have changed in the mounted drive [\f4\fs19 SHChangeNotify\f5  API]\f0\fs20 .\par
-- Sort out the code for the file renames in Win 7 and \cf3\f4\fs19 "{\field{\*\fldinst{HYPERLINK "http://code.google.com/p/dokan/issues/detail?id=238"}}{\fldrslt{\ul\cf2 http://code.google.com/p/dokan/issues/detail?id=238}}}\f4\fs19 " \par
+- Sort out the code for the file renames in Win 7 and \cf4\f4\fs19 "\cf0{\field{\*\fldinst{HYPERLINK "http://code.google.com/p/dokan/issues/detail?id=238"}}{\fldrslt{\ul\cf2 http://code.google.com/p/dokan/issues/detail?id=238}}}\cf4\f4\fs19 " \par
 \cf0\par
 \ul\b\f0\fs20\par
 2011-10-30\par
@@ -62,7 +83,7 @@ Keep an open eye on the \cf0\b{\field{\*\fldinst{HYPERLINK "http://liquesce.code
 - Implement workaround for \f4\fs19{\field{\*\fldinst{HYPERLINK "http://code.google.com/p/dokan/issues/detail?id=209"}}{\fldrslt{\ul\cf2 http://code.google.com/p/dokan/issues/detail?id=209}}}\f5\fs19  as manifest does not work for share access\f0\fs20\par
 - Fix the tray menu to only have service control when the correct key sequence is held.\par
 \ul\b\par
-2011-06-01-\par
+2011-06-01\par
 \ulnone\b0 Merge fixes from Jose:\par
 - Optimisation in fileOpen to minimise use of File.Exists(...)\par
 - Optimisation in MoveFile to keep the files on the same drive (Faster move result)\par

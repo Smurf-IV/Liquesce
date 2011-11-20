@@ -60,6 +60,8 @@ namespace LiquesceSvc
          FileSystemInfo fsi = null;
          try
          {
+            // Even A directory requires 4K to be created !
+            spaceRequired += 16384;
             if (String.IsNullOrWhiteSpace(filename))
             {
                Log.Trace("Win 7 (x64) sometimes passes in a blank");
@@ -83,10 +85,9 @@ namespace LiquesceSvc
             if (String.IsNullOrWhiteSpace(filename))
                throw new ArgumentNullException(filename, "Not allowed to pass this length 2");
 
-            if (!CheckAndGetType(filename, Path.Combine(foundPath, searchFilename), out fsi))
+            if (!CheckAndGetType(Path.Combine(foundPath, searchFilename), out fsi))
             {
-               // if (configDetails.SourceLocations != null)
-               if (configDetails.SourceLocations.Select(sourceLocation => Path.Combine(sourceLocation, searchFilename)).Any(newTarget => CheckAndGetType(filename, newTarget, out fsi)))
+               if (configDetails.SourceLocations.Select(sourceLocation => Path.Combine(sourceLocation, searchFilename)).Any(newTarget => CheckAndGetType(newTarget, out fsi)))
                {
                   Log.Trace("Found in source list");
                   return fsi;
@@ -94,7 +95,7 @@ namespace LiquesceSvc
             }
             else
             {
-               Log.Trace("Not found in 1st mode source");
+               Log.Trace("found in 1st mode source");
                return fsi;
             }
 
@@ -129,32 +130,34 @@ namespace LiquesceSvc
       /// <param name="searchOffsetFilename"></param>
       /// <param name="spaceRequired"></param>
       /// <returns>will return string.Empty if not found</returns>
-      public FileSystemInfo GetPathRelatedtoShare(string searchOffsetFilename, ulong spaceRequired)
+      public FileSystemInfo GetPathRelatedtoShare(string searchOffsetFilename, ulong spaceRequired=0)
       {
          FileSystemInfo fsi = null;
          try
          {
+            // Even A directory requires 4K to be created !
+            spaceRequired += 16384;
+
             if (configDetails.KnownSharePaths != null)
             {
                string foundPath = FindAllocationRootPath(PathDirectorySeparatorChar, spaceRequired);
 
+// ReSharper disable LoopCanBeConvertedToQuery
+               // Do not allow Resharper to mangle this one, as it gets the variable scoping wrong !
                foreach (string sharePath in configDetails.KnownSharePaths)
+// ReSharper restore LoopCanBeConvertedToQuery
                {
-                  string newPath = Path.Combine(sharePath, searchOffsetFilename);
+                  string newPath = Path.GetFullPath(Path.Combine(sharePath, searchOffsetFilename));
                   string relPath = newPath.Replace(Path.GetPathRoot(newPath), String.Empty);
-                  if (!CheckAndGetType(newPath, Path.Combine(foundPath, relPath), out fsi))
+                  if (!CheckAndGetType(Path.Combine(foundPath, relPath), out fsi))
                   {
                      // if (configDetails.SourceLocations != null)
                      if (configDetails.SourceLocations.Select(sourceLocation => Path.Combine(sourceLocation, relPath)).
-                           Any(newTarget => CheckAndGetType(newPath, newTarget, out fsi)))
+                           Any(newTarget => CheckAndGetType(newTarget, out fsi)))
                      {
                         Log.Trace("Found in source list");
                         return fsi;
                      }
-                  }
-                  else
-                  {
-                     return fsi;
                   }
                }
             }
@@ -166,7 +169,7 @@ namespace LiquesceSvc
          return fsi;
       }
 
-      private bool CheckAndGetType(string filename, string newTarget, out FileSystemInfo fsi)
+      private bool CheckAndGetType(string newTarget, out FileSystemInfo fsi)
       {
          if (cachedRootPathsSystemInfo.TryGetValue(newTarget, out fsi))
          {
@@ -390,5 +393,6 @@ namespace LiquesceSvc
          }
          RemoveFromLookup(filename);
       }
+
    }
 }

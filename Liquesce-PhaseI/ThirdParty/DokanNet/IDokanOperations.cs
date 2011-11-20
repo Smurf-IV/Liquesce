@@ -51,7 +51,7 @@ namespace DokanNet
 
       int WriteFileNative(string filename, IntPtr rawBuffer, uint rawNumberOfBytesToWrite, ref uint rawNumberOfBytesWritten, long rawOffset, DokanFileInfo info);
 
-      int FlushFileBuffers( string filename, DokanFileInfo info);
+      int FlushFileBuffersNative( string filename, DokanFileInfo info);
 
       int GetFileInformationNative( string filename, ref BY_HANDLE_FILE_INFORMATION rawHandleFileInformation, DokanFileInfo info);
 
