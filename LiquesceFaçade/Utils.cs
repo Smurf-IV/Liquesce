@@ -74,8 +74,12 @@ System.IO.FileNotFoundException: The file specified in path was not found.
 System.NotSupportedException: path is in an invalid format. 
 
 System.Security.SecurityException: The caller does not have the required permission. 
-*/         
-         if ( ex.InnerException is SocketException)
+*/
+         if (ex is System.ComponentModel.Win32Exception)
+         {
+            return (ex as System.ComponentModel.Win32Exception).NativeErrorCode * -1;
+         }
+         else if ( ex.InnerException is SocketException)
          {
             return -((SocketException) ex.InnerException).ErrorCode;
          }

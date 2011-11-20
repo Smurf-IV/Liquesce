@@ -385,7 +385,7 @@ UNPROTECTED_SACL_SECURITY_INFORMATION  The SACL inherits ACEs from the parent ob
          try
          {
             string file = GetFileName(rawFileName);
-            int ret = operations.FlushFileBuffers(file, ConvertFileInfo(ref rawFileInfo));
+            int ret = operations.FlushFileBuffersNative(file, ConvertFileInfo(ref rawFileInfo));
             return ret;
          }
          catch (Exception ex)
@@ -408,7 +408,6 @@ UNPROTECTED_SACL_SECURITY_INFORMATION  The SACL inherits ACEs from the parent ob
             DokanFileInfo info = ConvertFileInfo(ref rawFileInfo);
 
             int ret = operations.GetFileInformationNative(file, ref rawHandleFileInformation, info);
-            rawFileInfo.IsDirectory = Convert.ToByte(info.IsDirectory);
             if ( ret == 0 )
                rawHandleFileInformation.dwVolumeSerialNumber = volumeSerialNumber;
 
