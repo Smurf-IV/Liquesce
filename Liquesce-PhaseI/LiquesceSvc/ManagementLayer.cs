@@ -186,7 +186,7 @@ namespace LiquesceSvc
                   // UseAltStream = true, // This needs all sorts of extra API's
                   UseKeepAlive = true,  // When you set TRUE on DokanOptions->UseKeepAlive, dokan library automatically unmounts 15 seconds after user-mode file system hanged up
                   NetworkDrive = false,  // Set this to true to see if it stops the recycler bin question until [workitem:7253] is sorted
-                                         // If the network is true then also need to have the correct version of the dokannp.dll that works on the installed OS
+                  // If the network is true then also need to have the correct version of the dokannp.dll that works on the installed OS
                   VolumeLabel = currentConfigDetails.VolumeLabel
                };
 
@@ -364,8 +364,13 @@ namespace LiquesceSvc
                List<string> fileSourceLocations = new List<string>(currentConfigDetails.SourceLocations);
                currentConfigDetails.SourceLocations.Clear();
 
-               fileSourceLocations.ForEach(
-                  location => currentConfigDetails.SourceLocations.Add(Path.GetFullPath(location).TrimEnd(Path.DirectorySeparatorChar)));
+               foreach (string location in fileSourceLocations.Select(fileSourceLocation => Path.GetFullPath(fileSourceLocation).TrimEnd(Path.DirectorySeparatorChar))
+                                    .Where(location => OkToAddThisDriveType(location))
+                                    )
+               {
+                  currentConfigDetails.SourceLocations.Add(location);
+               }
+
             }
          }
          catch (Exception ex)
@@ -382,6 +387,58 @@ namespace LiquesceSvc
                   WriteOutConfigDetails();
             }
          }
+
+      }
+
+      private bool OkToAddThisDriveType(string dr)
+      {
+         bool seemsOK = false;
+         try
+         {
+            Log.Debug(dr);
+            DriveInfo di = new DriveInfo(dr);
+            DriveType driveType = di.DriveType;
+            switch (driveType)
+            {
+               case DriveType.Removable:
+               case DriveType.Fixed:
+                  {
+                     string di_DriveFormat = di.DriveFormat;
+                     switch (di_DriveFormat.ToUpper())
+                     {
+                        case "DOKAN":
+                           Log.Warn("Removing the existing DOKAN drive as this would cause confusion ! [{0}]",
+                                    di.Name);
+                           seemsOK = false;
+                           break;
+                        case "FAT":
+                           Log.Warn("Removing FAT formated drive type, as this causes ACL Failures [{0}]", di.Name);
+                           seemsOK = false;
+                           break;
+                        default:
+                           seemsOK = true;
+                           break;
+                     }
+                  }
+                  break;
+               case DriveType.Unknown:
+               case DriveType.NoRootDirectory:
+               case DriveType.Network:
+               case DriveType.CDRom:
+               case DriveType.Ram:
+                  seemsOK = true;
+                  break;
+               default:
+                  throw new ArgumentOutOfRangeException("driveType", "Unknown type detected");
+            }
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException("Check Drive Format Type threw:", ex);
+            seemsOK = false;
+
+         }
+         return seemsOK;
 
       }
 

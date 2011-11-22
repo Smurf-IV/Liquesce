@@ -301,12 +301,12 @@
             0});
          this.DelayCreation.Location = new System.Drawing.Point(140, 2);
          this.DelayCreation.Maximum = new decimal(new int[] {
-            300000,
+            10000000,
             0,
             0,
             0});
          this.DelayCreation.Minimum = new decimal(new int[] {
-            250,
+            0,
             0,
             0,
             0});
@@ -314,11 +314,11 @@
          this.DelayCreation.Size = new System.Drawing.Size(101, 22);
          this.DelayCreation.TabIndex = 0;
          this.DelayCreation.ThousandsSeparator = true;
-         this.toolTip1.SetToolTip(this.DelayCreation, "Range 250 <-> 10000000\r\nThis is a Delay Start Service, But this gives the OS a li" +
+         this.toolTip1.SetToolTip(this.DelayCreation, "Range 0 <-> 10000000\r\nThis is a Delay Start Service, But this gives the OS a li" +
                  "ttle extra to mount Networks and USB devices before attempting to start the Pool" +
                  " driver.\r\n");
          this.DelayCreation.Value = new decimal(new int[] {
-            15000,
+            250,
             0,
             0,
             0});
