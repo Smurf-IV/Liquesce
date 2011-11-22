@@ -23,6 +23,7 @@
 //  </summary>
 // --------------------------------------------------------------------------------------------------------------------
 #endregion
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -150,7 +151,6 @@ namespace Liquesce
       // Code stolen from the http://frwingui.codeplex.com project
       private void StartTree()
       {
-         TreeNode tvwRoot;
          // Code taken and adapted from http://msdn.microsoft.com/en-us/library/bb513869.aspx
          try
          {
@@ -159,12 +159,12 @@ namespace Liquesce
             driveAndDirTreeView.Nodes.Clear();
 
             Log.Debug("Create the root node.");
-            tvwRoot = new TreeNode
-                         {
-                            Text = Environment.MachineName,
-                            ImageKey = "MyComputer",
-                            SelectedImageKey = "MyComputer"
-                         };
+            TreeNode tvwRoot = new TreeNode
+                                  {
+                                     Text = Environment.MachineName,
+                                     ImageKey = "MyComputer",
+                                     SelectedImageKey = "MyComputer"
+                                  };
             driveAndDirTreeView.Nodes.Add(tvwRoot);
             Log.Debug("Now we need to add any children to the root node.");
 
@@ -174,7 +174,6 @@ namespace Liquesce
             {
                Log.Debug(dr);
                DriveInfo di = new DriveInfo(dr);
-
                FillInDirectoryType(tvwRoot, di);
             }
 
@@ -195,25 +194,46 @@ namespace Liquesce
       {
          if (di != null)
          {
-            if (((di.DriveType == DriveType.Fixed)
-                  || (di.DriveType == DriveType.Network)
-                  )
-               && (di.DriveFormat == "DOKAN")
-               )
-            {
-               Log.Info("Removing the existing DOKAN drive as this would cause confusion ! [{0}]", di.Name);
-               return;
-            }
-            SafelyAddIcon(di.Name);
             string label;
+            string di_DriveFormat = "Unknown Format";
             try
             {
-               label = (di.IsReady && !String.IsNullOrWhiteSpace(di.VolumeLabel)) ? di.VolumeLabel : di.DriveType.ToString();
+               DriveType driveType = di.DriveType;
+               switch (driveType)
+               {
+                  case DriveType.Removable:
+                  case DriveType.Fixed:
+                     {
+                        di_DriveFormat = di.DriveFormat;
+                        switch (di_DriveFormat.ToUpper())
+                        {
+                           case "DOKAN":
+                              Log.Warn("Removing the existing DOKAN drive as this would cause confusion ! [{0}]",
+                                       di.Name);
+                              return;
+                           case "FAT":
+                              Log.Warn("Removing FAT formated drive type, as this causes ACL Failures [{0}]", di.Name);
+                              return;
+                        }
+                     }
+                     break;
+                  case DriveType.Unknown:
+                  case DriveType.NoRootDirectory:
+                  case DriveType.Network:
+                  case DriveType.CDRom:
+                  case DriveType.Ram:
+                     di_DriveFormat = driveType.ToString();
+                     break;
+                  default:
+                     throw new ArgumentOutOfRangeException("driveType", "Unknown type detected");
+               }
+               SafelyAddIcon(di.Name);
+               label = (di.IsReady && !String.IsNullOrWhiteSpace(di.VolumeLabel)) ? di.VolumeLabel : di_DriveFormat;
             }
             catch
             {
                // The above throws a wobble e.g. if the CD_Rom does not have a disk in it
-               label = di.DriveType.ToString();
+               label = di_DriveFormat;
             }
             label += " (" + di.Name + ")";
             TreeNode thisNode = new TreeNode
