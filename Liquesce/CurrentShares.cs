@@ -71,9 +71,10 @@ namespace Liquesce
          Enabled = false;
          UseWaitCursor = true;
          mountedPoints.Text = shareDetails.VolumeLabel + " (" + shareDetails.DriveLetter + ")";
-         ChannelFactory<ILiquesce> factory = new ChannelFactory<ILiquesce>("LiquesceFacade");
-         ILiquesce remoteIF = factory.CreateChannel();
-         lmsd = remoteIF.GetPossibleShares();
+         EndpointAddress endpointAddress = new EndpointAddress("net.pipe://localhost/LiquesceFacade");
+         NetNamedPipeBinding namedPipeBindingpublish = new NetNamedPipeBinding();
+         LiquesceProxy proxy = new LiquesceProxy(namedPipeBindingpublish, endpointAddress);
+         lmsd = proxy.GetPossibleShares();
 
          foreach (string[] row in lmsd.SelectMany(share =>
                                                   share.UserAccessRules.Select(fsare => new string[]

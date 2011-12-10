@@ -45,6 +45,7 @@ namespace LiquesceSvc
 
       public void Move(Roots roots, string source, string pathTarget_FullName, bool replaceIfExisting)
       {
+         Log.Trace("XMoveDirectory.Move(roots[{0}], dirSource[{1}], currentNewTarget[{2}], replaceIfExisting[{3}])", roots, source, pathTarget_FullName, replaceIfExisting);
          try
          {
             using (TransactionScope scope = new TransactionScope())
@@ -53,16 +54,19 @@ namespace LiquesceSvc
                scope.Complete();
             }
          }
-         catch
+         catch ( Exception ex )
          {
-            // try to move the non transactions back
+            Log.ErrorException( "Try to move the non transactions back", ex );
             foreach (KeyValuePair<string, string> newToOld in dirMovesNotTransacted)
             {
                try
                {
                   XMoveFile.MoveFileEx(newToOld.Key, newToOld.Value, true);
                }
-               catch {}
+               catch  ( Exception exInner )
+               {
+                  Log.ErrorException( "Rewind threw: ", exInner );
+               }
             }
             throw;
          }

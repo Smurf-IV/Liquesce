@@ -22,18 +22,18 @@ Keep an open eye on the \cf0\b{\field{\*\fldinst{HYPERLINK "http://liquesce.code
 - Change the space usage to be a table with scrollbars to give better layout options (And sorting etc.)\par
 - PureSync does not work due to issues with the dokan Driver\par
 - Teracopy 2.2 does not copy from Liquesce shares\par
-- 0.6.0 Sharing on x64 Host Locks up network on Host\par
 - Error 1450: Insufficient System Resources for Service\par
 - The TrayHelper GPF's when trying to start a service that is already started\par
 - The License warning in the installer needs to change\par
-- Messages sent to Application Tray fail for some users and on some OS's\par
 - Dokan Move A directory to its parent (Over a share) does not pass correct information to UserSpace\par
+- Need some way of creating a zip file for the config and logs for email\par
+- Multiple mounted points from the same drive will increase reported drive space\par
 \cf0\par
 \ul\b\par
 \cf1\ulnone\b0\par
 \cf0\ul\b Done\par
 \par
-2011-11-##\par
+2011-12-01\par
 \ulnone\b0 - Creating a directory - when that dir name already exists - can make the directory appear twice in explorer\par
 - Rename directory (Folder mode) will not rename all sources of that directory (via a share)\par
 - Remove the Stream usage for File API's\par
@@ -46,7 +46,15 @@ Keep an open eye on the \cf0\b{\field{\*\fldinst{HYPERLINK "http://liquesce.code
 - Default startup value needs to be set to Min value\par
 - Detect Drive Format of "FAT" and remove from the selection list\par
 - On initial install, New Drive N shows in Management App\cf3\par
-\cf0\par
+\cf0 - 0.6.0 Sharing on x64 Host Locks up network XP Host\par
+- Tested and shown to work: Sharing on restart is broken in Win 7x32 Ultimate\par
+\cf3 - Messages sent to Application Tray fail for some users and on some OS's\par
+- Investigate why New *.rtf does not work in Win 7x64\cf0\par
+- Add NativeFileFind to speed up to remove Win32 -> C# -> FileFind -> Win32 -> Dokan conversions\par
+- Correct usage of the FileTime and the FileAttributes types to ease logging\par
+- Add "Fastest" method to discover if a directory is empty\par
+- Use lowlevel API for FindFullPath (This can be LongPath enabled :-)\par
+\par
 \ul\b\par
 2011-11-17\par
 \ulnone\b0 - Switch to using for the \f4\fs19 GetFileInformationByHandle\f5 () \f0\fs20 for speed (Probably) and direct return of upto date information from the native file system.\par

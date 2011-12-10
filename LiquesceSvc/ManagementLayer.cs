@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.ServiceModel;
 using System.Threading;
 using System.Xml.Serialization;
@@ -73,13 +74,13 @@ namespace LiquesceSvc
          }
       }
 
-      public void Subscribe(Guid guid)
+      public void Subscribe(Client id)
       {
          try
          {
             IStateChange callback = OperationContext.Current.GetCallbackChannel<IStateChange>();
             using (subscribersLock.WriteLock())
-               subscribers.Add(new Client { id = guid }, callback);
+               subscribers.Add(id, callback);
          }
          catch (Exception ex)
          {
@@ -87,17 +88,17 @@ namespace LiquesceSvc
          }
       }
 
-      public void Unsubscribe(Guid guid)
+      public void Unsubscribe(Client id)
       {
          try
          {
-            IStateChange callback = OperationContext.Current.GetCallbackChannel<IStateChange>();
-            using (subscribersLock.WriteLock())
+            using (subscribersLock.UpgradableReadLock())
             {
                var query = from c in subscribers.Keys
-                           where c.id == guid
+                           where c.id == id.id
                            select c;
-               subscribers.Remove(query.First());
+               using (subscribersLock.WriteLock())
+                  subscribers.Remove(query.First());
             }
          }
          catch (Exception ex)
@@ -188,6 +189,7 @@ namespace LiquesceSvc
                   NetworkDrive = false,  // Set this to true to see if it stops the recycler bin question until [workitem:7253] is sorted
                   // If the network is true then also need to have the correct version of the dokannp.dll that works on the installed OS
                   VolumeLabel = currentConfigDetails.VolumeLabel
+                  ,RemovableDrive = true
                };
 
 
@@ -311,12 +313,22 @@ namespace LiquesceSvc
             {
                // Get all the clients in dictionary
                var query = (from c in subscribers
-                            select c.Value).ToList();
+                            select c.Value).ToArray();
                // Create the callback action
-               Action<IStateChange> action = callback => callback.Update(newState, message);
+               Type type = typeof(IStateChange);
+               MethodInfo methodInfo = type.GetMethod("Update");
 
                // For each connected client, invoke the callback
-               query.ForEach(action);
+               foreach (IStateChange stateChange in query)
+               {
+                  try
+                  {
+                     methodInfo.Invoke(stateChange, new object[] { newState, message });
+                  }
+                  catch
+                  {
+                  }
+               }
             }
          }
          catch (Exception ex)
@@ -332,13 +344,10 @@ namespace LiquesceSvc
 
       public void Stop()
       {
-         if (IsRunning)
-         {
-            FireStateChange(LiquesceSvcState.Unknown, "Stop has been requested");
-            int retVal = Dokan.DokanUnmount(mountedDriveLetter);
-            ShellChangeNotify.Unmount(mountedDriveLetter);
-            Log.Info("Stop returned[{0}]", retVal);
-         }
+         FireStateChange(LiquesceSvcState.Unknown, "Stop has been requested");
+         int retVal = Dokan.DokanUnmount(mountedDriveLetter);
+         ShellChangeNotify.Unmount(mountedDriveLetter);
+         Log.Info("Stop returned[{0}]", retVal);
       }
 
       public List<LanManShareDetails> GetPossibleShares()

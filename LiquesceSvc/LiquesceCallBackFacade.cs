@@ -23,7 +23,7 @@
 //  </summary>
 // --------------------------------------------------------------------------------------------------------------------
 #endregion
-using System;
+
 using System.ServiceModel;
 using LiquesceFacade;
 using NLog;
@@ -44,13 +44,13 @@ namespace LiquesceSvc
       {
          Log.Debug("Object Created");
       }
-      public void Subscribe(Guid id)
+      public void Subscribe(Client id)
       {
          Log.Debug("Calling Subscribe");
          ManagementLayer.Instance.Subscribe(id);
       }
 
-      public void Unsubscribe(Guid id)
+      public void Unsubscribe(Client id)
       {
          Log.Debug("Calling Unsubscribe");
          ManagementLayer.Instance.Unsubscribe(id);

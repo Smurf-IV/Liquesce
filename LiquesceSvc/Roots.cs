@@ -43,7 +43,7 @@ namespace LiquesceSvc
       public static readonly string PathDirectorySeparatorChar = Path.DirectorySeparatorChar.ToString();
       private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
-      private readonly CacheHelper<string, FileSystemInfo> cachedRootPathsSystemInfo;
+      private readonly CacheHelper<string, NativeFileOps> cachedRootPathsSystemInfo;
 
       private readonly ConfigDetails configDetails;
 
@@ -51,18 +51,19 @@ namespace LiquesceSvc
       public Roots(ConfigDetails configDetailsTemp)
       {
          configDetails = configDetailsTemp;
-         cachedRootPathsSystemInfo = new CacheHelper<string, FileSystemInfo>(configDetails.CacheLifetimeSeconds);
+         cachedRootPathsSystemInfo = new CacheHelper<string, NativeFileOps>(configDetails.CacheLifetimeSeconds);
       }
 
 
-      public FileSystemInfo GetPath(string filename, ulong spaceRequired = 0)
+      public NativeFileOps GetPath(string filename, ulong spaceRequired = 0)
       {
-         FileSystemInfo fsi = null;
+         NativeFileOps fsi = null;
          try
          {
             // Even A directory requires 4K to be created !
             spaceRequired += 16384;
-            if (String.IsNullOrWhiteSpace(filename))
+            Log.Trace("GetPath [{0}] spaceRequired [{1}]", filename, spaceRequired);
+            if (string.IsNullOrWhiteSpace(filename))
             {
                Log.Trace("Win 7 (x64) sometimes passes in a blank");
                filename = PathDirectorySeparatorChar;
@@ -77,12 +78,12 @@ namespace LiquesceSvc
             if (filename == PathDirectorySeparatorChar)
             {
                Log.Trace("Assuming Home directory so add new to cache and return");
-               fsi = new DirectoryInfo(foundPath);
+               fsi = new NativeFileOps(foundPath);
                return fsi;
             }
 
             string searchFilename = filename.Trim(Path.DirectorySeparatorChar);
-            if (String.IsNullOrWhiteSpace(filename))
+            if (string.IsNullOrWhiteSpace(filename))
                throw new ArgumentNullException(filename, "Not allowed to pass this length 2");
 
             if (!CheckAndGetType(Path.Combine(foundPath, searchFilename), out fsi))
@@ -102,7 +103,7 @@ namespace LiquesceSvc
             //-------------------------------------
             Log.Trace("file/folder not found");
             // So create a holder for the return and do not store
-            fsi = new FileInfo(Path.Combine(foundPath, searchFilename));
+            fsi = new NativeFileOps(Path.Combine(foundPath, searchFilename));
          }
          catch (Exception ex)
          {
@@ -130,9 +131,9 @@ namespace LiquesceSvc
       /// <param name="searchOffsetFilename"></param>
       /// <param name="spaceRequired"></param>
       /// <returns>will return string.Empty if not found</returns>
-      public FileSystemInfo GetPathRelatedtoShare(string searchOffsetFilename, ulong spaceRequired=0)
+      public NativeFileOps GetPathRelatedtoShare(string searchOffsetFilename, ulong spaceRequired = 0)
       {
-         FileSystemInfo fsi = null;
+         NativeFileOps fsi = null;
          try
          {
             // Even A directory requires 4K to be created !
@@ -169,7 +170,7 @@ namespace LiquesceSvc
          return fsi;
       }
 
-      private bool CheckAndGetType(string newTarget, out FileSystemInfo fsi)
+      private bool CheckAndGetType(string newTarget, out NativeFileOps fsi)
       {
          if (cachedRootPathsSystemInfo.TryGetValue(newTarget, out fsi))
          {
@@ -179,9 +180,7 @@ namespace LiquesceSvc
          Log.Trace("Try and GetPath from [{0}]", newTarget);
          //Now here's a kicker.. The User might have copied a file directly onto one of the drives while
          // this has been running, So this ought to try and find if it exists that way.
-         fsi = new FileInfo(newTarget);
-         if (!fsi.Exists)
-            fsi = new DirectoryInfo(newTarget);
+         fsi = new NativeFileOps(newTarget);
          return fsi.Exists;
       }
 
@@ -201,20 +200,20 @@ namespace LiquesceSvc
 
       public string GetRoot(string path)
       {
-         if (!String.IsNullOrEmpty(path))
+         if (!string.IsNullOrEmpty(path))
             foreach (string t in configDetails.SourceLocations.Where(path.Contains))
             {
                return t;
             }
 
-         return String.Empty;
+         return string.Empty;
       }
 
 
       // return the path from a inputpath seen relative from the root
       public string GetRelative(string path)
       {
-         return path.Replace(GetRoot(path), String.Empty);
+         return path.Replace(GetRoot(path), string.Empty);
       }
 
 
@@ -270,7 +269,7 @@ namespace LiquesceSvc
                   string testpath = t + relativeFolder;
 
                   // check if relativeFolder is on this disk
-                  if (Directory.Exists(testpath))
+                  if (new NativeFileOps(testpath).Exists)
                      return t;
                }
             }
@@ -318,11 +317,11 @@ namespace LiquesceSvc
 
       public bool RelativeFileExists(string relative)
       {
-         return configDetails.SourceLocations.Any(t => File.Exists(t + relative));
+         return configDetails.SourceLocations.Any(t => new NativeFileOps(t + relative).Exists);
       }
 
       // adds the root path to cachedRootPathsSystemInfo dicionary for a specific file
-      public string TrimAndAddUnique(FileSystemInfo fsi)
+      public string TrimAndAddUnique(NativeFileOps fsi)
       {
          string fullFilePath = fsi.FullName;
          string key = findOffsetPath(fullFilePath);

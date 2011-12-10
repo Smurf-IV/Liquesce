@@ -28,6 +28,7 @@ using System.Diagnostics;
 using System.ServiceModel;
 using System.ServiceProcess;
 using System.Threading;
+using LiquesceFacade;
 using NLog;
 
 namespace LiquesceSvc
@@ -115,7 +116,21 @@ namespace LiquesceSvc
                }
             }
             _ILiquesceHost = new ServiceHost(typeof(LiquesceFacade));
+            //System.ServiceModel.Channels.Binding wsDualBinding = new WSDualHttpBinding(WSDualHttpSecurityMode.None);
+            //System.ServiceModel.Channels.Binding tcpBinding = new NetTcpBinding(SecurityMode.None);
+            System.ServiceModel.Channels.Binding namedPipeBinding = new NetNamedPipeBinding();
+            //_ILiquesceHost.AddServiceEndpoint(typeof(ILiquesce), wsDualBinding, "http://localhost:41013/LiquesceFacade/");
+            //_ILiquesceHost.AddServiceEndpoint(typeof(ILiquesce), tcpBinding, "net.tcp://localhost:41014/LiquesceFacade");
+            _ILiquesceHost.AddServiceEndpoint(typeof(ILiquesce), namedPipeBinding, "net.pipe://localhost/LiquesceFacade");
+
             _ILiquesceHostCallBack = new ServiceHost(typeof(LiquesceCallBackFacade));
+            //System.ServiceModel.Channels.Binding wsDualBindingpublish = new WSDualHttpBinding();
+            //System.ServiceModel.Channels.Binding tcpBindingpublish = new NetTcpBinding();
+            System.ServiceModel.Channels.Binding namedPipeBindingpublish = new NetNamedPipeBinding();
+            //_ILiquesceHostCallBack.AddServiceEndpoint(typeof(ILiquesceCallBack), wsDualBindingpublish, "http://localhost:41015/LiquesceCallBackFacade/");
+            //_ILiquesceHostCallBack.AddServiceEndpoint(typeof(ILiquesceCallBack), tcpBindingpublish, "net.tcp://localhost:41016/LiquesceCallBackFacade");
+            _ILiquesceHostCallBack.AddServiceEndpoint(typeof(ILiquesceCallBack), namedPipeBindingpublish, "net.pipe://localhost/LiquesceCallBackFacade");
+
             _ILiquesceHost.Open();
             _ILiquesceHostCallBack.Open();
 

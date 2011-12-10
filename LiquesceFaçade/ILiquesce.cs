@@ -48,7 +48,7 @@ namespace LiquesceFacade
       [OperationContract(IsOneWay = true)]
       void Start();
 
-      LiquesceSvcState State
+      LiquesceSvcState LiquesceState
       {
          [OperationContract]
          get;

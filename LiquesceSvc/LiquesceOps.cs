@@ -35,7 +35,6 @@ using System.Threading;
 using DokanNet;
 using LiquesceFacade;
 using NLog;
-using ComTypes = System.Runtime.InteropServices.ComTypes;
 using PID = LiquesceSvc.ProcessIdentity;
 
 namespace LiquesceSvc
@@ -48,9 +47,9 @@ namespace LiquesceSvc
       // last key
       static private UInt64 openFilesLastKey;
       // lock
-      static private readonly ReaderWriterLockSlim openFilesSync = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
+      private readonly ReaderWriterLockSlim openFilesSync = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
       // dictionary of all open files
-      static private readonly Dictionary<UInt64, NativeFileOps> openFiles = new Dictionary<UInt64, NativeFileOps>();
+      private readonly Dictionary<UInt64, NativeFileOps> openFiles = new Dictionary<UInt64, NativeFileOps>();
 
       private readonly Roots roots;
       private readonly ConfigDetails configDetails;
@@ -79,86 +78,26 @@ namespace LiquesceSvc
       /// <returns></returns>
       public int CreateFile(string filename, uint rawAccessMode, uint rawShare, uint rawCreationDisposition, uint rawFlagsAndAttributes, DokanFileInfo info)
       {
-         int actualErrorCode = Dokan.DOKAN_SUCCESS;
+         int dokanReturn = Dokan.DOKAN_SUCCESS;
          try
          {
-            // TODO: Dump these out in hex to max it easier to decode :-)
-
-
-            Log.Debug( "CreateFile IN filename [{0}], rawAccessMode[{1}], rawShare[{2}], rawCreationDisposition[{3}], rawFlagsAndAttributes[{4}], ProcessId[{5}]",
-              filename, rawAccessMode, rawShare, rawCreationDisposition, rawFlagsAndAttributes, info.ProcessId);
+            // TODO: Dump rawAccessMode out in hex to max it easier to decode :-)
+            Log.Debug( "CreateFile IN filename [{0}], rawAccessMode[{1}], rawShare[{2}], rawCreationDisposition[{3}], rawFlagsAndAttributes[{4}|{5}], ProcessId[{6}]",
+              filename, rawAccessMode, (FileShare)rawShare, (FileMode)rawCreationDisposition, (rawFlagsAndAttributes&0xFFFE0000), (FileAttributes)(rawFlagsAndAttributes&0x0001FFFF), info.ProcessId);
             bool createNew = (rawCreationDisposition == Proxy.CREATE_NEW) || (rawCreationDisposition == Proxy.CREATE_ALWAYS);
-            FileSystemInfo foundFileInfo = roots.GetPath(filename,  (!createNew?0:configDetails.HoldOffBufferBytes));
-
-            bool fileExists = foundFileInfo.Exists;
-            //if (fileExists
-            //   && (foundFileInfo is DirectoryInfo)
-            //   && (filename == Roots.PathDirectorySeparatorChar)
-            //   )
-            //{
-            //   actualErrorCode = OpenDirectory(filename, info);
-            //   return actualErrorCode;
-            //}
+            NativeFileOps foundFileInfo = roots.GetPath(filename,  (!createNew?0:configDetails.HoldOffBufferBytes));
 
             // Increment now in case there is an exception later
-            ++openFilesLastKey; // never be Zero !
-            // Stop using exceptions to throw ERROR_FILE_NOT_FOUND
-
-            switch (rawCreationDisposition)
-            {
-               // *** NTh Change ***
-               // Fix the parameter invalid when trying to replace an existing file
-               case Proxy.CREATE_ALWAYS:
-                  //Ignore the existing of the file, at this time the OS is trying to overwrite it                
-                  break;
-               case Proxy.CREATE_NEW:
-                  if (fileExists)
-                  {
-                     Log.Debug("filename [{0}] CREATE_NEW File Exists !", filename);
-
-                     // force it to be "Looked up" next time
-                     roots.RemoveFromLookup(filename);
-                     actualErrorCode = Dokan.ERROR_FILE_EXISTS;
-                     return actualErrorCode;
-                  }
-                  break;
-               case Proxy.OPEN_EXISTING:
-               //case FileMode.Append:                    
-               case Proxy.TRUNCATE_EXISTING:
-                  if (!fileExists)
-                  {
-                     Log.Debug("filename [{0}] ERROR_FILE_NOT_FOUND", filename);
-                     // Probably someone has removed this on the actual drive
-                     roots.RemoveFromLookup(filename);
-                     actualErrorCode = Dokan.ERROR_FILE_NOT_FOUND;
-                     return actualErrorCode;
-                  }
-                  break;
-            }
-
-            bool writeable = (((rawAccessMode & Proxy.FILE_WRITE_DATA) == Proxy.FILE_WRITE_DATA));
-            // *** NTh Change ***
-            // The Condition that eliminates the variable fileExists
+            using (openFilesSync.WriteLock())
+               ++openFilesLastKey; // never be Zero !
             string fullName = foundFileInfo.FullName;
             PID.Invoke(info.ProcessId, delegate
             {
-               if (!fileExists
-                   && (writeable
-                       || createNew)
-                  )
+               if (createNew)
                {
-                  Log.Trace("We want to create a new file in: [{0}]", fullName);
-
-                  // Need to solve the issue with Synctoy performing moves into unknown / unused space
-                  // MoveFile pathSource: [F:\_backup\Kylie Minogue\FSP01FA0CF932F74BF5AE5C217F4AE6626B.tmp] pathTarget: [G:\_backup\Kylie Minogue\(2010) Aphrodite\12 - Can't Beat The Feeling.mp3] 
-                  // MoveFile threw:  System.IO.DirectoryNotFoundException: The system cannot find the path specified. (Exception from HRESULT: 0x80070003)
-                  DirectoryInfo newDir = ((FileInfo)foundFileInfo).Directory;
-                  Log.Trace("Check if directory exists: [{0}]", newDir.FullName);
-                  if (!newDir.Exists)
-                  {
-                     Log.Trace("Have to create this directory.");
-                     Directory.CreateDirectory(newDir.FullName);
-                  }
+                  // force it to be "Looked up" next time
+                  roots.RemoveFromLookup(filename);
+                  NativeFileOps.CreateDirectory( foundFileInfo.DirectoryPathOnly );
                }
 
                // TODO: The DokanFileInfo structure has the following extra things that need to be mapped tothe file open
@@ -174,7 +113,7 @@ namespace LiquesceSvc
                // AND that the I/O buffers also be aligned on addresses which are multiples of the sector size
                if (info.SynchronousIo)
                   rawFlagsAndAttributes |= Proxy.FILE_FLAG_SEQUENTIAL_SCAN;
-               if (foundFileInfo is DirectoryInfo)
+               if (foundFileInfo.IsDirectory)
                {
                   info.IsDirectory = true;
                   rawFlagsAndAttributes |= Proxy.FILE_FLAG_BACKUP_SEMANTICS;
@@ -184,99 +123,103 @@ namespace LiquesceSvc
 
                NativeFileOps fs = NativeFileOps.CreateFile(fullName, rawAccessMode, rawShare,
                                                    rawCreationDisposition, rawFlagsAndAttributes);
-
+               
+               // If a specified file exists before the function call and dwCreationDisposition is CREATE_ALWAYS 
+               // or OPEN_ALWAYS, a call to GetLastError returns ERROR_ALREADY_EXISTS, even when the function succeeds.
+               //if (createNew)
+               //   dokanReturn = Marshal.GetLastWin32Error() * -1;
                // It's not gone boom, so it must be okay..
-               // Remove the cached entry as it will have new access time / been created / etc.
-               roots.RemoveTargetFromLookup(fullName);
                using (openFilesSync.WriteLock())
                {
                   info.refFileHandleContext = openFilesLastKey; // Incremented above
                   openFiles.Add(openFilesLastKey, fs);
                }
             });
-            notifyOf.CreateFile(fullName, info.refFileHandleContext, !fileExists);
+            notifyOf.CreateFile(fullName, info.refFileHandleContext, createNew);
          }
          catch (Exception ex)
          {
+            Log.Error("CreateFile filename [{0}], rawAccessMode[{1}], rawShare[{2}], rawCreationDisposition[{3}], rawFlagsAndAttributes[{4}|{5}], ProcessId[{6}]",
+              filename, rawAccessMode, (FileShare)rawShare, (FileMode)rawCreationDisposition, (rawFlagsAndAttributes&0xFFFE0000), (FileAttributes)(rawFlagsAndAttributes&0x0001FFFF), info.ProcessId);
             Log.ErrorException("CreateFile threw: ", ex);
-            actualErrorCode = Utils.BestAttemptToWin32(ex);
+            dokanReturn = Utils.BestAttemptToWin32(ex);
          }
          finally
          {
-            Log.Debug("CreateFile OUT actualErrorCode=[{0}] context[{1}]", actualErrorCode, openFilesLastKey);
+            Log.Debug("CreateFile OUT dokanReturn=[{0}] context[{1}]", dokanReturn, openFilesLastKey);
+            if (dokanReturn != Dokan.DOKAN_SUCCESS)
+            {
+               // force it to be "Looked up" next time
+               roots.RemoveFromLookup(filename);
+            }
          }
-         return actualErrorCode;
+         return dokanReturn;
       }
 
       public int OpenDirectory(string filename, DokanFileInfo info)
       {
-         int dokanError = Dokan.DOKAN_ERROR;
+         int dokanReturn = Dokan.DOKAN_ERROR;
          try
          {
             Log.Debug("OpenDirectory [{0}] IN DokanProcessId[{1}]", filename, info.ProcessId);
-            FileSystemInfo foundDirInfo = roots.GetPath(filename);
-            if (foundDirInfo.Exists
-               && (foundDirInfo is DirectoryInfo))
+            NativeFileOps foundDirInfo = roots.GetPath(filename);
+            PID.Invoke(info.ProcessId, delegate
             {
-               PID.Invoke(info.ProcessId, delegate
+               if (foundDirInfo.Exists
+                  && foundDirInfo.IsDirectory
+                  )
                {
                   info.IsDirectory = true;
-                  // Attempt to get a list of security permissions from the folder. 
-                  // This will raise an exception if the path is read only or do not have access to view the permissions. 
-                  (foundDirInfo as DirectoryInfo).GetAccessControl();
-                  info.refFileHandleContext = ++openFilesLastKey; // never be Zero !
+                  using (openFilesSync.WriteLock())
+                     info.refFileHandleContext = ++openFilesLastKey; // never be Zero !
+                  ShellChangeNotify.OpenDirectory(foundDirInfo.FullName, info.refFileHandleContext);
+                  dokanReturn = Dokan.DOKAN_SUCCESS;
                }
-               );
-               ShellChangeNotify.OpenDirectory(foundDirInfo.FullName, info.refFileHandleContext);
-               dokanError = Dokan.DOKAN_SUCCESS;
-            }
-            else
-               dokanError = Dokan.ERROR_PATH_NOT_FOUND;
+               else
+                  dokanReturn = Dokan.ERROR_PATH_NOT_FOUND;
+            });
          }
          catch (Exception ex)
          {
             Log.ErrorException("OpenDirectory threw: ", ex);
-            dokanError = Utils.BestAttemptToWin32(ex);
+            dokanReturn = Utils.BestAttemptToWin32(ex);
          }
          finally
          {
-            Log.Debug("OpenDirectory OUT. dokanError[{0}]", dokanError);
+            Log.Debug("OpenDirectory OUT. dokanReturn[{0}]", dokanReturn);
          }
-         return dokanError;
+         return dokanReturn;
       }
 
 
       public int CreateDirectory(string filename, DokanFileInfo info)
       {
-         int dokanError = Dokan.DOKAN_ERROR;
+         int dokanReturn = Dokan.DOKAN_ERROR;
 
          try
          {
             Log.Debug("CreateDirectory [{0}] IN DokanProcessId[{1}]", filename, info.ProcessId);
             PID.Invoke(info.ProcessId, delegate
             {
-               FileSystemInfo foundDirInfo = roots.GetPath(filename);
-               if (!foundDirInfo.Exists)
-               {
-                  foundDirInfo = Directory.CreateDirectory(foundDirInfo.FullName);
-               }
+               NativeFileOps foundDirInfo = roots.GetPath(filename);
+               foundDirInfo.CreateDirectory();
                Log.Debug("By the time it gets here the dir should exist, or have existed by another method / thread");
                info.IsDirectory = true;
                roots.TrimAndAddUnique(foundDirInfo);
                notifyOf.CreateDirectory(foundDirInfo.FullName, info.refFileHandleContext);
-               dokanError = Dokan.DOKAN_SUCCESS;
+               dokanReturn = Dokan.DOKAN_SUCCESS;
             });
          }
          catch (Exception ex)
          {
             Log.ErrorException("CreateDirectory threw: ", ex);
-            dokanError = Utils.BestAttemptToWin32(ex);
+            dokanReturn = Utils.BestAttemptToWin32(ex);
          }
          finally
          {
-            Log.Debug("CreateDirectory OUT dokanError[{0}]", dokanError);
+            Log.Debug("CreateDirectory OUT dokanReturn[{0}]", dokanReturn);
          }
-         return dokanError;
+         return dokanReturn;
       }
 
       /*
@@ -296,11 +239,11 @@ namespace LiquesceSvc
       /// <returns></returns>
       public int Cleanup(string filename, DokanFileInfo info)
       {
-         int dokanError = Dokan.DOKAN_ERROR;
+         int dokanReturn = Dokan.DOKAN_ERROR;
          try
          {
             Log.Trace("Cleanup IN DokanProcessId[{0}] with filename [{1}] handle[{2}] isDir[{3}]", info.ProcessId, filename, info.refFileHandleContext, info.IsDirectory);
-            FileSystemInfo foundInfo = roots.GetPath(filename);
+            NativeFileOps foundInfo = roots.GetPath(filename);
             CloseAndRemove(info);
             PID.Invoke(info.ProcessId, delegate
             {
@@ -310,51 +253,50 @@ namespace LiquesceSvc
                   {
                      Log.Trace("DeleteOnClose Directory");
                      roots.DeleteDirectory(filename);
+                     notifyOf.DeleteDirectory(foundInfo.FullName, info.refFileHandleContext);
                   }
                   else
                   {
                      roots.DeleteFile(filename);
+                     notifyOf.DeleteFile(foundInfo.FullName, info.refFileHandleContext);
                   }
-               }
-               else
-               {
-                  // Remove the cached entry as it will have new access time etc.
-                  roots.RemoveFromLookup(filename);
                }
             });
             notifyOf.Cleanup(foundInfo.FullName, info.refFileHandleContext);
             info.refFileHandleContext = 0;
-            dokanError = Dokan.DOKAN_SUCCESS;
+            dokanReturn = Dokan.DOKAN_SUCCESS;
          }
          catch (Exception ex)
          {
             Log.ErrorException("Cleanup threw: ", ex);
-            dokanError = Utils.BestAttemptToWin32(ex);
+            dokanReturn = Utils.BestAttemptToWin32(ex);
          }
          finally
          {
-            Log.Trace("Cleanup OUT dokanError[{0}]", dokanError);
+            Log.Trace("Cleanup OUT dokanReturn[{0}]", dokanReturn);
          }
-         return dokanError;
+         return dokanReturn;
       }
 
       public int CloseFile(string filename, DokanFileInfo info)
       {
+         int dokanReturn = Dokan.DOKAN_ERROR;
          try
          {
             Log.Trace("CloseFile [{0}] IN DokanProcessId[{1}]", filename, info.ProcessId);
-            // ShellChangeNotify.CloseFile(roots.GetPath(filename).FullName, info.refFileHandleContext);
+            CloseAndRemove(info);
+            dokanReturn = Dokan.DOKAN_SUCCESS;
          }
          catch (Exception ex)
          {
             Log.ErrorException("CloseFile threw: ", ex);
-            return Utils.BestAttemptToWin32(ex);
+            dokanReturn =  Utils.BestAttemptToWin32(ex);
          }
          finally
          {
-            Log.Trace("CloseFile OUT");
+            Log.Trace("CloseFile OUT dokanReturn[{0]}", dokanReturn);
          }
-         return Dokan.DOKAN_SUCCESS;
+         return dokanReturn;
       }
 
       /// <summary>
@@ -372,7 +314,7 @@ namespace LiquesceSvc
       /// </remarks>
       public int ReadFileNative(string filename, IntPtr rawBuffer, uint rawBufferLength, ref uint rawReadLength, long rawOffset, DokanFileInfo info)
       {
-         int errorCode = Dokan.DOKAN_SUCCESS;
+         int dokanReturn = Dokan.DOKAN_SUCCESS;
          bool closeOnReturn = false;
          NativeFileOps fileStream = null;
          try
@@ -388,7 +330,7 @@ namespace LiquesceSvc
                || fileStream.IsInvalid
                )
             {
-               FileSystemInfo fsi = roots.GetPath(filename);
+               NativeFileOps fsi = roots.GetPath(filename);
                PID.Invoke(info.ProcessId, delegate
                   {
                      Log.Warn("No context handle for [{0}]", fsi.FullName);
@@ -424,7 +366,7 @@ namespace LiquesceSvc
          catch (Exception ex)
          {
             Log.ErrorException("ReadFile threw: ", ex);
-            errorCode = Utils.BestAttemptToWin32(ex);
+            dokanReturn = Utils.BestAttemptToWin32(ex);
          }
          finally
          {
@@ -439,9 +381,9 @@ namespace LiquesceSvc
             {
                Log.ErrorException("closeOnReturn threw: ", ex);
             }
-            Log.Debug("ReadFile OUT readBytes=[{0}], errorCode[{1}]", rawReadLength, errorCode);
+            Log.Debug("ReadFile OUT readBytes=[{0}], dokanReturn[{1}]", rawReadLength, dokanReturn);
          }
-         return errorCode;
+         return dokanReturn;
       }
 
       /// <summary>
@@ -460,7 +402,7 @@ namespace LiquesceSvc
       /// </remarks>
       public int WriteFileNative(string filename, IntPtr rawBuffer, uint rawNumberOfBytesToWrite, ref uint rawNumberOfBytesWritten, long rawOffset, DokanFileInfo info)
       {
-         int errorCode = Dokan.DOKAN_SUCCESS;
+         int dokanReturn = Dokan.DOKAN_SUCCESS;
          rawNumberOfBytesWritten = 0;
          NativeFileOps fileStream = null;
          bool closeOnReturn = false;
@@ -479,7 +421,7 @@ namespace LiquesceSvc
                || fileStream.IsInvalid
                )
             {
-               FileSystemInfo fsi = roots.GetPath(filename);
+               NativeFileOps fsi = roots.GetPath(filename);
                PID.Invoke(info.ProcessId, delegate
                {
                   Log.Warn("No context handle for [{0}]", fsi.FullName);
@@ -510,7 +452,7 @@ namespace LiquesceSvc
          catch (Exception ex)
          {
             Log.ErrorException("WriteFile threw: ", ex);
-            errorCode = Utils.BestAttemptToWin32(ex);
+            dokanReturn = Utils.BestAttemptToWin32(ex);
          }
          finally
          {
@@ -525,9 +467,9 @@ namespace LiquesceSvc
             {
                Log.ErrorException("closeOnReturn threw: ", ex);
             }
-            Log.Debug("WriteFile OUT Written[{0}] errorCode[{1}]", rawNumberOfBytesWritten, errorCode);
+            Log.Debug("WriteFile OUT Written[{0}] dokanReturn[{1}]", rawNumberOfBytesWritten, dokanReturn);
          }
-         return errorCode;
+         return dokanReturn;
       }
 
 
@@ -537,23 +479,20 @@ namespace LiquesceSvc
          try
          {
             Log.Debug("FlushFileBuffers IN [{0}] DokanProcessId[{1}]", filename, info.ProcessId);
-            if (info.refFileHandleContext != 0)
+            Log.Trace("info.refFileHandleContext [{0}]", info.refFileHandleContext);
+            using (openFilesSync.ReadLock())
             {
-               Log.Trace("info.refFileHandleContext [{0}]", info.refFileHandleContext);
-               using (openFilesSync.ReadLock())
+               NativeFileOps fileStream;
+               if (openFiles.TryGetValue(info.refFileHandleContext, out fileStream))
                {
-                  NativeFileOps fileStream;
-                  if (openFiles.TryGetValue(info.refFileHandleContext, out fileStream))
-                  {
-                     fileStream.FlushFileBuffers();
-                     ShellChangeNotify.FlushFileBuffers(fileStream.FullName, info.refFileHandleContext);
-                     dokanReturn = Dokan.DOKAN_SUCCESS;
-                  }
+                  fileStream.FlushFileBuffers();
+                  ShellChangeNotify.FlushFileBuffers(fileStream.FullName, info.refFileHandleContext);
+                  dokanReturn = Dokan.DOKAN_SUCCESS;
                }
-            }
-            else
-            {
-               dokanReturn = Dokan.ERROR_FILE_NOT_FOUND;
+               else
+               {
+                  dokanReturn = Dokan.ERROR_FILE_NOT_FOUND;
+               }
             }
          }
          catch (Exception ex)
@@ -563,14 +502,14 @@ namespace LiquesceSvc
          }
          finally
          {
-            Log.Debug("FlushFileBuffers OUT dokanReturn=[{0}]", dokanReturn);
+            Log.Debug("FlushFileBuffers OUT dokanReturn[{0}]", dokanReturn);
          }
          return dokanReturn;
       }
 
       public int GetFileInformationNative(string filename, ref BY_HANDLE_FILE_INFORMATION lpFileInformation, DokanFileInfo info)
       {
-         int dokanReturn = Dokan.ERROR_FILE_NOT_FOUND;
+         int dokanReturn;
          NativeFileOps stream = null;
          bool needToClose = false;
          try
@@ -586,7 +525,7 @@ namespace LiquesceSvc
                || stream.IsInvalid
                )
             {
-               FileSystemInfo fsi = roots.GetPath(filename);
+               NativeFileOps fsi = roots.GetPath(filename);
                // Now attempt workaround for issue "http://code.google.com/p/dokan/issues/detail?id=239" 
                if (!fsi.Exists
                   && ProcessIdentity.CouldBeSMB(info.ProcessId)
@@ -618,6 +557,21 @@ namespace LiquesceSvc
             {
                throw new System.ComponentModel.Win32Exception();
             }
+            if (Log.IsTraceEnabled)
+            {
+               StringBuilder fileInfo = new StringBuilder("lpFileInformation=");
+               fileInfo.AppendLine().AppendFormat("dwFileAttributes[{0}]", lpFileInformation.dwFileAttributes);
+               fileInfo.AppendLine().AppendFormat("ftCreationTime[{0}]", NativeFileOps.ConvertFileTimeToDateTime(lpFileInformation.ftCreationTime));
+               fileInfo.AppendLine().AppendFormat("ftLastAccessTime[{0}]", NativeFileOps.ConvertFileTimeToDateTime(lpFileInformation.ftLastAccessTime));
+               fileInfo.AppendLine().AppendFormat("ftLastWriteTime[{0}]", NativeFileOps.ConvertFileTimeToDateTime(lpFileInformation.ftLastWriteTime));
+               fileInfo.AppendLine().AppendFormat("dwVolumeSerialNumber[{0}]", lpFileInformation.dwVolumeSerialNumber);
+               fileInfo.AppendLine().AppendFormat("nFileSizeHigh[{0}]", lpFileInformation.nFileSizeHigh);
+               fileInfo.AppendLine().AppendFormat("nFileSizeLow[{0}]", lpFileInformation.nFileSizeLow);
+               fileInfo.AppendLine().AppendFormat("dwNumberOfLinks[{0}]", lpFileInformation.dwNumberOfLinks);
+               fileInfo.AppendLine().AppendFormat("nFileIndexHigh[{0}]", lpFileInformation.nFileIndexHigh);
+               fileInfo.AppendLine().AppendFormat("nFileIndexLow[{0}]", lpFileInformation.nFileIndexLow);
+               Log.Trace(fileInfo);
+            }
          }
          catch (Exception ex)
          {
@@ -639,47 +593,51 @@ namespace LiquesceSvc
             catch
             {
             }
-            Log.Debug("GetFileInformation OUT dokanReturn[{2}]", dokanReturn);
          }
+         Log.Debug("GetFileInformation OUT dokanReturn[{0}]", dokanReturn);
          return dokanReturn;
       }
 
-      public int FindFilesWithPattern(string filename, string pattern, out FileInformation[] files, DokanFileInfo info)
+      public int FindFilesWithPattern(string filename, string pattern, out WIN32_FIND_DATA[] files, DokanFileInfo info)
       {
          return FindFiles(filename, info.ProcessId, out files, pattern);
       }
 
-      public int FindFiles(string filename, out FileInformation[] files, DokanFileInfo info)
+      public int FindFiles(string filename, out WIN32_FIND_DATA[] files, DokanFileInfo info)
       {
          return FindFiles(filename, info.ProcessId, out files);
       }
 
-      private int FindFiles(string filename, uint processId, out FileInformation[] files, string pattern = "*")
+      private int FindFiles(string filename, uint processId, out WIN32_FIND_DATA[] files, string pattern = "*")
       {
+         int dokanReturn;
          files = null;
          try
          {
             Log.Debug("FindFiles IN [{0}], pattern[{1}]", filename, pattern);
-            Dictionary<string, FileInformation> uniqueFiles = new Dictionary<string, FileInformation>();
+            Dictionary<string, WIN32_FIND_DATA> uniqueFiles = new Dictionary<string, WIN32_FIND_DATA>();
+            //uniqueFiles.Add(".",
+            // FindFiles should not return an empty array. It should return parent ("..") and self ("."). That wasn't obvious!
             PID.Invoke(processId, delegate
             {
                // Do this in reverse, so that the preferred refreences overwrite the older files
                for (int i = configDetails.SourceLocations.Count - 1; i >= 0; i--)
                {
-                  AddFiles(configDetails.SourceLocations[i] + filename, uniqueFiles, pattern);
+                  NativeFileFind.AddFiles(configDetails.SourceLocations[i] + filename, uniqueFiles, pattern);
                }
             });
             // If these are not found then the loop speed of a "failed remove" and "not finding" is the same !
-            uniqueFiles.Remove(@"\System Volume Information");
-            uniqueFiles.Remove(@"\$RECYCLE.BIN");
-            uniqueFiles.Remove(@"\Recycle Bin");
-            files = new FileInformation[uniqueFiles.Values.Count];
+            uniqueFiles.Remove(@"System Volume Information");
+            uniqueFiles.Remove(@"$RECYCLE.BIN");
+            uniqueFiles.Remove(@"Recycle Bin");
+            files = new WIN32_FIND_DATA[uniqueFiles.Values.Count];
             uniqueFiles.Values.CopyTo(files, 0);
+            dokanReturn = Dokan.DOKAN_SUCCESS;
          }
          catch (Exception ex)
          {
             Log.ErrorException("FindFiles threw: ", ex);
-            return Utils.BestAttemptToWin32(ex);
+            dokanReturn = Utils.BestAttemptToWin32(ex);
          }
          finally
          {
@@ -690,49 +648,68 @@ namespace LiquesceSvc
                {
                   StringBuilder sb = new StringBuilder();
                   sb.AppendLine();
-                  foreach (FileInformation fileInformation in files)
+                  foreach (WIN32_FIND_DATA fileInformation in files)
                   {
-                     sb.AppendLine(fileInformation.FileName);
+                     sb.AppendLine(fileInformation.cFileName);
                   }
                   Log.Trace(sb.ToString());
                }
             }
          }
-         return Dokan.DOKAN_SUCCESS;
+         return dokanReturn;
       }
 
       public int SetFileAttributes(string filename, FileAttributes attr, DokanFileInfo info)
       {
+         int dokanReturn = Dokan.ERROR_FILE_NOT_FOUND;
          try
          {
             Log.Debug("SetFileAttributes [{0}] IN DokanProcessId[{1}]", filename, info.ProcessId);
-            FileSystemInfo foundFileInfo = roots.GetPath(filename);
-            if (foundFileInfo.Exists)
+            NativeFileOps stream = null;
+            using (openFilesSync.ReadLock())
             {
-               PID.Invoke(info.ProcessId, delegate
-                  {
-                     // This uses  if (!Win32Native.SetFileAttributes(fullPathInternal, (int) fileAttributes))
-                     // And can throw PathTOOLong
-                     foundFileInfo.Attributes = attr;
-                  });
-               notifyOf.SetFileAttributes(foundFileInfo.FullName, info.refFileHandleContext);
+               Log.Trace("info.refFileHandleContext [{0}]", info.refFileHandleContext);
+               openFiles.TryGetValue(info.refFileHandleContext, out stream);
             }
+            if ((stream == null)
+               || stream.IsInvalid
+               )
+            {
+               NativeFileOps foundFileInfo = roots.GetPath(filename);
+               if (foundFileInfo.Exists)
+               {
+                  PID.Invoke(info.ProcessId, delegate
+                                                {
+                                                   // This uses  if (!Win32Native.SetFileAttributes(fullPathInternal, (int) fileAttributes))
+                                                   // And can throw PathTOOLong
+                                                   foundFileInfo.SetFileAttributes(attr);
+                                                });
+                  notifyOf.SetFileAttributes(foundFileInfo.FullName, info.refFileHandleContext);
+               }
+            }
+            else
+            {
+               stream.SetFileAttributes(attr);
+               notifyOf.SetFileAttributes(stream.FullName, info.refFileHandleContext);
+            }
+            dokanReturn = Dokan.DOKAN_SUCCESS;
          }
          catch (Exception ex)
          {
             Log.ErrorException("SetFileAttributes threw: ", ex);
-            return Utils.BestAttemptToWin32(ex);
+            dokanReturn = Utils.BestAttemptToWin32(ex);
          }
          finally
          {
-            Log.Debug("SetFileAttributes OUT");
+            Log.Debug("SetFileAttributes OUT dokanReturn[{0}]", dokanReturn);
          }
-         return Dokan.DOKAN_SUCCESS;
+         return dokanReturn;
       }
 
-      public int SetFileTimeNative(string filename, ref ComTypes.FILETIME rawCreationTime, ref ComTypes.FILETIME rawLastAccessTime,
-          ref ComTypes.FILETIME rawLastWriteTime, DokanFileInfo info)
+      public int SetFileTimeNative(string filename, ref WIN32_FIND_FILETIME rawCreationTime, ref WIN32_FIND_FILETIME rawLastAccessTime,
+          ref WIN32_FIND_FILETIME rawLastWriteTime, DokanFileInfo info)
       {
+         int dokanReturn = Dokan.ERROR_FILE_NOT_FOUND;
          NativeFileOps stream = null;
          bool needToClose = false;
          try
@@ -748,8 +725,8 @@ namespace LiquesceSvc
                || stream.IsInvalid 
                )
             {
-               FileSystemInfo fsi = roots.GetPath(filename);
-               if (fsi is DirectoryInfo)
+               NativeFileOps fsi = roots.GetPath(filename);
+               if (fsi.IsDirectory)
                   info.IsDirectory = true;
                PID.Invoke(info.ProcessId, delegate
                {
@@ -773,12 +750,17 @@ namespace LiquesceSvc
             {
                stream.SetFileTime(ref rawCreationTime, ref rawLastAccessTime, ref rawLastWriteTime);
                notifyOf.SetFileTimeNative(stream.FullName, info.refFileHandleContext);
+               dokanReturn = Dokan.DOKAN_SUCCESS;
+            }
+            else
+            {
+               dokanReturn = Dokan.ERROR_FILE_NOT_FOUND;
             }
          }
          catch (Exception ex)
          {
             Log.ErrorException("SetFileTime threw: ", ex);
-            return Utils.BestAttemptToWin32(ex);
+            dokanReturn = Utils.BestAttemptToWin32(ex);
          }
          finally
          {
@@ -795,9 +777,9 @@ namespace LiquesceSvc
             catch
             {
             }
-            Log.Debug("SetFileTime OUT");
+            Log.Debug("SetFileTime OUT dokanReturn[{0}]", dokanReturn);
          }
-         return Dokan.DOKAN_SUCCESS;
+         return dokanReturn;
       }
 
       /// <summary>
@@ -819,14 +801,21 @@ namespace LiquesceSvc
          int dokanReturn = Dokan.DOKAN_ERROR;
          try
          {
-            Log.Debug("DeleteFile [{0}] IN DokanProcessId[{1}]", filename, info.ProcessId);
+            Log.Debug("DeleteFile [{0}] IN DokanProcessId[{1}], refFileHandleContext[{2}]", filename, info.ProcessId, info.refFileHandleContext);
+            NativeFileOps stream;
+            using (openFilesSync.ReadLock())
+            {
+               openFiles.TryGetValue(info.refFileHandleContext, out stream);
+            }
+            if (stream != null)
+               dokanReturn = Dokan.DOKAN_SUCCESS;
+            else
             PID.Invoke(info.ProcessId, delegate
             {
-               FileSystemInfo foundFileInfo = roots.GetPath(filename);
-               dokanReturn = (foundFileInfo.Exists && (foundFileInfo is FileInfo))
+               NativeFileOps foundFileInfo = roots.GetPath(filename);
+               dokanReturn = (foundFileInfo.Exists && !foundFileInfo.IsDirectory)
                                 ? Dokan.DOKAN_SUCCESS
                                 : Dokan.ERROR_FILE_NOT_FOUND;
-               notifyOf.DeleteFile(foundFileInfo.FullName, info.refFileHandleContext);
             });
          }
          catch (Exception ex)
@@ -849,19 +838,12 @@ namespace LiquesceSvc
             Log.Debug("DeleteDirectory [{0}] IN DokanProcessId[{1}]", filename, info.ProcessId);
             PID.Invoke(info.ProcessId, delegate
             {
-               FileSystemInfo dirInfo = roots.GetPath(filename);
+               NativeFileOps dirInfo = roots.GetPath(filename);
                if (dirInfo.Exists
-                   && (dirInfo is DirectoryInfo)
+                   && dirInfo.IsDirectory
                   )
                {
-                  FileSystemInfo[] fileInfos = (dirInfo as DirectoryInfo).GetFileSystemInfos();
-                  if (fileInfos.Length > 0)
-                     dokanReturn = Dokan.ERROR_DIR_NOT_EMPTY;
-                  else
-                  {
-                     notifyOf.DeleteDirectory(dirInfo.FullName, info.refFileHandleContext);
-                     dokanReturn = Dokan.DOKAN_SUCCESS;
-                  }
+                  dokanReturn = dirInfo.IsEmptyDirectory ? Dokan.DOKAN_SUCCESS : Dokan.ERROR_DIR_NOT_EMPTY;
                }
                else
                   dokanReturn = Dokan.ERROR_PATH_NOT_FOUND;
@@ -891,9 +873,9 @@ namespace LiquesceSvc
                return (dokanReturn = Dokan.DOKAN_SUCCESS);
             }
 
-            FileSystemInfo nfo = roots.GetPath(dokanFilename);
+            NativeFileOps nfo = roots.GetPath(dokanFilename);
             if (!nfo.Exists)
-               dokanReturn = (nfo is DirectoryInfo) ? Dokan.ERROR_PATH_NOT_FOUND : Dokan.ERROR_FILE_NOT_FOUND;
+               dokanReturn = nfo.IsDirectory ? Dokan.ERROR_PATH_NOT_FOUND : Dokan.ERROR_FILE_NOT_FOUND;
             else
             {
                Log.Trace("info.refFileHandleContext [{0}]", info.refFileHandleContext);
@@ -995,7 +977,7 @@ namespace LiquesceSvc
                if (thisFileSize < length)
                {
                   // Need to check that the source FullName drive has enough free space for this "Potential" allocation
-                  FileSystemInfo confirmSpace = roots.GetPath(filename, (ulong)(length - thisFileSize));
+                  NativeFileOps confirmSpace = roots.GetPath(filename, (ulong)(length - thisFileSize));
                   if (confirmSpace.FullName != stream.FullName)
                   {
                      Log.Warn(
@@ -1092,6 +1074,7 @@ namespace LiquesceSvc
 
       public int GetDiskFreeSpace(ref ulong freeBytesAvailable, ref ulong totalBytes, ref ulong totalFreeBytes, DokanFileInfo info)
       {
+         int dokanReturn = Dokan.DOKAN_ERROR;
          try
          {
             Log.Trace("GetDiskFreeSpace IN DokanProcessId[{0}]", info.ProcessId);
@@ -1111,17 +1094,18 @@ namespace LiquesceSvc
             freeBytesAvailable = localFreeBytesAvailable;
             totalBytes = localTotalBytes;
             totalFreeBytes = localTotalFreeBytes;
+            dokanReturn = Dokan.DOKAN_SUCCESS;
          }
          catch (Exception ex)
          {
             Log.ErrorException("UnlockFile threw: ", ex);
-            return Utils.BestAttemptToWin32(ex);
+            dokanReturn = Utils.BestAttemptToWin32(ex);
          }
          finally
          {
-            Log.Trace("GetDiskFreeSpace OUT");
+            Log.Trace("GetDiskFreeSpace OUT dokanReturn[{0}]", dokanReturn);
          }
-         return Dokan.DOKAN_SUCCESS;
+         return dokanReturn;
       }
 
       public int Unmount(DokanFileInfo info)
@@ -1158,61 +1142,71 @@ namespace LiquesceSvc
          int dokanReturn = Dokan.DOKAN_SUCCESS;
          try
          {
-            FileSystemInfo foundFileInfo = roots.GetPath(filename);
-
-            if (foundFileInfo.Exists)
+            return (dokanReturn = -120); // 
+            SECURITY_INFORMATION reqInfo = rawRequestedInformation;
+            byte[] managedDescriptor = null;
+                  AccessControlSections includeSections = AccessControlSections.None;
+                  if ((reqInfo & SECURITY_INFORMATION.OWNER_SECURITY_INFORMATION) == SECURITY_INFORMATION.OWNER_SECURITY_INFORMATION)
+                     includeSections |= AccessControlSections.Owner;
+                  if ((reqInfo & SECURITY_INFORMATION.GROUP_SECURITY_INFORMATION) == SECURITY_INFORMATION.GROUP_SECURITY_INFORMATION)
+                     includeSections |= AccessControlSections.Group;
+                  if ((reqInfo & SECURITY_INFORMATION.DACL_SECURITY_INFORMATION) == SECURITY_INFORMATION.DACL_SECURITY_INFORMATION)
+                     includeSections |= AccessControlSections.Access;
+                  if ((reqInfo & SECURITY_INFORMATION.SACL_SECURITY_INFORMATION) == SECURITY_INFORMATION.SACL_SECURITY_INFORMATION)
+                     includeSections |= AccessControlSections.Audit;
+            FileSystemSecurity pSD = null;
+            NativeFileOps stream;
+            using (openFilesSync.ReadLock())
             {
-               SECURITY_INFORMATION reqInfo = rawRequestedInformation;
-               byte[] managedDescriptor = null;
-               PID.Invoke(info.ProcessId, delegate
-                  {
-                     AccessControlSections includeSections = AccessControlSections.None;
-                     if ((reqInfo & SECURITY_INFORMATION.OWNER_SECURITY_INFORMATION) == SECURITY_INFORMATION.OWNER_SECURITY_INFORMATION)
-                        includeSections |= AccessControlSections.Owner;
-                     if ((reqInfo & SECURITY_INFORMATION.GROUP_SECURITY_INFORMATION) == SECURITY_INFORMATION.GROUP_SECURITY_INFORMATION)
-                        includeSections |= AccessControlSections.Group;
-                     if ((reqInfo & SECURITY_INFORMATION.DACL_SECURITY_INFORMATION) == SECURITY_INFORMATION.DACL_SECURITY_INFORMATION)
-                        includeSections |= AccessControlSections.Access;
-                     if ((reqInfo & SECURITY_INFORMATION.SACL_SECURITY_INFORMATION) == SECURITY_INFORMATION.SACL_SECURITY_INFORMATION)
-                        includeSections |= AccessControlSections.Audit;
-                     FileSystemSecurity pSD = (foundFileInfo is FileInfo) ? (FileSystemSecurity)((FileInfo)foundFileInfo).GetAccessControl(includeSections)
-                                                 : ((DirectoryInfo)foundFileInfo).GetAccessControl(includeSections);
-                     pSD.SetAccessRuleProtection(
-                        (reqInfo & SECURITY_INFORMATION.PROTECTED_DACL_SECURITY_INFORMATION) == SECURITY_INFORMATION.PROTECTED_DACL_SECURITY_INFORMATION,
-                        (reqInfo & SECURITY_INFORMATION.UNPROTECTED_DACL_SECURITY_INFORMATION) == SECURITY_INFORMATION.UNPROTECTED_DACL_SECURITY_INFORMATION);
-                     pSD.SetAuditRuleProtection(
-                        (reqInfo & SECURITY_INFORMATION.PROTECTED_SACL_SECURITY_INFORMATION) == SECURITY_INFORMATION.PROTECTED_SACL_SECURITY_INFORMATION,
-                        (reqInfo & SECURITY_INFORMATION.UNPROTECTED_SACL_SECURITY_INFORMATION) == SECURITY_INFORMATION.UNPROTECTED_SACL_SECURITY_INFORMATION);
-                     if (Log.IsTraceEnabled)
-                     {
-                        string getFileSecurityNative = pSD.GetSecurityDescriptorSddlForm(includeSections);
-                        Log.Trace("GetFileSecurityNative on {0} Retrieved [{1}]", foundFileInfo.FullName, getFileSecurityNative);
-                     }
-                     managedDescriptor = pSD.GetSecurityDescriptorBinaryForm();
-                  });
-               if (managedDescriptor != null)
-               {
-                  rawSecurityDescriptorLengthNeeded = (uint) managedDescriptor.Length;
-                  // if the buffer is not enough the we must pass the correct error
-                  // If the returned number of bytes is less than or equal to nLength, the entire security descriptor is returned in the output buffer; otherwise, none of the descriptor is returned.
-                  if (rawSecurityDescriptorLength < rawSecurityDescriptorLengthNeeded)
-                  {
-                     dokanReturn = Dokan.ERROR_INSUFFICIENT_BUFFER;
-                  }
-                  else
-                  {
-                     Marshal.Copy(managedDescriptor, 0, rawSecurityDescriptor, managedDescriptor.Length);
-                     ShellChangeNotify.GetFileSecurityNative(foundFileInfo.FullName, info.refFileHandleContext);
-                  }
-               }
-               else
-               {
-                  dokanReturn = Dokan.ERROR_ACCESS_DENIED;
-               }
+               openFiles.TryGetValue(info.refFileHandleContext, out stream);
+            }
+            string FullName;
+            if (stream != null)
+            {
+               FullName = stream.FullName;
+               pSD = (!stream.IsDirectory)? (FileSystemSecurity)File.GetAccessControl(FullName, includeSections)
+                                                      : Directory.GetAccessControl(FullName, includeSections);
             }
             else
             {
-               dokanReturn = info.IsDirectory ? Dokan.ERROR_PATH_NOT_FOUND : Dokan.ERROR_FILE_NOT_FOUND;
+               NativeFileOps foundFileInfo = roots.GetPath(filename);
+               FullName = foundFileInfo.FullName;
+               if (foundFileInfo.Exists)
+               {
+                  PID.Invoke(info.ProcessId, delegate
+                                                {
+                                                   pSD = (!foundFileInfo.IsDirectory) ? (FileSystemSecurity)File.GetAccessControl(FullName, includeSections)
+                                                      : Directory.GetAccessControl(FullName, includeSections);
+                                                });
+               }
+               else
+               {
+                  dokanReturn = info.IsDirectory ? Dokan.ERROR_PATH_NOT_FOUND : Dokan.ERROR_FILE_NOT_FOUND;
+               }
+            }
+            if (pSD != null)
+            {
+               if (Log.IsTraceEnabled)
+               {
+                  string getFileSecurityNative = pSD.GetSecurityDescriptorSddlForm(includeSections);
+                  Log.Trace("GetFileSecurityNative on {0} Retrieved [{1}]", FullName, getFileSecurityNative);
+               }
+               managedDescriptor = pSD.GetSecurityDescriptorBinaryForm();
+            }
+            if (managedDescriptor != null)
+            {
+               rawSecurityDescriptorLengthNeeded = (uint) managedDescriptor.Length;
+               // if the buffer is not enough the we must pass the correct error
+               // If the returned number of bytes is less than or equal to nLength, the entire security descriptor is returned in the output buffer; otherwise, none of the descriptor is returned.
+               if (rawSecurityDescriptorLength < rawSecurityDescriptorLengthNeeded)
+               {
+                  dokanReturn = Dokan.ERROR_INSUFFICIENT_BUFFER;
+               }
+               else
+               {
+                  Marshal.Copy(managedDescriptor, 0, rawSecurityDescriptor, managedDescriptor.Length);
+                  ShellChangeNotify.GetFileSecurityNative(FullName, info.refFileHandleContext);
+               }
             }
          }
          catch (Exception ex)
@@ -1234,7 +1228,8 @@ namespace LiquesceSvc
          int dokanReturn = Dokan.DOKAN_SUCCESS;
          try
          {
-            FileSystemInfo foundFileInfo = roots.GetPath(filename);
+            return (dokanReturn = -120); // 50 = ERROR_NOT_SUPPORTED 120 = ERROR_CALL_NOT_IMPLEMENTED
+            NativeFileOps foundFileInfo = roots.GetPath(filename);
             if (foundFileInfo.Exists)
             {
                SECURITY_INFORMATION reqInfo = rawSecurityInformation;
@@ -1249,14 +1244,9 @@ namespace LiquesceSvc
                         includeSections |= AccessControlSections.Access;
                      if ((reqInfo & SECURITY_INFORMATION.SACL_SECURITY_INFORMATION) == SECURITY_INFORMATION.SACL_SECURITY_INFORMATION)
                         includeSections |= AccessControlSections.Audit;
-                     FileSystemSecurity pSD;
-                     if (foundFileInfo is FileInfo)
-                        pSD = ((FileInfo)foundFileInfo).GetAccessControl(includeSections);
-                     else
-                     {
-                        info.IsDirectory = true;
-                        pSD = ((DirectoryInfo)foundFileInfo).GetAccessControl(includeSections);
-                     }
+                     string FullName = foundFileInfo.FullName;
+                     FileSystemSecurity pSD = (!foundFileInfo.IsDirectory) ? (FileSystemSecurity)File.GetAccessControl(FullName, includeSections)
+                                                      : Directory.GetAccessControl(FullName, includeSections);
                      byte[] binaryForm = new byte[rawSecurityDescriptorLength];
                      Marshal.Copy(rawSecurityDescriptor, binaryForm, 0, binaryForm.Length);
                      pSD.SetAccessRuleProtection(
@@ -1267,11 +1257,11 @@ namespace LiquesceSvc
                         (reqInfo & SECURITY_INFORMATION.UNPROTECTED_SACL_SECURITY_INFORMATION) == SECURITY_INFORMATION.UNPROTECTED_SACL_SECURITY_INFORMATION);
                      pSD.SetSecurityDescriptorBinaryForm(binaryForm, includeSections);
                      // Apply these changes.
-                     if (info.IsDirectory)
-                        ((DirectoryInfo)foundFileInfo).SetAccessControl((DirectorySecurity)pSD);
+                     if (foundFileInfo.IsDirectory)
+                        Directory.SetAccessControl(FullName, (DirectorySecurity)pSD);
                      else
                      {
-                        ((FileInfo)foundFileInfo).SetAccessControl((FileSecurity)pSD);
+                        File.SetAccessControl(FullName, (FileSecurity)pSD);
                      }
                      notifyOf.SetFileSecurityNative(foundFileInfo.FullName, info.refFileHandleContext);
                   });
@@ -1297,63 +1287,24 @@ namespace LiquesceSvc
       #endregion
 
 
-      private void AddFiles(string path, Dictionary<string, FileInformation> files, string pattern)
-      {
-         Log.Trace("AddFiles IN path[{0}] pattern[{1}]", path, pattern);
-         try
-         {
-            DirectoryInfo dirInfo = new DirectoryInfo(path);
-            if (dirInfo.Exists)
-            {
-               FileSystemInfo[] fileSystemInfos = dirInfo.GetFileSystemInfos(pattern, SearchOption.TopDirectoryOnly);
-               foreach (FileSystemInfo info2 in fileSystemInfos)
-               {
-                  AddToUniqueLookup(info2, files);
-               }
-            }
-         }
-         catch (Exception ex)
-         {
-            Log.ErrorException("AddFiles threw: ", ex);
-         }
-      }
-
-      private void AddToUniqueLookup(FileSystemInfo info2, Dictionary<string, FileInformation> files)
-      {
-         bool isDirectoy = (info2.Attributes & FileAttributes.Directory) == FileAttributes.Directory;
-         FileInformation item = new FileInformation
-                                   {
-                                      // Prevent expensive time spent allowing indexing == FileAttributes.NotContentIndexed
-                                      // Prevent the system from timing out due to slow access through the driver == FileAttributes.Offline
-                                      Attributes = info2.Attributes | FileAttributes.NotContentIndexed,
-                                      CreationTime = info2.CreationTime,
-                                      LastAccessTime = info2.LastAccessTime,
-                                      LastWriteTime = info2.LastWriteTime,
-                                      Length = (isDirectoy) ? 0L : ((FileInfo)info2).Length,
-                                      FileName = info2.Name
-                                   };
-         if (Log.IsTraceEnabled)
-            item.Attributes |= FileAttributes.Offline;
-         files[roots.TrimAndAddUnique(info2)] = item;
-      }
-
       private void CloseAndRemove(DokanFileInfo info)
       {
+         Log.Debug("info.refFileHandleContext[{0}]", info.refFileHandleContext);
          if (info.refFileHandleContext != 0)
          {
-            Log.Trace("CloseAndRemove info.refFileHandleContext [{0}]", info.refFileHandleContext);
             using (openFilesSync.UpgradableReadLock())
             {
                // The File can be closed by the remote client via Delete (as it does not know to close first!)
                NativeFileOps fileStream;
                if (openFiles.TryGetValue(info.refFileHandleContext, out fileStream))
                {
+                  Log.Debug("Remove and then close stream [{0}]", fileStream.FullName);
                   using (openFilesSync.WriteLock())
                   {
                      openFiles.Remove(info.refFileHandleContext);
                   }
-                  Log.Trace("CloseAndRemove [{0}] info.refFileHandleContext[{1}]", fileStream.FullName, info.refFileHandleContext);
                   fileStream.Close();
+                  ShellChangeNotify.CloseFile(fileStream.FullName, info.refFileHandleContext);
                }
                else
                {
@@ -1361,6 +1312,7 @@ namespace LiquesceSvc
                }
             }
          }
+         info.refFileHandleContext = 0;
       }
 
       public void InitialiseShares(object state)

@@ -29,28 +29,45 @@ using System.IO;
 using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Security;
+using System.Text;
 using DokanNet;
+using Microsoft.Win32;
 using Microsoft.Win32.SafeHandles;
-using FILETIME = System.Runtime.InteropServices.ComTypes.FILETIME;
 
 namespace LiquesceSvc
 {
+   /// <summary>
+   /// Some of this has been inspired by .Net code from System\IO\File.cs
+   /// </summary>
    [SuppressUnmanagedCodeSecurity]
    [SecurityCritical]
    internal class NativeFileOps
    {
       public string FullName { get; private set; }
-      private SafeFileHandle handle { get; set; }
+      private readonly SafeFileHandle handle;
+      /// <summary>
+      /// Not all file systems can record creation and last access times, and not all file systems record them in the same manner. 
+      /// For example, on the FAT file system, create time has a resolution of 10 milliseconds, write time has a resolution of 2 seconds,
+      /// and access time has a resolution of 1 day. The NTFS file system delays updates to the last access time for a file by up to 
+      /// 1 hour after the last access. For more information. See http://msdn.microsoft.com/en-us/library/windows/desktop/aa365740%28v=VS.85%29.aspx
+      /// </summary>
+      private BY_HANDLE_FILE_INFORMATION? cachedFileInformation;
+      private WIN32_FILE_ATTRIBUTE_DATA? cachedAttributeData;
 
       public bool IsInvalid
       {
          get { return handle.IsInvalid; }
       }
 
+      public NativeFileOps(string fullName)
+         : this(fullName, new SafeFileHandle(IntPtr.Zero, false))
+      {
+      }
+
       public NativeFileOps(string fullName, SafeFileHandle handle)
       {
          this.handle = handle;
-         FullName = fullName;
+         FullName = GetFullPathName(fullName);
       }
 
       /// <summary>
@@ -73,15 +90,38 @@ namespace LiquesceSvc
          return new NativeFileOps(lpFileName, handle);
       }
 
+      static public void CreateDirectory(string pathName)
+      {
+         Directory.CreateDirectory(pathName);
+      }
+
+      public void CreateDirectory()
+      {
+         if (!Exists)
+         {
+            CreateDirectory(FullName);
+         }
+      }
+
       public void SetFilePointer(long offset, SeekOrigin origin)
       {
          if (!SetFilePointerEx(handle, offset, IntPtr.Zero, (int)origin))
             throw new System.ComponentModel.Win32Exception();
+         RemoveCachedFileInformation();
       }
 
       public int ReadFile(IntPtr bytes, uint numBytesToRead, out uint numBytesRead_mustBeZero)
       {
-         return ReadFile(handle, bytes, numBytesToRead, out numBytesRead_mustBeZero, IntPtr.Zero);
+         numBytesRead_mustBeZero = 0;
+         try
+         {
+            return ReadFile(handle, bytes, numBytesToRead, out numBytesRead_mustBeZero, IntPtr.Zero);
+         }
+         finally
+         {
+            if (numBytesRead_mustBeZero != 0)
+               RemoveCachedFileInformation();
+         }
       }
 
       public void Close()
@@ -91,7 +131,17 @@ namespace LiquesceSvc
 
       public int WriteFile(IntPtr buffer, uint numBytesToWrite, out uint numBytesWritten)
       {
-         return WriteFile(handle, buffer, numBytesToWrite, out numBytesWritten, IntPtr.Zero);
+         numBytesWritten = 0;
+         try
+         {
+            return WriteFile(handle, buffer, numBytesToWrite, out numBytesWritten, IntPtr.Zero);
+
+         }
+         finally
+         {
+            if (numBytesWritten != 0)
+               RemoveCachedFileInformation();
+         }
       }
 
       public void FlushFileBuffers()
@@ -102,14 +152,35 @@ namespace LiquesceSvc
 
       public void GetFileInformationByHandle(ref BY_HANDLE_FILE_INFORMATION lpFileInformation)
       {
-         if (!GetFileInformationByHandle(handle, ref lpFileInformation))
+         BY_HANDLE_FILE_INFORMATION? local = cachedFileInformation;
+         if (local.HasValue)
+            lpFileInformation = local.Value;
+         else if (!GetFileInformationByHandle(handle, ref lpFileInformation))
             throw new System.ComponentModel.Win32Exception();
+         else
+         {
+            cachedFileInformation = lpFileInformation;
+            cachedAttributeData = new WIN32_FILE_ATTRIBUTE_DATA();
+            cachedAttributeData.Value.PopulateFrom(lpFileInformation);
+         }
       }
 
-      public void SetFileTime(ref FILETIME lpCreationTime, ref FILETIME lpLastAccessTime, ref FILETIME lpLastWriteTime)
+      private void RemoveCachedFileInformation()
+      {
+         cachedFileInformation = null;
+         cachedAttributeData = null;
+      }
+
+      public void SetFileTime(ref WIN32_FIND_FILETIME lpCreationTime, ref WIN32_FIND_FILETIME lpLastAccessTime, ref WIN32_FIND_FILETIME lpLastWriteTime)
       {
          if (!SetFileTime(handle, ref lpCreationTime, ref lpLastAccessTime, ref lpLastWriteTime))
             throw new System.ComponentModel.Win32Exception();
+         RemoveCachedFileInformation();
+      }
+
+      public static DateTime ConvertFileTimeToDateTime(WIN32_FIND_FILETIME data)
+      {
+         return DateTime.FromFileTimeUtc((long)data.dwHighDateTime << 32 | data.dwLowDateTime);
       }
 
       /// <summary>
@@ -119,25 +190,139 @@ namespace LiquesceSvc
       public void SetLength(long length)
       {
          SetFilePointer(length, SeekOrigin.Begin);
-         if ( !SetEndOfFile(handle) )
+         if (!SetEndOfFile(handle))
             throw new System.ComponentModel.Win32Exception();
+         RemoveCachedFileInformation();
       }
 
       public void LockFile(long offset, long length)
       {
-         if ( !LockFile(handle, (int) offset, (int) (offset >> 32), (int) length, (int) (length >> 32) ) )
+         if (!LockFile(handle, (int)offset, (int)(offset >> 32), (int)length, (int)(length >> 32)))
             throw new System.ComponentModel.Win32Exception();
       }
 
       public void UnlockFile(long offset, long length)
       {
-         if ( !UnlockFile(handle, (int)offset, (int)(offset >> 32), (int)length, (int)(length >> 32) ) )
+         if (!UnlockFile(handle, (int)offset, (int)(offset >> 32), (int)length, (int)(length >> 32)))
             throw new System.ComponentModel.Win32Exception();
+      }
+
+      private void CheckData()
+      {
+         WIN32_FILE_ATTRIBUTE_DATA? local = cachedAttributeData;
+         if (!cachedAttributeData.HasValue)
+         {
+            WIN32_FILE_ATTRIBUTE_DATA newData;
+            if (GetFileAttributesEx(FullName, GET_FILEEX_INFO_LEVELS.GetFileExInfoStandard, out newData))
+               cachedAttributeData = newData;
+         }
+      }
+
+      public FileAttributes Attributes
+      {
+         get
+         {
+            return (Exists) ? cachedAttributeData.Value.dwFileAttributes : (FileAttributes) (-1);
+         }
+      }
+
+      public string DirectoryPathOnly
+      {
+         get 
+         { 
+            // Stolen from Path.GetDirectoryName() then simplified
+            int length = FullName.Length;
+            do
+            {
+            } while ((FullName[--length] != Path.DirectorySeparatorChar) 
+               && (FullName[length] != Path.AltDirectorySeparatorChar)
+               );
+            return FullName.Substring(0, length);
+         }
+      }
+
+      public long Length
+      {
+         get
+         {
+            return (!Exists || IsDirectory) ? 0 : (long)cachedAttributeData.Value.nFileSizeHigh << 32 | (long)cachedAttributeData.Value.nFileSizeLow & (long)uint.MaxValue;
+         }
+      }
+
+      public bool Exists
+      {
+         get
+         {
+            try
+            {
+               CheckData();
+               return cachedAttributeData.HasValue;
+            }
+            catch
+            {
+               return false;
+            }
+         }
+      }
+
+      public bool IsDirectory
+      {
+         get
+         {
+            try
+            {
+               return (Attributes & FileAttributes.Directory) == FileAttributes.Directory;
+            }
+            catch (Exception)
+            {
+               return false;
+            }
+         }
+      }
+
+      public bool IsEmptyDirectory
+      {
+         get 
+         {
+            return !string.IsNullOrEmpty(FullName) && IsDirectory &&
+               (FullName.Length <= MAX_PATH ? PathIsDirectoryEmptyW(FullName) : NativeFileFind.IsDirEmpty(FullName));
+         }
+      }
+
+
+      public void SetFileAttributes(FileAttributes attr)
+      {
+         if (!SetFileAttributesW(FullName, attr))
+            throw new System.ComponentModel.Win32Exception();
+         RemoveCachedFileInformation();
+      }
+
+      private static string GetFullPathName(string startPath )
+      {
+         StringBuilder buffer = new StringBuilder(MAX_PATH + 1);
+         int fullPathNameLength = GetFullPathNameW(startPath, MAX_PATH + 1, buffer, IntPtr.Zero);
+         if (fullPathNameLength > MAX_PATH)
+         {
+            buffer.Length = fullPathNameLength;
+            fullPathNameLength = GetFullPathNameW(startPath, fullPathNameLength, buffer, IntPtr.Zero);
+         }
+         if (fullPathNameLength == 0)
+         {
+            throw new System.ComponentModel.Win32Exception();
+         }
+         return buffer.ToString();
       }
 
       #region DLL Imports
       // Stolen from http://www.123aspx.com/Rotor/RotorSrc.aspx?rot=42415
 
+      [StructLayout(LayoutKind.Sequential)]
+      public struct SECURITY_ATTRIBUTES
+      {
+         public int nLength;
+         public IntPtr lpSecurityDescriptor;
+         public int bInheritHandle;
+      }
       /// <summary>
       /// The CreateFile function creates or opens a file, file stream, directory, physical disk, volume, console buffer, tape drive,
       /// communications resource, mailslot, or named pipe. The function returns a handle that can be used to access an object.
@@ -167,6 +352,10 @@ namespace LiquesceSvc
          IntPtr hTemplateFile
          );
 
+      [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+      [return: MarshalAs(UnmanagedType.Bool)]
+      private static extern bool CreateDirectoryW(string lpPathName, IntPtr lpSecurityAttributes);
+
       [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
       [DllImport("kernel32.dll", SetLastError = true)]
       private static extern bool CloseHandle(IntPtr handle);
@@ -175,13 +364,20 @@ namespace LiquesceSvc
       private static extern int GetFileType(SafeFileHandle handle);
 
       [DllImport("kernel32.dll", SetLastError = true)]
+      [return: MarshalAs(UnmanagedType.Bool)]
+      private static extern bool GetFileInformationByHandle(SafeFileHandle hFile, [MarshalAs(UnmanagedType.Struct)] ref BY_HANDLE_FILE_INFORMATION lpFileInformation);
+
+      [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true, BestFitMapping = false)]
+      private static extern int GetFullPathNameW(string path, int numBufferChars, StringBuilder buffer, IntPtr mustBeZero);
+      
+      [DllImport("kernel32.dll", SetLastError = true)]
       private static extern bool SetEndOfFile(SafeFileHandle hFile);
 
       [DllImport("kernel32.dll", SetLastError = true)]
       [return: MarshalAs(UnmanagedType.Bool)]
       private static extern bool FlushFileBuffers(SafeFileHandle hFile);
 
-      [DllImport("Kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+      [DllImport("Kernel32.dll", SetLastError = true)]
       static extern bool SetFilePointerEx(SafeFileHandle Handle, Int64 i64DistanceToMove, IntPtr ptrNewFilePointer, int origin);
 
       [DllImport("kernel32.dll", SetLastError = true)]
@@ -194,11 +390,7 @@ namespace LiquesceSvc
 
       [DllImport("kernel32.dll", SetLastError = true)]
       [return: MarshalAs(UnmanagedType.Bool)]
-      private static extern bool SetFileTime(SafeFileHandle hFile, ref FILETIME lpCreationTime, ref FILETIME lpLastAccessTime, ref FILETIME lpLastWriteTime);
-
-      [DllImport("kernel32.dll", SetLastError = true)]
-      [return: MarshalAs(UnmanagedType.Bool)]
-      private static extern bool GetFileInformationByHandle(SafeFileHandle hFile, [MarshalAs(UnmanagedType.Struct)] ref BY_HANDLE_FILE_INFORMATION lpFileInformation);
+      private static extern bool SetFileTime(SafeFileHandle hFile, ref WIN32_FIND_FILETIME lpCreationTime, ref WIN32_FIND_FILETIME lpLastAccessTime, ref WIN32_FIND_FILETIME lpLastWriteTime);
 
       [DllImport("kernel32.dll", SetLastError = true)]
       private static extern bool LockFile(SafeFileHandle handle, int offsetLow, int offsetHigh, int countLow, int countHigh);
@@ -206,6 +398,49 @@ namespace LiquesceSvc
       [DllImport("kernel32.dll", SetLastError = true)]
       private static extern bool UnlockFile(SafeFileHandle handle, int offsetLow, int offsetHigh, int countLow, int countHigh);
 
+      [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+      [return: MarshalAs(UnmanagedType.Bool)]
+      static extern bool GetFileAttributesEx(string lpFileName, GET_FILEEX_INFO_LEVELS fInfoLevelId, out WIN32_FILE_ATTRIBUTE_DATA lpFileInformation);
+
+      [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+      private static extern bool SetFileAttributesW(string name, FileAttributes attr);
+
+      // Stolen from 
+      [StructLayout(LayoutKind.Sequential)]
+      public struct WIN32_FILE_ATTRIBUTE_DATA
+      {
+         public FileAttributes dwFileAttributes;
+         public WIN32_FIND_FILETIME ftCreationTime;
+         public WIN32_FIND_FILETIME ftLastAccessTime;
+         public WIN32_FIND_FILETIME ftLastWriteTime;
+         public uint nFileSizeHigh;
+         public uint nFileSizeLow;
+
+         [SecurityCritical]
+         internal void PopulateFrom(BY_HANDLE_FILE_INFORMATION findData)
+         {
+            this.dwFileAttributes = findData.dwFileAttributes;
+            this.ftCreationTime = findData.ftCreationTime;
+            this.ftLastAccessTime = findData.ftLastAccessTime;
+            this.ftLastWriteTime = findData.ftLastWriteTime;
+            this.nFileSizeHigh = findData.nFileSizeHigh;
+            this.nFileSizeLow = findData.nFileSizeLow;
+         }
+      }
+
+      public enum GET_FILEEX_INFO_LEVELS
+      {
+         GetFileExInfoStandard,
+         GetFileExMaxInfoLevel
+      }
+
+      [DllImport("shlwapi.dll", CharSet = CharSet.Unicode)]
+      [return: MarshalAsAttribute(UnmanagedType.Bool)]
+      private static extern bool PathIsDirectoryEmptyW( [MarshalAsAttribute(UnmanagedType.LPWStr), In] string pszPath);
+
+      private static readonly int MAX_PATH = 260;
+      private static readonly int MaxLongPath = 32000;
+      private static readonly string Prefix = "\\\\?\\";
 
       #endregion
 
