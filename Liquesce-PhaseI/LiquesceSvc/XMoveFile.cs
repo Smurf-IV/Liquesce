@@ -47,11 +47,11 @@ namespace LiquesceSvc
       /// <param name="info"></param>
       public static void Move(Roots roots, string oldName, string newName, bool replaceIfExisting, bool isDirectory, uint processID)
       {
-         Log.Info("MoveFile replaceIfExisting [{0}] filename: [{1}] newname: [{2}]", replaceIfExisting, oldName, newName);
+         Log.Info("MoveFile replaceIfExisting [{0}] filename: [{1}] newname: [{2}] isDirectory:[{3}]", replaceIfExisting, oldName, newName, isDirectory);
 
-         FileSystemInfo pathSource = roots.GetPath(oldName);
-         ulong pathSource_Length = (ulong) (isDirectory?0:(pathSource as FileInfo).Length);
-         FileSystemInfo pathTarget;
+         NativeFileOps pathSource = roots.GetPath(oldName);
+         ulong pathSource_Length = (ulong) (pathSource.Length);
+         NativeFileOps pathTarget;
          // Got to handle defect / Issue "http://code.google.com/p/dokan/issues/detail?id=238" 
          if (ProcessIdentity.CouldBeSMB(processID)
             && (600 == Dokan.DokanVersion())
@@ -119,8 +119,9 @@ namespace LiquesceSvc
             // Cannot use MoveFileEx, as this app needs to remove the old cached values.
             // So call a function to move each file, and subdir recusively via XMoveDirectory
             // Repeat the file tests above, but use directories instead.
+            Log.Trace("GetAllPaths [{0}]", oldName);
             string[] allPossibleTargets = roots.GetAllPaths(oldName);
-            // Now do them backwards so that overwrites are done correctly
+            Log.Trace("Now do them backwards so that overwrites are done correctly");
             Array.Reverse(allPossibleTargets);
             XMoveDirectory dirMover = new XMoveDirectory();
             // newName will already be calculated as the relative offset (Should have starting '\')

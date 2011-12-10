@@ -23,6 +23,7 @@
 //  </summary>
 // --------------------------------------------------------------------------------------------------------------------
 #endregion
+
 using System;
 using System.ServiceModel;
 using LiquesceFacade;
@@ -30,11 +31,11 @@ using NLog;
 
 namespace LiquesceTray
 {
-   public class StateChangeHandler : LiquesceCallbackSvcRef.ILiquesceCallBackCallback
+   public class StateChangeHandler : IStateChange
    {
       private static readonly Logger Log = LogManager.GetCurrentClassLogger();
-      private LiquesceCallbackSvcRef.LiquesceCallBackClient client;
-      private readonly Guid guid = Guid.NewGuid();
+      LiquesceCallBackProxy client;
+      private readonly Client guid = new Client { id = Guid.NewGuid() };
 
       public delegate void SetStateDelegate(LiquesceSvcState state, string text);
       private SetStateDelegate setStateDelegate;
@@ -43,10 +44,12 @@ namespace LiquesceTray
       {
          try
          {
-            InstanceContext context = new InstanceContext(this);
-            client = new LiquesceCallbackSvcRef.LiquesceCallBackClient(context);
-            client.Subscribe(guid);
             setStateDelegate = newDelegate;
+            NetNamedPipeBinding namedpipebinding = new NetNamedPipeBinding();
+            EndpointAddress endpointAddress = new EndpointAddress("net.pipe://localhost/LiquesceCallBackFacade");
+            InstanceContext context = new InstanceContext(this);
+            client = new LiquesceCallBackProxy(context, namedpipebinding, endpointAddress);
+            client.Subscribe(guid);
          }
          catch (Exception ex)
          {

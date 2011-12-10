@@ -23,6 +23,7 @@
 //  </summary>
 // --------------------------------------------------------------------------------------------------------------------
 #endregion
+
 using System.Collections.Generic;
 using System.ServiceModel;
 using System.Threading;
@@ -59,7 +60,7 @@ namespace LiquesceSvc
          ThreadPool.QueueUserWorkItem(ManagementLayer.Instance.Start);
       }
 
-      public LiquesceSvcState State
+      public LiquesceSvcState LiquesceState
       {
          get
          {

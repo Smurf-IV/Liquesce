@@ -1,7 +1,5 @@
 using System;
-using System.Runtime.Serialization;
 using System.IO;
-using ComTypes = System.Runtime.InteropServices.ComTypes;
 
 namespace DokanNet
 {
@@ -15,24 +13,6 @@ namespace DokanNet
       public bool SynchronousIo;
       public bool Nocache;
       public bool WriteToEndOfFile;
-   }
-
-   // Now used by the client service via WCF
-   [DataContract]
-   public class FileInformation
-   {
-      [DataMember]
-      public FileAttributes Attributes;
-      [DataMember]
-      public DateTime CreationTime;
-      [DataMember]
-      public DateTime LastAccessTime;
-      [DataMember]
-      public DateTime LastWriteTime;
-      [DataMember]
-      public long Length;
-      [DataMember]
-      public string FileName;
    }
 
    public interface IDokanOperations
@@ -55,14 +35,14 @@ namespace DokanNet
 
       int GetFileInformationNative( string filename, ref BY_HANDLE_FILE_INFORMATION rawHandleFileInformation, DokanFileInfo info);
 
-      int FindFiles(string filename, out FileInformation[] files, DokanFileInfo info);
+      int FindFiles(string filename, out WIN32_FIND_DATA[] files, DokanFileInfo info);
 
-      int FindFilesWithPattern(string filename, string pattern, out FileInformation[] files, DokanFileInfo info);
+      int FindFilesWithPattern(string filename, string pattern, out WIN32_FIND_DATA[] files, DokanFileInfo info);
 
       int SetFileAttributes(string filename, FileAttributes attr, DokanFileInfo info);
 
-      int SetFileTimeNative(string filename, ref ComTypes.FILETIME rawCreationTime, ref ComTypes.FILETIME rawLastAccessTime,
-          ref ComTypes.FILETIME rawLastWriteTime, DokanFileInfo info);
+      int SetFileTimeNative(string filename, ref WIN32_FIND_FILETIME rawCreationTime, ref WIN32_FIND_FILETIME rawLastAccessTime,
+          ref WIN32_FIND_FILETIME rawLastWriteTime, DokanFileInfo info);
 
       int DeleteFile( string filename, DokanFileInfo info);
 

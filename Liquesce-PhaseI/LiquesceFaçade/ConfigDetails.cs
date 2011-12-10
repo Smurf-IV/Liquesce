@@ -140,7 +140,7 @@ namespace LiquesceFacade
       public string VolumeLabel = "Mirror of C";
 
       [DataMember]
-      public AllocationModes AllocationMode = AllocationModes.priority;
+      public AllocationModes AllocationMode = AllocationModes.folder;
 
       [DataMember]
       public UInt64 HoldOffBufferBytes = 1L << 10 << 10 << 10; // ==1GB;
@@ -149,7 +149,7 @@ namespace LiquesceFacade
       public List<string> SourceLocations;
 
       [DataMember]
-      public string ServiceLogLevel = "Debug"; // NLog's LogLevel.Debug.ToString()
+      public string ServiceLogLevel = "Warn"; // NLog's LogLevel.Debug.ToString()
 
       [DataMember]
       public List<LanManShareDetails> SharesToRestore;

@@ -1,32 +1,68 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using NLog;
-using ComTypes = System.Runtime.InteropServices.ComTypes;
 
+// ReSharper disable FieldCanBeMadeReadOnly.Global
 namespace DokanNet
 {
    /// <summary>
    /// http://msdn.microsoft.com/en-us/library/aa363788%28VS.85%29.aspx
    /// </summary>
+   // ReSharper disable FieldCanBeMadeReadOnly.Global
    [StructLayout(LayoutKind.Sequential, Pack = 4)]
    public struct BY_HANDLE_FILE_INFORMATION
    {
-      private uint dwFileAttributes;
-      private ComTypes.FILETIME ftCreationTime;
-      private ComTypes.FILETIME ftLastAccessTime;
-      private ComTypes.FILETIME ftLastWriteTime;
-      internal uint dwVolumeSerialNumber;
+      public FileAttributes dwFileAttributes;
+      public WIN32_FIND_FILETIME ftCreationTime;
+      public WIN32_FIND_FILETIME ftLastAccessTime;
+      public WIN32_FIND_FILETIME ftLastWriteTime;
+      public uint dwVolumeSerialNumber;
       public uint nFileSizeHigh;
       public uint nFileSizeLow;
-      private uint dwNumberOfLinks;
-      private uint nFileIndexHigh;
-      private uint nFileIndexLow;
+      public uint dwNumberOfLinks;
+      public uint nFileIndexHigh;
+      public uint nFileIndexLow;
    }
+   // ReSharper restore FieldCanBeMadeReadOnly.Global
 
+   ////
+   /// <summary>
+   /// Structure used for Windows API calls related to file information.
+   /// </summary>
+   /// <remarks>
+   /// Workaround from http://www.pinvoke.net/default.aspx/Structures/WIN32_FIND_DATA.html
+   /// </remarks>
+   // ReSharper disable FieldCanBeMadeReadOnly.Global
+   [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+   public struct WIN32_FIND_FILETIME
+   {
+      public UInt32 dwLowDateTime;
+      public UInt32 dwHighDateTime;
+   }
+   // ReSharper restore FieldCanBeMadeReadOnly.Global
+
+   // ReSharper disable FieldCanBeMadeReadOnly.Global
+   [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto, Pack = 4)]
+   public struct WIN32_FIND_DATA
+   {
+      public FileAttributes dwFileAttributes;
+      public WIN32_FIND_FILETIME ftCreationTime;
+      public WIN32_FIND_FILETIME ftLastAccessTime;
+      public WIN32_FIND_FILETIME ftLastWriteTime;
+      public uint nFileSizeHigh;
+      public uint nFileSizeLow;
+      private readonly uint dwReserved0;
+      private readonly uint dwReserved1;
+      [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
+      public string cFileName;
+      [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 14)]
+      private readonly string cAlternateFileName;
+   }
+   // ReSharper restore FieldCanBeMadeReadOnly.Global
+
+   // ReSharper disable FieldCanBeMadeReadOnly.Global
    [StructLayout(LayoutKind.Sequential, Pack = 4)]
    public struct DOKAN_FILE_INFO
    {
@@ -41,6 +77,7 @@ namespace DokanNet
       public readonly byte Nocache;
       public readonly byte WriteToEndOfFile;
    }
+   // ReSharper restore FieldCanBeMadeReadOnly.Global
 
    /// <summary>
    /// Check http://msdn.microsoft.com/en-us/library/cc230369%28v=prot.13%29.aspx
@@ -94,6 +131,7 @@ UNPROTECTED_SACL_SECURITY_INFORMATION  The SACL inherits ACEs from the parent ob
    ///// <summary>
    ///// See http://www.pinvoke.net/search.aspx?search=SECURITY_DESCRIPTOR&namespace=[All]
    ///// </summary>
+   // ReSharper disable FieldCanBeMadeReadOnly.Global
    [StructLayoutAttribute(LayoutKind.Sequential, Pack = 4)]
    public struct SECURITY_DESCRIPTOR
    {
@@ -421,124 +459,26 @@ UNPROTECTED_SACL_SECURITY_INFORMATION  The SACL inherits ACEs from the parent ob
 
       }
 
-      ////
-
-      [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto, Pack = 4)]
-      struct WIN32_FIND_DATA
-      {
-         public FileAttributes dwFileAttributes;
-         public ComTypes.FILETIME ftCreationTime;
-         public ComTypes.FILETIME ftLastAccessTime;
-         public ComTypes.FILETIME ftLastWriteTime;
-         public uint nFileSizeHigh;
-         public uint nFileSizeLow;
-         private readonly uint dwReserved0;
-         private readonly uint dwReserved1;
-         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
-         public string cFileName;
-         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 14)]
-         private readonly string cAlternateFileName;
-      }
 
       private delegate int FILL_FIND_DATA(ref WIN32_FIND_DATA rawFindData, ref DOKAN_FILE_INFO rawFileInfo);
 
-      public delegate int FindFilesDelegate(IntPtr rawFileName, IntPtr rawFillFindData, // function pointer
-          ref DOKAN_FILE_INFO rawFileInfo);
+      public delegate int FindFilesDelegate(IntPtr rawFileName, IntPtr rawFillFindData, ref DOKAN_FILE_INFO rawFileInfo);
 
-      public int FindFilesProxy(IntPtr rawFileName, IntPtr rawFillFindData, // function pointer
-          ref DOKAN_FILE_INFO rawFileInfo)
+      public int FindFilesProxy(IntPtr rawFileName, IntPtr rawFillFindData, ref DOKAN_FILE_INFO rawFileInfo)
       {
          try
          {
             string file = GetFileName(rawFileName);
-            FileInformation[] files;
+            WIN32_FIND_DATA[] files;
             int ret = operations.FindFiles(file, out files, ConvertFileInfo(ref rawFileInfo));
 
-            FILL_FIND_DATA fill = (FILL_FIND_DATA)Marshal.GetDelegateForFunctionPointer(rawFillFindData, typeof(FILL_FIND_DATA));
-
             if ((ret == 0)
                && (files != null)
                )
             {
-               // ReSharper disable ForCanBeConvertedToForeach
-               // Used a single entry call to speed up the "enumeration" of the list
-               for (int index = 0; index < files.Length; index++)
-               // ReSharper restore ForCanBeConvertedToForeach
-               {
-                  Addto(fill, ref rawFileInfo, files[index]);
-               }
-            }
-            return ret;
-         }
-         catch (Exception ex)
-         {
-            Log.ErrorException("FindFilesProxy threw: ", ex);
-            return -1;
-         }
-
-      }
-
-      public delegate int FindFilesWithPatternDelegate(IntPtr rawFileName, IntPtr rawSearchPattern,
-          IntPtr rawFillFindData, // function pointer
-          ref DOKAN_FILE_INFO rawFileInfo);
-
-      public int FindFilesWithPatternProxy(IntPtr rawFileName, IntPtr rawSearchPattern, IntPtr rawFillFindData, // function pointer
-          ref DOKAN_FILE_INFO rawFileInfo)
-      {
-         try
-         {
-            string file = GetFileName(rawFileName);
-            string pattern = GetFileName(rawSearchPattern);
-            int ret;
-            FileInformation[] files = null;
-            char[] matchDOS = ("\"<>?").ToCharArray();
-            if (-1 != pattern.IndexOfAny(matchDOS))  // See http://liquesce.codeplex.com/workitem/7556
-            {
-               Log.Info("An Application is using DOS_STAR style pattern matching[{0}], Will switch to compatible mode matching", pattern);
-               // PureSync (And maybe others) use the following to get this and / or the subdir contents
-               // DirName<"*
-               // But there is an issue with the code inside dokan see http://code.google.com/p/dokan/issues/detail?id=192 
-               FileInformation[] nonPatternFiles;
-               ret = operations.FindFiles(file, out nonPatternFiles, ConvertFileInfo(ref rawFileInfo));
-               if (ret == Dokan.DOKAN_SUCCESS)
-               {
-                  List<FileInformation> matchedFiles = new List<FileInformation>();
-                  matchedFiles.AddRange(nonPatternFiles.Where(patternFile => DokanDll.DokanIsNameInExpression(pattern, patternFile.FileName, false)));
-                  files = matchedFiles.ToArray();
-               }
-               // * (asterisk) Matches zero or more characters.
-               // ? (question mark) Matches a single character.
-               // #define DOS_DOT (L'"') -  Matches either a period or zero characters beyond the name string.
-               // #define DOS_QM (L'>') - Matches any single character or, upon encountering a period or end of name string, 
-               // advances the expression to the end of the set of contiguous DOS_QMs.
-               // #define DOS_STAR (L'<') - Matches zero or more characters until encountering and matching the final . in the name. 
-               Log.Debug("DOS_STAR style pattern OUT [found {0}]", (files != null) ? files.Length : 0);
-               if (Log.IsTraceEnabled)
-               {
-                  if (files != null)
-                  {
-                     StringBuilder sb = new StringBuilder();
-                     sb.AppendLine();
-                     // It's an Array, so a foreach is easier to read
-                     foreach (FileInformation fileInformation in files)
-                     {
-                        sb.AppendLine(fileInformation.FileName);
-                     }
-                     Log.Trace(sb.ToString());
-                  }
-               }
-            }
-            else
-               ret = operations.FindFilesWithPattern(file, pattern, out files, ConvertFileInfo(ref rawFileInfo));
-
-            FILL_FIND_DATA fill = (FILL_FIND_DATA)Marshal.GetDelegateForFunctionPointer(rawFillFindData, typeof(FILL_FIND_DATA));
-
-            if ((ret == 0)
-               && (files != null)
-               )
-            {
+               FILL_FIND_DATA fill = (FILL_FIND_DATA)Marshal.GetDelegateForFunctionPointer(rawFillFindData, typeof(FILL_FIND_DATA));
                // It's an Array, so a foreach is easier to read
-               foreach (FileInformation t in files)
+               foreach (WIN32_FIND_DATA t in files)
                {
                   Addto(fill, ref rawFileInfo, t);
                }
@@ -553,34 +493,43 @@ UNPROTECTED_SACL_SECURITY_INFORMATION  The SACL inherits ACEs from the parent ob
 
       }
 
-      private void Addto(FILL_FIND_DATA fill, ref DOKAN_FILE_INFO rawFileInfo, FileInformation fi)
+      public delegate int FindFilesWithPatternDelegate(IntPtr rawFileName, IntPtr rawSearchPattern,
+          IntPtr rawFillFindData, ref DOKAN_FILE_INFO rawFileInfo);
+
+      public int FindFilesWithPatternProxy(IntPtr rawFileName, IntPtr rawSearchPattern, IntPtr rawFillFindData, ref DOKAN_FILE_INFO rawFileInfo)
       {
-         WIN32_FIND_DATA data = new WIN32_FIND_DATA
+         try
          {
-            dwFileAttributes = fi.Attributes,
-            ftCreationTime =
-            {
-               dwHighDateTime = (int)(fi.CreationTime.ToFileTime() >> 32),
-               dwLowDateTime = (int)(fi.CreationTime.ToFileTime() & 0xffffffff)
-            },
-            ftLastAccessTime =
-            {
-               dwHighDateTime = (int)(fi.LastAccessTime.ToFileTime() >> 32),
-               dwLowDateTime = (int)(fi.LastAccessTime.ToFileTime() & 0xffffffff)
-            },
-            ftLastWriteTime =
-            {
-               dwHighDateTime = (int)(fi.LastWriteTime.ToFileTime() >> 32),
-               dwLowDateTime = (int)(fi.LastWriteTime.ToFileTime() & 0xffffffff)
-            },
-            nFileSizeLow = (uint)(fi.Length & 0xffffffff),
-            nFileSizeHigh = (uint)(fi.Length >> 32),
-            cFileName = fi.FileName
-         };
-         //ZeroMemory(&data, sizeof(WIN32_FIND_DATAW));
+            string file = GetFileName(rawFileName);
+            string pattern = GetFileName(rawSearchPattern);
+            WIN32_FIND_DATA[] files;
+            int ret = operations.FindFilesWithPattern(file, pattern, out files, ConvertFileInfo(ref rawFileInfo));
 
-         fill(ref data, ref rawFileInfo);
+            FILL_FIND_DATA fill = (FILL_FIND_DATA)Marshal.GetDelegateForFunctionPointer(rawFillFindData, typeof(FILL_FIND_DATA));
 
+            if ((ret == 0)
+               && (files != null)
+               )
+            {
+               // It's an Array, so a foreach is easier to read
+               foreach (WIN32_FIND_DATA t in files)
+               {
+                  Addto(fill, ref rawFileInfo, t);
+               }
+            }
+            return ret;
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException("FindFilesProxy threw: ", ex);
+            return -1;
+         }
+
+      }
+
+      private static void Addto(FILL_FIND_DATA fill, ref DOKAN_FILE_INFO rawFileInfo, WIN32_FIND_DATA fi)
+      {
+         fill(ref fi, ref rawFileInfo);
       }
 
       ////
@@ -643,11 +592,11 @@ UNPROTECTED_SACL_SECURITY_INFORMATION  The SACL inherits ACEs from the parent ob
 
       ////
 
-      public delegate int SetFileTimeDelegate(IntPtr rawFileName, ref ComTypes.FILETIME rawCreationTime, ref ComTypes.FILETIME rawLastAccessTime,
-         ref ComTypes.FILETIME rawLastWriteTime, ref DOKAN_FILE_INFO rawFileInfo);
+      public delegate int SetFileTimeDelegate(IntPtr rawFileName, ref WIN32_FIND_FILETIME rawCreationTime, ref WIN32_FIND_FILETIME rawLastAccessTime,
+         ref WIN32_FIND_FILETIME rawLastWriteTime, ref DOKAN_FILE_INFO rawFileInfo);
 
-      public int SetFileTimeProxy(IntPtr rawFileName, ref ComTypes.FILETIME rawCreationTime, ref ComTypes.FILETIME rawLastAccessTime,
-          ref ComTypes.FILETIME rawLastWriteTime, ref DOKAN_FILE_INFO rawFileInfo)
+      public int SetFileTimeProxy(IntPtr rawFileName, ref WIN32_FIND_FILETIME rawCreationTime, ref WIN32_FIND_FILETIME rawLastAccessTime,
+          ref WIN32_FIND_FILETIME rawLastWriteTime, ref DOKAN_FILE_INFO rawFileInfo)
       {
          try
          {
@@ -775,29 +724,32 @@ UNPROTECTED_SACL_SECURITY_INFORMATION  The SACL inherits ACEs from the parent ob
          }
       }
 
+      // ReSharper disable UnusedMember.Local
       [Flags]
-      public enum FILE_SYSTEM_FLAGS : uint
+      private enum FILE_SYSTEM_FLAGS : uint
       {
-         FILE_CASE_PRESERVED_NAMES = 0x00000002,
+         // See http://msdn.microsoft.com/en-us/library/aa364993%28VS.85%29.aspx for more flags
+         FILE_CASE_PRESERVED_NAMES = 0x00000002,   
          FILE_CASE_SENSITIVE_SEARCH = 0x00000001,
-         FILE_FILE_COMPRESSION = 0x00000010,
-         FILE_NAMED_STREAMS = 0x00040000,
-         FILE_PERSISTENT_ACLS = 0x00000008,
+         FILE_FILE_COMPRESSION = 0x00000010,          // Don't do this.. It causes lot's of problems later on
+         FILE_NAMED_STREAMS = 0x00040000,             // http://www.flexhex.com/docs/articles/alternate-streams.phtml
+         FILE_PERSISTENT_ACLS = 0x00000008,  
          FILE_READ_ONLY_VOLUME = 0x00080000,
          FILE_SEQUENTIAL_WRITE_ONCE = 0x00100000,
          FILE_SUPPORTS_ENCRYPTION = 0x00020000,
          FILE_SUPPORTS_EXTENDED_ATTRIBUTES = 0x00800000,
-         FILE_SUPPORTS_HARD_LINKS = 0x00400000,
+         FILE_SUPPORTS_HARD_LINKS = 0x00400000,       // http://www.flexhex.com/docs/articles/hard-links.phtml
          FILE_SUPPORTS_OBJECT_IDS = 0x00010000,
          FILE_SUPPORTS_OPEN_BY_FILE_ID = 0x01000000,
-         FILE_SUPPORTS_REPARSE_POINTS = 0x00000080,
+         FILE_SUPPORTS_REPARSE_POINTS = 0x00000080,   // Don't do this ->http://groups.google.com/group/dokan/browse_thread/thread/77edca429c791df0
          FILE_SUPPORTS_SPARSE_FILES = 0x00000040,
          FILE_SUPPORTS_TRANSACTIONS = 0x00200000,
-         FILE_SUPPORTS_USN_JOURNAL = 0x02000000,
+         FILE_SUPPORTS_USN_JOURNAL   = 0x02000000,    // Not support on Win 7 and above
          FILE_UNICODE_ON_DISK = 0x00000004,
          FILE_VOLUME_IS_COMPRESSED = 0x00008000,
          FILE_VOLUME_QUOTAS = 0x00000020
       }
+      // ReSharper restore UnusedMember.Local
 
       public delegate int GetVolumeInformationDelegate(IntPtr rawVolumeNameBuffer, uint rawVolumeNameSize, ref uint rawVolumeSerialNumber,
           ref uint rawMaximumComponentLength, ref uint rawFileSystemFlags, IntPtr rawFileSystemNameBuffer, uint rawFileSystemNameSize, ref DOKAN_FILE_INFO rawFileInfo);
@@ -807,6 +759,7 @@ UNPROTECTED_SACL_SECURITY_INFORMATION  The SACL inherits ACEs from the parent ob
       {
          try
          {
+            Log.Trace("GetVolumeInformationProxy");
             byte[] volume = Encoding.Unicode.GetBytes(options.VolumeLabel);
             int length = volume.Length;
             byte[] volumeNull = new byte[length + 2];
@@ -815,31 +768,23 @@ UNPROTECTED_SACL_SECURITY_INFORMATION  The SACL inherits ACEs from the parent ob
             rawVolumeSerialNumber = volumeSerialNumber;
             rawMaximumComponentLength = 256;
 
-            //#define FILE_CASE_SENSITIVE_SEARCH      0x00000001  
-            //#define FILE_CASE_PRESERVED_NAMES       0x00000002  
-            //#define FILE_UNICODE_ON_DISK            0x00000004  
-            //#define FILE_PERSISTENT_ACLS            0x00000008  // This sends the data to the Recycler and not Recycled
-            // See http://msdn.microsoft.com/en-us/library/aa364993%28VS.85%29.aspx for more flags
-            //
-            // FILE_FILE_COMPRESSION      0x00000010     // Don't do this.. It causes lot's of problems later on
+            // FILE_FILE_COMPRESSION      0x00000010     // Don't do this.. It causes lot's of problems later on  
             // And the Dokan code does not support it
             //case FileStreamInformation:
             //            //DbgPrint("FileStreamInformation\n");
             //            status = STATUS_NOT_IMPLEMENTED;
             //            break;
-            //rawFileSystemFlags = 0x0f;
-            //rawFileSystemFlags = FILE_CASE_SENSITIVE_SEARCH | FILE_CASE_PRESERVED_NAMES | FILE_UNICODE_ON_DISK;
 
             rawFileSystemFlags = (uint)(FILE_SYSTEM_FLAGS.FILE_CASE_PRESERVED_NAMES
                | FILE_SYSTEM_FLAGS.FILE_CASE_SENSITIVE_SEARCH
-               | FILE_SYSTEM_FLAGS.FILE_NAMED_STREAMS
-               | FILE_SYSTEM_FLAGS.FILE_SEQUENTIAL_WRITE_ONCE
-               | FILE_SYSTEM_FLAGS.FILE_SUPPORTS_EXTENDED_ATTRIBUTES
-               | FILE_SYSTEM_FLAGS.FILE_SUPPORTS_HARD_LINKS
-               | FILE_SYSTEM_FLAGS.FILE_SUPPORTS_USN_JOURNAL
+               //| FILE_SYSTEM_FLAGS.FILE_NAMED_STREAMS
+               //| FILE_SYSTEM_FLAGS.FILE_SEQUENTIAL_WRITE_ONCE
+               //| FILE_SYSTEM_FLAGS.FILE_SUPPORTS_EXTENDED_ATTRIBUTES
+               //| FILE_SYSTEM_FLAGS.FILE_SUPPORTS_HARD_LINKS  
                | FILE_SYSTEM_FLAGS.FILE_UNICODE_ON_DISK
-               | FILE_SYSTEM_FLAGS.FILE_PERSISTENT_ACLS
-               | FILE_SYSTEM_FLAGS.FILE_VOLUME_QUOTAS);
+               //| FILE_SYSTEM_FLAGS.FILE_PERSISTENT_ACLS
+               //| FILE_SYSTEM_FLAGS.FILE_VOLUME_QUOTAS
+               );
 
             byte[] sys = Encoding.Unicode.GetBytes("Dokan");
             length = sys.Length;
@@ -911,3 +856,4 @@ UNPROTECTED_SACL_SECURITY_INFORMATION  The SACL inherits ACEs from the parent ob
       }
    }
 }
+// ReSharper restore FieldCanBeMadeReadOnly.Global

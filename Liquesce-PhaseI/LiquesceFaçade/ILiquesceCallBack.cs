@@ -23,6 +23,7 @@
 //  </summary>
 // --------------------------------------------------------------------------------------------------------------------
 #endregion
+
 using System;
 using System.Runtime.Serialization;
 using System.ServiceModel;
@@ -35,18 +36,15 @@ namespace LiquesceFacade
       void Update(LiquesceSvcState state, string message);
    }
 
-   [ServiceContract(
-      CallbackContract = typeof(IStateChange),
-      SessionMode = SessionMode.Required)
-   ]
+   [ServiceContract( CallbackContract = typeof(IStateChange))]
    public interface ILiquesceCallBack
    {
 
       [OperationContract(IsOneWay = true)]
-      void Subscribe(Guid id);
+      void Subscribe(Client id);
 
       [OperationContract(IsOneWay = true)]
-      void Unsubscribe(Guid id);
+      void Unsubscribe(Client id);
    }
 
    // Each client connected to the service has a GUID

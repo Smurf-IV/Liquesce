@@ -146,6 +146,7 @@
     <Compile Include="CacheHelper.cs" />
     <Compile Include="FileManager.cs" />
     <Compile Include="KtmTransactionHandle.cs" />
+    <Compile Include="NativeFileFind.cs" />
     <Compile Include="NativeFileOps.cs" />
     <Compile Include="ProcessExtensions.cs" />
     <Compile Include="ProcessIdentity.cs" />
@@ -235,7 +236,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="YearStamp.MonthStamp.DayStamp.Increment" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UseGlobalSettings="False" />
+      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="YearStamp.MonthStamp.DayStamp.Increment" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

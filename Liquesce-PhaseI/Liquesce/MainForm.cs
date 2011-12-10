@@ -84,9 +84,10 @@ namespace Liquesce
             try
             {
                currentSharesToolStripMenuItem.Enabled = commitToolStripMenuItem.Enabled = true;
-               ChannelFactory<ILiquesce> factory = new ChannelFactory<ILiquesce>("LiquesceFacade");
-               ILiquesce remoteIF = factory.CreateChannel();
-               cd = remoteIF.ConfigDetails;
+               EndpointAddress endpointAddress = new EndpointAddress("net.pipe://localhost/LiquesceFacade");
+               NetNamedPipeBinding namedPipeBindingpublish = new NetNamedPipeBinding();
+               LiquesceProxy proxy = new LiquesceProxy(namedPipeBindingpublish, endpointAddress);
+               cd = proxy.ConfigDetails;
             }
             catch (Exception ex)
             {
@@ -737,15 +738,16 @@ namespace Liquesce
                   cd.SourceLocations.Add(node.Text);
                }
 
-               ChannelFactory<ILiquesce> factory = new ChannelFactory<ILiquesce>("LiquesceFacade");
-               ILiquesce remoteIF = factory.CreateChannel();
+               EndpointAddress endpointAddress = new EndpointAddress("net.pipe://localhost/LiquesceFacade");
+               NetNamedPipeBinding namedPipeBindingpublish = new NetNamedPipeBinding();
+               LiquesceProxy proxy = new LiquesceProxy(namedPipeBindingpublish, endpointAddress);
                Log.Info("Didn't go bang so stop");
-               remoteIF.Stop();
+               proxy.Stop();
                Log.Info("Send the new details");
-               remoteIF.ConfigDetails = cd;
+               proxy.ConfigDetails = cd;
                Log.Info("Now start, may need a small sleep to allow things to settle");
                Thread.Sleep(Math.Max(1000, 2500 - (int)cd.DelayStartMilliSec));
-               remoteIF.Start();
+               proxy.Start();
             }
          }
          catch (Exception ex)
