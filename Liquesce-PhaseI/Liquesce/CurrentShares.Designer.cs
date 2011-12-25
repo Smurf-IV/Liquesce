@@ -38,11 +38,12 @@
          this.mountedPoints = new System.Windows.Forms.TextBox();
          this.progressBar1 = new System.Windows.Forms.ProgressBar();
          this.dataGridView1 = new System.Windows.Forms.DataGridView();
-         this.buttonSave = new System.Windows.Forms.Button();
-         this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
          this.Source = new System.Windows.Forms.DataGridViewTextBoxColumn();
          this.Description = new System.Windows.Forms.DataGridViewTextBoxColumn();
          this.Credentials = new System.Windows.Forms.DataGridViewTextBoxColumn();
+         this.buttonSave = new System.Windows.Forms.Button();
+         this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+         this.label2 = new System.Windows.Forms.Label();
          this.groupBox1.SuspendLayout();
          this.groupBox2.SuspendLayout();
          ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
@@ -50,12 +51,12 @@
          // 
          // groupBox1
          // 
-         this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                     | System.Windows.Forms.AnchorStyles.Right)));
+         this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
          this.groupBox1.Controls.Add(this.label1);
          this.groupBox1.Location = new System.Drawing.Point(15, 5);
          this.groupBox1.Name = "groupBox1";
-         this.groupBox1.Size = new System.Drawing.Size(378, 78);
+         this.groupBox1.Size = new System.Drawing.Size(468, 78);
          this.groupBox1.TabIndex = 0;
          this.groupBox1.TabStop = false;
          this.groupBox1.Text = "Notes :";
@@ -65,16 +66,16 @@
          this.label1.Dock = System.Windows.Forms.DockStyle.Fill;
          this.label1.Location = new System.Drawing.Point(3, 18);
          this.label1.Name = "label1";
-         this.label1.Size = new System.Drawing.Size(372, 57);
+         this.label1.Size = new System.Drawing.Size(462, 57);
          this.label1.TabIndex = 0;
          this.label1.Text = "The current active \"Mount Points\" owned by Liquesce will need to be renabled afte" +
-             "r the service has been started. Therefore you will need to confirm that they are" +
-             " have been found correctly.";
+    "r the service has been started. Therefore you will need to confirm that they are" +
+    " have been found correctly.";
          // 
          // Store
          // 
          this.Store.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-         this.Store.Location = new System.Drawing.Point(237, 366);
+         this.Store.Location = new System.Drawing.Point(327, 366);
          this.Store.Name = "Store";
          this.Store.Size = new System.Drawing.Size(75, 23);
          this.Store.TabIndex = 1;
@@ -85,34 +86,34 @@
          // 
          // groupBox2
          // 
-         this.groupBox2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                     | System.Windows.Forms.AnchorStyles.Right)));
+         this.groupBox2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
          this.groupBox2.Controls.Add(this.mountedPoints);
          this.groupBox2.Location = new System.Drawing.Point(15, 89);
          this.groupBox2.Name = "groupBox2";
-         this.groupBox2.Size = new System.Drawing.Size(380, 53);
+         this.groupBox2.Size = new System.Drawing.Size(468, 53);
          this.groupBox2.TabIndex = 2;
          this.groupBox2.TabStop = false;
          this.groupBox2.Text = "Mounted Points :";
          // 
          // mountedPoints
          // 
-         this.mountedPoints.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                     | System.Windows.Forms.AnchorStyles.Right)));
+         this.mountedPoints.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
          this.mountedPoints.Location = new System.Drawing.Point(8, 22);
          this.mountedPoints.Name = "mountedPoints";
          this.mountedPoints.ReadOnly = true;
-         this.mountedPoints.Size = new System.Drawing.Size(366, 22);
+         this.mountedPoints.Size = new System.Drawing.Size(454, 22);
          this.mountedPoints.TabIndex = 0;
          this.toolTip1.SetToolTip(this.mountedPoints, "Current drive matching pattern to search for the shares and creadentials");
          // 
          // progressBar1
          // 
-         this.progressBar1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
-                     | System.Windows.Forms.AnchorStyles.Right)));
+         this.progressBar1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
          this.progressBar1.Location = new System.Drawing.Point(13, 366);
          this.progressBar1.Name = "progressBar1";
-         this.progressBar1.Size = new System.Drawing.Size(218, 23);
+         this.progressBar1.Size = new System.Drawing.Size(308, 23);
          this.progressBar1.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
          this.progressBar1.TabIndex = 4;
          // 
@@ -123,9 +124,9 @@
          this.dataGridView1.AllowUserToOrderColumns = true;
          dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.ControlLight;
          this.dataGridView1.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
-         this.dataGridView1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                     | System.Windows.Forms.AnchorStyles.Left)
-                     | System.Windows.Forms.AnchorStyles.Right)));
+         this.dataGridView1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
          this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
          this.dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.Source,
@@ -138,22 +139,9 @@
          this.dataGridView1.ReadOnly = true;
          this.dataGridView1.RowHeadersVisible = false;
          this.dataGridView1.ShowEditingIcon = false;
-         this.dataGridView1.Size = new System.Drawing.Size(380, 212);
+         this.dataGridView1.Size = new System.Drawing.Size(470, 212);
          this.dataGridView1.TabIndex = 5;
          this.toolTip1.SetToolTip(this.dataGridView1, "Any settings seen here will be the one used in the share restore operation");
-         // 
-         // buttonSave
-         // 
-         this.buttonSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-         this.buttonSave.DialogResult = System.Windows.Forms.DialogResult.OK;
-         this.buttonSave.Location = new System.Drawing.Point(318, 366);
-         this.buttonSave.Name = "buttonSave";
-         this.buttonSave.Size = new System.Drawing.Size(75, 23);
-         this.buttonSave.TabIndex = 6;
-         this.buttonSave.Text = "&Save";
-         this.toolTip1.SetToolTip(this.buttonSave, "The Settings above will be stored - ready to be sent to the server");
-         this.buttonSave.UseVisualStyleBackColor = true;
-         this.buttonSave.Click += new System.EventHandler(this.buttonSave_Click);
          // 
          // Source
          // 
@@ -180,11 +168,38 @@
          this.Credentials.ReadOnly = true;
          this.Credentials.Width = 116;
          // 
+         // buttonSave
+         // 
+         this.buttonSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+         this.buttonSave.DialogResult = System.Windows.Forms.DialogResult.OK;
+         this.buttonSave.Location = new System.Drawing.Point(408, 366);
+         this.buttonSave.Name = "buttonSave";
+         this.buttonSave.Size = new System.Drawing.Size(75, 23);
+         this.buttonSave.TabIndex = 6;
+         this.buttonSave.Text = "&Save";
+         this.toolTip1.SetToolTip(this.buttonSave, "The Settings above will be stored - ready to be sent to the server");
+         this.buttonSave.UseVisualStyleBackColor = true;
+         this.buttonSave.Click += new System.EventHandler(this.buttonSave_Click);
+         // 
+         // label2
+         // 
+         this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+         this.label2.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+         this.label2.ForeColor = System.Drawing.Color.Maroon;
+         this.label2.Location = new System.Drawing.Point(490, 13);
+         this.label2.Name = "label2";
+         this.label2.Size = new System.Drawing.Size(155, 347);
+         this.label2.TabIndex = 7;
+         this.label2.Text = resources.GetString("label2.Text");
+         // 
          // CurrentShares
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 14F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-         this.ClientSize = new System.Drawing.Size(405, 402);
+         this.ClientSize = new System.Drawing.Size(657, 402);
+         this.Controls.Add(this.label2);
          this.Controls.Add(this.buttonSave);
          this.Controls.Add(this.dataGridView1);
          this.Controls.Add(this.progressBar1);
@@ -222,5 +237,6 @@
       private System.Windows.Forms.DataGridViewTextBoxColumn Source;
       private System.Windows.Forms.DataGridViewTextBoxColumn Description;
       private System.Windows.Forms.DataGridViewTextBoxColumn Credentials;
+      private System.Windows.Forms.Label label2;
    }
 }
