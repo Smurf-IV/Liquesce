@@ -14,7 +14,7 @@
    <?define UpgradeCode = "F6F94F17-A05F-4824-8DD9-9F5E8267D783" ?>
 
    <!-- Change this when creating new release YY-MM-DD -->
-   <?define Version = "11.11.20.770" ?>
+   <?define Version = "11.11.21.770" ?>
    
    <?define ProductName = "Liquesce Windows HDD Pooling Suite"?>
 
@@ -38,7 +38,8 @@
       <Property Id="ARPURLINFOABOUT" Value="http://liquesce.codeplex.com/" />
       <Icon Id="InstallerIcon" SourceFile="$(sys.SOURCEFILEDIR)..\Liquesce\Resources\Liquesce.ico" />
       <Property Id="ARPPRODUCTICON" Value="InstallerIcon" />
-
+      <WixVariable Id="WixUILicenseRtf" Value="GPLv2.rtf" />
+      
       <!-- Properties to allow detection of .Net installation -->
       <PropertyRef Id="NETFRAMEWORK40FULL"/>
       <PropertyRef Id="NETFRAMEWORK40FULLINSTALLROOTDIR" />
