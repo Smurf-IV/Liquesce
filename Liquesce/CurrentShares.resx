@@ -129,6 +129,13 @@
   <metadata name="Credentials.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
+  <data name="label2.Text" xml:space="preserve">
+    <value>Due to issues with the underlying Dokan driver; Some client OS's will not be to utilise all of the features normally associated with windows sharing. 
+
+For Example: if an XP client connects to a Windows 7 host, then applications like Notepad will not be able to save their edits to the same file.
+
+Most of these have been documented in both the Dokan Forum And the Issues List in Liquesce.</value>
+  </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
