@@ -14,7 +14,7 @@
    <?define UpgradeCode = "F6F94F17-A05F-4824-8DD9-9F5E8267D783" ?>
 
    <!-- Change this when creating new release YY-MM-DD -->
-   <?define Version = "11.11.21.770" ?>
+   <?define Version = "12.01.04.861" ?>
    
    <?define ProductName = "Liquesce Windows HDD Pooling Suite"?>
 
