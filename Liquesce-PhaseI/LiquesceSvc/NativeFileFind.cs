@@ -84,7 +84,7 @@ namespace LiquesceSvc
             // please note that the following line won't work if you try this on a network folder, like \\Machine\C$
             // simply remove the \\?\ part in this case or use \\?\UNC\ prefix
             // FileSystemInfo[] fileSystemInfos = dirInfo.GetFileSystemInfos(pattern, SearchOption.TopDirectoryOnly);
-            using (SafeFindHandle findHandle = FindFirstFile(Path.Combine(path, pattern), out findData))
+            using (SafeFindHandle findHandle = FindFirstFile(NativeFileOps.CombineNoChecks(path, pattern), out findData))
             {
                if (!findHandle.IsInvalid)
                {

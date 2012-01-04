@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="NativeFileOps.cs" company="Smurf-IV">
 // 
-//  Copyright (C) 2011 Smurf-IV
+//  Copyright (C) 2011-2012 Smurf-IV
 // 
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -71,6 +71,26 @@ namespace LiquesceSvc
       }
 
       /// <summary>
+      /// Taken from System\IO\Path.cs
+      /// and then remove the checks to allow speedier combines
+      /// </summary>
+      /// <param name="path1"></param>
+      /// <param name="path2"></param>
+      /// <returns></returns>
+      public static string CombineNoChecks(string path1, string path2)
+      {
+         if (path2.Length == 0)
+            return path1;
+         if (path1.Length == 0 || Path.IsPathRooted(path2))
+            return path2;
+         char ch = path1[path1.Length - 1];
+         if ((int)ch != (int)Path.DirectorySeparatorChar && (int)ch != (int)Path.AltDirectorySeparatorChar && (int)ch != (int)Path.VolumeSeparatorChar)
+            return path1 + (object)Path.DirectorySeparatorChar + path2;
+         else
+            return path1 + path2;
+      }
+
+      /// <summary>
       /// Call the native function to create an appropriate wrapper for the File Operations
       /// </summary>
       /// <param name="lpFileName"></param>
@@ -135,7 +155,6 @@ namespace LiquesceSvc
          try
          {
             return WriteFile(handle, buffer, numBytesToWrite, out numBytesWritten, IntPtr.Zero);
-
          }
          finally
          {
@@ -210,7 +229,7 @@ namespace LiquesceSvc
       private void CheckData()
       {
          WIN32_FILE_ATTRIBUTE_DATA? local = cachedAttributeData;
-         if (!cachedAttributeData.HasValue)
+         if (!local.HasValue)
          {
             WIN32_FILE_ATTRIBUTE_DATA newData;
             if (GetFileAttributesEx(FullName, GET_FILEEX_INFO_LEVELS.GetFileExInfoStandard, out newData))
@@ -222,7 +241,7 @@ namespace LiquesceSvc
       {
          get
          {
-            return (Exists) ? cachedAttributeData.Value.dwFileAttributes : (FileAttributes) (-1);
+            return (Exists) ? cachedAttributeData.Value.dwFileAttributes : 0;
          }
       }
 
@@ -358,7 +377,7 @@ namespace LiquesceSvc
 
       [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
       [DllImport("kernel32.dll", SetLastError = true)]
-      private static extern bool CloseHandle(IntPtr handle);
+      private static extern bool CloseHandle(SafeFileHandle handle);
 
       [DllImport("kernel32.dll")]
       private static extern int GetFileType(SafeFileHandle handle);
@@ -439,8 +458,10 @@ namespace LiquesceSvc
       private static extern bool PathIsDirectoryEmptyW( [MarshalAsAttribute(UnmanagedType.LPWStr), In] string pszPath);
 
       private static readonly int MAX_PATH = 260;
+// ReSharper disable UnusedMember.Local
       private static readonly int MaxLongPath = 32000;
       private static readonly string Prefix = "\\\\?\\";
+// ReSharper restore UnusedMember.Local
 
       #endregion
 
