@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="ManagementLayer.cs" company="Smurf-IV">
 // 
-//  Copyright (C) 2010-2011 Smurf-IV
+//  Copyright (C) 2010-2012 Smurf-IV
 // 
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@
 //  </summary>
 // --------------------------------------------------------------------------------------------------------------------
 #endregion
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -183,13 +184,13 @@ namespace LiquesceSvc
                   MountPoint = mountPoint,
                   ThreadCount = currentConfigDetails.ThreadCount,
                   DebugMode = currentConfigDetails.DebugMode,
-                  //      public bool UseStdErr;
+                  // public bool UseStdErr;
                   // UseAltStream = true, // This needs all sorts of extra API's
                   UseKeepAlive = true,  // When you set TRUE on DokanOptions->UseKeepAlive, dokan library automatically unmounts 15 seconds after user-mode file system hanged up
                   NetworkDrive = false,  // Set this to true to see if it stops the recycler bin question until [workitem:7253] is sorted
                   // If the network is true then also need to have the correct version of the dokannp.dll that works on the installed OS
                   VolumeLabel = currentConfigDetails.VolumeLabel
-                  ,RemovableDrive = true
+                  //,RemovableDrive = true
                };
 
 

@@ -79,6 +79,7 @@ namespace LiquesceSvc
       public int CreateFile(string filename, uint rawAccessMode, uint rawShare, uint rawCreationDisposition, uint rawFlagsAndAttributes, DokanFileInfo info)
       {
          int dokanReturn = Dokan.DOKAN_SUCCESS;
+         NativeFileOps fs = null;
          try
          {
             // TODO: Dump rawAccessMode out in hex to max it easier to decode :-)
@@ -87,13 +88,50 @@ namespace LiquesceSvc
             bool createNew = (rawCreationDisposition == Proxy.CREATE_NEW) || (rawCreationDisposition == Proxy.CREATE_ALWAYS);
             NativeFileOps foundFileInfo = roots.GetPath(filename,  (!createNew?0:configDetails.HoldOffBufferBytes));
 
-            // Increment now in case there is an exception later
-            using (openFilesSync.WriteLock())
-               ++openFilesLastKey; // never be Zero !
+            //bool fileExists = foundFileInfo.Exists;
+            //if (fileExists
+            //   && (foundFileInfo.IsDirectory)
+            //   )
+            //{
+            //   dokanReturn = OpenDirectory(filename, info);
+            //   return dokanReturn;
+            //}
+
             string fullName = foundFileInfo.FullName;
+            //switch (rawCreationDisposition)
+            //{
+            //   // *** NTh Change ***
+            //   // Fix the parameter invalid when trying to replace an existing file
+            //   case Proxy.CREATE_ALWAYS:
+            //      //Ignore the existing of the file, at this time the OS is trying to overwrite it                
+            //      break;
+            //   case Proxy.CREATE_NEW:
+            //      if (fileExists)
+            //      {
+            //         Log.Debug("filename [{0}] CREATE_NEW File Exists !", fullName);
+
+            //         // force it to be "Looked up" next time
+            //         roots.RemoveFromLookup(filename);
+            //         throw new System.ComponentModel.Win32Exception(Dokan.ERROR_FILE_EXISTS*-1);
+            //      }
+            //      break;
+            //   case Proxy.OPEN_EXISTING:
+            //   //case FileMode.Append:                    
+            //   case Proxy.TRUNCATE_EXISTING:
+            //      if (!fileExists)
+            //      {
+            //         Log.Debug("filename [{0}] ERROR_FILE_NOT_FOUND", fullName);
+            //         // Probably someone has removed this on the actual drive
+            //         roots.RemoveFromLookup(filename);
+            //         throw new System.ComponentModel.Win32Exception(Dokan.ERROR_FILE_NOT_FOUND*-1);
+            //      }
+            //      break;
+            //}
+
             PID.Invoke(info.ProcessId, delegate
             {
-               if (createNew)
+               if (!foundFileInfo.Exists
+                  && createNew)
                {
                   // force it to be "Looked up" next time
                   roots.RemoveFromLookup(filename);
@@ -121,18 +159,19 @@ namespace LiquesceSvc
 
                Log.Debug("Modified rawFlagsAndAttributes[{0}]", rawFlagsAndAttributes);
 
-               NativeFileOps fs = NativeFileOps.CreateFile(fullName, rawAccessMode, rawShare,
+               fs = NativeFileOps.CreateFile(fullName, rawAccessMode, rawShare,
                                                    rawCreationDisposition, rawFlagsAndAttributes);
-               
                // If a specified file exists before the function call and dwCreationDisposition is CREATE_ALWAYS 
                // or OPEN_ALWAYS, a call to GetLastError returns ERROR_ALREADY_EXISTS, even when the function succeeds.
-               //if (createNew)
-               //   dokanReturn = Marshal.GetLastWin32Error() * -1;
-               // It's not gone boom, so it must be okay..
-               using (openFilesSync.WriteLock())
+               int lastError = Marshal.GetLastWin32Error();
+               if (lastError != 0)
                {
-                  info.refFileHandleContext = openFilesLastKey; // Incremented above
-                  openFiles.Add(openFilesLastKey, fs);
+                  // observe what is happening in the Dokan Code @ https://code.google.com/p/dokan/source/browse/trunk/dokan/create.c?r=127
+                  // if a 
+                  // throw new System.ComponentModel.Win32Exception(lastError);
+                  // is used then a -ve result will be ruturned and Dokan will then return the incorrect result to the caller.
+                  // In this case where an open has succedded but the error code has been set we need to return it as a +ve value
+                  dokanReturn = lastError;
                }
             });
             notifyOf.CreateFile(fullName, info.refFileHandleContext, createNew);
@@ -146,12 +185,20 @@ namespace LiquesceSvc
          }
          finally
          {
-            Log.Debug("CreateFile OUT dokanReturn=[{0}] context[{1}]", dokanReturn, openFilesLastKey);
-            if (dokanReturn != Dokan.DOKAN_SUCCESS)
+            if ( fs != null )
             {
-               // force it to be "Looked up" next time
-               roots.RemoveFromLookup(filename);
+               // If a specified file exists before the function call and dwCreationDisposition is CREATE_ALWAYS 
+               // or OPEN_ALWAYS, a call to GetLastError returns ERROR_ALREADY_EXISTS, even when the function succeeds.
+               //if (createNew)
+               //   dokanReturn = Marshal.GetLastWin32Error() * -1;
+               Log.Trace("It's not gone boom, so it must be okay..");
+               using (openFilesSync.WriteLock())
+               {
+                  info.refFileHandleContext = ++openFilesLastKey;
+                  openFiles.Add(openFilesLastKey, fs);
+               }
             }
+            Log.Debug("CreateFile OUT dokanReturn=[{0}] context[{1}]", dokanReturn, openFilesLastKey);
          }
          return dokanReturn;
       }
@@ -170,8 +217,6 @@ namespace LiquesceSvc
                   )
                {
                   info.IsDirectory = true;
-                  using (openFilesSync.WriteLock())
-                     info.refFileHandleContext = ++openFilesLastKey; // never be Zero !
                   ShellChangeNotify.OpenDirectory(foundDirInfo.FullName, info.refFileHandleContext);
                   dokanReturn = Dokan.DOKAN_SUCCESS;
                }
@@ -243,7 +288,10 @@ namespace LiquesceSvc
          try
          {
             Log.Trace("Cleanup IN DokanProcessId[{0}] with filename [{1}] handle[{2}] isDir[{3}]", info.ProcessId, filename, info.refFileHandleContext, info.IsDirectory);
+            
             NativeFileOps foundInfo = roots.GetPath(filename);
+            // Make a copy for use later as the CloseAndRemove will remove this value
+            ulong shellFireContext = info.refFileHandleContext;
             CloseAndRemove(info);
             PID.Invoke(info.ProcessId, delegate
             {
@@ -253,17 +301,22 @@ namespace LiquesceSvc
                   {
                      Log.Trace("DeleteOnClose Directory");
                      roots.DeleteDirectory(filename);
-                     notifyOf.DeleteDirectory(foundInfo.FullName, info.refFileHandleContext);
+                     notifyOf.DeleteDirectory(foundInfo.FullName, shellFireContext);
                   }
                   else
                   {
                      roots.DeleteFile(filename);
-                     notifyOf.DeleteFile(foundInfo.FullName, info.refFileHandleContext);
+                     notifyOf.DeleteFile(foundInfo.FullName, shellFireContext);
                   }
                }
             });
-            notifyOf.Cleanup(foundInfo.FullName, info.refFileHandleContext);
-            info.refFileHandleContext = 0;
+            ShellChangeNotify.UpdateType type = notifyOf.Cleanup(foundInfo.FullName, shellFireContext);
+            if (type != 0)
+            {
+               notifyOf.CombinedNotify(roots.ReturnMountFileName(foundInfo.FullName), type );
+               roots.RemoveFromLookup(filename);
+            }
+
             dokanReturn = Dokan.DOKAN_SUCCESS;
          }
          catch (Exception ex)
@@ -898,7 +951,7 @@ namespace LiquesceSvc
                   });
                }
                // If we get this far, then everything is probably ok (No exeptions thrown :-)
-               notifyOf.MoveFile(nfo.FullName, roots.GetPath(newname).FullName, (nfo is DirectoryInfo), info.refFileHandleContext);
+               notifyOf.MoveFile(nfo.FullName, roots.GetPath(newname).FullName, nfo.IsDirectory, info.refFileHandleContext);
                dokanReturn = Dokan.DOKAN_SUCCESS;
             }
          }
@@ -1142,7 +1195,7 @@ namespace LiquesceSvc
          int dokanReturn = Dokan.DOKAN_SUCCESS;
          try
          {
-            return (dokanReturn = -120); // 
+            // return (dokanReturn = -120); // 
             SECURITY_INFORMATION reqInfo = rawRequestedInformation;
             byte[] managedDescriptor = null;
                   AccessControlSections includeSections = AccessControlSections.None;
@@ -1228,7 +1281,7 @@ namespace LiquesceSvc
          int dokanReturn = Dokan.DOKAN_SUCCESS;
          try
          {
-            return (dokanReturn = -120); // 50 = ERROR_NOT_SUPPORTED 120 = ERROR_CALL_NOT_IMPLEMENTED
+            // return (dokanReturn = -120); // 50 = ERROR_NOT_SUPPORTED 120 = ERROR_CALL_NOT_IMPLEMENTED
             NativeFileOps foundFileInfo = roots.GetPath(filename);
             if (foundFileInfo.Exists)
             {

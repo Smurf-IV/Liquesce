@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="LiquesceOps.cs" company="Smurf-IV">
 // 
-//  Copyright (C) 2011 Smurf-IV
+//  Copyright (C) 2011-2012 Smurf-IV
 // 
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -38,16 +38,16 @@ namespace LiquesceSvc
    internal class ShellChangeNotify /*: IDokanOperations*/
    {
       [Flags]
-      private enum UpdateType
+      internal enum UpdateType
       {
          Write = 1,
          Delete = Write << 1,
          Attributes = Delete << 1,
          Times = Attributes << 1,
          Security = Times << 1,
-         DeleteDir,
-         DeleteFile,
-         Size
+         DeleteDir = Security << 1,
+         DeleteFile = DeleteDir << 1,
+         Size = DeleteFile << 1
       }
 
       static private readonly Logger Log = LogManager.GetCurrentClassLogger();
@@ -89,32 +89,38 @@ namespace LiquesceSvc
                         HChangeNotifyFlags.SHCNF_PATHW | HChangeNotifyFlags.SHCNF_FLUSHNOWAIT, str.Ptr, IntPtr.Zero);
       }
 
-      public void Cleanup(string actualFilename, UInt64 fileHandleContext)
+      public UpdateType Cleanup(string actualFilename, UInt64 fileHandleContext)
       {
          UpdateType type;
          if (fileHandleContextUpdate.TryGetValue(fileHandleContext, out type))
          {
-            Log.Trace("Fire ShellChangeNotify for Cleanup on [{0}] with [{1}]", actualFilename, type);
-            HChangeNotifyEventID updateWith = HChangeNotifyEventID.SHCNE_FREESPACE;
-            if ((type & UpdateType.Write) == UpdateType.Write)
-               updateWith |= HChangeNotifyEventID.SHCNE_FREESPACE;
-            if ((type & UpdateType.DeleteDir) == UpdateType.DeleteDir)
-               updateWith |= HChangeNotifyEventID.SHCNE_RMDIR;
-            if ((type & UpdateType.DeleteFile) == UpdateType.DeleteFile)
-               updateWith |= HChangeNotifyEventID.SHCNE_DELETE;
-            if ((type & UpdateType.Times) == UpdateType.Times)
-               updateWith |= HChangeNotifyEventID.SHCNE_ATTRIBUTES;
-            if ((type & UpdateType.Security) == UpdateType.Security)
-               updateWith |= HChangeNotifyEventID.SHCNE_ATTRIBUTES;
-            if ((type & UpdateType.Size) == UpdateType.Size)
-               updateWith |= HChangeNotifyEventID.SHCNE_FREESPACE;
-            
-            using (ConvertStringToIntPtr str = new ConvertStringToIntPtr(actualFilename))
-               SHChangeNotify(updateWith,
-                              HChangeNotifyFlags.SHCNF_PATHW | HChangeNotifyFlags.SHCNF_FLUSHNOWAIT, 
-                              str.Ptr, IntPtr.Zero);
+            fileHandleContextUpdate.Remove(fileHandleContext);
+            CombinedNotify(actualFilename, type);
          }
+         return type;
+      }
 
+      public void CombinedNotify(string targetFullFilename, UpdateType type)
+      {
+         Log.Trace("Fire CombinedNotify for Cleanup on [{0}] with [{1}]", targetFullFilename, type);
+         HChangeNotifyEventID updateWith = HChangeNotifyEventID.SHCNE_FREESPACE;
+         if ((type & UpdateType.Write) == UpdateType.Write)
+            updateWith |= HChangeNotifyEventID.SHCNE_FREESPACE;
+         if ((type & UpdateType.DeleteDir) == UpdateType.DeleteDir)
+            updateWith |= HChangeNotifyEventID.SHCNE_RMDIR;
+         if ((type & UpdateType.DeleteFile) == UpdateType.DeleteFile)
+            updateWith |= HChangeNotifyEventID.SHCNE_DELETE;
+         if ((type & UpdateType.Times) == UpdateType.Times)
+            updateWith |= HChangeNotifyEventID.SHCNE_ATTRIBUTES;
+         if ((type & UpdateType.Security) == UpdateType.Security)
+            updateWith |= HChangeNotifyEventID.SHCNE_ATTRIBUTES;
+         if ((type & UpdateType.Size) == UpdateType.Size)
+            updateWith |= HChangeNotifyEventID.SHCNE_FREESPACE;
+
+         using (ConvertStringToIntPtr str = new ConvertStringToIntPtr(targetFullFilename))
+            SHChangeNotify(updateWith,
+                           HChangeNotifyFlags.SHCNF_PATHW | HChangeNotifyFlags.SHCNF_FLUSHNOWAIT,
+                           str.Ptr, IntPtr.Zero);
       }
 
       public static void CloseFile(string actualFilename, UInt64 fileHandleContext)
