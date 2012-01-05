@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="LiquesceOps.cs" company="Smurf-IV">
 // 
-//  Copyright (C) 2010-2011 Smurf-IV
+//  Copyright (C) 2010-2012 Smurf-IV
 // 
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -1131,22 +1131,23 @@ namespace LiquesceSvc
          try
          {
             Log.Trace("GetDiskFreeSpace IN DokanProcessId[{0}]", info.ProcessId);
-            ulong localFreeBytesAvailable = 0, localTotalBytes = 0, localTotalFreeBytes = 0;
-            configDetails.SourceLocations.ForEach(str =>
-                                                     {
-                                                        ulong num;
-                                                        ulong num2;
-                                                        ulong num3;
-                                                        if (GetDiskFreeSpaceExW(str, out num, out num2, out num3))
-                                                        {
-                                                           localFreeBytesAvailable += num;
-                                                           localTotalBytes += num2;
-                                                           localTotalFreeBytes += num3;
-                                                        }
-                                                     });
-            freeBytesAvailable = localFreeBytesAvailable;
-            totalBytes = localTotalBytes;
-            totalFreeBytes = localTotalFreeBytes;
+            freeBytesAvailable = totalBytes = totalFreeBytes = 0;
+
+            HashSet<string> uniqueSources = new HashSet<string>();
+            configDetails.SourceLocations.ForEach(str => uniqueSources.Add(NativeFileOps.GetRootOrMountFor(str)) );
+
+            foreach (string source in uniqueSources)
+            {
+               ulong num;
+               ulong num2;
+               ulong num3;
+               if (GetDiskFreeSpaceExW(source, out num, out num2, out num3))
+               {
+                  freeBytesAvailable += num;
+                  totalBytes += num2;
+                  totalFreeBytes += num3;
+               }
+            }
             dokanReturn = Dokan.DOKAN_SUCCESS;
          }
          catch (Exception ex)
@@ -1195,7 +1196,10 @@ namespace LiquesceSvc
          int dokanReturn = Dokan.DOKAN_SUCCESS;
          try
          {
-            // return (dokanReturn = -120); // 
+            // Following in an attempt to solve Win 7 and above share write access
+            //if ( PID.CouldBeSMB(info.ProcessId ) )
+            //   return ( dokanReturn = Dokan.ERROR_CALL_NOT_IMPLEMENTED);
+
             SECURITY_INFORMATION reqInfo = rawRequestedInformation;
             byte[] managedDescriptor = null;
                   AccessControlSections includeSections = AccessControlSections.None;
@@ -1281,7 +1285,10 @@ namespace LiquesceSvc
          int dokanReturn = Dokan.DOKAN_SUCCESS;
          try
          {
-            // return (dokanReturn = -120); // 50 = ERROR_NOT_SUPPORTED 120 = ERROR_CALL_NOT_IMPLEMENTED
+            // Following in an attempt to solve Win 7 and above share write access
+            //if (PID.CouldBeSMB(info.ProcessId))
+            //   return (dokanReturn = Dokan.ERROR_CALL_NOT_IMPLEMENTED);
+
             NativeFileOps foundFileInfo = roots.GetPath(filename);
             if (foundFileInfo.Exists)
             {

@@ -32,6 +32,7 @@ namespace DokanNet
       public const int ERROR_SHARING_VIOLATION = -32;
       public const int ERROR_FILE_EXISTS = -80;
       public const int ERROR_DISK_FULL = -112;     // There is not enough space on the disk.
+      public const int ERROR_CALL_NOT_IMPLEMENTED = -120;
       public const int ERROR_INSUFFICIENT_BUFFER = -122;
       public const int ERROR_INVALID_NAME = -123;
       public const int ERROR_DIR_NOT_EMPTY = -145; // MessageText: The directory is not empty.

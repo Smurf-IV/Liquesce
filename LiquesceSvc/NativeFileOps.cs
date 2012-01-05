@@ -25,13 +25,13 @@
 #endregion
 
 using System;
+using System.ComponentModel;
 using System.IO;
 using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Text;
 using DokanNet;
-using Microsoft.Win32;
 using Microsoft.Win32.SafeHandles;
 
 namespace LiquesceSvc
@@ -83,11 +83,7 @@ namespace LiquesceSvc
             return path1;
          if (path1.Length == 0 || Path.IsPathRooted(path2))
             return path2;
-         char ch = path1[path1.Length - 1];
-         if ((int)ch != (int)Path.DirectorySeparatorChar && (int)ch != (int)Path.AltDirectorySeparatorChar && (int)ch != (int)Path.VolumeSeparatorChar)
-            return path1 + (object)Path.DirectorySeparatorChar + path2;
-         else
-            return path1 + path2;
+         return AddTrailingSeperator(path1) + path2;
       }
 
       /// <summary>
@@ -105,7 +101,7 @@ namespace LiquesceSvc
                                                     dwCreationDisposition, dwFlagsAndAttributes, IntPtr.Zero);
          if (handle.IsInvalid)
          {
-            throw new System.ComponentModel.Win32Exception();
+            throw new Win32Exception();
          }
          return new NativeFileOps(lpFileName, handle);
       }
@@ -126,7 +122,7 @@ namespace LiquesceSvc
       public void SetFilePointer(long offset, SeekOrigin origin)
       {
          if (!SetFilePointerEx(handle, offset, IntPtr.Zero, (int)origin))
-            throw new System.ComponentModel.Win32Exception();
+            throw new Win32Exception();
          RemoveCachedFileInformation();
       }
 
@@ -166,7 +162,7 @@ namespace LiquesceSvc
       public void FlushFileBuffers()
       {
          if (!FlushFileBuffers(handle))
-            throw new System.ComponentModel.Win32Exception();
+            throw new Win32Exception();
       }
 
       public void GetFileInformationByHandle(ref BY_HANDLE_FILE_INFORMATION lpFileInformation)
@@ -175,13 +171,45 @@ namespace LiquesceSvc
          if (local.HasValue)
             lpFileInformation = local.Value;
          else if (!GetFileInformationByHandle(handle, ref lpFileInformation))
-            throw new System.ComponentModel.Win32Exception();
+            throw new Win32Exception();
          else
          {
             cachedFileInformation = lpFileInformation;
             cachedAttributeData = new WIN32_FILE_ATTRIBUTE_DATA();
             cachedAttributeData.Value.PopulateFrom(lpFileInformation);
          }
+      }
+
+      static public string GetRootOrMountFor(string path)
+      {
+         do
+         {
+            NativeFileOps dirInfo = new NativeFileOps(path);
+            FileAttributes attr = dirInfo.Attributes;
+            if ((attr & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint)
+            {
+               path = AddTrailingSeperator(path);
+               const int MaxVolumeNameLength = 100;
+               StringBuilder sb = new StringBuilder(MaxVolumeNameLength);
+               if (GetVolumeNameForVolumeMountPointW(path, sb, (uint)MaxVolumeNameLength))
+                  return sb.ToString();
+            }
+            DirectoryInfo tmp = Directory.GetParent(path);
+            if (tmp == null)
+               return AddTrailingSeperator(path);
+            path = tmp.FullName;
+         } while (!string.IsNullOrEmpty(path));
+         return path;
+      }
+
+      private static string AddTrailingSeperator(string path)
+      {
+         char ch = path[path.Length - 1];
+         if ((ch != Path.DirectorySeparatorChar)
+            && (ch != Path.AltDirectorySeparatorChar)
+            )
+            path += Path.DirectorySeparatorChar;
+         return path;
       }
 
       private void RemoveCachedFileInformation()
@@ -193,7 +221,7 @@ namespace LiquesceSvc
       public void SetFileTime(ref WIN32_FIND_FILETIME lpCreationTime, ref WIN32_FIND_FILETIME lpLastAccessTime, ref WIN32_FIND_FILETIME lpLastWriteTime)
       {
          if (!SetFileTime(handle, ref lpCreationTime, ref lpLastAccessTime, ref lpLastWriteTime))
-            throw new System.ComponentModel.Win32Exception();
+            throw new Win32Exception();
          RemoveCachedFileInformation();
       }
 
@@ -210,20 +238,20 @@ namespace LiquesceSvc
       {
          SetFilePointer(length, SeekOrigin.Begin);
          if (!SetEndOfFile(handle))
-            throw new System.ComponentModel.Win32Exception();
+            throw new Win32Exception();
          RemoveCachedFileInformation();
       }
 
       public void LockFile(long offset, long length)
       {
          if (!LockFile(handle, (int)offset, (int)(offset >> 32), (int)length, (int)(length >> 32)))
-            throw new System.ComponentModel.Win32Exception();
+            throw new Win32Exception();
       }
 
       public void UnlockFile(long offset, long length)
       {
          if (!UnlockFile(handle, (int)offset, (int)(offset >> 32), (int)length, (int)(length >> 32)))
-            throw new System.ComponentModel.Win32Exception();
+            throw new Win32Exception();
       }
 
       private void CheckData()
@@ -247,13 +275,13 @@ namespace LiquesceSvc
 
       public string DirectoryPathOnly
       {
-         get 
-         { 
+         get
+         {
             // Stolen from Path.GetDirectoryName() then simplified
             int length = FullName.Length;
             do
             {
-            } while ((FullName[--length] != Path.DirectorySeparatorChar) 
+            } while ((FullName[--length] != Path.DirectorySeparatorChar)
                && (FullName[length] != Path.AltDirectorySeparatorChar)
                );
             return FullName.Substring(0, length);
@@ -264,7 +292,7 @@ namespace LiquesceSvc
       {
          get
          {
-            return (!Exists || IsDirectory) ? 0 : (long)cachedAttributeData.Value.nFileSizeHigh << 32 | (long)cachedAttributeData.Value.nFileSizeLow & (long)uint.MaxValue;
+            return (!Exists || IsDirectory) ? 0 : (long)cachedAttributeData.Value.nFileSizeHigh << 32 | (long)cachedAttributeData.Value.nFileSizeLow & (long)UInt32.MaxValue;
          }
       }
 
@@ -301,9 +329,9 @@ namespace LiquesceSvc
 
       public bool IsEmptyDirectory
       {
-         get 
+         get
          {
-            return !string.IsNullOrEmpty(FullName) && IsDirectory &&
+            return !String.IsNullOrEmpty(FullName) && IsDirectory &&
                (FullName.Length <= MAX_PATH ? PathIsDirectoryEmptyW(FullName) : NativeFileFind.IsDirEmpty(FullName));
          }
       }
@@ -312,11 +340,11 @@ namespace LiquesceSvc
       public void SetFileAttributes(FileAttributes attr)
       {
          if (!SetFileAttributesW(FullName, attr))
-            throw new System.ComponentModel.Win32Exception();
+            throw new Win32Exception();
          RemoveCachedFileInformation();
       }
 
-      private static string GetFullPathName(string startPath )
+      private static string GetFullPathName(string startPath)
       {
          StringBuilder buffer = new StringBuilder(MAX_PATH + 1);
          int fullPathNameLength = GetFullPathNameW(startPath, MAX_PATH + 1, buffer, IntPtr.Zero);
@@ -327,7 +355,7 @@ namespace LiquesceSvc
          }
          if (fullPathNameLength == 0)
          {
-            throw new System.ComponentModel.Win32Exception();
+            throw new Win32Exception();
          }
          return buffer.ToString();
       }
@@ -388,7 +416,7 @@ namespace LiquesceSvc
 
       [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true, BestFitMapping = false)]
       private static extern int GetFullPathNameW(string path, int numBufferChars, StringBuilder buffer, IntPtr mustBeZero);
-      
+
       [DllImport("kernel32.dll", SetLastError = true)]
       private static extern bool SetEndOfFile(SafeFileHandle hFile);
 
@@ -420,6 +448,12 @@ namespace LiquesceSvc
       [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
       [return: MarshalAs(UnmanagedType.Bool)]
       static extern bool GetFileAttributesEx(string lpFileName, GET_FILEEX_INFO_LEVELS fInfoLevelId, out WIN32_FILE_ATTRIBUTE_DATA lpFileInformation);
+
+      [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+      [return: MarshalAs(UnmanagedType.Bool)]
+      private static extern bool GetVolumeNameForVolumeMountPointW(string lpszVolumeMountPoint, [Out] StringBuilder lpszVolumeName,
+                                                                   uint cchBufferLength);
+
 
       [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
       private static extern bool SetFileAttributesW(string name, FileAttributes attr);
@@ -454,16 +488,15 @@ namespace LiquesceSvc
       }
 
       [DllImport("shlwapi.dll", CharSet = CharSet.Unicode)]
-      [return: MarshalAsAttribute(UnmanagedType.Bool)]
-      private static extern bool PathIsDirectoryEmptyW( [MarshalAsAttribute(UnmanagedType.LPWStr), In] string pszPath);
+      [return: MarshalAs(UnmanagedType.Bool)]
+      private static extern bool PathIsDirectoryEmptyW([MarshalAs(UnmanagedType.LPWStr), In] string pszPath);
 
       private static readonly int MAX_PATH = 260;
-// ReSharper disable UnusedMember.Local
+      // ReSharper disable UnusedMember.Local
       private static readonly int MaxLongPath = 32000;
       private static readonly string Prefix = "\\\\?\\";
-// ReSharper restore UnusedMember.Local
+      // ReSharper restore UnusedMember.Local
 
       #endregion
-
    }
 }
