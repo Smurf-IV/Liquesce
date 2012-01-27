@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace LiquesceTray.Properties {
+namespace Liquesce.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]

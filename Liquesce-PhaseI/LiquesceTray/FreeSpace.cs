@@ -96,6 +96,7 @@ namespace LiquesceTray
       public FreeSpace()
       {
          InitializeComponent();
+         WindowLocation.GeometryFromString(Properties.Settings.Default.WindowLocation, this);
       }
 
       private void Form1_Load(object sender, EventArgs e)
@@ -771,6 +772,13 @@ namespace LiquesceTray
          }
          catch { }
          return sizeInBytes;
+      }
+
+      private void FreeSpace_FormClosing(object sender, FormClosingEventArgs e)
+      {
+         // persist our geometry string.
+         Properties.Settings.Default.WindowLocation = WindowLocation.GeometryToString(this);
+         Properties.Settings.Default.Save();
       }
 
    }

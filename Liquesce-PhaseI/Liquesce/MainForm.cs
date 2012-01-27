@@ -36,6 +36,7 @@ using System.ServiceProcess;
 using System.Threading;
 using System.Windows.Forms;
 using LiquesceFacade;
+using LiquesceTray;
 using NLog;
 
 namespace Liquesce
@@ -54,6 +55,14 @@ namespace Liquesce
          //   Font = SystemFonts.MessageBoxFont;
 
          InitializeComponent();
+         if (Properties.Settings.Default.UpdateRequired)
+         {
+            // Thanks go to http://cs.rthand.com/blogs/blog_with_righthand/archive/2005/12/09/246.aspx
+            Properties.Settings.Default.Upgrade();
+            Properties.Settings.Default.UpdateRequired = false;
+            Properties.Settings.Default.Save();
+         }
+         WindowLocation.GeometryFromString(Properties.Settings.Default.WindowLocation, this);
          Icon icon = ExtractIcon.GetIconForFilename(Environment.GetFolderPath(Environment.SpecialFolder.MyComputer), true);
          imageListUnits.Images.Add("MyComputer", icon.ToBitmap());
          versionNumberToolStripMenuItem.Text = Assembly.GetExecutingAssembly().GetName().Version.ToString();
@@ -107,6 +116,9 @@ namespace Liquesce
       {
          isClosing = true;
          FillExpectedLayoutWorker.CancelAsync();
+         // persist our geometry string.
+         Properties.Settings.Default.WindowLocation = WindowLocation.GeometryToString(this);
+         Properties.Settings.Default.Save();
       }
 
       private bool IsClosing

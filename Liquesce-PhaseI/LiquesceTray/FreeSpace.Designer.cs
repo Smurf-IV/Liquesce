@@ -63,6 +63,7 @@
          this.Name = "FreeSpace";
          this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Show;
          this.Text = "Liquesce Free Space";
+         this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FreeSpace_FormClosing);
          this.Load += new System.EventHandler(this.Form1_Load);
          this.ResumeLayout(false);
 

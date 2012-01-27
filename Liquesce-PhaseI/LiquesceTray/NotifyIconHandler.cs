@@ -43,6 +43,13 @@ namespace LiquesceTray
       public NotifyIconHandler()
       {
          InitializeComponent();
+         if (Properties.Settings.Default.UpdateRequired)
+         {
+            // Thanks go to http://cs.rthand.com/blogs/blog_with_righthand/archive/2005/12/09/246.aspx
+            Properties.Settings.Default.Upgrade();
+            Properties.Settings.Default.UpdateRequired = false;
+            Properties.Settings.Default.Save();
+         }
          notifyIcon1.BalloonTipTitle = Resources.NotifyIconHandler_NotifyIconHandler_Service_Status;
          // Use last state to prevent balloon tip showing on start !
          SetState(lastState, Resources.NotifyIconHandler_NotifyIconHandler_Application_tray_is_starting);
