@@ -14,7 +14,7 @@
    <?define UpgradeCode = "F6F94F17-A05F-4824-8DD9-9F5E8267D783" ?>
 
    <!-- Change this when creating new release YY-MM-DD -->
-   <?define Version = "12.01.04.861" ?>
+   <?define Version = "12.01.05.861" ?>
    
    <?define ProductName = "Liquesce Windows HDD Pooling Suite"?>
 
@@ -51,13 +51,15 @@
       <Property Id="DOKANVERCHECK32">
          <DirectorySearch Id="Dokan.sys.version" Path="[SystemFolder]\Drivers">
             <!--Make sure that the min / max _straddle_ the actual version..  Check for 0.6.0 x32 Size -->
-            <!-- It appears that there is yet another version for Windows 7 x32 !! -->
-            <FileSearch Name="Dokan.sys" MinSize="91903" MaxSize="95745" />
+            <!-- It appears that there is yet another version for Windows 7 x32  (95744?)!! -->
+            <!-- Win2k3 R2 (x32) size = 96,256 Bytes -->
+            <FileSearch Name="Dokan.sys" MinSize="91903" MaxSize="96257" />
          </DirectorySearch>
       </Property>
       <Property Id="DOKANVERCHECK64">
          <DirectorySearch Id="Dokan.sys64.version" Path="[System64Folder]\Drivers">
             <!--Make sure that the min / max _straddle_ the actual version.. Check for 0.6.0 x64 Size -->
+            <!-- Win 7 x64 = 120,408 Bytes -->
             <FileSearch Name="Dokan.sys" MinSize="120407" MaxSize="120409" />
          </DirectorySearch>
       </Property>
