@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="Program.cs" company="Smurf-IV">
 // 
-//  Copyright (C) 2010-2011 Smurf-IV
+//  Copyright (C) 2010-2012 Smurf-IV
 // 
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -23,8 +23,11 @@
 //  </summary>
 // --------------------------------------------------------------------------------------------------------------------
 #endregion
+
+using System;
 using System.Diagnostics;
 using System.ServiceProcess;
+using System.Windows.Forms;
 
 namespace LiquesceTrayHelper
 {
@@ -32,21 +35,57 @@ namespace LiquesceTrayHelper
    {
       static void Main(string[] args)
       {
-         ServiceController serviceController1 = new ServiceController { ServiceName = "LiquesceSvc" };
-         for (int index = 0; index < args.Length; index++)
+         try
          {
-            switch (args[index].ToLower())
+            AppDomain.CurrentDomain.UnhandledException += logUnhandledException;
+         }
+         catch (Exception ex)
+         {
+            try
             {
-               case "-debug":
-                  Debugger.Launch();
-                  break;
-               case "stop":
-                  serviceController1.Stop();
-                  break;
-               case "start":
-                  serviceController1.Start();
-                  break;
+               MessageBox.Show(ex.Message, "Liquesce Service Control", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+            catch
+            {
+            }
+         }
+         try
+         {
+            ServiceController serviceController1 = new ServiceController { ServiceName = "LiquesceSvc" };
+            foreach (string t in args)
+            {
+               switch (t.ToLower())
+               {
+                  case "-debug":
+                     Debugger.Launch();
+                     break;
+                  case "stop":
+                     if ( serviceController1.Status != ServiceControllerStatus.Stopped )
+                        serviceController1.Stop();
+                     break;
+                  case "start":
+                     if (serviceController1.Status != ServiceControllerStatus.Running)
+                        serviceController1.Start();
+                     break;
+               }
+            }
+         }
+         catch (Exception ex)
+         {
+            MessageBox.Show(ex.Message, "Liquesce Service Control", MessageBoxButtons.OK, MessageBoxIcon.Error);
+         }
+      }
+
+      private static void logUnhandledException(object sender, UnhandledExceptionEventArgs e)
+      {
+         try
+         {
+            Exception ex = e.ExceptionObject as Exception;
+            MessageBox.Show(ex != null ? ex.Message : "Unhandled Excpetion", "Liquesce Service Control",
+                            MessageBoxButtons.OK, MessageBoxIcon.Error);
+         }
+         catch
+         {
          }
       }
    }

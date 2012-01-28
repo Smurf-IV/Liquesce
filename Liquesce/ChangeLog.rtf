@@ -20,24 +20,26 @@ Keep an open eye on the \cf0\b{\field{\*\fldinst{HYPERLINK "http://liquesce.code
 \f0\fs20\par
 \ul\b TODO \cf3\ulnone\b0 - Fix Issues\par
 - Change the space usage to be a table with scroll-bars to give better layout options (And sorting etc.)\par
-- Teracopy 2.2 does not copy from Liquesce shares\par
 - 0.6.0 Sharing on Win 7 x64 & x32 Host Locks up XP Client\par
 - Error 1450: Insufficient System Resources for Service\par
-- The TrayHelper GPF's when trying to start a service that is already started\par
 - Dokan Move A directory to its parent (Over a share) does not pass correct information to UserSpace\par
-- Appears to be a 4GB File Limit over a share\par
+\par
 \cf0\par
 \ul\b\par
 \cf1\ulnone\b0\par
 \cf0\ul\b Done\par
-2012-01-##\par
+2012-01-28 (Release Candidate)\par
 \ulnone\b0 - Testing\par
 - Fix the \cf3 Multiple mounted points from the same drive will increase reported drive space\par
 - The "Re-Focused" release (Alpha4) does not allow files to be edited over a share -  \cf0 solved by\cf3  \cf0{\field{\*\fldinst{HYPERLINK "http://liquesce.codeplex.com/discussions/236580"}}{\fldrslt{\ul\cf2 http://liquesce.codeplex.com/discussions/236580}}}\ul\b\f0\fs20\par
 \ulnone\b0 - Add Window location restore\par
 - Add config file upgrade for user settings\par
-\cf3 - On Windows Server 2003, Dokan 0.6.0 Version is not detected Correctly\cf0\ul\b\par
-\par
+\cf3 - On Windows Server 2003, Dokan 0.6.0 Version is not detected Correctly\par
+- Tested and unable reproduce "Appears to be a 4GB File Limit over a share"\par
+- Tested and closed "Teracopy 2.2 does not copy from Liquesce shares"\par
+- Tested and closed "VLC cannot access File Over Dokan Hosted Share"\cf0\ul\b\par
+\ulnone\b0 - Fix the \cf3 "The TrayHelper GPF's when trying to start a service that is already started"\par
+\cf0\ul\b\par
 2012-01-04 (Alpha 5)\par
 \ulnone\b0 - Add new warning to the share dialog, indicating that shares my not work.\par
 \cf3 - \cf0 Fix t\cf3 he License warning in the installer needs to change.\par

@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="AssemblyInfo.cs" company="Smurf-IV">
 // 
-//  Copyright (C) 2010-2011 Smurf-IV
+//  Copyright (C) 2010-2012 Smurf-IV
 // 
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@
 //  </summary>
 // --------------------------------------------------------------------------------------------------------------------
 #endregion
+
 using System.Reflection;
 using System.Runtime.InteropServices;
 
@@ -34,7 +35,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Smurf-IV")]
 [assembly: AssemblyProduct("LiquesceTrayHelper")]
-[assembly: AssemblyCopyright("Copyright © Smurf-IV 2011")]
+[assembly: AssemblyCopyright("Copyright © Smurf-IV 2011-2012")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -56,5 +57,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("2011.3.14.5")]
-[assembly: AssemblyFileVersion("2011.3.14.5")]
+[assembly: AssemblyVersion("2012.1.28.7")]
+[assembly: AssemblyFileVersion("2012.1.28.7")]
