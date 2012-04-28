@@ -37,7 +37,7 @@ namespace LiquesceSvc
       /// <returns>systemProcessId</returns>
       private static uint GetSystemProcessId()
       {
-         Process[] processesByName = Process.GetProcessesByName("system");
+         Process[] processesByName = Process.GetProcessesByName("System");
          if (processesByName.Length > 0)
             return (uint) processesByName[0].Id;
          throw new SystemException("Unable to identify System.exe process ID");

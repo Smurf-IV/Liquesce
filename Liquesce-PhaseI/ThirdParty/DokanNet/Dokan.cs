@@ -142,10 +142,10 @@ namespace DokanNet
          return DokanDll.DokanDriverVersion();
       }
 
-      //public static bool DokanResetTimeout(uint timeout, DokanFileInfo fileinfo)
-      //{
-      //   var rawFileInfo = new DOKAN_FILE_INFO { DokanContext = fileinfo.DokanContext };
-      //   return DokanDll.DokanResetTimeout(timeout, ref rawFileInfo);
-      //}
+      public static bool DokanResetTimeout(uint timeout, DokanFileInfo fileinfo)
+      {
+         var rawFileInfo = new DOKAN_FILE_INFO { DokanContext = fileinfo.refFileHandleContext };
+         return DokanDll.DokanResetTimeout(timeout, ref rawFileInfo);
+      }
    }
 }
