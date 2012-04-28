@@ -67,7 +67,7 @@ namespace DokanNet
    public struct DOKAN_FILE_INFO
    {
       public ulong Context;
-      private readonly ulong DokanContext;
+      internal ulong DokanContext;
       private readonly IntPtr DokanOptions;
       public readonly uint ProcessId;
       public byte IsDirectory;
@@ -362,7 +362,6 @@ UNPROTECTED_SACL_SECURITY_INFORMATION  The SACL inherits ACEs from the parent ob
          {
             string file = GetFileName(rawFileName);
             int ret = operations.CloseFile(file, ConvertFileInfo(ref rawFileInfo));
-            rawFileInfo.Context = 0;
             return ret;
          }
          catch (Exception ex)
@@ -782,7 +781,7 @@ UNPROTECTED_SACL_SECURITY_INFORMATION  The SACL inherits ACEs from the parent ob
                //| FILE_SYSTEM_FLAGS.FILE_SUPPORTS_EXTENDED_ATTRIBUTES
                //| FILE_SYSTEM_FLAGS.FILE_SUPPORTS_HARD_LINKS  
                | FILE_SYSTEM_FLAGS.FILE_UNICODE_ON_DISK
-               //| FILE_SYSTEM_FLAGS.FILE_PERSISTENT_ACLS
+               | FILE_SYSTEM_FLAGS.FILE_PERSISTENT_ACLS
                //| FILE_SYSTEM_FLAGS.FILE_VOLUME_QUOTAS
                );
 

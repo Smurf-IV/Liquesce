@@ -80,12 +80,14 @@ namespace LiquesceSvc
       {
          int dokanReturn = Dokan.DOKAN_SUCCESS;
          NativeFileOps fs = null;
+         string fullName = String.Empty;
+         bool createNew = false;
          try
          {
             // TODO: Dump rawAccessMode out in hex to max it easier to decode :-)
             Log.Debug( "CreateFile IN filename [{0}], rawAccessMode[{1}], rawShare[{2}], rawCreationDisposition[{3}], rawFlagsAndAttributes[{4}|{5}], ProcessId[{6}]",
               filename, rawAccessMode, (FileShare)rawShare, (FileMode)rawCreationDisposition, (rawFlagsAndAttributes&0xFFFE0000), (FileAttributes)(rawFlagsAndAttributes&0x0001FFFF), info.ProcessId);
-            bool createNew = (rawCreationDisposition == Proxy.CREATE_NEW) || (rawCreationDisposition == Proxy.CREATE_ALWAYS);
+            createNew = (rawCreationDisposition == Proxy.CREATE_NEW) || (rawCreationDisposition == Proxy.CREATE_ALWAYS);
             NativeFileOps foundFileInfo = roots.GetPath(filename,  (!createNew?0:configDetails.HoldOffBufferBytes));
 
             //bool fileExists = foundFileInfo.Exists;
@@ -97,7 +99,7 @@ namespace LiquesceSvc
             //   return dokanReturn;
             //}
 
-            string fullName = foundFileInfo.FullName;
+            fullName = foundFileInfo.FullName;
             //switch (rawCreationDisposition)
             //{
             //   // *** NTh Change ***
@@ -144,17 +146,27 @@ namespace LiquesceSvc
                //public bool Nocache;
                // See http://msdn.microsoft.com/en-us/library/aa363858%28VS.85%29.aspx#caching_behavior
                if (info.PagingIo)
+               {
                   rawFlagsAndAttributes |= Proxy.FILE_FLAG_RANDOM_ACCESS;
+                  Log.Trace("Adding rawFlagsAndAttributes |= Proxy.FILE_FLAG_RANDOM_ACCESS");
+               }
                if (info.Nocache)
+               {
                   rawFlagsAndAttributes |= Proxy.FILE_FLAG_WRITE_THROUGH; // | Proxy.FILE_FLAG_NO_BUFFERING;
+                  Log.Trace("Adding rawFlagsAndAttributes |= Proxy.FILE_FLAG_WRITE_THROUGH; // | Proxy.FILE_FLAG_NO_BUFFERING;");
+               }
                // FILE_FLAG_NO_BUFFERING flag requires that all I/O operations on the file handle be in multiples of the sector size, 
                // AND that the I/O buffers also be aligned on addresses which are multiples of the sector size
                if (info.SynchronousIo)
+               {
                   rawFlagsAndAttributes |= Proxy.FILE_FLAG_SEQUENTIAL_SCAN;
+                  Log.Trace("Adding rawFlagsAndAttributes |= Proxy.FILE_FLAG_SEQUENTIAL_SCAN");
+               }
                if (foundFileInfo.IsDirectory)
                {
                   info.IsDirectory = true;
                   rawFlagsAndAttributes |= Proxy.FILE_FLAG_BACKUP_SEMANTICS;
+                  Log.Trace("Adding rawFlagsAndAttributes |= Proxy.FILE_FLAG_BACKUP_SEMANTICS");
                }
 
                Log.Debug("Modified rawFlagsAndAttributes[{0}]", rawFlagsAndAttributes);
@@ -173,8 +185,8 @@ namespace LiquesceSvc
                   // In this case where an open has succedded but the error code has been set we need to return it as a +ve value
                   dokanReturn = lastError;
                }
+
             });
-            notifyOf.CreateFile(fullName, info.refFileHandleContext, createNew);
          }
          catch (Exception ex)
          {
@@ -197,6 +209,7 @@ namespace LiquesceSvc
                   info.refFileHandleContext = ++openFilesLastKey;
                   openFiles.Add(openFilesLastKey, fs);
                }
+               notifyOf.CreateFile(fullName, info.refFileHandleContext, createNew);
             }
             Log.Debug("CreateFile OUT dokanReturn=[{0}] context[{1}]", dokanReturn, openFilesLastKey);
          }
@@ -337,7 +350,7 @@ namespace LiquesceSvc
          try
          {
             Log.Trace("CloseFile [{0}] IN DokanProcessId[{1}]", filename, info.ProcessId);
-            CloseAndRemove(info);
+            Log.Trace("info.refFileHandleContext [{0}]", info.refFileHandleContext);
             dokanReturn = Dokan.DOKAN_SUCCESS;
          }
          catch (Exception ex)
@@ -347,7 +360,7 @@ namespace LiquesceSvc
          }
          finally
          {
-            Log.Trace("CloseFile OUT dokanReturn[{0]}", dokanReturn);
+            Log.Trace("CloseFile OUT dokanReturn[{0}]", dokanReturn);
          }
          return dokanReturn;
       }
@@ -398,6 +411,8 @@ namespace LiquesceSvc
                      closeOnReturn = true;
                   }); 
             }
+            else if (!Dokan.DokanResetTimeout(120 * 1000, info))
+               Log.Warn("Unable to DokanResetTimeout!"); 
 
             // Some programs the file offset to extend the file length to write past the end of the file
             // Commented the check of rawOffset being off the size of the file.
@@ -680,9 +695,11 @@ namespace LiquesceSvc
                }
             });
             // If these are not found then the loop speed of a "failed remove" and "not finding" is the same !
-            uniqueFiles.Remove(@"System Volume Information");
+            uniqueFiles.Remove(@"System Volume Information");  // NTFS
             uniqueFiles.Remove(@"$RECYCLE.BIN");
             uniqueFiles.Remove(@"Recycle Bin");
+            uniqueFiles.Remove(@"RECYCLER");       // XP
+            uniqueFiles.Remove(@"Recycled");       // XP
             files = new WIN32_FIND_DATA[uniqueFiles.Values.Count];
             uniqueFiles.Values.CopyTo(files, 0);
             dokanReturn = Dokan.DOKAN_SUCCESS;
