@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Text;
 using NLog;
 
 // ReSharper disable FieldCanBeMadeReadOnly.Global
@@ -147,17 +146,41 @@ UNPROTECTED_SACL_SECURITY_INFORMATION  The SACL inherits ACEs from the parent ob
       public IntPtr dacl;     // == PACL  
    }
 
+   // ReSharper disable UnusedMember.Local
+   [Flags]
+   public enum FILE_SYSTEM_FLAGS : uint
+   {
+      // See http://msdn.microsoft.com/en-us/library/aa364993%28VS.85%29.aspx for more flags
+      FILE_CASE_PRESERVED_NAMES = 0x00000002,
+      FILE_CASE_SENSITIVE_SEARCH = 0x00000001,     // NTFS is case-preserving but case-insensitive in the Win32 namespace
+      FILE_FILE_COMPRESSION = 0x00000010,          // Don't do this.. It causes lot's of problems later on
+      FILE_NAMED_STREAMS = 0x00040000,             // http://www.flexhex.com/docs/articles/alternate-streams.phtml
+      FILE_PERSISTENT_ACLS = 0x00000008,
+      FILE_READ_ONLY_VOLUME = 0x00080000,
+      FILE_SEQUENTIAL_WRITE_ONCE = 0x00100000,
+      FILE_SUPPORTS_ENCRYPTION = 0x00020000,
+      FILE_SUPPORTS_EXTENDED_ATTRIBUTES = 0x00800000,
+      FILE_SUPPORTS_HARD_LINKS = 0x00400000,       // http://www.flexhex.com/docs/articles/hard-links.phtml
+      FILE_SUPPORTS_OBJECT_IDS = 0x00010000,
+      FILE_SUPPORTS_OPEN_BY_FILE_ID = 0x01000000,
+      FILE_SUPPORTS_REPARSE_POINTS = 0x00000080,   // Don't do this ->http://groups.google.com/group/dokan/browse_thread/thread/77edca429c791df0
+      FILE_SUPPORTS_SPARSE_FILES = 0x00000040,
+      FILE_SUPPORTS_TRANSACTIONS = 0x00200000,
+      FILE_SUPPORTS_USN_JOURNAL = 0x02000000,    // Not support on Win 7 and above
+      FILE_UNICODE_ON_DISK = 0x00000004,
+      FILE_VOLUME_IS_COMPRESSED = 0x00008000,
+      FILE_VOLUME_QUOTAS = 0x00000020
+   }
+   // ReSharper restore UnusedMember.Local
+
    public class Proxy
    {
       static private readonly Logger Log = LogManager.GetCurrentClassLogger();
       private readonly IDokanOperations operations;
-      private readonly DokanOptions options;
-      private const uint volumeSerialNumber = 0x20101112;
 
-      public Proxy(DokanOptions options, IDokanOperations operations)
+      public Proxy(IDokanOperations operations)
       {
          this.operations = operations;
-         this.options = options;
       }
 
       /// <summary>
@@ -445,8 +468,6 @@ UNPROTECTED_SACL_SECURITY_INFORMATION  The SACL inherits ACEs from the parent ob
             DokanFileInfo info = ConvertFileInfo(ref rawFileInfo);
 
             int ret = operations.GetFileInformationNative(file, ref rawHandleFileInformation, info);
-            if ( ret == 0 )
-               rawHandleFileInformation.dwVolumeSerialNumber = volumeSerialNumber;
 
             return ret;
          }
@@ -723,75 +744,17 @@ UNPROTECTED_SACL_SECURITY_INFORMATION  The SACL inherits ACEs from the parent ob
          }
       }
 
-      // ReSharper disable UnusedMember.Local
-      [Flags]
-      private enum FILE_SYSTEM_FLAGS : uint
-      {
-         // See http://msdn.microsoft.com/en-us/library/aa364993%28VS.85%29.aspx for more flags
-         FILE_CASE_PRESERVED_NAMES = 0x00000002,   
-         FILE_CASE_SENSITIVE_SEARCH = 0x00000001,
-         FILE_FILE_COMPRESSION = 0x00000010,          // Don't do this.. It causes lot's of problems later on
-         FILE_NAMED_STREAMS = 0x00040000,             // http://www.flexhex.com/docs/articles/alternate-streams.phtml
-         FILE_PERSISTENT_ACLS = 0x00000008,  
-         FILE_READ_ONLY_VOLUME = 0x00080000,
-         FILE_SEQUENTIAL_WRITE_ONCE = 0x00100000,
-         FILE_SUPPORTS_ENCRYPTION = 0x00020000,
-         FILE_SUPPORTS_EXTENDED_ATTRIBUTES = 0x00800000,
-         FILE_SUPPORTS_HARD_LINKS = 0x00400000,       // http://www.flexhex.com/docs/articles/hard-links.phtml
-         FILE_SUPPORTS_OBJECT_IDS = 0x00010000,
-         FILE_SUPPORTS_OPEN_BY_FILE_ID = 0x01000000,
-         FILE_SUPPORTS_REPARSE_POINTS = 0x00000080,   // Don't do this ->http://groups.google.com/group/dokan/browse_thread/thread/77edca429c791df0
-         FILE_SUPPORTS_SPARSE_FILES = 0x00000040,
-         FILE_SUPPORTS_TRANSACTIONS = 0x00200000,
-         FILE_SUPPORTS_USN_JOURNAL   = 0x02000000,    // Not support on Win 7 and above
-         FILE_UNICODE_ON_DISK = 0x00000004,
-         FILE_VOLUME_IS_COMPRESSED = 0x00008000,
-         FILE_VOLUME_QUOTAS = 0x00000020
-      }
-      // ReSharper restore UnusedMember.Local
-
       public delegate int GetVolumeInformationDelegate(IntPtr rawVolumeNameBuffer, uint rawVolumeNameSize, ref uint rawVolumeSerialNumber,
           ref uint rawMaximumComponentLength, ref uint rawFileSystemFlags, IntPtr rawFileSystemNameBuffer, uint rawFileSystemNameSize, ref DOKAN_FILE_INFO rawFileInfo);
 
       public int GetVolumeInformationProxy(IntPtr rawVolumeNameBuffer, uint rawVolumeNameSize, ref uint rawVolumeSerialNumber,
-          ref uint rawMaximumComponentLength, ref uint rawFileSystemFlags, IntPtr rawFileSystemNameBuffer, uint rawFileSystemNameSize, ref DOKAN_FILE_INFO fileInfo)
+          ref uint rawMaximumComponentLength, ref uint rawFileSystemFlags, IntPtr rawFileSystemNameBuffer, uint rawFileSystemNameSize, ref DOKAN_FILE_INFO rawFileInfo)
       {
          try
          {
-            Log.Trace("GetVolumeInformationProxy");
-            byte[] volume = Encoding.Unicode.GetBytes(options.VolumeLabel);
-            int length = volume.Length;
-            byte[] volumeNull = new byte[length + 2];
-            Array.Copy(volume, volumeNull, length);
-            Marshal.Copy(volumeNull, 0, rawVolumeNameBuffer, Math.Min((int)rawVolumeNameSize, length + 2));
-            rawVolumeSerialNumber = volumeSerialNumber;
-            rawMaximumComponentLength = 256;
+            return operations.GetVolumeInformation(rawVolumeNameBuffer, rawVolumeNameSize, ref rawVolumeSerialNumber,
+          ref rawMaximumComponentLength, ref rawFileSystemFlags, rawFileSystemNameBuffer, rawFileSystemNameSize, ConvertFileInfo(ref rawFileInfo));
 
-            // FILE_FILE_COMPRESSION      0x00000010     // Don't do this.. It causes lot's of problems later on  
-            // And the Dokan code does not support it
-            //case FileStreamInformation:
-            //            //DbgPrint("FileStreamInformation\n");
-            //            status = STATUS_NOT_IMPLEMENTED;
-            //            break;
-
-            rawFileSystemFlags = (uint)(FILE_SYSTEM_FLAGS.FILE_CASE_PRESERVED_NAMES
-               | FILE_SYSTEM_FLAGS.FILE_CASE_SENSITIVE_SEARCH
-               //| FILE_SYSTEM_FLAGS.FILE_NAMED_STREAMS
-               //| FILE_SYSTEM_FLAGS.FILE_SEQUENTIAL_WRITE_ONCE
-               //| FILE_SYSTEM_FLAGS.FILE_SUPPORTS_EXTENDED_ATTRIBUTES
-               //| FILE_SYSTEM_FLAGS.FILE_SUPPORTS_HARD_LINKS  
-               | FILE_SYSTEM_FLAGS.FILE_UNICODE_ON_DISK
-               | FILE_SYSTEM_FLAGS.FILE_PERSISTENT_ACLS
-               //| FILE_SYSTEM_FLAGS.FILE_VOLUME_QUOTAS
-               );
-
-            byte[] sys = Encoding.Unicode.GetBytes("Dokan");
-            length = sys.Length;
-            byte[] sysNull = new byte[length + 2];
-            Array.Copy(sys, sysNull, length);
-
-            Marshal.Copy(sysNull, 0, rawFileSystemNameBuffer, Math.Min((int)rawFileSystemNameSize, length + 2));
-            return 0;
          }
          catch (Exception ex)
          {

@@ -130,11 +130,12 @@
     <value>True</value>
   </metadata>
   <data name="label2.Text" xml:space="preserve">
-    <value>Due to issues with the underlying Dokan driver; Some client OS's will not be to utilise all of the features normally associated with windows sharing. 
+    <value>If you are using mixed 64 and 32 bit OS's then Disable SMB2:
+[http://liquesce.codeplex.com/discussions/236580 ]
 
-For Example: if an XP client connects to a Windows 7 host, then applications like Notepad will not be able to save their edits to the same file.
-
-Most of these have been documented in both the Dokan Forum And the Issues List in Liquesce.</value>
+If you are hosting on XP or have XP clients then disable OpLocks:
+[http://liquesce.codeplex.com/workitem/10543]
+</value>
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">

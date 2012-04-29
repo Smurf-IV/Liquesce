@@ -72,7 +72,7 @@ namespace LiquesceSvc
       }
 
       private readonly uint expireSeconds;
-      private readonly Dictionary<TKey, ValueObject<TValue>> Cache = new Dictionary<TKey, ValueObject<TValue>>();
+      private readonly Dictionary<TKey, ValueObject<TValue>> Cache;
 
       #endregion
 
@@ -81,11 +81,13 @@ namespace LiquesceSvc
       /// </summary>
       /// <param name="expireSeconds">timeout cannot be -ve</param>
       /// <param name="useApiCallToRelease">When an function call is made then it will go check the staleness of the cache</param>
+      /// <param name="comparer">The System.Collections.Generic.IEqualityComparer/T/ implementation to use when comparing keys, or null to use the default System.Collections.Generic.EqualityComparer/T/ for the type of the key.</param>
       /// <remarks>
       /// expiresecounds must be less than 14 hours otherwise the DateTimeOffset for each object will throw an exception
       /// </remarks>
-      public CacheHelper(uint expireSeconds, bool useApiCallToRelease = true)
+      public CacheHelper(uint expireSeconds, bool useApiCallToRelease = true, IEqualityComparer<TKey> comparer = (IEqualityComparer<TKey>) null)
       {
+         Cache = new Dictionary<TKey, ValueObject<TValue>>(comparer);
          this.expireSeconds = expireSeconds;
          useAPICallToRelease = useApiCallToRelease;
       }

@@ -73,7 +73,7 @@ namespace DokanNet
             options.VolumeLabel = "DOKAN";
          }
 
-         Proxy proxy = new Proxy(options, operations);
+         Proxy proxy = new Proxy(operations);
 
          var dokanOptions = new DOKAN_OPTIONS
                                          {

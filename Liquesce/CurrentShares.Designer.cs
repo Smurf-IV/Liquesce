@@ -193,6 +193,7 @@
          this.label2.Size = new System.Drawing.Size(155, 347);
          this.label2.TabIndex = 7;
          this.label2.Text = resources.GetString("label2.Text");
+         this.toolTip1.SetToolTip(this.label2, "Known Issues and workarounds.");
          // 
          // CurrentShares
          // 
