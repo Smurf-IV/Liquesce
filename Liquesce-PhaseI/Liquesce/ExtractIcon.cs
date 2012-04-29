@@ -116,7 +116,7 @@ namespace Liquesce
       uint cbSizeFileInfo,
       uint uFlags );
 
-      [StructLayout( LayoutKind.Sequential )]
+      [StructLayout(LayoutKind.Sequential, Pack = 4)]
       private struct SHFILEINFO
       {
          public IntPtr hIcon;

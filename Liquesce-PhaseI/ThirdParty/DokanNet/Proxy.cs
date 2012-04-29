@@ -35,7 +35,7 @@ namespace DokanNet
    /// Workaround from http://www.pinvoke.net/default.aspx/Structures/WIN32_FIND_DATA.html
    /// </remarks>
    // ReSharper disable FieldCanBeMadeReadOnly.Global
-   [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+   [StructLayout(LayoutKind.Sequential, Pack = 4)]
    public struct WIN32_FIND_FILETIME
    {
       public UInt32 dwLowDateTime;

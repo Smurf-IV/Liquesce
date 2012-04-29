@@ -370,24 +370,22 @@ namespace LiquesceSvc
 
       #endregion
 
-      public void DeleteDirectory(string filename)
+      public void DeleteDirectory(string dirName)
       {
-         foreach (string path in GetAllFilePaths(filename))
+         foreach (string path in GetAllPaths(dirName))
          {
             Log.Trace("Deleting matched dir [{0}]", path);
             Directory.Delete(path, false);
          }
-         RemoveFromLookup(filename);
+         RemoveFromLookup(dirName);
       }
 
       public void DeleteFile(string filename)
       {
-         // *** NTh Change ***
-         // Get all copies of the same file in other sources and delete them
-         Log.Trace("DeleteOnClose File");
+         Log.Trace("DeleteFile - Get all copies of the same file in other sources and delete them");
          foreach (string path in GetAllFilePaths(filename))
          {
-            Log.Trace("Deleting matched dir [{0}]", path);
+            Log.Trace("Deleting file [{0}]", path);
             File.Delete(path);
          }
          RemoveFromLookup(filename);
