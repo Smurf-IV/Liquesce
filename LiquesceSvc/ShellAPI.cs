@@ -27,7 +27,7 @@ namespace LiquesceSvc
 
       // Contains parameters for the SHBrowseForFolder function and receives information about the folder selected 
       // by the user.
-      [StructLayout(LayoutKind.Sequential)]
+      [StructLayout(LayoutKind.Sequential, Pack = 4)]
       public struct BROWSEINFO
       {
          public IntPtr hwndOwner;				// Handle to the owner window for the dialog box.
@@ -52,7 +52,7 @@ namespace LiquesceSvc
          public Int32 iImage;					// Variable to receive the image associated with the selected folder.
       }
 
-      [StructLayout(LayoutKind.Explicit)]
+      [StructLayout(LayoutKind.Explicit, Pack = 4)]
       public struct STRRET
       {
          [FieldOffset(0)]
@@ -72,7 +72,7 @@ namespace LiquesceSvc
       }
 
       // Contains information used by ShellExecuteEx
-      [StructLayout(LayoutKind.Sequential)]
+      [StructLayout(LayoutKind.Sequential, Pack = 4)]
       public struct SHELLEXECUTEINFO
       {
          public UInt32 cbSize;					// Size of the structure, in bytes. 

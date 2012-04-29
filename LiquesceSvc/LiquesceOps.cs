@@ -84,8 +84,7 @@ namespace LiquesceSvc
          bool createNew = false;
          try
          {
-            // TODO: Dump rawAccessMode out in hex to max it easier to decode :-)
-            Log.Debug( "CreateFile IN filename [{0}], rawAccessMode[{1}], rawShare[{2}], rawCreationDisposition[{3}], rawFlagsAndAttributes[{4}|{5}], ProcessId[{6}]",
+            Log.Debug("CreateFile IN filename [{0}], rawAccessMode[0x{1:X8}], rawShare[{2}], rawCreationDisposition[{3}], rawFlagsAndAttributes[{4}|{5}], ProcessId[{6}]",
               filename, rawAccessMode, (FileShare)rawShare, (FileMode)rawCreationDisposition, (rawFlagsAndAttributes&0xFFFE0000), (FileAttributes)(rawFlagsAndAttributes&0x0001FFFF), info.ProcessId);
             createNew = (rawCreationDisposition == Proxy.CREATE_NEW) || (rawCreationDisposition == Proxy.CREATE_ALWAYS);
             NativeFileOps foundFileInfo = roots.GetPath(filename,  (!createNew?0:configDetails.HoldOffBufferBytes));
@@ -211,7 +210,7 @@ namespace LiquesceSvc
                }
                notifyOf.CreateFile(fullName, info.refFileHandleContext, createNew);
             }
-            Log.Debug("CreateFile OUT dokanReturn=[{0}] context[{1}]", dokanReturn, openFilesLastKey);
+            Log.Debug("CreateFile OUT dokanReturn=[{0}] context[{1}]", dokanReturn, info.refFileHandleContext);
          }
          return dokanReturn;
       }
@@ -411,8 +410,6 @@ namespace LiquesceSvc
                      closeOnReturn = true;
                   }); 
             }
-            else if (!Dokan.DokanResetTimeout(120 * 1000, info))
-               Log.Warn("Unable to DokanResetTimeout!"); 
 
             // Some programs the file offset to extend the file length to write past the end of the file
             // Commented the check of rawOffset being off the size of the file.
@@ -926,7 +923,7 @@ namespace LiquesceSvc
          }
          finally
          {
-            Log.Debug("DeleteDirectory OUT dokanReturn[(0}]", dokanReturn);
+            Log.Debug("DeleteDirectory OUT dokanReturn[{0}]", dokanReturn);
          }
 
          return dokanReturn;
@@ -1375,12 +1372,12 @@ namespace LiquesceSvc
                NativeFileOps fileStream;
                if (openFiles.TryGetValue(info.refFileHandleContext, out fileStream))
                {
-                  Log.Debug("Remove and then close stream [{0}]", fileStream.FullName);
+                  Log.Debug("Close and then Remove stream [{0}]", fileStream.FullName);
+                  fileStream.Close();
                   using (openFilesSync.WriteLock())
                   {
                      openFiles.Remove(info.refFileHandleContext);
                   }
-                  fileStream.Close();
                   ShellChangeNotify.CloseFile(fileStream.FullName, info.refFileHandleContext);
                }
                else

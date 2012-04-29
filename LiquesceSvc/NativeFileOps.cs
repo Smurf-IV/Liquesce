@@ -88,6 +88,7 @@ namespace LiquesceSvc
 
       /// <summary>
       /// Call the native function to create an appropriate wrapper for the File Operations
+      /// http://msdn.microsoft.com/en-us/library/windows/desktop/aa363858%28v=vs.85%29.aspx
       /// </summary>
       /// <param name="lpFileName"></param>
       /// <param name="dwDesiredAccess"></param>
@@ -174,9 +175,9 @@ namespace LiquesceSvc
             throw new Win32Exception();
          else
          {
+            // Ensure that the attributes stored are the Extended variety
+            lpFileInformation.dwFileAttributes = Attributes;
             cachedFileInformation = lpFileInformation;
-            cachedAttributeData = new WIN32_FILE_ATTRIBUTE_DATA();
-            cachedAttributeData.Value.PopulateFrom(lpFileInformation);
          }
       }
 
@@ -363,7 +364,7 @@ namespace LiquesceSvc
       #region DLL Imports
       // Stolen from http://www.123aspx.com/Rotor/RotorSrc.aspx?rot=42415
 
-      [StructLayout(LayoutKind.Sequential)]
+      [StructLayout(LayoutKind.Sequential, Pack = 4)]
       public struct SECURITY_ATTRIBUTES
       {
          public int nLength;
@@ -445,6 +446,7 @@ namespace LiquesceSvc
       [DllImport("kernel32.dll", SetLastError = true)]
       private static extern bool UnlockFile(SafeFileHandle handle, int offsetLow, int offsetHigh, int countLow, int countHigh);
 
+      // http://msdn.microsoft.com/en-us/library/windows/desktop/aa364946%28v=vs.85%29.aspx
       [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
       [return: MarshalAs(UnmanagedType.Bool)]
       static extern bool GetFileAttributesEx(string lpFileName, GET_FILEEX_INFO_LEVELS fInfoLevelId, out WIN32_FILE_ATTRIBUTE_DATA lpFileInformation);
@@ -459,7 +461,7 @@ namespace LiquesceSvc
       private static extern bool SetFileAttributesW(string name, FileAttributes attr);
 
       // Stolen from 
-      [StructLayout(LayoutKind.Sequential)]
+      [StructLayout(LayoutKind.Sequential, Pack = 4)]
       public struct WIN32_FILE_ATTRIBUTE_DATA
       {
          public FileAttributes dwFileAttributes;
