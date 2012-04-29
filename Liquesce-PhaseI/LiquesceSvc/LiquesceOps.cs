@@ -622,6 +622,8 @@ namespace LiquesceSvc
             {
                throw new System.ComponentModel.Win32Exception();
             }
+            // Now make it look like the mount volume SN
+            lpFileInformation.dwVolumeSerialNumber = volumeSerialNumber;
             if (Log.IsTraceEnabled)
             {
                StringBuilder fileInfo = new StringBuilder("lpFileInformation=");
@@ -680,7 +682,8 @@ namespace LiquesceSvc
          try
          {
             Log.Debug("FindFiles IN [{0}], pattern[{1}]", filename, pattern);
-            Dictionary<string, WIN32_FIND_DATA> uniqueFiles = new Dictionary<string, WIN32_FIND_DATA>();
+            // NTFS is case-preserving but case-insensitive in the Win32 namespace
+            Dictionary<string, WIN32_FIND_DATA> uniqueFiles = new Dictionary<string, WIN32_FIND_DATA>(StringComparer.OrdinalIgnoreCase);
             //uniqueFiles.Add(".",
             // FindFiles should not return an empty array. It should return parent ("..") and self ("."). That wasn't obvious!
             PID.Invoke(processId, delegate
@@ -1166,12 +1169,73 @@ namespace LiquesceSvc
          }
          catch (Exception ex)
          {
-            Log.ErrorException("UnlockFile threw: ", ex);
+            Log.ErrorException("GetDiskFreeSpace threw: ", ex);
             dokanReturn = Utils.BestAttemptToWin32(ex);
          }
          finally
          {
             Log.Trace("GetDiskFreeSpace OUT dokanReturn[{0}]", dokanReturn);
+         }
+         return dokanReturn;
+      }
+
+      private const uint volumeSerialNumber = 0x20101112;
+
+      public int GetVolumeInformation(IntPtr rawVolumeNameBuffer, uint rawVolumeNameSize, ref uint rawVolumeSerialNumber,
+                                       ref uint rawMaximumComponentLength, ref uint rawFileSystemFlags, IntPtr rawFileSystemNameBuffer, 
+                                       uint rawFileSystemNameSize, DokanFileInfo info)
+      {
+         int dokanReturn = Dokan.DOKAN_ERROR;
+         try
+         {
+            Log.Trace("GetVolumeInformation IN DokanProcessId[{0}]", info.ProcessId);
+
+
+            byte[] volume = Encoding.Unicode.GetBytes(configDetails.VolumeLabel);
+            int length = volume.Length;
+            byte[] volumeNull = new byte[length + 2];
+            Array.Copy(volume, volumeNull, length);
+            Marshal.Copy(volumeNull, 0, rawVolumeNameBuffer, Math.Min((int)rawVolumeNameSize, length + 2));
+            rawVolumeSerialNumber = volumeSerialNumber;
+            rawMaximumComponentLength = 256;
+
+            // FILE_FILE_COMPRESSION      0x00000010     // Don't do this.. It causes lot's of problems later on  
+            // And the Dokan code does not support it
+            //case FileStreamInformation:
+            //            //DbgPrint("FileStreamInformation\n");
+            //            status = STATUS_NOT_IMPLEMENTED;
+            //            break;
+
+            rawFileSystemFlags = (uint)(FILE_SYSTEM_FLAGS.FILE_CASE_PRESERVED_NAMES
+               // | FILE_SYSTEM_FLAGS.FILE_CASE_SENSITIVE_SEARCH // NTFS is case-preserving but case-insensitive in the Win32 namespace
+               //| FILE_SYSTEM_FLAGS.FILE_NAMED_STREAMS
+               //| FILE_SYSTEM_FLAGS.FILE_SEQUENTIAL_WRITE_ONCE
+               | FILE_SYSTEM_FLAGS.FILE_SUPPORTS_EXTENDED_ATTRIBUTES
+               //| FILE_SYSTEM_FLAGS.FILE_SUPPORTS_HARD_LINKS  
+               | FILE_SYSTEM_FLAGS.FILE_UNICODE_ON_DISK
+               | FILE_SYSTEM_FLAGS.FILE_PERSISTENT_ACLS
+               //| FILE_SYSTEM_FLAGS.FILE_VOLUME_QUOTAS
+               );
+
+            // rawFileSystemFlags |= (uint) FILE_SYSTEM_FLAGS.FILE_READ_ONLY_VOLUME;
+
+            byte[] sys = Encoding.Unicode.GetBytes("Dokan");
+            length = sys.Length;
+            byte[] sysNull = new byte[length + 2];
+            Array.Copy(sys, sysNull, length);
+
+            Marshal.Copy(sysNull, 0, rawFileSystemNameBuffer, Math.Min((int)rawFileSystemNameSize, length + 2));
+
+            dokanReturn = Dokan.DOKAN_SUCCESS;
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException("GetVolumeInformation threw: ", ex);
+            dokanReturn = Utils.BestAttemptToWin32(ex);
+         }
+         finally
+         {
+            Log.Trace("GetVolumeInformation OUT dokanReturn[{0}]", dokanReturn);
          }
          return dokanReturn;
       }

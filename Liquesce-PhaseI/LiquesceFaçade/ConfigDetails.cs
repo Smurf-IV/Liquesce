@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="ConfigDetails.cs" company="Smurf-IV">
 // 
-//  Copyright (C) 2010-2011 Smurf-IV
+//  Copyright (C) 2010-2012 Smurf-IV
 // 
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@ using System.Runtime.Serialization;
 
 namespace LiquesceFacade
 {
+   // ReSharper disable UnusedMember.Global
    [Flags]
    public enum Mask : uint
    {
@@ -78,6 +79,7 @@ namespace LiquesceFacade
       AccessDenied = 1,
       Audit = 2
    }
+   // ReSharper restore UnusedMember.Global
 
    [DataContract]
    public class UserAccessRuleExport
