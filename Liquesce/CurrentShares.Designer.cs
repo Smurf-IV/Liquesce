@@ -29,8 +29,8 @@
       private void InitializeComponent()
       {
          this.components = new System.ComponentModel.Container();
-         System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
          System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(CurrentShares));
+         System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
          this.groupBox1 = new System.Windows.Forms.GroupBox();
          this.label1 = new System.Windows.Forms.Label();
          this.Store = new System.Windows.Forms.Button();
@@ -43,7 +43,8 @@
          this.Credentials = new System.Windows.Forms.DataGridViewTextBoxColumn();
          this.buttonSave = new System.Windows.Forms.Button();
          this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-         this.label2 = new System.Windows.Forms.Label();
+         this.disableSMB2 = new System.Windows.Forms.Button();
+         this.disableOpLocks = new System.Windows.Forms.Button();
          this.groupBox1.SuspendLayout();
          this.groupBox2.SuspendLayout();
          ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
@@ -68,14 +69,12 @@
          this.label1.Name = "label1";
          this.label1.Size = new System.Drawing.Size(462, 57);
          this.label1.TabIndex = 0;
-         this.label1.Text = "The current active \"Mount Points\" owned by Liquesce will need to be renabled afte" +
-    "r the service has been started. Therefore you will need to confirm that they are" +
-    " have been found correctly.";
+         this.label1.Text = resources.GetString("label1.Text");
          // 
          // Store
          // 
          this.Store.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-         this.Store.Location = new System.Drawing.Point(327, 366);
+         this.Store.Location = new System.Drawing.Point(405, 366);
          this.Store.Name = "Store";
          this.Store.Size = new System.Drawing.Size(75, 23);
          this.Store.TabIndex = 1;
@@ -113,7 +112,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
          this.progressBar1.Location = new System.Drawing.Point(13, 366);
          this.progressBar1.Name = "progressBar1";
-         this.progressBar1.Size = new System.Drawing.Size(308, 23);
+         this.progressBar1.Size = new System.Drawing.Size(386, 23);
          this.progressBar1.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
          this.progressBar1.TabIndex = 4;
          // 
@@ -122,8 +121,8 @@
          this.dataGridView1.AllowUserToAddRows = false;
          this.dataGridView1.AllowUserToDeleteRows = false;
          this.dataGridView1.AllowUserToOrderColumns = true;
-         dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.ControlLight;
-         this.dataGridView1.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
+         dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.ControlLight;
+         this.dataGridView1.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle2;
          this.dataGridView1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -172,35 +171,50 @@
          // 
          this.buttonSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
          this.buttonSave.DialogResult = System.Windows.Forms.DialogResult.OK;
-         this.buttonSave.Location = new System.Drawing.Point(408, 366);
+         this.buttonSave.Location = new System.Drawing.Point(490, 284);
          this.buttonSave.Name = "buttonSave";
-         this.buttonSave.Size = new System.Drawing.Size(75, 23);
+         this.buttonSave.Size = new System.Drawing.Size(155, 105);
          this.buttonSave.TabIndex = 6;
-         this.buttonSave.Text = "&Save";
-         this.toolTip1.SetToolTip(this.buttonSave, "The Settings above will be stored - ready to be sent to the server");
+         this.buttonSave.Text = "&Save the relevant shares.\r\n\r\nRemember to \"Send to Service\" afterwards.\r\n";
+         this.toolTip1.SetToolTip(this.buttonSave, "The shares will be temporay, until sent to the server.");
          this.buttonSave.UseVisualStyleBackColor = true;
          this.buttonSave.Click += new System.EventHandler(this.buttonSave_Click);
          // 
-         // label2
+         // disableSMB2
          // 
-         this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-         this.label2.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-         this.label2.ForeColor = System.Drawing.Color.Maroon;
-         this.label2.Location = new System.Drawing.Point(490, 13);
-         this.label2.Name = "label2";
-         this.label2.Size = new System.Drawing.Size(155, 347);
-         this.label2.TabIndex = 7;
-         this.label2.Text = resources.GetString("label2.Text");
-         this.toolTip1.SetToolTip(this.label2, "Known Issues and workarounds.");
+         this.disableSMB2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+         this.disableSMB2.ForeColor = System.Drawing.Color.DarkRed;
+         this.disableSMB2.Location = new System.Drawing.Point(490, 13);
+         this.disableSMB2.Name = "disableSMB2";
+         this.disableSMB2.Size = new System.Drawing.Size(155, 120);
+         this.disableSMB2.TabIndex = 8;
+         this.disableSMB2.Text = "If you are using mixed 64 and 32 bit OS\'s then Disable SMB2:\r\n\r\nhttp://liquesce.c" +
+    "odeplex.com/discussions/236580";
+         this.toolTip1.SetToolTip(this.disableSMB2, "I Understand the Issues, Please apply the fix!");
+         this.disableSMB2.UseVisualStyleBackColor = true;
+         this.disableSMB2.Click += new System.EventHandler(this.disableSMB2_Click);
+         // 
+         // disableOpLocks
+         // 
+         this.disableOpLocks.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+         this.disableOpLocks.ForeColor = System.Drawing.Color.DarkRed;
+         this.disableOpLocks.Location = new System.Drawing.Point(490, 148);
+         this.disableOpLocks.Name = "disableOpLocks";
+         this.disableOpLocks.Size = new System.Drawing.Size(155, 120);
+         this.disableOpLocks.TabIndex = 9;
+         this.disableOpLocks.Text = "If you are hosting on XP or have XP clients then disable OpLocks:\r\n\r\nhttp://lique" +
+    "sce.codeplex.com/workitem/10543";
+         this.toolTip1.SetToolTip(this.disableOpLocks, "I Understand the Issues, Please apply the fix!");
+         this.disableOpLocks.UseVisualStyleBackColor = true;
+         this.disableOpLocks.Click += new System.EventHandler(this.disableOpLocks_Click);
          // 
          // CurrentShares
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 14F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.ClientSize = new System.Drawing.Size(657, 402);
-         this.Controls.Add(this.label2);
+         this.Controls.Add(this.disableOpLocks);
+         this.Controls.Add(this.disableSMB2);
          this.Controls.Add(this.buttonSave);
          this.Controls.Add(this.dataGridView1);
          this.Controls.Add(this.progressBar1);
@@ -238,6 +252,7 @@
       private System.Windows.Forms.DataGridViewTextBoxColumn Source;
       private System.Windows.Forms.DataGridViewTextBoxColumn Description;
       private System.Windows.Forms.DataGridViewTextBoxColumn Credentials;
-      private System.Windows.Forms.Label label2;
+      private System.Windows.Forms.Button disableSMB2;
+      private System.Windows.Forms.Button disableOpLocks;
    }
 }

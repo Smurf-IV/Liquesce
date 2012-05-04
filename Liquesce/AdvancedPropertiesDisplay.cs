@@ -26,6 +26,7 @@
 
 using System;
 using System.ComponentModel;
+using System.Drawing.Design;
 using LiquesceFacade;
 using NLog;
 
@@ -48,21 +49,15 @@ namespace Liquesce
          }
       }
 
-      private ulong holdOffMBytes;
-
-      [DescriptionAttribute("Number of free MegaBytes to leave, before attempting to use another drive to write to.\rUsed in Priority and Folder modes.\rRange 1 <-> 1024000"),
+      [DescriptionAttribute("Number of free MegaBytes to leave, before attempting to use another drive to write to.\r" +
+         "Used in Priority and Folder modes.\r" +
+         "Range 1 <-> 1024000"),
       DisplayName("Hold Off Buffer")
       , CategoryAttribute("File")
       ]
-      public ulong HoldOffMBytes
-      {
-         get { return holdOffMBytes; }
-         set
-         {
-            if (value >= 1
-            && value <= 1024000) holdOffMBytes = value;
-         }
-      }
+      [TypeConverter(typeof(NumericUpDownTypeConverter))]
+      [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMaxAttribute(1, 1024000, 1024)]
+      public ulong HoldOffMBytes { get; set;}
 
       [DescriptionAttribute("Turn Dokan Debug information on, to all it to be captured in an appropriate app."),
       DisplayName("Dokan Debug Mode")
@@ -70,28 +65,22 @@ namespace Liquesce
       ]
       public bool DokanDebugMode { get; set; }
 
-      private ushort threadCount;
 
       [DescriptionAttribute("0 is automatic, use 1 for problem finding scenario's.\rRange 0 <-> 32"),
-      DisplayName("Thread Count")
+       DisplayName("Thread Count")
       , CategoryAttribute("Dokan")
       ]
-      public ushort ThreadCount
-      {
-         get { return threadCount; }
-         set
-         {
-            if (value >= 0
-                && value <= 32)
-               threadCount = value;
-         }
-      }
+      [TypeConverter(typeof(NumericUpDownTypeConverter))]
+      [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMaxAttribute(0, 32)]
+      public ushort ThreadCount { get; set; }
 
-      [DescriptionAttribute("The amount of information that will be placed into the Log files (Trace means slower performance!)."),
-      DisplayName("Service Logging Level"),
-      TypeConverter(typeof(ServiceLogLevelValues))
+      [DescriptionAttribute("The amount of information that will be placed into the Log files.\r" +
+         "Trace means slower performance!\r." +
+         "Useful for creating bug reports - set threads to 1 as well"),
+      DisplayName("Service Logging Level")
       , CategoryAttribute("Service")
       ]
+      [TypeConverter(typeof(ServiceLogLevelValues))]
       public string ServiceLogLevel { get; set; }
 
 
@@ -101,20 +90,21 @@ namespace Liquesce
           "Balanced = balance the available space on all storage disks; Whichever disc has the most space will be used\n" +
           "See http://liquesce.codeplex.com/wikipage?title=How%20are%20the%20files%20spread%20across%20the%20drives%20%3f"
           ),
-      DisplayName("Disk Allocation Mode")
-      , TypeConverter(typeof(AllocationModeValues))
-      , CategoryAttribute("File")
-      ]
+      DisplayName("Disk Allocation Mode")]
+      [TypeConverter(typeof(AllocationModeValues)), CategoryAttribute("File")]
       public String AllocationMode { get; set; }
 
-       [DescriptionAttribute("Cache the file details. This will improve the speed of file discovery and opening"),
-      DisplayName("File Detail cache seconds"),
-      TypeConverter(typeof(ServiceLogLevelValues))
+       [DescriptionAttribute("Cache the file details. This will improve the speed of file discovery and opening.\r" +
+          "Range is 0 <-> 65535"),
+      DisplayName("File Detail cache seconds")
       , CategoryAttribute("File")
       ]
+      [TypeConverter(typeof(NumericUpDownTypeConverter))]
+      [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMaxAttribute(UInt16.MaxValue)]
       public UInt16 CacheLifetimeSeconds { get; set; }
    }
    // ReSharper restore MemberCanBePrivate.Global
+
 
    public class ServiceLogLevelValues : StringConverter
    {
