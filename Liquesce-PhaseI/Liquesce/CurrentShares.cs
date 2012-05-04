@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="CurrentShares.cs" company="Smurf-IV">
 // 
-//  Copyright (C) 2010-2011 Smurf-IV
+//  Copyright (C) 2010-2012 Smurf-IV
 // 
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -23,19 +23,24 @@
 //  </summary>
 // --------------------------------------------------------------------------------------------------------------------
 #endregion
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.ServiceModel;
 using System.Text;
 using System.Windows.Forms;
 using LiquesceFacade;
+using NLog;
 
 namespace Liquesce
 {
    public partial class CurrentShares : Form
    {
+      private static readonly Logger Log = LogManager.GetCurrentClassLogger();
       private ConfigDetails shareDetails;
       List<LanManShareDetails> lmsd;
 
@@ -114,6 +119,47 @@ namespace Liquesce
       private void buttonSave_Click(object sender, EventArgs e)
       {
          shareDetails.SharesToRestore = lmsd;
+      }
+
+      private void StartHelper(string command)
+      {
+         try
+         {
+            ProcessStartInfo startInfo = new ProcessStartInfo
+            {
+               UseShellExecute = true,
+               CreateNoWindow = true,
+               WindowStyle = ProcessWindowStyle.Hidden,
+               FileName = Path.Combine(Application.StartupPath, @"LiquesceTrayHelper.exe"),
+               Arguments = command,
+               // Two lines below make the UAC dialog modal to this app
+               ErrorDialog = true,
+               ErrorDialogParentHandle = this.Handle
+            };
+
+            //// if the other process did not have a manifest
+            //// then force it to run elevated
+            //startInfo.Verb = "runas";
+            Process p = Process.Start(startInfo);
+
+            // block this UI until the launched process exits
+            // I.e. make it modal
+            p.WaitForExit();
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException("stopServiceToolStripMenuItem_Click", ex);
+         }
+      }
+
+      private void disableSMB2_Click(object sender, EventArgs e)
+      {
+         StartHelper("DisableSMB2");
+      }
+
+      private void disableOpLocks_Click(object sender, EventArgs e)
+      {
+         StartHelper("DisableOpLocks");
       }
 
    }

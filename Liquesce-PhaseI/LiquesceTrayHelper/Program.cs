@@ -28,6 +28,7 @@ using System;
 using System.Diagnostics;
 using System.ServiceProcess;
 using System.Windows.Forms;
+using Microsoft.Win32;
 
 namespace LiquesceTrayHelper
 {
@@ -51,7 +52,6 @@ namespace LiquesceTrayHelper
          }
          try
          {
-            ServiceController serviceController1 = new ServiceController { ServiceName = "LiquesceSvc" };
             foreach (string t in args)
             {
                switch (t.ToLower())
@@ -60,12 +60,30 @@ namespace LiquesceTrayHelper
                      Debugger.Launch();
                      break;
                   case "stop":
-                     if ( serviceController1.Status != ServiceControllerStatus.Stopped )
-                        serviceController1.Stop();
+                     {
+                        ServiceController serviceController1 = new ServiceController {ServiceName = "LiquesceSvc"};
+                        if (serviceController1.Status != ServiceControllerStatus.Stopped)
+                           serviceController1.Stop();
+                     }
                      break;
                   case "start":
-                     if (serviceController1.Status != ServiceControllerStatus.Running)
-                        serviceController1.Start();
+                     {
+                        ServiceController serviceController1 = new ServiceController {ServiceName = "LiquesceSvc"};
+                        if (serviceController1.Status != ServiceControllerStatus.Running)
+                           serviceController1.Start();
+                     }
+                     break;
+                  case "disablesmb2":
+                     {
+                        RegistryKey rk = Registry.LocalMachine.CreateSubKey(@"SYSTEM\CurrentControlSet\services\LanmanServer\Parameters");
+                        rk.SetValue("Smb2", 0);
+                     }
+                     break;
+                  case "disableoplocks":
+                     {
+                        RegistryKey rk = Registry.LocalMachine.CreateSubKey(@"SYSTEM\CurrentControlSet\services\LanmanServer\Parameters");
+                        rk.SetValue("EnableOplocks", 0);
+                     }
                      break;
                }
             }
