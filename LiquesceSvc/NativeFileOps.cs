@@ -120,6 +120,35 @@ namespace LiquesceSvc
          }
       }
 
+      static public void DeleteDirectory(string path)
+      {
+         if (!RemoveDirectory(path))
+            throw new Win32Exception();
+      }
+
+      public void DeleteDirectory()
+      {
+         if (Exists)
+         {
+            DeleteDirectory(FullName);
+            RemoveCachedFileInformation();
+         }
+      }
+
+      static public void DeleteFile(string path)
+      {
+         if (!DeleteFileW(path))
+            throw new Win32Exception();
+      }
+      public void DeleteFile()
+      {
+         if (Exists)
+         {
+            DeleteFile(FullName);
+            RemoveCachedFileInformation();
+         }
+      }
+
       public void SetFilePointer(long offset, SeekOrigin origin)
       {
          if (!SetFilePointerEx(handle, offset, IntPtr.Zero, (int)origin))
@@ -406,6 +435,7 @@ namespace LiquesceSvc
 
       [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
       [DllImport("kernel32.dll", SetLastError = true)]
+      [return: MarshalAs(UnmanagedType.Bool)]
       private static extern bool CloseHandle(SafeFileHandle handle);
 
       [DllImport("kernel32.dll")]
@@ -419,6 +449,7 @@ namespace LiquesceSvc
       private static extern int GetFullPathNameW(string path, int numBufferChars, StringBuilder buffer, IntPtr mustBeZero);
 
       [DllImport("kernel32.dll", SetLastError = true)]
+      [return: MarshalAs(UnmanagedType.Bool)]
       private static extern bool SetEndOfFile(SafeFileHandle hFile);
 
       [DllImport("kernel32.dll", SetLastError = true)]
@@ -426,6 +457,7 @@ namespace LiquesceSvc
       private static extern bool FlushFileBuffers(SafeFileHandle hFile);
 
       [DllImport("Kernel32.dll", SetLastError = true)]
+      [return: MarshalAs(UnmanagedType.Bool)]
       static extern bool SetFilePointerEx(SafeFileHandle Handle, Int64 i64DistanceToMove, IntPtr ptrNewFilePointer, int origin);
 
       [DllImport("kernel32.dll", SetLastError = true)]
@@ -441,9 +473,11 @@ namespace LiquesceSvc
       private static extern bool SetFileTime(SafeFileHandle hFile, ref WIN32_FIND_FILETIME lpCreationTime, ref WIN32_FIND_FILETIME lpLastAccessTime, ref WIN32_FIND_FILETIME lpLastWriteTime);
 
       [DllImport("kernel32.dll", SetLastError = true)]
+      [return: MarshalAs(UnmanagedType.Bool)]
       private static extern bool LockFile(SafeFileHandle handle, int offsetLow, int offsetHigh, int countLow, int countHigh);
 
       [DllImport("kernel32.dll", SetLastError = true)]
+      [return: MarshalAs(UnmanagedType.Bool)]
       private static extern bool UnlockFile(SafeFileHandle handle, int offsetLow, int offsetHigh, int countLow, int countHigh);
 
       // http://msdn.microsoft.com/en-us/library/windows/desktop/aa364946%28v=vs.85%29.aspx
@@ -458,6 +492,7 @@ namespace LiquesceSvc
 
 
       [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+      [return: MarshalAs(UnmanagedType.Bool)]
       private static extern bool SetFileAttributesW(string name, FileAttributes attr);
 
       // Stolen from 
@@ -498,6 +533,15 @@ namespace LiquesceSvc
       private static readonly int MaxLongPath = 32000;
       private static readonly string Prefix = "\\\\?\\";
       // ReSharper restore UnusedMember.Local
+
+
+      [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true, BestFitMapping = false)]
+      [return: MarshalAs(UnmanagedType.Bool)]
+      private static extern bool RemoveDirectory(string path);
+
+      [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true, BestFitMapping = false)]
+      [return: MarshalAs(UnmanagedType.Bool)]
+      private static extern bool DeleteFileW([MarshalAs(UnmanagedType.LPWStr), In] string path);
 
       #endregion
    }
