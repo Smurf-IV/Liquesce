@@ -76,6 +76,10 @@ namespace LiquesceSvc
                return fsi;
             }
             string foundPath = FindAllocationRootPath(filename, spaceRequired);
+            if (string.IsNullOrEmpty(foundPath))
+            {
+               int ti = 4;
+            }
             if (filename == PathDirectorySeparatorChar)
             {
                Log.Trace("Assuming Home directory so add new to cache and return");
@@ -312,8 +316,9 @@ namespace LiquesceSvc
                }
             }
          });
-
-         return (highestFreeSpace < spaceRequired) ? string.Empty : sourceWithMostFreeSpace;
+         if (highestFreeSpace < spaceRequired)
+            Log.Warn("Amount of free space[{0}] on [{1}] is less than required [{2}]", highestFreeSpace, sourceWithMostFreeSpace, spaceRequired);
+         return sourceWithMostFreeSpace;
       }
 
       public bool RelativeFileExists(string relative)
@@ -376,7 +381,7 @@ namespace LiquesceSvc
          foreach (string path in GetAllPaths(dirName))
          {
             Log.Trace("Deleting matched dir [{0}]", path);
-            Directory.Delete(path, false);
+            NativeFileOps.DeleteDirectory(path);
          }
          RemoveFromLookup(dirName);
       }
@@ -387,7 +392,7 @@ namespace LiquesceSvc
          foreach (string path in GetAllFilePaths(filename))
          {
             Log.Trace("Deleting file [{0}]", path);
-            File.Delete(path);
+            NativeFileOps.DeleteFile(path);
          }
          RemoveFromLookup(filename);
       }
