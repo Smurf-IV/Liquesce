@@ -1,6 +1,7 @@
 ﻿// The code in this file has been built up from lot's of trawling of the internet.
 // So I cannot claim any Copyright or usage on it.
 // Mostly taken from http://msdn.microsoft.com/en-us/library/cc303707.aspx
+// and here: http://improve.dk/archive/2009/02/15/utilizing-transactional-ntfs-through-dotnet.aspx
 // It's your risk !
 
 using System;
