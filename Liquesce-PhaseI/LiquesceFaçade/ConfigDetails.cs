@@ -133,7 +133,7 @@ namespace LiquesceFacade
       public string DriveLetter = "N";
 
       [DataMember]
-      public ushort ThreadCount = 5;
+      public ushort ThreadCount = 0;
 
       [DataMember]
       public bool DebugMode = false;

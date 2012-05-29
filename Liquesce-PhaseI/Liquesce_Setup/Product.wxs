@@ -8,6 +8,8 @@
    <?define MgtSource=$(sys.SOURCEFILEDIR)..\Liquesce\bin\Release ?>
    <?define SvcSource=$(sys.SOURCEFILEDIR)..\LiquesceSvc\bin\Release ?>
    <?define TraySource=$(sys.SOURCEFILEDIR)..\LiquesceTray\bin\Release ?>
+   <?define DokanSource_x86=$(sys.SOURCEFILEDIR)..\ThirdParty\Dokan_x86\Win32\Release ?>
+   <?define DokanSource_x64=$(sys.SOURCEFILEDIR)..\ThirdParty\Dokan_x64\x64\Release ?>
 
 
    <!-- do not change this ever !-->
@@ -144,19 +146,41 @@
             <File Id="LiquesceSvc.File" Name="LiquesceSvc.exe" Source="$(var.SvcSource)\LiquesceSvc.exe" KeyPath="yes">
                <fire:FirewallException Id="LiquesceFWX2" Name="LiquesceSvc" Scope="localSubnet" IgnoreFailure="yes" />
                <!-- Why Use NGen ? http://msdn.microsoft.com/en-gb/magazine/cc163610.aspx -->
-               <netfx:NativeImage Id="ngen_LiquesceSvc.exe" Platform="32bit" Priority="1" AppBaseDirectory="ServiceDIR"/>
+               <netfx:NativeImage Id="ngen_LiquesceSvc.exe" Platform="all" Priority="1" AppBaseDirectory="ServiceDIR"/>
             </File>
             <File Id="LiquesceSvc.exe.config.File" Name="LiquesceSvc.exe.config" Source="$(var.SvcSource)\LiquesceSvc.exe.config"/>
             <ServiceControl Id='LiquesceSvcControl' Name='LiquesceSvc' Start='install' Stop='both' Remove='uninstall' Wait='yes' />
          </Component>
+         <Component Id="Dokan.dll.x32" Directory="ServiceDIR" Guid="BEBF3F29-9CF1-44FE-A94C-CC1B4FE09368">
+            <Condition ><![CDATA[NOT VersionNT64]]></Condition>
+            <!--Suppress ICE30: The target file 'Dokan.dll' might be installed in '[ProgramFilesFolder]\Liquesce\xk_56tu-\' by two different conditionalized components on an SFN system: 'Dokan.dll.x32' and 'Dokan.dll.x64'. If the conditions are not mutually exclusive, this will break the component reference counting system.-->
+            <File Id="Dokan.dll.x32" Source="$(var.DokanSource_x86)\Dokan.dll" KeyPath="yes" />
+         </Component>
+         <Component Id="Dokan.dll.x64" Directory="ServiceDIR" Guid="BEBF3F29-9CF1-44FE-A94C-CC1B4FE09369">
+            <Condition ><![CDATA[VersionNT64]]></Condition>
+            <!--Suppress ICE30: The target file 'Dokan.dll' might be installed in '[ProgramFilesFolder]\Liquesce\xk_56tu-\' by two different conditionalized components on an SFN system: 'Dokan.dll.x32' and 'Dokan.dll.x64'. If the conditions are not mutually exclusive, this will break the component reference counting system.-->
+            <File Id="Dokan.dll.x64" Source="$(var.DokanSource_x64)\Dokan.dll" KeyPath="yes" />
+         </Component>
          <Component Id="DokanNet.dll" Directory="ServiceDIR">
-            <File Source="$(var.SvcSource)\DokanNet.dll" KeyPath="yes" />
+            <File Source="$(var.SvcSource)\DokanNet.dll" KeyPath="yes" >
+               <netfx:NativeImage Id="ngen_DokanNet.dll" Platform="all" Priority="1" AppBaseDirectory="ServiceDIR"/>
+            </File>
          </Component>
          <Component Id="LiquesceFacade.dll" Directory="ServiceDIR">
-            <File Source="$(var.SvcSource)\LiquesceFacade.dll" KeyPath="yes" />
+            <File Source="$(var.SvcSource)\LiquesceFacade.dll" KeyPath="yes">
+               <netfx:NativeImage Id="ngen_LiquesceFacade.dll" Platform="all" Priority="1" AppBaseDirectory="ServiceDIR"/>
+            </File>
          </Component>
+         <Component Id="ChinhDo.Transactions.dll" Directory="ServiceDIR">
+            <File Source="$(var.SvcSource)\ChinhDo.Transactions.dll" KeyPath="yes">
+               <netfx:NativeImage Id="ChinhDo.Transactions.dll" Platform="all" Priority="1" AppBaseDirectory="ServiceDIR"/>
+            </File>
+         </Component>
+         
          <Component Id="NLog.dll" Directory="ServiceDIR">
-            <File Source="$(var.SvcSource)\NLog.dll" KeyPath="yes" />
+            <File Source="$(var.SvcSource)\NLog.dll" KeyPath="yes">
+               <netfx:NativeImage Id="ngen_NLog.dll" Platform="all" Priority="1" AppBaseDirectory="ServiceDIR"/>
+            </File>
          </Component>
       </ComponentGroup>
       <DirectoryRef Id="ProgramMenuDir">
