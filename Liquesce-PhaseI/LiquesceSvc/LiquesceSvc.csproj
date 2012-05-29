@@ -129,6 +129,9 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ChinhDo.Transactions">
+      <HintPath>..\ThirdParty\ChinhDo.Transactions.dll</HintPath>
+    </Reference>
     <Reference Include="NLog, Version=2.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
       <HintPath>..\ThirdParty\NLog.dll</HintPath>
     </Reference>
@@ -145,7 +148,8 @@
   <ItemGroup>
     <Compile Include="CacheHelper.cs" />
     <Compile Include="FileManager.cs" />
-    <Compile Include="KtmTransactionHandle.cs" />
+    <Compile Include="FileSystemTransact\RollbackDirectory.cs" />
+    <Compile Include="FileSystemTransact\TransFileManager.cs" />
     <Compile Include="NativeFileFind.cs" />
     <Compile Include="NativeFileOps.cs" />
     <Compile Include="ProcessExtensions.cs" />
@@ -236,7 +240,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="YearStamp.MonthStamp.DayStamp.Increment" />
+      <UserProperties BuildVersion_BuildVersioningStyle="YearStamp.MonthStamp.DayStamp.Increment" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UseGlobalSettings="True" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
