@@ -20,8 +20,8 @@ with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#ifndef _DOKANI_H_
-#define _DOKANI_H_
+#ifndef __DOKANI_H_
+#define __DOKANI_H_
 
 #ifndef _WINDOWS_
 #include <windows.h>
@@ -33,16 +33,16 @@ with this program. If not, see <http://www.gnu.org/licenses/>.
 #include <stdlib.h>
 #endif
 
-#ifndef _PUBLIC_H_
+#ifndef __PUBLIC_H_
 #include "public.h"
 #endif
-#ifndef _DOKAN_H_
+#ifndef __DOKAN_H_
 #include "dokan.h"
 #endif
-#ifndef _DOKANC_H_
+#ifndef __DOKANC_H_
 #include "dokanc.h"
 #endif
-#ifndef _LIST_H_
+#ifndef __LIST_H_
 #include "list.h"
 #endif
 
@@ -55,16 +55,9 @@ with this program. If not, see <http://www.gnu.org/licenses/>.
 class DOKAN_INSTANCE 
 {
 public:
-   DOKAN_INSTANCE()
-   {
-      ZeroMemory( DeviceName, 64 * sizeof(WCHAR) );
-      ZeroMemory( MountPoint, MAX_PATH * sizeof(WCHAR) );
-      DeviceNumber = 0UL;
-      MountId = 0UL;
-      DokanOptions = NULL;
-      DokanOperations = NULL;
-      ZeroMemory( &ListEntry, sizeof(LIST_ENTRY) );
-   }
+   DOKAN_INSTANCE();
+   virtual ~ DOKAN_INSTANCE();
+
    // to ensure that unmount dispatch is called at once
    CComAutoCriticalSection	CriticalSection;
 
@@ -99,10 +92,11 @@ typedef struct _DOKAN_OPEN_INFO
 
 const bool DokanStart( PDOKAN_INSTANCE	Instance);
 
-const bool SendToDevice( LPCWSTR	DeviceName,
-   DWORD	IoControlCode,
+const bool SendToDevice( lpfnDebugOutStringCallback pfnDebugOutString,
+   LPCWSTR	DeviceName,
+   CONST DWORD	& IoControlCode,
    PVOID	InputBuffer,
-   ULONG	InputLength,
+   CONST ULONG	&InputLength,
    PVOID	OutputBuffer,
    ULONG	OutputLength,
    PULONG	ReturnedLength);
@@ -113,18 +107,18 @@ BOOL DokanMount( LPCWSTR	MountPoint, LPCWSTR	DeviceName);
 
 VOID SendEventInformation( HANDLE				Handle,
    PEVENT_INFORMATION	EventInfo,
-   ULONG				EventLength,
+   CONST ULONG &EventLength,
    PDOKAN_INSTANCE		DokanInstance);
 
 
 PEVENT_INFORMATION DispatchCommon( PEVENT_CONTEXT		EventContext,
-   ULONG				SizeOfEventInfo,
+   CONST ULONG &SizeOfEventInfo,
    PDOKAN_INSTANCE		DokanInstance,
    PDOKAN_FILE_INFO	DokanFileInfo,
    PDOKAN_OPEN_INFO*	DokanOpenInfo);
 
 
-VOID DispatchDirectoryInformation( HANDLE				Handle,
+VOID DispatchDirectoryInformation( HANDLE Handle,
    PEVENT_CONTEXT		EventContext,
    PDOKAN_INSTANCE		DokanInstance);
 
@@ -216,7 +210,7 @@ VOID DispatchSetSecurity( HANDLE			Handle,
 //    USHORT   Function);
 //
 
-BOOL SendReleaseIRP( LPCWSTR DeviceName);
+BOOL SendReleaseIRP( lpfnDebugOutStringCallback pfnDebugOutString, LPCWSTR DeviceName);
 
 VOID CheckFileName( LPWSTR	FileName);
 
@@ -227,7 +221,7 @@ UINT WINAPI DokanLoop( PVOID /*PDOKAN_INSTANCE*/ Param);
 UINT WINAPI DokanKeepAlive( PVOID /*PDOKAN_INSTANCE*/ Param);
 
 
-ULONG GetNTStatus(DWORD ErrorCode);
+ULONG GetNTStatus( CONST DWORD &ErrorCode);
 
 PDOKAN_OPEN_INFO GetDokanOpenInfo( PEVENT_CONTEXT EventInfomation, PDOKAN_INSTANCE DokanInstance);
 

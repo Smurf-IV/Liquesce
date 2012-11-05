@@ -11,8 +11,8 @@ Revision History:
 
 // begin_winioctl
 
-#ifndef _DEVIOCTL_
-#define _DEVIOCTL_
+#ifndef __DEVIOCTL_
+#define __DEVIOCTL_
 
 // begin_ntddk begin_nthal begin_ntifs
 //

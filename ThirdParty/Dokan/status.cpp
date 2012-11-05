@@ -38,7 +38,7 @@ static char THIS_FILE[] = __FILE__;
 //////////////////////////////////////////////////////////////////////////////
 
 
-ULONG GetNTStatus(DWORD ErrorCode)
+ULONG GetNTStatus(CONST DWORD &ErrorCode)
 {
    switch (ErrorCode)
    {

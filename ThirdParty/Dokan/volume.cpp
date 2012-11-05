@@ -88,9 +88,6 @@ ULONG DokanFsVolumeInformation(
    DWORD	fsFlags;
    WCHAR	fsName[MAX_PATH];
    ULONG	remainingLength;
-   ULONG	bytesToCopy;
-
-   int		status = -1;
 
    PFILE_FS_VOLUME_INFORMATION volumeInfo = (PFILE_FS_VOLUME_INFORMATION)EventInfo->Buffer;
 
@@ -109,10 +106,10 @@ ULONG DokanFsVolumeInformation(
    }
 
 
-   RtlZeroMemory(volumeName, sizeof(volumeName));
-   RtlZeroMemory(fsName, sizeof(fsName));
+   ZeroMemory(volumeName, sizeof(volumeName));
+   ZeroMemory(fsName, sizeof(fsName));
 
-   status = DokanOperations->GetVolumeInformation(
+   const int status = DokanOperations->GetVolumeInformation(
             volumeName,							// VolumeNameBuffer
             sizeof(volumeName) / sizeof(WCHAR), // VolumeNameSize
             &volumeSerial,						// VolumeSerialNumber
@@ -134,7 +131,7 @@ ULONG DokanFsVolumeInformation(
    
    remainingLength -= FIELD_OFFSET(FILE_FS_VOLUME_INFORMATION, VolumeLabel[0]);
    
-   bytesToCopy = wcslen(volumeName) * sizeof(WCHAR);
+   ULONG bytesToCopy( (ULONG)wcslen(volumeName) * sizeof(WCHAR) );
    if (remainingLength < bytesToCopy) 
    {
       bytesToCopy = remainingLength;
@@ -210,9 +207,6 @@ ULONG DokanFsAttributeInformation(
    DWORD	fsFlags;
    WCHAR	fsName[MAX_PATH];
    ULONG	remainingLength;
-   ULONG	bytesToCopy;
-
-   int		status = -1;
 
    PFILE_FS_ATTRIBUTE_INFORMATION attrInfo = (PFILE_FS_ATTRIBUTE_INFORMATION)EventInfo->Buffer;
    
@@ -230,10 +224,10 @@ ULONG DokanFsAttributeInformation(
    }
 
 
-   RtlZeroMemory(volumeName, sizeof(volumeName));
-   RtlZeroMemory(fsName, sizeof(fsName));
+   ZeroMemory(volumeName, sizeof(volumeName));
+   ZeroMemory(fsName, sizeof(fsName));
 
-   status = DokanOperations->GetVolumeInformation(
+   const int status = DokanOperations->GetVolumeInformation(
             volumeName,			// VolumeNameBuffer
             sizeof(volumeName),	// VolumeNameSize
             &volumeSerial,		// VolumeSerialNumber
@@ -254,7 +248,7 @@ ULONG DokanFsAttributeInformation(
 
    remainingLength -= FIELD_OFFSET(FILE_FS_ATTRIBUTE_INFORMATION, FileSystemName[0]);
    
-   bytesToCopy = wcslen(fsName) * sizeof(WCHAR);
+   ULONG bytesToCopy( (ULONG)wcslen(fsName) * sizeof(WCHAR));
    if (remainingLength < bytesToCopy)
    {
       bytesToCopy = remainingLength;
@@ -331,8 +325,8 @@ VOID DispatchQueryVolumeInformation(
 
    eventInfo = (PEVENT_INFORMATION)new(sizeOfEventInfo);
 
-   RtlZeroMemory(eventInfo, sizeOfEventInfo);
-   RtlZeroMemory(&fileInfo, sizeof(DOKAN_FILE_INFO));
+   ZeroMemory(eventInfo, sizeOfEventInfo);
+   ZeroMemory(&fileInfo, sizeof(DOKAN_FILE_INFO));
 
    // There is no Context because file is not opened
    // so DispatchCommon is not used here
@@ -347,7 +341,7 @@ VOID DispatchQueryVolumeInformation(
    eventInfo->Status = STATUS_NOT_IMPLEMENTED;
    eventInfo->BufferLength = 0;
 
-   DbgPrint(L"###QueryVolumeInfo %04d\n", openInfo ? openInfo->EventId : -1);
+   DbgPrint(DokanInstance->DokanOperations->DebugOutString, L"###QueryVolumeInfo %04d\n", openInfo ? openInfo->EventId : -1);
 
    switch (EventContext->Volume.FsInformationClass) 
    {
@@ -364,7 +358,7 @@ VOID DispatchQueryVolumeInformation(
       eventInfo->Status = DokanFsFullSizeInformation( eventInfo, EventContext, &fileInfo, DokanInstance->DokanOperations);
       break;
    default:
-      DbgPrint(L"error unknown volume info %d\n", EventContext->Volume.FsInformationClass);
+      DbgPrint(DokanInstance->DokanOperations->DebugOutString, L"error unknown volume info %d\n", EventContext->Volume.FsInformationClass);
       break;
    }
 

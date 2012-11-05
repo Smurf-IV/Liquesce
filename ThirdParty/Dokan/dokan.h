@@ -20,8 +20,8 @@ with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#ifndef _DOKAN_H_
-#define _DOKAN_H_
+#ifndef __DOKAN_H_
+#define __DOKAN_H_
 
 #define DOKAN_DRIVER_NAME	L"dokan.sys"
 
@@ -86,9 +86,12 @@ typedef struct _DOKAN_FILE_INFO
 //   (currently never return 1)
 typedef int (WINAPI *PFillFindData) (PWIN32_FIND_DATAW, PDOKAN_FILE_INFO);
 
+#ifndef lpfnDebugOutStringCallback
+typedef void (DOKAN_CALLBACK *lpfnDebugOutStringCallback) (LPCWSTR cpswzDebugString);
+#endif 
+
 typedef struct _DOKAN_OPERATIONS 
 {
-
    // When an error occurs, return negative value.
    // Usually you should return GetLastError() * -1.
 
@@ -275,6 +278,7 @@ typedef struct _DOKAN_OPERATIONS
       ULONG, // SecurityDescriptor length
       PDOKAN_FILE_INFO);
 
+   lpfnDebugOutStringCallback DebugOutString;
 
 } DOKAN_OPERATIONS, *PDOKAN_OPERATIONS;
 

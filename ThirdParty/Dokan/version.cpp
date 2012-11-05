@@ -48,7 +48,7 @@ STDDLLEXAPI_(ULONG ) DokanDriverVersion()
 	ULONG version = 0;
 	ULONG ret = 0;
 
-	if (SendToDevice(
+	if (SendToDevice( NULL, 
 			DOKAN_GLOBAL_DEVICE_NAME,
 			IOCTL_TEST,
 			NULL, // InputBuffer

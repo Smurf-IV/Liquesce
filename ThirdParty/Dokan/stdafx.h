@@ -86,14 +86,15 @@
 #define STDDLLAPIPTR_( ret_type, PTRName ) typedef ret_type (AFX_EXPORT * PTRName)
 #define STDAPIPTR_( ret_type, PTRName ) typedef ret_type (CALLBACK * PTRName)
 
-VOID DokanDbgPrintW(LPCWSTR format, ...);
+typedef void (CALLBACK *lpfnDebugOutStringCallback) (LPCWSTR cpswzDebugString);
+
+void DokanDbgPrintW(lpfnDebugOutStringCallback pfnDebugOutString, LPCWSTR format, ...);
 // DokanOptions->DebugMode is ON?
 extern bool g_DebugMode;
 // DokanOptions->UseStdErr is ON?
 extern bool	g_UseStdErr;
 
-#define DbgPrint(format, ... )  if (g_DebugMode) { DokanDbgPrintW(format, __VA_ARGS__); }
-
+#define DbgPrint(pfnDebugOutString, format, ... )  if (g_DebugMode) { DokanDbgPrintW(pfnDebugOutString, format, __VA_ARGS__); }
 
 #ifndef _STRSAFE_H_INCLUDED_
 // The MSDN Suggests that this file go after all the other #includes

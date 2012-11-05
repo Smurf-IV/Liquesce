@@ -23,6 +23,7 @@
 //  </summary>
 // --------------------------------------------------------------------------------------------------------------------
 #endregion
+
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -38,13 +39,8 @@ namespace Liquesce
    {
       static private readonly Logger Log = LogManager.GetCurrentClassLogger();
 
-      /// <summary>
-      /// 
-      /// </summary>
-      static public void LogDisplay(string logLocation)
+      static public string FindLogLocation(string logLocation)
       {
-         try
-         {
             OpenFileDialog openFileDialog = new OpenFileDialog
                                                {
                                                   InitialDirectory =
@@ -57,9 +53,19 @@ namespace Liquesce
                                                   Title = "Select name to view contents"
                                                };
 
-            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            return (openFileDialog.ShowDialog() == DialogResult.OK) ? openFileDialog.FileName : string.Empty;
+      }
+      /// <summary>
+      /// 
+      /// </summary>
+      static public void LogDisplay(string logLocation)
+      {
+         try
+         {
+            logLocation = FindLogLocation(logLocation);
+            if (!string.IsNullOrEmpty(logLocation))
             {
-               Process word = Process.Start("Wordpad.exe", '"' + openFileDialog.FileName + '"');
+               Process word = Process.Start("Wordpad.exe", '"' + logLocation + '"');
                if (word != null)
                {
                   word.WaitForInputIdle();

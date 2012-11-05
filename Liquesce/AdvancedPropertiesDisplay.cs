@@ -41,7 +41,6 @@ namespace Liquesce
          if (cd != null)
          {
             ThreadCount = cd.ThreadCount;
-            DokanDebugMode = cd.DebugMode;
             AllocationMode = cd.AllocationMode.ToString();
             HoldOffMBytes = cd.HoldOffBufferBytes / (1024 * 1024);
             ServiceLogLevel = cd.ServiceLogLevel;
@@ -59,24 +58,17 @@ namespace Liquesce
       [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMaxAttribute(1, 1024000, 1024)]
       public ulong HoldOffMBytes { get; set;}
 
-      [DescriptionAttribute("Turn Dokan Debug information on, to all it to be captured in an appropriate app."),
-      DisplayName("Dokan Debug Mode")
-      , CategoryAttribute("Dokan")
-      ]
-      public bool DokanDebugMode { get; set; }
-
-
-      [DescriptionAttribute("0 is automatic, use 1 for problem finding scenario's.\rRange 0 <-> 32"),
+      [DescriptionAttribute("0 is automatic (Number of processing units * 2), use 1 for problem finding scenario's.\rRange 0 <-> 31"),
        DisplayName("Thread Count")
       , CategoryAttribute("Dokan")
       ]
       [TypeConverter(typeof(NumericUpDownTypeConverter))]
-      [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMaxAttribute(0, 32)]
+      [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMaxAttribute(0, 31)]
       public ushort ThreadCount { get; set; }
 
       [DescriptionAttribute("The amount of information that will be placed into the Log files.\r" +
          "Trace means slower performance!\r." +
-         "Useful for creating bug reports - set threads to 1 as well"),
+         "Useful for creating bug reports - set Thread Count to 1 as well"),
       DisplayName("Service Logging Level")
       , CategoryAttribute("Service")
       ]

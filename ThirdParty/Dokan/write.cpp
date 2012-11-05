@@ -37,7 +37,7 @@ static char THIS_FILE[] = __FILE__;
 
 //////////////////////////////////////////////////////////////////////////////
 
-VOID SendWriteRequest(
+VOID SendWriteRequest( lpfnDebugOutStringCallback pfnDebugOutString, 
    HANDLE				Handle,
    PEVENT_INFORMATION	EventInfo,
    ULONG				EventLength,
@@ -45,7 +45,7 @@ VOID SendWriteRequest(
    ULONG				BufferLength)
 {
 
-   DbgPrint(L"SendWriteRequest\n");
+   DbgPrint(pfnDebugOutString, L"SendWriteRequest\n");
    ULONG	returnedLength;
    CONST BOOL status( DeviceIoControl(
       Handle,		            // Handle to device
@@ -63,11 +63,11 @@ VOID SendWriteRequest(
       if (g_DebugMode) 
       {
          CONST DWORD dwErrorCode( GetLastError() );
-         DbgPrint(L"SendWriteRequest: Ioctl failed with code %d\n", dwErrorCode );
+         DbgPrint(pfnDebugOutString, L"SendWriteRequest: Ioctl failed with code %d\n", dwErrorCode );
       }
    }
 
-   DbgPrint(L"SendWriteRequest got %d bytes\n", returnedLength);
+   DbgPrint(pfnDebugOutString, L"SendWriteRequest got %d bytes\n", returnedLength);
 }
 
 
@@ -84,8 +84,7 @@ VOID DispatchWrite(
    bool bufferAllocated( false );
    ULONG					sizeOfEventInfo = sizeof(EVENT_INFORMATION);
 
-   eventInfo = DispatchCommon(
-      EventContext, sizeOfEventInfo, DokanInstance, &fileInfo, &openInfo);
+   eventInfo = DispatchCommon( EventContext, sizeOfEventInfo, DokanInstance, &fileInfo, &openInfo);
 
    // Since driver requested bigger memory,
    // allocate enough memory and send it to driver
@@ -93,14 +92,14 @@ VOID DispatchWrite(
    {
       ULONG contextLength = EventContext->Write.RequestLength;
       PEVENT_CONTEXT	contextBuf = (PEVENT_CONTEXT)new(contextLength);
-      SendWriteRequest(Handle, eventInfo, sizeOfEventInfo, contextBuf, contextLength);
+      SendWriteRequest(DokanInstance->DokanOperations->DebugOutString, Handle, eventInfo, sizeOfEventInfo, contextBuf, contextLength);
       EventContext = contextBuf;
       bufferAllocated = true;
    }
 
    CheckFileName(EventContext->Write.FileName);
 
-   DbgPrint(L"###WriteFile %04d\n", openInfo != NULL ? openInfo->EventId : -1);
+   DbgPrint(DokanInstance->DokanOperations->DebugOutString, L"###WriteFile %04d\n", openInfo != NULL ? openInfo->EventId : -1);
 
    if (DokanInstance->DokanOperations->WriteFile)
    {

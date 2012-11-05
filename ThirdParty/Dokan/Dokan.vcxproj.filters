@@ -84,6 +84,9 @@
     <None Include="..\..\Liquesce\Liquesce.ico">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="..\..\Liquesce\Resources\Liquesce.ico">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="devioctl.h">

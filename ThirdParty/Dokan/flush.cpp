@@ -52,7 +52,7 @@ VOID DispatchFlush(
 
 	eventInfo = DispatchCommon( EventContext, sizeOfEventInfo, DokanInstance, &fileInfo, &openInfo);
 
-	DbgPrint(L"###Flush %04d\n", openInfo != NULL ? openInfo->EventId : -1);
+	DbgPrint(DokanInstance->DokanOperations->DebugOutString, L"###Flush %04d\n", openInfo != NULL ? openInfo->EventId : -1);
 
 	eventInfo->Status = STATUS_SUCCESS;
 

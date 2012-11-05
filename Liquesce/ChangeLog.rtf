@@ -23,13 +23,21 @@ Keep an open eye on the \cf0\b{\field{\*\fldinst{HYPERLINK "http://liquesce.code
 - Change the space usage to be a table with scroll-bars to give better layout options (And sorting etc.)\par
 - Error 1450: Insufficient System Resources for Service\par
 - Dokan Move A directory to its parent (Over a share) does not pass correct information to UserSpace\par
-\par
+- Disk Full with "Total Commander" file copy on 12-01-beta2 XP Server\par
 - \par
 \cf0\ul\b\par
 \cf1\ulnone\b0\par
 \cf0\ul\b Done\par
 \par
-2012-05-##\par
+2012-06-##\par
+\ulnone\b0 - Add logging Callback function, to allow UserSpace to perform logging of Dokan interface calls.\par
+- If Liquesce logging level is set to Debug or Trace, then the Dokan UserSpace Dll is set to DebugCallback.\par
+- Add TailForm to the Management application to see the Service log files changing.\par
+- If Liquesce Trace level is set, then the Debug Flag for the system driver is also set (Use DebugView).\par
+-- More optimisations to give the optimising compiler a chance\par
+- \par
+\ul\b\par
+2012-05-29 Test Release\par
 \ulnone\b0 - Add numericUpDown range control to the property Gird\par
 \cf3 - Advanced Settings - File Detail Cache Seconds\par
 \cf0 - Addition of buttons to allow user to perform the workarouns for SMB and EnableOpLocks overrides.\par
@@ -37,7 +45,9 @@ Keep an open eye on the \cf0\b{\field{\*\fldinst{HYPERLINK "http://liquesce.code
 - Change default thread value to 0, now that it has been tested.\par
 - unable to reproduce \cf3 Number of Folders not showing up over a share\par
 \cf0 - Fix \cf3 Cannot rename folders with 12-01-beta2 in XP Server\par
-\cf0 - Start to convert project over to using 64 Native API's and Builds\cf3\par
+\cf0 - Start to convert project over to using 64 Native API's and Builds\par
+-- Fix compile warnings\par
+-- Start to optimise usage of variables to give the optimising compiler a chance\cf3\par
 \cf0\par
 \ul\b\par
 2012-04-29 (RC2)\par

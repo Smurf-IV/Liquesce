@@ -40,11 +40,10 @@ VOID DispatchCreate( HANDLE Handle, PEVENT_CONTEXT EventContext, PDOKAN_INSTANCE
    static long eventId = 0;
    CheckFileName(EventContext->Create.FileName);
 
-
    CONST ULONG length( sizeof(EVENT_INFORMATION) );
-   EVENT_INFORMATION _eventInfo = {0};
+   EVENT_INFORMATION _eventInfo;
+   ZeroMemory( &_eventInfo, length );
    PEVENT_INFORMATION eventInfo = &_eventInfo;
-   //ZeroMemory(eventInfo, length);
 
    eventInfo->BufferLength = 0;
    eventInfo->SerialNumber = EventContext->SerialNumber;
@@ -57,7 +56,7 @@ VOID DispatchCreate( HANDLE Handle, PEVENT_CONTEXT EventContext, PDOKAN_INSTANCE
    openInfo->EventContext = EventContext;
    openInfo->DokanInstance = DokanInstance;
 
-   DOKAN_FILE_INFO fileInfo = {0};
+   DOKAN_FILE_INFO fileInfo;
    ZeroMemory(&fileInfo, sizeof(DOKAN_FILE_INFO));
    fileInfo.ProcessId = EventContext->ProcessId;
    fileInfo.DokanOptions = DokanInstance->DokanOptions;
@@ -73,7 +72,7 @@ VOID DispatchCreate( HANDLE Handle, PEVENT_CONTEXT EventContext, PDOKAN_INSTANCE
 
    // The low 24 bits of this member correspond to the CreateOptions parameter
    CONST DWORD options(EventContext->Create.CreateOptions & FILE_VALID_OPTION_FLAGS );
-   //DbgPrint("Create.CreateOptions 0x%x\n", options);
+   DbgPrint(DokanInstance->DokanOperations->DebugOutString, L"Create.CreateOptions 0x%x\n", options);
 
    // to open directory
    // even if this flag is not specified, 
@@ -85,7 +84,7 @@ VOID DispatchCreate( HANDLE Handle, PEVENT_CONTEXT EventContext, PDOKAN_INSTANCE
    // there is a case to open non directory file
    if ((options & FILE_NON_DIRECTORY_FILE) == FILE_NON_DIRECTORY_FILE) 
    {
-      //DbgPrint("FILE_NON_DIRECTORY_FILE\n");
+      DbgPrint(DokanInstance->DokanOperations->DebugOutString, L"FILE_NON_DIRECTORY_FILE\n");
    }
 
    if ((options & FILE_DELETE_ON_CLOSE) == FILE_DELETE_ON_CLOSE)
@@ -93,12 +92,13 @@ VOID DispatchCreate( HANDLE Handle, PEVENT_CONTEXT EventContext, PDOKAN_INSTANCE
       EventContext->Create.FileAttributes |= FILE_FLAG_DELETE_ON_CLOSE;
    }
 
-   DbgPrint(L"###Create %04d\n", eventId);
+   DbgPrint(DokanInstance->DokanOperations->DebugOutString, L"###Create %04d\n", eventId);
    //DbgPrint("### OpenInfo %X\n", openInfo);
    openInfo->EventId = eventId++;
 
+   DbgPrint(DokanInstance->DokanOperations->DebugOutString, L"   CreateDisposition %X\n", disposition);
    // make a directory or open
-   if (fileInfo.IsDirectory)
+   if (fileInfo.IsDirectory != FALSE)
    {
       switch(disposition)
       {
@@ -116,7 +116,7 @@ VOID DispatchCreate( HANDLE Handle, PEVENT_CONTEXT EventContext, PDOKAN_INSTANCE
          }
          break;
       default:
-         DbgPrint(L"### Create other disposition : %d\n", disposition);
+         DbgPrint(DokanInstance->DokanOperations->DebugOutString, L"### Create other disposition : %d\n", disposition);
          break;
       }
 
@@ -124,7 +124,6 @@ VOID DispatchCreate( HANDLE Handle, PEVENT_CONTEXT EventContext, PDOKAN_INSTANCE
    else // open a file 
    {
       DWORD creationDisposition( OPEN_EXISTING );
-      DbgPrint(L"   CreateDisposition %X\n", disposition);
       switch(disposition)
       {
       case FILE_CREATE:
@@ -144,7 +143,7 @@ VOID DispatchCreate( HANDLE Handle, PEVENT_CONTEXT EventContext, PDOKAN_INSTANCE
          break;
       default:
          // TODO: should support FILE_SUPERSEDE ?
-         DbgPrint(L"### Create other disposition : %X\n", disposition);
+         DbgPrint(DokanInstance->DokanOperations->DebugOutString, L"### Create other disposition : %X\n", disposition);
          break;
       }
 
@@ -177,10 +176,10 @@ VOID DispatchCreate( HANDLE Handle, PEVENT_CONTEXT EventContext, PDOKAN_INSTANCE
 
       const int error(status * -1);
 
-      DbgPrint(L"CreateFile status = %d\n", status);
+      DbgPrint(DokanInstance->DokanOperations->DebugOutString, L"CreateFile status = %d\n", status);
       if ((EventContext->Flags & SL_OPEN_TARGET_DIRECTORY) == SL_OPEN_TARGET_DIRECTORY)
       {
-         DbgPrint(L"SL_OPEN_TARGET_DIRECTORY specified\n");
+         DbgPrint(DokanInstance->DokanOperations->DebugOutString, L"SL_OPEN_TARGET_DIRECTORY specified\n");
       }
       eventInfo->Create.Information = FILE_DOES_NOT_EXIST;
 
@@ -220,7 +219,7 @@ VOID DispatchCreate( HANDLE Handle, PEVENT_CONTEXT EventContext, PDOKAN_INSTANCE
          break;
       default:
          eventInfo->Status = STATUS_INVALID_PARAMETER;
-         DbgPrint(L"Create got unknown error code %d\n", error);
+         DbgPrint(DokanInstance->DokanOperations->DebugOutString, L"Create got unknown error code %d\n", error);
          break;
       }
 

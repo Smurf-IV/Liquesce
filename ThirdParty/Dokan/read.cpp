@@ -55,7 +55,7 @@ VOID DispatchRead(
 
    eventInfo = DispatchCommon( EventContext, sizeOfEventInfo, DokanInstance, &fileInfo, &openInfo);
 
-   DbgPrint(L"###Read %04d\n", openInfo != NULL ? openInfo->EventId : -1);
+   DbgPrint(DokanInstance->DokanOperations->DebugOutString, L"###Read %04d\n", openInfo != NULL ? openInfo->EventId : -1);
 
    if (DokanInstance->DokanOperations->ReadFile)
    {

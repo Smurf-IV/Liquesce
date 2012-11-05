@@ -63,7 +63,7 @@ STDDLLEXAPI_(BOOL ) DokanResetTimeout(ULONG Timeout, PDOKAN_FILE_INFO FileInfo)
    eventInfo->ResetTimeout.Timeout = Timeout;
 
    ULONG	returnedLength;
-   const bool status( SendToDevice(
+   const bool status( SendToDevice( instance->DokanOperations->DebugOutString,
             GetRawDeviceName(instance->DeviceName),
             IOCTL_RESET_TIMEOUT,
             eventInfo,

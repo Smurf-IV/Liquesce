@@ -20,8 +20,8 @@ with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#ifndef _FILEINFO_H_
-#define _FILEINFO_H_
+#ifndef __FILEINFO_H_
+#define __FILEINFO_H_
 
 
 #define IRP_MJ_CREATE                   0x00

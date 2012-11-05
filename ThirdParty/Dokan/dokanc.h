@@ -20,10 +20,10 @@ with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#ifndef _DOKANC_H_
-#define _DOKANC_H_
+#ifndef __DOKANC_H_
+#define __DOKANC_H_
 
-#ifndef _DOKAN_H_
+#ifndef __DOKAN_H_
 #include "dokan.h"
 #endif
 
@@ -51,9 +51,9 @@ with this program. If not, see <http://www.gnu.org/licenses/>.
 #define DOKAN_SERVICE_STOP		2
 #define DOKAN_SERVICE_DELETE	3
 
-#define DOKAN_KEEPALIVE_TIME	3000 // in miliseconds
+#define DOKAN_KEEPALIVE_TIME	3000 // in milliseconds
 
-#define DOKAN_MAX_THREAD		15
+#define DOKAN_MAX_THREAD		32
 
 
 typedef struct _DOKAN_CONTROL 
