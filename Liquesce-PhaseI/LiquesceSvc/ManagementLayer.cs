@@ -149,6 +149,12 @@ namespace LiquesceSvc
                   return;
                   // ReSharper restore HeuristicUnreachableCode
                }
+               Log.Info(currentConfigDetails.ToString());
+               dokanOperations = new LiquesceOps(currentConfigDetails);
+               ulong freeBytesAvailable = 0;
+               ulong totalBytes = 0;
+               ulong totalFreeBytes = 0;
+               dokanOperations.GetDiskFreeSpace(ref freeBytesAvailable, ref totalBytes, ref totalFreeBytes, null);
                SetNLogLevel(currentConfigDetails.ServiceLogLevel);
                string mountPoint = currentConfigDetails.DriveLetter;
                mountedDriveLetter = currentConfigDetails.DriveLetter[0];
@@ -183,7 +189,7 @@ namespace LiquesceSvc
                {
                   MountPoint = mountPoint,
                   ThreadCount = currentConfigDetails.ThreadCount,
-                  DebugMode = currentConfigDetails.DebugMode,
+                  DebugMode = ((currentConfigDetails.ServiceLogLevel == "Trace") || (currentConfigDetails.ServiceLogLevel == "Debug")),
                   // public bool UseStdErr;
                   // UseAltStream = true, // This needs all sorts of extra API's
                   UseKeepAlive = true,  // When you set TRUE on DokanOptions->UseKeepAlive, dokan library automatically unmounts 15 seconds after user-mode file system hanged up
@@ -193,8 +199,9 @@ namespace LiquesceSvc
                   //,RemovableDrive = true
                };
 
+               if (currentConfigDetails.ServiceLogLevel == "Trace")
+                  Dokan.DokanSetDebugMode(true);
 
-               dokanOperations = new LiquesceOps(currentConfigDetails);
                ThreadPool.QueueUserWorkItem(dokanOperations.InitialiseShares, dokanOperations);
 
                int retVal = Dokan.DokanMain(options, dokanOperations);
@@ -247,7 +254,6 @@ namespace LiquesceSvc
       private void SetNLogLevel(string serviceLogLevel)
       {
          LoggingConfiguration currentConfig = LogManager.Configuration;
-         //LogManager.DisableLogging();
          foreach (LoggingRule rule in currentConfig.LoggingRules)
          {
             rule.EnableLoggingForLevel(LogLevel.Fatal);
@@ -282,10 +288,7 @@ namespace LiquesceSvc
                   break;
             }
          }
-         //LogManager.EnableLogging();
-         //LogManager.Configuration = null;
          LogManager.ReconfigExistingLoggers();
-         //LogManager.Configuration = currentConfig;
          Log.Warn("Test @ [{0}]", serviceLogLevel);
          Log.Debug("Test @ [{0}]", serviceLogLevel);
          Log.Trace("Test @ [{0}]", serviceLogLevel);
@@ -353,7 +356,7 @@ namespace LiquesceSvc
 
       public List<LanManShareDetails> GetPossibleShares()
       {
-         // TODO: Phase 2 will have a foreach onthe drive letter
+         // TODO: Phase 2 will have a foreach on the drive letter
          return (LanManShareHandler.MatchDriveLanManShares(currentConfigDetails.DriveLetter));
       }
 
@@ -460,7 +463,6 @@ namespace LiquesceSvc
             {
                currentConfigDetails = new ConfigDetails
                                          {
-                                            DebugMode = true,
                                             DelayStartMilliSec = (uint)short.MaxValue,
                                             DriveLetter = "N",
                                             SourceLocations = new List<string>(1),

@@ -25,7 +25,9 @@
 #endregion
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Serialization;
+using System.Text;
 
 namespace LiquesceFacade
 {
@@ -135,9 +137,6 @@ namespace LiquesceFacade
       [DataMember]
       public ushort ThreadCount = 0;
 
-      [DataMember]
-      public bool DebugMode = false;
-
       [DataMember(IsRequired = true)]
       public string VolumeLabel = "Mirror of C";
 
@@ -160,5 +159,23 @@ namespace LiquesceFacade
       public UInt16 CacheLifetimeSeconds = 32; // Set to zero to disable
 
       public List<string> KnownSharePaths;
+
+      public new string ToString()
+      {
+         StringBuilder sb = new StringBuilder();
+         sb = sb.AppendFormat("DelayStartMilliSec=[{0}]",DelayStartMilliSec).AppendLine();
+         sb = sb.AppendFormat("DriveLetter=[{0}]", DriveLetter).AppendLine();
+         sb = sb.AppendFormat("ThreadCount=[{0}]",ThreadCount).AppendLine();
+         sb = sb.AppendFormat("VolumeLabel=[{0}]",VolumeLabel).AppendLine();
+         sb = sb.AppendFormat("AllocationMode=[{0}]",AllocationMode).AppendLine();
+         sb = sb.AppendFormat("HoldOffBufferBytes=[{0}]", HoldOffBufferBytes).AppendLine();
+         sb = sb.AppendLine("SourceLocations:");
+         sb = SourceLocations.Aggregate(sb, (current, location) => current.AppendLine(location));
+         sb = sb.AppendFormat("ServiceLogLevel[{0}]",ServiceLogLevel).AppendLine();
+         sb = sb.AppendLine("SharesToRestore:");
+         sb = SharesToRestore.Aggregate(sb, (current, sharePath) => current.AppendLine(sharePath.Path));
+         sb = sb.AppendFormat("CacheLifetimeSeconds=[{0}]", CacheLifetimeSeconds).AppendLine();
+         return sb.ToString();
+      }
    }
 }

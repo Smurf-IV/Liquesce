@@ -794,10 +794,25 @@ namespace Liquesce
          DisplayLog.LogDisplay(@"Liquesce\Logs");
       }
 
-      private void serviceLogViewToolStripMenuItem_Click(object sender, EventArgs e)
+      private void viewToolStripMenuItem_Click(object sender, EventArgs e)
       {
          DisplayLog.LogDisplay(@"LiquesceSvc\Logs");
+      }
 
+      private void tailToolStripMenuItem_Click(object sender, EventArgs e)
+      {
+         try
+         {
+            string logLocation = DisplayLog.FindLogLocation(@"LiquesceSvc\Logs");
+            if (!string.IsNullOrEmpty(logLocation))
+            {
+               new TailForm(logLocation).Show(this);
+            }
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException("OpenFile has an exception: ", ex);
+         }
       }
 
       private void globalConfigSettingsToolStripMenuItem_Click(object sender, EventArgs e)

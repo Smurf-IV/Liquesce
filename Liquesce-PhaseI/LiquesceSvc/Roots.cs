@@ -130,8 +130,8 @@ namespace LiquesceSvc
       }
 
       /// <summary>
-      /// Takes the SMB offset name and attempt to match against a knwon location.
-      /// This is indended to be used for the MoveFile workaround
+      /// Takes the SMB offset name and attempt to match against a known location.
+      /// This is intended to be used for the MoveFile workaround
       /// </summary>
       /// <param name="searchOffsetFilename"></param>
       /// <param name="spaceRequired"></param>
@@ -149,7 +149,7 @@ namespace LiquesceSvc
                string foundPath = FindAllocationRootPath(PathDirectorySeparatorChar, spaceRequired);
 
 // ReSharper disable LoopCanBeConvertedToQuery
-               // Do not allow Resharper to mangle this one, as it gets the variable scoping wrong !
+               // Do not allow ReSharper to mangle this one, as it gets the variable scoping wrong !
                foreach (string sharePath in configDetails.KnownSharePaths)
 // ReSharper restore LoopCanBeConvertedToQuery
                {
@@ -266,7 +266,7 @@ namespace LiquesceSvc
          {
             // first get free space
             ulong lpFreeBytesAvailable, num2, num3;
-            if (GetDiskFreeSpaceEx(t, out lpFreeBytesAvailable, out num2, out num3))
+            if (GetDiskFreeSpaceExW(t, out lpFreeBytesAvailable, out num2, out num3))
             {
                // see if enough space
                if (lpFreeBytesAvailable > spaceRequired)
@@ -288,7 +288,7 @@ namespace LiquesceSvc
       {
          ulong lpFreeBytesAvailable = 0, num2, num3;
          foreach (string t in from t in configDetails.SourceLocations
-                              where GetDiskFreeSpaceEx(t, out lpFreeBytesAvailable, out num2, out num3)
+                              where GetDiskFreeSpaceExW(t, out lpFreeBytesAvailable, out num2, out num3)
                               where lpFreeBytesAvailable > spaceRequired
                               select t)
          {
@@ -307,7 +307,7 @@ namespace LiquesceSvc
          configDetails.SourceLocations.ForEach(str =>
          {
             ulong num, num2, num3;
-            if (GetDiskFreeSpaceEx(str, out num, out num2, out num3))
+            if (GetDiskFreeSpaceExW(str, out num, out num2, out num3))
             {
                if (highestFreeSpace < num)
                {
@@ -371,8 +371,8 @@ namespace LiquesceSvc
 
       #region DLL Imports
 
-      [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-      private static extern bool GetDiskFreeSpaceEx(string lpDirectoryName, out ulong lpFreeBytesAvailable, out ulong lpTotalNumberOfBytes, out ulong lpTotalNumberOfFreeBytes);
+      [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+      private static extern bool GetDiskFreeSpaceExW(string lpDirectoryName, out ulong lpFreeBytesAvailable, out ulong lpTotalNumberOfBytes, out ulong lpTotalNumberOfFreeBytes);
 
       #endregion
 

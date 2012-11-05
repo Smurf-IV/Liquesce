@@ -49,7 +49,7 @@ VOID DispatchClose( HANDLE /*Handle*/, PEVENT_CONTEXT EventContext, PDOKAN_INSTA
 
    eventInfo->Status = STATUS_SUCCESS; // return success at any case
 
-   DbgPrint(L"###Close %04d\n", openInfo != NULL ? openInfo->EventId : -1);
+   DbgPrint(DokanInstance->DokanOperations->DebugOutString, L"###Close %04d\n", openInfo != NULL ? openInfo->EventId : -1);
 
    //if (DokanInstance->DokanOperations->CloseFile)
    //{

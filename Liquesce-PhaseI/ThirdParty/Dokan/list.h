@@ -20,8 +20,8 @@ with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#ifndef _LIST_H_
-#define _LIST_H_
+#ifndef __LIST_H_
+#define __LIST_H_
 
 #ifndef _WINDOWS_
 #include <windows.h>

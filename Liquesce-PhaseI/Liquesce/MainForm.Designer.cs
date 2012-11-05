@@ -60,10 +60,12 @@
          this.advancedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.globalConfigSettingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.currentSharesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+         this.versionNumberToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
          this.FillExpectedLayoutWorker = new System.ComponentModel.BackgroundWorker();
          this.serviceController1 = new System.ServiceProcess.ServiceController();
-         this.versionNumberToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+         this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+         this.tailToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
          this.splitContainer1.Panel1.SuspendLayout();
          this.splitContainer1.Panel2.SuspendLayout();
@@ -228,8 +230,8 @@
          // 
          // VolumeLabel
          // 
-         this.VolumeLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
-                     | System.Windows.Forms.AnchorStyles.Right)));
+         this.VolumeLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
          this.VolumeLabel.Location = new System.Drawing.Point(7, 18);
          this.VolumeLabel.MaxLength = 32;
          this.VolumeLabel.Name = "VolumeLabel";
@@ -305,18 +307,13 @@
             0,
             0,
             0});
-         this.DelayCreation.Minimum = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
          this.DelayCreation.Name = "DelayCreation";
          this.DelayCreation.Size = new System.Drawing.Size(101, 22);
          this.DelayCreation.TabIndex = 0;
          this.DelayCreation.ThousandsSeparator = true;
-         this.toolTip1.SetToolTip(this.DelayCreation, "Range 0 <-> 10000000\r\nThis is a Delay Start Service, But this gives the OS a li" +
-                 "ttle extra to mount Networks and USB devices before attempting to start the Pool" +
-                 " driver.\r\n");
+         this.toolTip1.SetToolTip(this.DelayCreation, "Range 0 <-> 10000000\r\nThis is a Delay Start Service, But this gives the OS a litt" +
+        "le extra to mount Networks and USB devices before attempting to start the Pool d" +
+        "river.\r\n");
          this.DelayCreation.Value = new decimal(new int[] {
             250,
             0,
@@ -429,16 +426,18 @@
          // serviceLogViewToolStripMenuItem
          // 
          this.serviceLogViewToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+         this.serviceLogViewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.viewToolStripMenuItem,
+            this.tailToolStripMenuItem});
          this.serviceLogViewToolStripMenuItem.Name = "serviceLogViewToolStripMenuItem";
-         this.serviceLogViewToolStripMenuItem.Size = new System.Drawing.Size(192, 22);
-         this.serviceLogViewToolStripMenuItem.Text = "&Service Log View...";
-         this.serviceLogViewToolStripMenuItem.Click += new System.EventHandler(this.serviceLogViewToolStripMenuItem_Click);
+         this.serviceLogViewToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
+         this.serviceLogViewToolStripMenuItem.Text = "&Service Log";
          // 
          // userLogViewToolStripMenuItem
          // 
          this.userLogViewToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
          this.userLogViewToolStripMenuItem.Name = "userLogViewToolStripMenuItem";
-         this.userLogViewToolStripMenuItem.Size = new System.Drawing.Size(192, 22);
+         this.userLogViewToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
          this.userLogViewToolStripMenuItem.Text = "&User Log View...";
          this.userLogViewToolStripMenuItem.Click += new System.EventHandler(this.userLogViewToolStripMenuItem_Click);
          // 
@@ -458,7 +457,7 @@
          // 
          this.globalConfigSettingsToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
          this.globalConfigSettingsToolStripMenuItem.Name = "globalConfigSettingsToolStripMenuItem";
-         this.globalConfigSettingsToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
+         this.globalConfigSettingsToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
          this.globalConfigSettingsToolStripMenuItem.Text = "&Global Config Settings...";
          this.globalConfigSettingsToolStripMenuItem.ToolTipText = "Access to the settings that control access to the OS and the Dokan Driver";
          this.globalConfigSettingsToolStripMenuItem.Click += new System.EventHandler(this.globalConfigSettingsToolStripMenuItem_Click);
@@ -467,10 +466,19 @@
          // 
          this.currentSharesToolStripMenuItem.Enabled = false;
          this.currentSharesToolStripMenuItem.Name = "currentSharesToolStripMenuItem";
-         this.currentSharesToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
+         this.currentSharesToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
          this.currentSharesToolStripMenuItem.Text = "&Current Shares...";
          this.currentSharesToolStripMenuItem.ToolTipText = "Requires this to be running at the administrator level";
          this.currentSharesToolStripMenuItem.Click += new System.EventHandler(this.currentSharesToolStripMenuItem_Click);
+         // 
+         // versionNumberToolStripMenuItem
+         // 
+         this.versionNumberToolStripMenuItem.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+         this.versionNumberToolStripMenuItem.Enabled = false;
+         this.versionNumberToolStripMenuItem.Name = "versionNumberToolStripMenuItem";
+         this.versionNumberToolStripMenuItem.Size = new System.Drawing.Size(106, 20);
+         this.versionNumberToolStripMenuItem.Text = "Version Number";
+         this.versionNumberToolStripMenuItem.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
          // 
          // FillExpectedLayoutWorker
          // 
@@ -484,14 +492,19 @@
          this.serviceController1.MachineName = "127.0.0.1";
          this.serviceController1.ServiceName = "LiquesceSvc";
          // 
-         // versionNumberToolStripMenuItem
+         // viewToolStripMenuItem
          // 
-         this.versionNumberToolStripMenuItem.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-         this.versionNumberToolStripMenuItem.Enabled = false;
-         this.versionNumberToolStripMenuItem.Name = "versionNumberToolStripMenuItem";
-         this.versionNumberToolStripMenuItem.Size = new System.Drawing.Size(106, 20);
-         this.versionNumberToolStripMenuItem.Text = "Version Number";
-         this.versionNumberToolStripMenuItem.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+         this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
+         this.viewToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+         this.viewToolStripMenuItem.Text = "&View...";
+         this.viewToolStripMenuItem.Click += new System.EventHandler(this.viewToolStripMenuItem_Click);
+         // 
+         // tailToolStripMenuItem
+         // 
+         this.tailToolStripMenuItem.Name = "tailToolStripMenuItem";
+         this.tailToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+         this.tailToolStripMenuItem.Text = "&Tail...";
+         this.tailToolStripMenuItem.Click += new System.EventHandler(this.tailToolStripMenuItem_Click);
          // 
          // MainForm
          // 
@@ -569,5 +582,7 @@
       private System.Windows.Forms.ToolStripMenuItem currentSharesToolStripMenuItem;
       private System.Windows.Forms.ToolStripMenuItem deleteToolStripMenuItem;
       private System.Windows.Forms.ToolStripMenuItem versionNumberToolStripMenuItem;
+      private System.Windows.Forms.ToolStripMenuItem viewToolStripMenuItem;
+      private System.Windows.Forms.ToolStripMenuItem tailToolStripMenuItem;
    }
 }

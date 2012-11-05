@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace DokanNet
 {
-   [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto, Pack = 4)]
+   [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode, Pack = 4)]
    struct DOKAN_OPTIONS
    {
       public ushort Version;
@@ -14,7 +14,7 @@ namespace DokanNet
       public string MountPoint;
    }
 
-   // this struct must be the same layout as DOKAN_OPERATIONS
+   // This must be the same layout as "struct _DOKAN_OPERATIONS" in \Dokan\dokan.h
    [StructLayout(LayoutKind.Sequential, Pack = 4)]
    struct DOKAN_OPERATIONS
    {
@@ -43,6 +43,7 @@ namespace DokanNet
       public Proxy.UnmountDelegate Unmount;
       public Proxy.GetFileSecurityDelegate GetFileSecurity;
       public Proxy.SetFileSecurityDelegate SetFileSecurity;
+      public Proxy.DebugOutStringDelegate DebugOutString;
    }
 
    static class DokanDll
@@ -70,6 +71,7 @@ namespace DokanNet
          string Name, // file name
          bool IgnoreCase);
 
-
+      [DllImport("dokan.dll")]
+      public static extern bool DokanSetDebugMode(UInt32 Mode);
    }
 }

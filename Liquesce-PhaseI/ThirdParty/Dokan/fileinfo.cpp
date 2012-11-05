@@ -271,7 +271,7 @@ VOID DispatchQueryInformation(
 
    eventInfo->BufferLength = EventContext->File.BufferLength;
 
-   DbgPrint(L"###GetFileInfo %04d\n", openInfo != NULL ? openInfo->EventId : -1);
+   DbgPrint(DokanInstance->DokanOperations->DebugOutString, L"###GetFileInfo %04d\n", openInfo != NULL ? openInfo->EventId : -1);
 
    int result( -1 );
    if (DokanInstance->DokanOperations->GetFileInformation) 
@@ -294,67 +294,69 @@ VOID DispatchQueryInformation(
       switch( EventContext->File.FileInformationClass ) 
       {
       case FileBasicInformation:
-         //DbgPrint("FileBasicInformation\n");
+         DbgPrint(DokanInstance->DokanOperations->DebugOutString, L"FileBasicInformation\n");
          status = DokanFillFileBasicInfo((PFILE_BASIC_INFORMATION)eventInfo->Buffer, &byHandleFileInfo, &remainingLength);
          break;
 
       case FileInternalInformation:
+         DbgPrint(DokanInstance->DokanOperations->DebugOutString, L"FileInternalInformation\n");
          status = DokanFillInternalInfo((PFILE_INTERNAL_INFORMATION)eventInfo->Buffer, &byHandleFileInfo, &remainingLength);
          break;
 
       case FileEaInformation:
-         //DbgPrint("FileEaInformation or FileInternalInformation\n");
-         //status = STATUS_NOT_IMPLEMENTED;
+         DbgPrint(DokanInstance->DokanOperations->DebugOutString, L"FileEaInformation\n");
          status = STATUS_SUCCESS;
          remainingLength -= sizeof(FILE_EA_INFORMATION);
          break;
 
       case FileStandardInformation:
-         //DbgPrint("FileStandardInformation\n");
+         DbgPrint(DokanInstance->DokanOperations->DebugOutString, L"FileStandardInformation\n");
          status = DokanFillFileStandardInfo((PFILE_STANDARD_INFORMATION)eventInfo->Buffer, &byHandleFileInfo, &remainingLength);
          break;
 
       case FileAllInformation:
-         //DbgPrint("FileAllInformation\n");
+         DbgPrint(DokanInstance->DokanOperations->DebugOutString, L"FileAllInformation\n");
          status = DokanFillFileAllInfo((PFILE_ALL_INFORMATION)eventInfo->Buffer, &byHandleFileInfo, &remainingLength, EventContext);
          break;
 
       case FileAlternateNameInformation:
+         DbgPrint(DokanInstance->DokanOperations->DebugOutString, L"FileAlternateNameInformation STATUS_NOT_IMPLEMENTED\n");
          status = STATUS_NOT_IMPLEMENTED;
          break;
 
       case FileAttributeTagInformation:
+         DbgPrint(DokanInstance->DokanOperations->DebugOutString, L"FileAttributeTagInformation\n");
          status = DokanFillFileAttributeTagInfo((PFILE_ATTRIBUTE_TAG_INFORMATION)eventInfo->Buffer, &byHandleFileInfo, &remainingLength);
          break;
 
       case FileCompressionInformation:
-         //DbgPrint("FileAlternateNameInformation or...\n");
+         DbgPrint(DokanInstance->DokanOperations->DebugOutString, L"FileCompressionInformation STATUS_NOT_IMPLEMENTED\n");
          status = STATUS_NOT_IMPLEMENTED;
          break;
 
       case FileNameInformation:
          // this case is not used because driver deal with
-         //DbgPrint("FileNameInformation\n");
+         DbgPrint(DokanInstance->DokanOperations->DebugOutString, L"FileNameInformation\n");
          status = DokanFillFileNameInfo((PFILE_NAME_INFORMATION)eventInfo->Buffer, &byHandleFileInfo, &remainingLength, EventContext);
          break;
 
       case FileNetworkOpenInformation:
-         //DbgPrint("FileNetworkOpenInformation\n");
+         DbgPrint(DokanInstance->DokanOperations->DebugOutString, L"FileNetworkOpenInformation\n");
          status = DokanFillNetworkOpenInfo((PFILE_NETWORK_OPEN_INFORMATION)eventInfo->Buffer, &byHandleFileInfo, &remainingLength);
          break;
 
       case FilePositionInformation:
          // this case is not used because driver deal with
-         //DbgPrint("FilePositionInformation\n");
+         DbgPrint(DokanInstance->DokanOperations->DebugOutString, L"FilePositionInformation\n");
          status = DokanFillFilePositionInfo((PFILE_POSITION_INFORMATION)eventInfo->Buffer, &byHandleFileInfo, &remainingLength);
 
          break;
       case FileStreamInformation:
-         //DbgPrint("FileStreamInformation\n");
+         DbgPrint(DokanInstance->DokanOperations->DebugOutString, L"FileStreamInformation STATUS_NOT_IMPLEMENTED\n");
          status = STATUS_NOT_IMPLEMENTED;
          break;
       default:
-         DbgPrint(L"  unknown type:%d\n", EventContext->File.FileInformationClass);
+         DbgPrint(DokanInstance->DokanOperations->DebugOutString, L"  unknown type:%d\n", EventContext->File.FileInformationClass);
          break;
       }
 

@@ -36,6 +36,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\Liquesce\Liquesce.ico" />
+    <None Include="..\..\Liquesce\Resources\Liquesce.ico" />
     <None Include="COPYING" />
     <None Include="COPYING.LESSER" />
     <None Include="dokan.def" />
@@ -94,11 +95,13 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
     <TargetName>Dokan</TargetName>
+    <IntDir>$(ProjectDir)$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
     <TargetName>Dokan</TargetName>
+    <IntDir>$(ProjectDir)$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -141,11 +144,4 @@
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-  </ImportGroup>
-  <ProjectExtensions>
-    <VisualStudio>
-      <UserProperties BuildVersion_UpdateAssemblyVersion="" BuildVersion_UpdateFileVersion="" BuildVersion_UseGlobalSettings="" BuildVersion_StartDate="1/1/1" BuildVersion_ReplaceNonNumerics="False" BuildVersion_IncrementBeforeBuild="False" />
-    </VisualStudio>
-  </ProjectExtensions>
 </Project>

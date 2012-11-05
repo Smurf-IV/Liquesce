@@ -20,10 +20,10 @@ with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#ifndef _PUBLIC_H_
-#define _PUBLIC_H_
+#ifndef __PUBLIC_H_
+#define __PUBLIC_H_
 
-#ifndef _DEVIOCTL_
+#ifndef __DEVIOCTL_
 #include <winioctl.h>
 #endif
 

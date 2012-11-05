@@ -53,7 +53,7 @@ VOID DispatchLock(
    eventInfo = DispatchCommon(
       EventContext, sizeOfEventInfo, DokanInstance, &fileInfo, &openInfo);
 
-   DbgPrint(L"###Lock %04d\n", openInfo != NULL ? openInfo->EventId : -1);
+   DbgPrint(DokanInstance->DokanOperations->DebugOutString, L"###Lock %04d\n", openInfo != NULL ? openInfo->EventId : -1);
 
    eventInfo->Status = STATUS_NOT_IMPLEMENTED;
 
@@ -70,8 +70,7 @@ VOID DispatchLock(
             //EventContext->Lock.Key,
             &fileInfo);
 
-         eventInfo->Status = status < 0 ?
-STATUS_LOCK_NOT_GRANTED : STATUS_SUCCESS;
+         eventInfo->Status = (status < 0) ? STATUS_LOCK_NOT_GRANTED : STATUS_SUCCESS;
       }
       break;
    case IRP_MN_UNLOCK_ALL:
@@ -93,7 +92,7 @@ STATUS_LOCK_NOT_GRANTED : STATUS_SUCCESS;
       }
       break;
    default:
-      DbgPrint(L"unkown lock function %d\n", EventContext->MinorFunction);
+      DbgPrint(DokanInstance->DokanOperations->DebugOutString, L"unkown lock function %d\n", EventContext->MinorFunction);
       break;
    }
 

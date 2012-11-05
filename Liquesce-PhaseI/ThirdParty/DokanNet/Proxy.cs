@@ -282,6 +282,13 @@ UNPROTECTED_SACL_SECURITY_INFORMATION  The SACL inherits ACEs from the parent ob
       // ReSharper restore InconsistentNaming
       #endregion
 
+      public delegate void DebugOutStringDelegate(IntPtr rawDebugString);
+
+      public static void DebugOutStringProxy(IntPtr rawDebugString)
+      {
+         Log.Debug(GetFileName(rawDebugString).TrimEnd(new char[]{'\n'}));
+      }
+
       public delegate int CreateFileDelegate(IntPtr rawFilName, uint rawAccessMode, uint rawShare, uint rawCreationDisposition, uint rawFlagsAndAttributes, ref DOKAN_FILE_INFO dokanFileInfo);
 
       public int CreateFileProxy(IntPtr rawFileName, uint rawAccessMode, uint rawShare, uint rawCreationDisposition, uint rawFlagsAndAttributes, ref DOKAN_FILE_INFO rawFileInfo)

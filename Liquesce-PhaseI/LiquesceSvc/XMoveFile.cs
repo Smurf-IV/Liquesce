@@ -44,28 +44,27 @@ namespace LiquesceSvc
       /// <param name="oldName">FullPath to Old</param>
       /// <param name="newName">FullPath to new</param>
       /// <param name="replaceIfExisting"></param>
-      /// <param name="info"></param>
+      /// <param name="isDirectory"> </param>
+      /// <param name="processID"> </param>
       public static void Move(Roots roots, string oldName, string newName, bool replaceIfExisting, bool isDirectory, uint processID)
       {
          Log.Info("MoveFile replaceIfExisting [{0}] filename: [{1}] newname: [{2}] isDirectory:[{3}]", replaceIfExisting, oldName, newName, isDirectory);
 
          NativeFileOps pathSource = roots.GetPath(oldName);
          ulong pathSource_Length = (ulong) (pathSource.Length);
-         NativeFileOps pathTarget;
          // Got to handle defect / Issue "http://code.google.com/p/dokan/issues/detail?id=238" 
          if (ProcessIdentity.CouldBeSMB(processID)
             && (600 == Dokan.DokanVersion())
             )
          {
             Log.Warn("ProcessID indicates that this could be an SMB redirect. Workaround dokan issue 238!");
-            int lastIndex = oldName.LastIndexOf(Roots.PathDirectorySeparatorChar);
-            string offsetPath = (lastIndex > -1) ? newName.Remove(0, lastIndex + 1) : newName;
-            pathTarget = roots.GetPathRelatedtoShare(offsetPath, 0);
-            newName = roots.GetRelative(pathTarget.FullName);
-
+            //int lastIndex = oldName.LastIndexOf(Roots.PathDirectorySeparatorChar);
+            //string offsetPath = (lastIndex > -1) ? newName.Remove(0, lastIndex + 1) : newName;
+            NativeFileOps pathTargetRelative = roots.GetPathRelatedtoShare(newName, 0);
+            newName = roots.GetRelative(pathTargetRelative.FullName);
          }
          // Now check to see if this has enough space to make a "Copy" before the atomic delete of MoveFileEX
-         pathTarget = roots.GetPath(newName, pathSource_Length);
+         NativeFileOps pathTarget = roots.GetPath(newName, pathSource_Length);
          string pathTarget_FullName = pathTarget.FullName;
          // Now check to see if this file exists, or exists in another location (Due to share redirect)
          if (pathTarget.Exists 

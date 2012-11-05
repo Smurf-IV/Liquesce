@@ -91,6 +91,7 @@ namespace DokanNet
 
          var dokanOperations = new DOKAN_OPERATIONS
                                                {
+                                                  DebugOutString = Proxy.DebugOutStringProxy,
                                                   CreateFile = proxy.CreateFileProxy,
                                                   OpenDirectory = proxy.OpenDirectoryProxy,
                                                   CreateDirectory = proxy.CreateDirectoryProxy,
@@ -148,5 +149,15 @@ namespace DokanNet
       //   var rawFileInfo = new DOKAN_FILE_INFO { DokanContext = fileinfo.refFileHandleContext };
       //   return DokanDll.DokanResetTimeout(timeout, ref rawFileInfo);
       //}
+
+      /// <summary>
+      /// 
+      /// </summary>
+      /// <param name="turnSystemDriverDebugOn"></param>
+      /// <returns></returns>
+      public static bool DokanSetDebugMode(bool turnSystemDriverDebugOn)
+      {
+         return DokanDll.DokanSetDebugMode( (uint) (turnSystemDriverDebugOn?1:0));
+      }
    }
 }

@@ -66,7 +66,7 @@ namespace LiquesceSvc
 
       /// <summary>
       /// The information given in the Dokan info is a bit misleading about the return codes
-      /// This is what the Win OS suystem is expecting http://msdn.microsoft.com/en-us/library/aa363858%28VS.85%29.aspx
+      /// This is what the Win OS system is expecting http://msdn.microsoft.com/en-us/library/aa363858%28VS.85%29.aspx
       /// So.. Everything succeeds but the Return code is ERROR_ALREADY_EXISTS
       /// </summary>
       /// <param name="filename"></param>
@@ -688,7 +688,7 @@ namespace LiquesceSvc
             // FindFiles should not return an empty array. It should return parent ("..") and self ("."). That wasn't obvious!
             PID.Invoke(processId, delegate
             {
-               // Do this in reverse, so that the preferred refreences overwrite the older files
+               // Do this in reverse, so that the preferred references overwrite the older files
                for (int i = configDetails.SourceLocations.Count - 1; i >= 0; i--)
                {
                   NativeFileFind.AddFiles(configDetails.SourceLocations[i] + filename, uniqueFiles, pattern);
@@ -1147,7 +1147,8 @@ namespace LiquesceSvc
          int dokanReturn = Dokan.DOKAN_ERROR;
          try
          {
-            Log.Trace("GetDiskFreeSpace IN DokanProcessId[{0}]", info.ProcessId);
+            if ( info != null )
+               Log.Trace("GetDiskFreeSpace IN DokanProcessId[{0}]", info.ProcessId);
             freeBytesAvailable = totalBytes = totalFreeBytes = 0;
 
             HashSet<string> uniqueSources = new HashSet<string>();
@@ -1164,6 +1165,8 @@ namespace LiquesceSvc
                   totalBytes += num2;
                   totalFreeBytes += num3;
                }
+               Log.Debug("DirectoryName=[{0}], FreeBytesAvailable=[{1}], TotalNumberOfBytes=[{2}], TotalNumberOfFreeBytes=[{3}]",
+                     source, num, num2, num3);
             }
             dokanReturn = Dokan.DOKAN_SUCCESS;
          }

@@ -11,8 +11,8 @@ DokanServiceDelete
 DokanVersion
 DokanDriverVersion
 DokanResetTimeout
-DokanNetworkProviderInstall
-DokanNetworkProviderUninstall
+/*DokanNetworkProviderInstall
+DokanNetworkProviderUninstall*/
 DokanSetDebugMode
 DokanMountControl
 DokanOpenRequestorToken

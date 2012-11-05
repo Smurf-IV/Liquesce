@@ -62,14 +62,14 @@ STDDLLEXAPI_(HANDLE ) DokanOpenRequestorToken(PDOKAN_FILE_INFO FileInfo)
    }
 
    CONST ULONG eventInfoSize( sizeof(EVENT_INFORMATION) );
-   EVENT_INFORMATION eventInfo= { 0 };
+   EVENT_INFORMATION eventInfo;
    ZeroMemory(&eventInfo, eventInfoSize);
 
    eventInfo.SerialNumber = eventContext->SerialNumber;
 
    ULONG	returnedLength;
    HANDLE handle = INVALID_HANDLE_VALUE;
-   const bool status( SendToDevice( GetRawDeviceName(instance->DeviceName),
+   const bool status( SendToDevice( NULL, GetRawDeviceName(instance->DeviceName),
       IOCTL_GET_ACCESS_TOKEN,
       &eventInfo,
       eventInfoSize,
@@ -83,7 +83,7 @@ STDDLLEXAPI_(HANDLE ) DokanOpenRequestorToken(PDOKAN_FILE_INFO FileInfo)
    } 
    else
    {
-      DbgPrint(L"IOCTL_GET_ACCESS_TOKEN failed\n");
+      DbgPrint(instance->DokanOperations->DebugOutString, L"IOCTL_GET_ACCESS_TOKEN failed\n");
    }
    return handle;
 }
