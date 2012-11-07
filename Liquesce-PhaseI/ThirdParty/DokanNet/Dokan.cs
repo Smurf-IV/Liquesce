@@ -50,7 +50,7 @@ namespace DokanNet
       public const int DOKAN_MOUNT_ERROR = -5; // Can't assign drive letter
       #endregion
 
-      private const ushort DOKAN_VERSION = 600; // ver 0.6.0
+      private const ushort DOKAN_VERSION = 601; // ver 0.6.0
 
       #region Dokan Driver Options
       private const uint DOKAN_OPTION_DEBUG = 1;
@@ -67,8 +67,11 @@ namespace DokanNet
 
       public static int DokanMain(DokanOptions options, IDokanOperations operations)
       {
+         if (operations == null) 
+            throw new ArgumentNullException("operations");
+
          Log.Info("Start DokanMain");
-         if (String.IsNullOrEmpty(options.VolumeLabel))
+         if (string.IsNullOrEmpty(options.VolumeLabel))
          {
             options.VolumeLabel = "DOKAN";
          }
@@ -130,7 +133,7 @@ namespace DokanNet
 
       public static int DokanRemoveMountPoint(string mountPoint)
       {
-         return Dokan.DokanRemoveMountPoint(mountPoint);
+         return DokanDll.DokanRemoveMountPoint(mountPoint);
       }
 
       public static uint DokanVersion()
