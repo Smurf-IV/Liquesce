@@ -43,6 +43,8 @@
          this.VolumeLabel = new System.Windows.Forms.TextBox();
          this.MountPoint = new System.Windows.Forms.ComboBox();
          this.label5 = new System.Windows.Forms.Label();
+         this.label4 = new System.Windows.Forms.Label();
+         this.DelayCreation = new System.Windows.Forms.NumericUpDown();
          this.label2 = new System.Windows.Forms.Label();
          this.expectedTreeView = new System.Windows.Forms.TreeView();
          this.refreshExpected = new System.Windows.Forms.ContextMenuStrip(this.components);
@@ -76,6 +78,7 @@
          this.splitContainer3.SuspendLayout();
          this.mergeListContext.SuspendLayout();
          this.groupBox1.SuspendLayout();
+         ((System.ComponentModel.ISupportInitialize)(this.DelayCreation)).BeginInit();
          this.refreshExpected.SuspendLayout();
          this.menuStrip1.SuspendLayout();
          this.SuspendLayout();
@@ -167,8 +170,10 @@
          this.splitContainer3.Panel2.Controls.Add(this.groupBox1);
          this.splitContainer3.Panel2.Controls.Add(this.MountPoint);
          this.splitContainer3.Panel2.Controls.Add(this.label5);
+         this.splitContainer3.Panel2.Controls.Add(this.label4);
+         this.splitContainer3.Panel2.Controls.Add(this.DelayCreation);
          this.splitContainer3.Size = new System.Drawing.Size(247, 448);
-         this.splitContainer3.SplitterDistance = 365;
+         this.splitContainer3.SplitterDistance = 344;
          this.splitContainer3.TabIndex = 7;
          // 
          // mergeList
@@ -183,7 +188,7 @@
          this.mergeList.Location = new System.Drawing.Point(0, 0);
          this.mergeList.Name = "mergeList";
          this.mergeList.SelectedImageIndex = 0;
-         this.mergeList.Size = new System.Drawing.Size(247, 365);
+         this.mergeList.Size = new System.Drawing.Size(247, 344);
          this.mergeList.TabIndex = 3;
          this.toolTip1.SetToolTip(this.mergeList, "Drop the Entries here");
          this.mergeList.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.mergeList_NodeMouseClick);
@@ -211,10 +216,9 @@
          // 
          // groupBox1
          // 
-         this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
-                     | System.Windows.Forms.AnchorStyles.Right)));
          this.groupBox1.Controls.Add(this.VolumeLabel);
-         this.groupBox1.Location = new System.Drawing.Point(2, 35);
+         this.groupBox1.Dock = System.Windows.Forms.DockStyle.Bottom;
+         this.groupBox1.Location = new System.Drawing.Point(0, 56);
          this.groupBox1.Margin = new System.Windows.Forms.Padding(0);
          this.groupBox1.Name = "groupBox1";
          this.groupBox1.Size = new System.Drawing.Size(247, 44);
@@ -224,6 +228,8 @@
          // 
          // VolumeLabel
          // 
+         this.VolumeLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
+                     | System.Windows.Forms.AnchorStyles.Right)));
          this.VolumeLabel.Location = new System.Drawing.Point(7, 18);
          this.VolumeLabel.MaxLength = 32;
          this.VolumeLabel.Name = "VolumeLabel";
@@ -234,8 +240,6 @@
          // 
          // MountPoint
          // 
-         this.MountPoint.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                     | System.Windows.Forms.AnchorStyles.Right)));
          this.MountPoint.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
          this.MountPoint.FormattingEnabled = true;
          this.MountPoint.Items.AddRange(new object[] {
@@ -262,7 +266,7 @@
             "X",
             "Y",
             "Z"});
-         this.MountPoint.Location = new System.Drawing.Point(87, 6);
+         this.MountPoint.Location = new System.Drawing.Point(87, 30);
          this.MountPoint.Name = "MountPoint";
          this.MountPoint.Size = new System.Drawing.Size(154, 22);
          this.MountPoint.Sorted = true;
@@ -273,11 +277,51 @@
          // label5
          // 
          this.label5.AutoSize = true;
-         this.label5.Location = new System.Drawing.Point(4, 9);
+         this.label5.Location = new System.Drawing.Point(4, 33);
          this.label5.Name = "label5";
          this.label5.Size = new System.Drawing.Size(77, 14);
          this.label5.TabIndex = 2;
          this.label5.Text = "Drive &Mount:";
+         // 
+         // label4
+         // 
+         this.label4.AutoSize = true;
+         this.label4.Location = new System.Drawing.Point(4, 4);
+         this.label4.Name = "label4";
+         this.label4.Size = new System.Drawing.Size(118, 14);
+         this.label4.TabIndex = 1;
+         this.label4.Text = "&Delay Creation (ms):";
+         // 
+         // DelayCreation
+         // 
+         this.DelayCreation.Increment = new decimal(new int[] {
+            100,
+            0,
+            0,
+            0});
+         this.DelayCreation.Location = new System.Drawing.Point(140, 2);
+         this.DelayCreation.Maximum = new decimal(new int[] {
+            10000000,
+            0,
+            0,
+            0});
+         this.DelayCreation.Minimum = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
+         this.DelayCreation.Name = "DelayCreation";
+         this.DelayCreation.Size = new System.Drawing.Size(101, 22);
+         this.DelayCreation.TabIndex = 0;
+         this.DelayCreation.ThousandsSeparator = true;
+         this.toolTip1.SetToolTip(this.DelayCreation, "Range 0 <-> 10000000\r\nThis is a Delay Start Service, But this gives the OS a li" +
+                 "ttle extra to mount Networks and USB devices before attempting to start the Pool" +
+                 " driver.\r\n");
+         this.DelayCreation.Value = new decimal(new int[] {
+            250,
+            0,
+            0,
+            0});
          // 
          // label2
          // 
@@ -480,6 +524,7 @@
          this.mergeListContext.ResumeLayout(false);
          this.groupBox1.ResumeLayout(false);
          this.groupBox1.PerformLayout();
+         ((System.ComponentModel.ISupportInitialize)(this.DelayCreation)).EndInit();
          this.refreshExpected.ResumeLayout(false);
          this.menuStrip1.ResumeLayout(false);
          this.menuStrip1.PerformLayout();
@@ -503,6 +548,8 @@
       private System.Windows.Forms.TreeView expectedTreeView;
       private System.Windows.Forms.Label label3;
       private System.ComponentModel.BackgroundWorker FillExpectedLayoutWorker;
+      private System.Windows.Forms.Label label4;
+      private System.Windows.Forms.NumericUpDown DelayCreation;
       private System.Windows.Forms.ComboBox MountPoint;
       private System.Windows.Forms.Label label5;
       private System.Windows.Forms.GroupBox groupBox1;

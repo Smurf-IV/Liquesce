@@ -1,16 +1,46 @@
-﻿using System;
+﻿#region Copyright (C)
+// ---------------------------------------------------------------------------------------------------------------
+//  <copyright file="CurrentShares.cs" company="Smurf-IV">
+// 
+//  Copyright (C) 2010-2012 Smurf-IV
+// 
+//  This program is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation, either version 2 of the License, or
+//   any later version.
+// 
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+//  GNU General Public License for more details.
+// 
+//  You should have received a copy of the GNU General Public License
+//  along with this program. If not, see http://www.gnu.org/licenses/.
+//  </copyright>
+//  <summary>
+//  Url: http://Liquesce.codeplex.com/
+//  Email: http://www.codeplex.com/site/users/view/smurfiv
+//  </summary>
+// --------------------------------------------------------------------------------------------------------------------
+#endregion
+
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.ServiceModel;
 using System.Text;
 using System.Windows.Forms;
 using LiquesceFacade;
+using NLog;
 
 namespace Liquesce
 {
    public partial class CurrentShares : Form
    {
+      private static readonly Logger Log = LogManager.GetCurrentClassLogger();
       private ConfigDetails shareDetails;
       List<LanManShareDetails> lmsd;
 
@@ -46,9 +76,10 @@ namespace Liquesce
          Enabled = false;
          UseWaitCursor = true;
          mountedPoints.Text = shareDetails.VolumeLabel + " (" + shareDetails.DriveLetter + ")";
-         ChannelFactory<ILiquesce> factory = new ChannelFactory<ILiquesce>("LiquesceFacade");
-         ILiquesce remoteIF = factory.CreateChannel();
-         lmsd = remoteIF.GetPossibleShares();
+         EndpointAddress endpointAddress = new EndpointAddress("net.pipe://localhost/LiquesceFacade");
+         NetNamedPipeBinding namedPipeBindingpublish = new NetNamedPipeBinding();
+         LiquesceProxy proxy = new LiquesceProxy(namedPipeBindingpublish, endpointAddress);
+         lmsd = proxy.GetPossibleShares();
 
          foreach (string[] row in lmsd.SelectMany(share =>
                                                   share.UserAccessRules.Select(fsare => new string[]
@@ -88,6 +119,47 @@ namespace Liquesce
       private void buttonSave_Click(object sender, EventArgs e)
       {
          shareDetails.SharesToRestore = lmsd;
+      }
+
+      private void StartHelper(string command)
+      {
+         try
+         {
+            ProcessStartInfo startInfo = new ProcessStartInfo
+            {
+               UseShellExecute = true,
+               CreateNoWindow = true,
+               WindowStyle = ProcessWindowStyle.Hidden,
+               FileName = Path.Combine(Application.StartupPath, @"LiquesceTrayHelper.exe"),
+               Arguments = command,
+               // Two lines below make the UAC dialog modal to this app
+               ErrorDialog = true,
+               ErrorDialogParentHandle = this.Handle
+            };
+
+            //// if the other process did not have a manifest
+            //// then force it to run elevated
+            //startInfo.Verb = "runas";
+            Process p = Process.Start(startInfo);
+
+            // block this UI until the launched process exits
+            // I.e. make it modal
+            p.WaitForExit();
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException("stopServiceToolStripMenuItem_Click", ex);
+         }
+      }
+
+      private void disableSMB2_Click(object sender, EventArgs e)
+      {
+         StartHelper("DisableSMB2");
+      }
+
+      private void disableOpLocks_Click(object sender, EventArgs e)
+      {
+         StartHelper("DisableOpLocks");
       }
 
    }

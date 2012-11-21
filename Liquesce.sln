@@ -26,19 +26,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiquesceFacade", "LiquesceF
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiquesceTray", "LiquesceTray\LiquesceTray.csproj", "{3B495DA8-B86F-4249-B94A-05B6FA01303F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiquesceSvcMEF", "LiquesceSvcMEF\LiquesceSvcMEF.csproj", "{E39910A2-C72A-4D3C-BFD0-4356906B86A7}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiquesceTrayMEF", "LiquesceTrayMEF\LiquesceTrayMEF.csproj", "{8E8DD4DD-0CEE-437B-9D81-1F166C95D09D}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ServiceMEFs", "ServiceMEFs", "{D840EDCD-7088-423F-9AF3-90C1F12255E8}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FolderMEF", "ServiceMEFs\FolderMEF\FolderMEF.csproj", "{8D071FB8-5E7B-43F4-81D4-839D2203D6AF}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PriorityMEF", "ServiceMEFs\PriorityMEF\PriorityMEF.csproj", "{0B134E04-A1C8-4BA3-A5D6-E83AD26A73ED}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiquesceTrayHelper", "LiquesceTrayHelper\LiquesceTrayHelper.csproj", "{F216D80D-2D70-4B3B-8632-813F6C399948}"
 EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 11
+		SccNumberOfProjects = 8
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs08
 		SccLocalPath0 = .
@@ -61,120 +53,52 @@ Global
 		SccProjectUniqueName6 = LiquesceTray\\LiquesceTray.csproj
 		SccProjectName6 = LiquesceTray
 		SccLocalPath6 = LiquesceTray
-		SccProjectUniqueName7 = LiquesceSvcMEF\\LiquesceSvcMEF.csproj
-		SccProjectName7 = LiquesceSvcMEF
-		SccLocalPath7 = LiquesceSvcMEF
-		SccProjectUniqueName8 = LiquesceTrayMEF\\LiquesceTrayMEF.csproj
-		SccProjectName8 = LiquesceTrayMEF
-		SccLocalPath8 = LiquesceTrayMEF
-		SccProjectUniqueName9 = ServiceMEFs\\FolderMEF\\FolderMEF.csproj
-		SccProjectTopLevelParentUniqueName9 = Liquesce.sln
-		SccProjectName9 = ServiceMEFs/FolderMEF
-		SccLocalPath9 = ServiceMEFs\\FolderMEF
-		SccProjectUniqueName10 = ServiceMEFs\\PriorityMEF\\PriorityMEF.csproj
-		SccProjectTopLevelParentUniqueName10 = Liquesce.sln
-		SccProjectName10 = ServiceMEFs/PriorityMEF
-		SccLocalPath10 = ServiceMEFs\\PriorityMEF
+		SccProjectUniqueName7 = LiquesceTrayHelper\\LiquesceTrayHelper.csproj
+		SccProjectName7 = LiquesceTrayHelper
+		SccLocalPath7 = LiquesceTrayHelper
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Any CPU = Debug|Any CPU
 		Debug|x86 = Debug|x86
-		Release|Any CPU = Release|Any CPU
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{74447D1D-F52F-485C-BDEE-66B114A45460}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{74447D1D-F52F-485C-BDEE-66B114A45460}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{74447D1D-F52F-485C-BDEE-66B114A45460}.Debug|x86.ActiveCfg = Debug|x86
 		{74447D1D-F52F-485C-BDEE-66B114A45460}.Debug|x86.Build.0 = Debug|x86
-		{74447D1D-F52F-485C-BDEE-66B114A45460}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{74447D1D-F52F-485C-BDEE-66B114A45460}.Release|Any CPU.Build.0 = Release|Any CPU
 		{74447D1D-F52F-485C-BDEE-66B114A45460}.Release|x86.ActiveCfg = Release|x86
 		{74447D1D-F52F-485C-BDEE-66B114A45460}.Release|x86.Build.0 = Release|x86
-		{EF06E5CB-374E-4E67-9057-785A3B7DAD5A}.Debug|Any CPU.ActiveCfg = Debug|x86
 		{EF06E5CB-374E-4E67-9057-785A3B7DAD5A}.Debug|x86.ActiveCfg = Debug|x86
-		{EF06E5CB-374E-4E67-9057-785A3B7DAD5A}.Release|Any CPU.ActiveCfg = Release|x86
 		{EF06E5CB-374E-4E67-9057-785A3B7DAD5A}.Release|x86.ActiveCfg = Release|x86
 		{EF06E5CB-374E-4E67-9057-785A3B7DAD5A}.Release|x86.Build.0 = Release|x86
-		{5E5EF4EC-A54C-45A7-970A-68FC4B5057D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5E5EF4EC-A54C-45A7-970A-68FC4B5057D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5E5EF4EC-A54C-45A7-970A-68FC4B5057D9}.Debug|x86.ActiveCfg = Debug|x86
 		{5E5EF4EC-A54C-45A7-970A-68FC4B5057D9}.Debug|x86.Build.0 = Debug|x86
-		{5E5EF4EC-A54C-45A7-970A-68FC4B5057D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5E5EF4EC-A54C-45A7-970A-68FC4B5057D9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5E5EF4EC-A54C-45A7-970A-68FC4B5057D9}.Release|x86.ActiveCfg = Release|x86
 		{5E5EF4EC-A54C-45A7-970A-68FC4B5057D9}.Release|x86.Build.0 = Release|x86
-		{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C}.Debug|x86.ActiveCfg = Debug|x86
 		{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C}.Debug|x86.Build.0 = Debug|x86
-		{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C}.Release|x86.ActiveCfg = Release|x86
 		{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C}.Release|x86.Build.0 = Release|x86
-		{CFE5DC7B-25FB-45C4-AF18-1963853375E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CFE5DC7B-25FB-45C4-AF18-1963853375E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CFE5DC7B-25FB-45C4-AF18-1963853375E1}.Debug|x86.ActiveCfg = Debug|x86
 		{CFE5DC7B-25FB-45C4-AF18-1963853375E1}.Debug|x86.Build.0 = Debug|x86
-		{CFE5DC7B-25FB-45C4-AF18-1963853375E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CFE5DC7B-25FB-45C4-AF18-1963853375E1}.Release|Any CPU.Build.0 = Release|Any CPU
 		{CFE5DC7B-25FB-45C4-AF18-1963853375E1}.Release|x86.ActiveCfg = Release|x86
 		{CFE5DC7B-25FB-45C4-AF18-1963853375E1}.Release|x86.Build.0 = Release|x86
-		{3B495DA8-B86F-4249-B94A-05B6FA01303F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3B495DA8-B86F-4249-B94A-05B6FA01303F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3B495DA8-B86F-4249-B94A-05B6FA01303F}.Debug|x86.ActiveCfg = Debug|x86
 		{3B495DA8-B86F-4249-B94A-05B6FA01303F}.Debug|x86.Build.0 = Debug|x86
-		{3B495DA8-B86F-4249-B94A-05B6FA01303F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3B495DA8-B86F-4249-B94A-05B6FA01303F}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3B495DA8-B86F-4249-B94A-05B6FA01303F}.Release|x86.ActiveCfg = Release|x86
 		{3B495DA8-B86F-4249-B94A-05B6FA01303F}.Release|x86.Build.0 = Release|x86
-		{E39910A2-C72A-4D3C-BFD0-4356906B86A7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E39910A2-C72A-4D3C-BFD0-4356906B86A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E39910A2-C72A-4D3C-BFD0-4356906B86A7}.Debug|x86.ActiveCfg = Debug|x86
-		{E39910A2-C72A-4D3C-BFD0-4356906B86A7}.Debug|x86.Build.0 = Debug|x86
-		{E39910A2-C72A-4D3C-BFD0-4356906B86A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E39910A2-C72A-4D3C-BFD0-4356906B86A7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E39910A2-C72A-4D3C-BFD0-4356906B86A7}.Release|x86.ActiveCfg = Release|x86
-		{E39910A2-C72A-4D3C-BFD0-4356906B86A7}.Release|x86.Build.0 = Release|x86
-		{8E8DD4DD-0CEE-437B-9D81-1F166C95D09D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8E8DD4DD-0CEE-437B-9D81-1F166C95D09D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8E8DD4DD-0CEE-437B-9D81-1F166C95D09D}.Debug|x86.ActiveCfg = Debug|x86
-		{8E8DD4DD-0CEE-437B-9D81-1F166C95D09D}.Debug|x86.Build.0 = Debug|x86
-		{8E8DD4DD-0CEE-437B-9D81-1F166C95D09D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8E8DD4DD-0CEE-437B-9D81-1F166C95D09D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8E8DD4DD-0CEE-437B-9D81-1F166C95D09D}.Release|x86.ActiveCfg = Release|x86
-		{8E8DD4DD-0CEE-437B-9D81-1F166C95D09D}.Release|x86.Build.0 = Release|x86
-		{8D071FB8-5E7B-43F4-81D4-839D2203D6AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8D071FB8-5E7B-43F4-81D4-839D2203D6AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8D071FB8-5E7B-43F4-81D4-839D2203D6AF}.Debug|x86.ActiveCfg = Debug|x86
-		{8D071FB8-5E7B-43F4-81D4-839D2203D6AF}.Debug|x86.Build.0 = Debug|x86
-		{8D071FB8-5E7B-43F4-81D4-839D2203D6AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8D071FB8-5E7B-43F4-81D4-839D2203D6AF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8D071FB8-5E7B-43F4-81D4-839D2203D6AF}.Release|x86.ActiveCfg = Release|x86
-		{8D071FB8-5E7B-43F4-81D4-839D2203D6AF}.Release|x86.Build.0 = Release|x86
-		{0B134E04-A1C8-4BA3-A5D6-E83AD26A73ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0B134E04-A1C8-4BA3-A5D6-E83AD26A73ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0B134E04-A1C8-4BA3-A5D6-E83AD26A73ED}.Debug|x86.ActiveCfg = Debug|x86
-		{0B134E04-A1C8-4BA3-A5D6-E83AD26A73ED}.Debug|x86.Build.0 = Debug|x86
-		{0B134E04-A1C8-4BA3-A5D6-E83AD26A73ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0B134E04-A1C8-4BA3-A5D6-E83AD26A73ED}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0B134E04-A1C8-4BA3-A5D6-E83AD26A73ED}.Release|x86.ActiveCfg = Release|x86
-		{0B134E04-A1C8-4BA3-A5D6-E83AD26A73ED}.Release|x86.Build.0 = Release|x86
+		{F216D80D-2D70-4B3B-8632-813F6C399948}.Debug|x86.ActiveCfg = Debug|x86
+		{F216D80D-2D70-4B3B-8632-813F6C399948}.Debug|x86.Build.0 = Debug|x86
+		{F216D80D-2D70-4B3B-8632-813F6C399948}.Release|x86.ActiveCfg = Release|x86
+		{F216D80D-2D70-4B3B-8632-813F6C399948}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C} = {C1ADA293-B55A-4B33-AE5A-6FC40323FC39}
-		{8D071FB8-5E7B-43F4-81D4-839D2203D6AF} = {D840EDCD-7088-423F-9AF3-90C1F12255E8}
-		{0B134E04-A1C8-4BA3-A5D6-E83AD26A73ED} = {D840EDCD-7088-423F-9AF3-90C1F12255E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		BuildVersion_UseGlobalSettings = False
-		BuildVersion_AssemblyInfoFilename = ..\Liquesce\LiquesceSvc\Properties\AssemblyInfo.cs
+		BuildVersion_UseGlobalSettings = True
+		BuildVersion_AssemblyInfoFilename = LiquesceSvc\Properties\AssemblyInfo.cs
 		BuildVersion_BuildVersioningStyle = YearStamp.MonthStamp.DayStamp.Increment
-	EndGlobalSection
-	GlobalSection(NDepend) = preSolution
-		Project = ".\Liquesce.ndproj"
 	EndGlobalSection
 EndGlobal

@@ -1,7 +1,5 @@
 using System;
-using System.Runtime.Serialization;
 using System.IO;
-using ComTypes = System.Runtime.InteropServices.ComTypes;
 
 namespace DokanNet
 {
@@ -17,52 +15,34 @@ namespace DokanNet
       public bool WriteToEndOfFile;
    }
 
-   // Now used by the client service via WCF
-   [DataContract]
-   public class FileInformation
-   {
-      [DataMember]
-      public FileAttributes Attributes;
-      [DataMember]
-      public DateTime CreationTime;
-      [DataMember]
-      public DateTime LastAccessTime;
-      [DataMember]
-      public DateTime LastWriteTime;
-      [DataMember]
-      public long Length;
-      [DataMember]
-      public string FileName;
-   }
-
    public interface IDokanOperations
    {
-      int CreateFile(string dokanPath, uint rawAccessMode, uint rawShare, uint rawCreationDisposition, uint rawFlagsAndAttributes, DokanFileInfo info);
+      int CreateFile(string filename, uint rawAccessMode, uint rawShare, uint rawCreationDisposition, uint rawFlagsAndAttributes, DokanFileInfo info);
 
-      int OpenDirectory( string dokanPath, DokanFileInfo info);
+      int OpenDirectory( string filename, DokanFileInfo info);
 
-      int CreateDirectory( string dokanPath, DokanFileInfo info);
+      int CreateDirectory( string filename, DokanFileInfo info);
 
-      int Cleanup( string dokanPath, DokanFileInfo info);
+      int Cleanup( string filename, DokanFileInfo info);
 
-      int CloseFile( string dokanPath, DokanFileInfo info);
+      int CloseFile( string filename, DokanFileInfo info);
 
       int ReadFileNative(string file, IntPtr rawBuffer, uint rawBufferLength, ref uint rawReadLength, long rawOffset, DokanFileInfo convertFileInfo);
 
-      int WriteFileNative(string dokanPath, IntPtr rawBuffer, uint rawNumberOfBytesToWrite, ref uint rawNumberOfBytesWritten, long rawOffset, DokanFileInfo info);
+      int WriteFileNative(string filename, IntPtr rawBuffer, uint rawNumberOfBytesToWrite, ref uint rawNumberOfBytesWritten, long rawOffset, DokanFileInfo info);
 
-      int FlushFileBuffers( string dokanPath, DokanFileInfo info);
+      int FlushFileBuffersNative( string filename, DokanFileInfo info);
 
-      int GetFileInformation( string dokanPath, ref FileInformation fileinfo, DokanFileInfo info);
+      int GetFileInformationNative( string filename, ref BY_HANDLE_FILE_INFORMATION rawHandleFileInformation, DokanFileInfo info);
 
-      int FindFiles(string filename, out FileInformation[] files, DokanFileInfo info);
+      int FindFiles(string filename, out WIN32_FIND_DATA[] files, DokanFileInfo info);
 
-      int FindFilesWithPattern(string filename, string pattern, out FileInformation[] files, DokanFileInfo info);
+      int FindFilesWithPattern(string filename, string pattern, out WIN32_FIND_DATA[] files, DokanFileInfo info);
 
       int SetFileAttributes(string filename, FileAttributes attr, DokanFileInfo info);
 
-      int SetFileTimeNative(string filename, ref ComTypes.FILETIME rawCreationTime, ref ComTypes.FILETIME rawLastAccessTime,
-          ref ComTypes.FILETIME rawLastWriteTime, DokanFileInfo info);
+      int SetFileTimeNative(string filename, ref WIN32_FIND_FILETIME rawCreationTime, ref WIN32_FIND_FILETIME rawLastAccessTime,
+          ref WIN32_FIND_FILETIME rawLastWriteTime, DokanFileInfo info);
 
       int DeleteFile( string filename, DokanFileInfo info);
 
@@ -80,10 +60,13 @@ namespace DokanNet
 
       int GetDiskFreeSpace( ref ulong freeBytesAvailable, ref ulong totalBytes, ref ulong totalFreeBytes, DokanFileInfo info);
 
+      int GetVolumeInformation(IntPtr rawVolumeNameBuffer, uint rawVolumeNameSize, ref uint rawVolumeSerialNumber,
+          ref uint rawMaximumComponentLength, ref uint rawFileSystemFlags, IntPtr rawFileSystemNameBuffer, uint rawFileSystemNameSize, DokanFileInfo info);
+
       int Unmount( DokanFileInfo info);
 
-      int GetFileSecurityNative(string file, ref SECURITY_INFORMATION rawRequestedInformation, ref SECURITY_DESCRIPTOR rawSecurityDescriptor, uint rawSecurityDescriptorLength, ref uint rawSecurityDescriptorLengthNeeded, DokanFileInfo info);
+      int GetFileSecurityNative(string file, ref SECURITY_INFORMATION rawRequestedInformation, IntPtr /*ref SECURITY_DESCRIPTOR*/ rawSecurityDescriptor, uint rawSecurityDescriptorLength, ref uint rawSecurityDescriptorLengthNeeded, DokanFileInfo info);
 
-      int SetFileSecurityNative(string file, ref SECURITY_INFORMATION rawSecurityInformation, ref SECURITY_DESCRIPTOR rawSecurityDescriptor, uint rawSecurityDescriptorLength, DokanFileInfo info);
+      int SetFileSecurityNative(string file, ref SECURITY_INFORMATION rawSecurityInformation, IntPtr /*ref SECURITY_DESCRIPTOR*/ rawSecurityDescriptor, uint rawSecurityDescriptorLength, DokanFileInfo info);
    }
 }

@@ -13,8 +13,8 @@
    <!-- do not change this ever !-->
    <?define UpgradeCode = "F6F94F17-A05F-4824-8DD9-9F5E8267D783" ?>
 
-   <!-- Change this when creating new release YY-MM-DD -->
-   <?define Version = "11.03.14" ?>
+   <!-- Change this when creating new release YY-MM-REV-DD -->
+   <?define Version = "!(bind.FileVersion.LiquesceSvc.File)" ?>
    
    <?define ProductName = "Liquesce Windows HDD Pooling Suite"?>
 
@@ -38,7 +38,8 @@
       <Property Id="ARPURLINFOABOUT" Value="http://liquesce.codeplex.com/" />
       <Icon Id="InstallerIcon" SourceFile="$(sys.SOURCEFILEDIR)..\Liquesce\Resources\Liquesce.ico" />
       <Property Id="ARPPRODUCTICON" Value="InstallerIcon" />
-
+      <WixVariable Id="WixUILicenseRtf" Value="GPLv2.rtf" />
+      
       <!-- Properties to allow detection of .Net installation -->
       <PropertyRef Id="NETFRAMEWORK40FULL"/>
       <PropertyRef Id="NETFRAMEWORK40FULLINSTALLROOTDIR" />
@@ -50,13 +51,17 @@
       <Property Id="DOKANVERCHECK32">
          <DirectorySearch Id="Dokan.sys.version" Path="[SystemFolder]\Drivers">
             <!--Make sure that the min / max _straddle_ the actual version..  Check for 0.6.0 x32 Size -->
-            <!-- It appears that there is yet another version for Windows 7 x32 !! -->
-            <FileSearch Name="Dokan.sys" MinSize="91903" MaxSize="95745" />
+            <!-- It appears that there is yet another version for Windows 7 x32  (95744?)!! -->
+            <!-- Win2k3 R2 (x32) size = 96,256 Bytes -->
+            <!-- WinXP SP3 (x32) size = 91,904 Bytes -->
+            <FileSearch Name="Dokan.sys" MinSize="91903" MaxSize="96257" />
          </DirectorySearch>
       </Property>
       <Property Id="DOKANVERCHECK64">
          <DirectorySearch Id="Dokan.sys64.version" Path="[System64Folder]\Drivers">
             <!--Make sure that the min / max _straddle_ the actual version.. Check for 0.6.0 x64 Size -->
+            <!-- Win 7 x64 = 120,408 Bytes -->
+            <!-- Win2k8 R2 = 120,408 Bytes -->
             <FileSearch Name="Dokan.sys" MinSize="120407" MaxSize="120409" />
          </DirectorySearch>
       </Property>
@@ -129,6 +134,9 @@
          </Component>
          <Component Id="LiquesceTray.exe" Directory="ClientDIR">
             <File Source="$(var.TraySource)\LiquesceTray.exe" KeyPath="yes" />
+         </Component>
+         <Component Id="LiquesceTrayHelper.exe" Directory="ClientDIR">
+            <File Source="$(sys.SOURCEFILEDIR)..\LiquesceTrayHelper\bin\Release\LiquesceTrayHelper.exe" KeyPath="yes" />
          </Component>
       </ComponentGroup>
       <ComponentGroup Id="Service">

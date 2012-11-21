@@ -5,7 +5,7 @@ namespace DokanNet
 {
    public class DokanOptions
    {
-      public ushort Version; 
+      public ushort Version;
       public ushort ThreadCount;
       public bool DebugMode;
       public bool UseStdErr;
@@ -22,9 +22,9 @@ namespace DokanNet
    {
       static private readonly Logger Log = LogManager.GetCurrentClassLogger();
 
-// ReSharper disable InconsistentNaming
+      // ReSharper disable InconsistentNaming
 #pragma warning disable 169
-      #region File Operation Errors 
+      #region File Operation Errors
       // From WinError.h -> http://msdn.microsoft.com/en-us/library/ms819773.aspx
       public const int ERROR_FILE_NOT_FOUND = -2;  // MessageText: The system cannot find the file specified.
       public const int ERROR_PATH_NOT_FOUND = -3;  // MessageText: The system cannot find the path specified.
@@ -32,9 +32,11 @@ namespace DokanNet
       public const int ERROR_SHARING_VIOLATION = -32;
       public const int ERROR_FILE_EXISTS = -80;
       public const int ERROR_DISK_FULL = -112;     // There is not enough space on the disk.
+      public const int ERROR_CALL_NOT_IMPLEMENTED = -120;
+      public const int ERROR_INSUFFICIENT_BUFFER = -122;
       public const int ERROR_INVALID_NAME = -123;
       public const int ERROR_DIR_NOT_EMPTY = -145; // MessageText: The directory is not empty.
-      public const int ERROR_ALREADY_EXISTS = -183;// MessageText: Cannot create a file when that file already exists.
+      public const int ERROR_ALREADY_EXISTS = -183;// MessageText: Cannot create a file / Directory when that file already exists.
       public const int ERROR_EXCEPTION_IN_SERVICE = -1064;//  An exception occurred in the service when handling thecontrol request.
 
       #endregion
@@ -59,19 +61,19 @@ namespace DokanNet
       private const uint DOKAN_OPTION_REMOVABLE = 32;
       #endregion
 #pragma warning restore 169
-// ReSharper restore InconsistentNaming
+      // ReSharper restore InconsistentNaming
 
 
 
       public static int DokanMain(DokanOptions options, IDokanOperations operations)
       {
          Log.Info("Start DokanMain");
-         if (String.IsNullOrEmpty(options.VolumeLabel) )
+         if (String.IsNullOrEmpty(options.VolumeLabel))
          {
             options.VolumeLabel = "DOKAN";
          }
 
-         Proxy proxy = new Proxy(options, operations);
+         Proxy proxy = new Proxy(operations);
 
          var dokanOptions = new DOKAN_OPTIONS
                                          {
@@ -140,9 +142,10 @@ namespace DokanNet
          return DokanDll.DokanDriverVersion();
       }
 
+      //   // This function causes a system access vilation inside DOKAN !!
       //public static bool DokanResetTimeout(uint timeout, DokanFileInfo fileinfo)
       //{
-      //   var rawFileInfo = new DOKAN_FILE_INFO { DokanContext = fileinfo.DokanContext };
+      //   var rawFileInfo = new DOKAN_FILE_INFO { DokanContext = fileinfo.refFileHandleContext };
       //   return DokanDll.DokanResetTimeout(timeout, ref rawFileInfo);
       //}
    }
