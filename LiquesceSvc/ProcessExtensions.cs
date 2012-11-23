@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------
 // <copyright file="ProcessExtensions.cs" company="DockOfTheBay">
 //     http://dotbay.blogspot.com/2009/06/finding-owner-of-process-in-c.html
-//    Modification by Smurf-IV
+//    Modification by Simon Coghlan (Aka Smurf-IV)
 // </copyright>
 // <summary>Defines the ProcessExtensions class.</summary>
 //-----------------------------------------------------------------------

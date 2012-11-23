@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="ILiquesce.cs" company="Smurf-IV">
 // 
-//  Copyright (C) 2010-2011 Smurf-IV
+//  Copyright (C) 2010-2012 Simon Coghlan (Aka Smurf-IV)
 // 
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -23,8 +23,8 @@
 //  </summary>
 // --------------------------------------------------------------------------------------------------------------------
 #endregion
+
 using System;
-using System.Collections.Generic;
 using System.ServiceModel;
 
 namespace LiquesceFacade
@@ -53,9 +53,6 @@ namespace LiquesceFacade
          [OperationContract]
          get;
       }
-
-      [OperationContract]
-      List<LanManShareDetails> GetPossibleShares();
 
       ConfigDetails ConfigDetails
       {

@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="MainForm.cs" company="Smurf-IV">
 // 
-//  Copyright (C) 2010-2011 Smurf-IV
+//  Copyright (C) 2010-2012 Simon Coghlan (Aka Smurf-IV)
 // 
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -85,14 +85,13 @@ namespace Liquesce
          }
          if (serviceStatus != ServiceControllerStatus.Running)
          {
-            currentSharesToolStripMenuItem.ToolTipText = commitToolStripMenuItem.ToolTipText = "Service is not running";
-            currentSharesToolStripMenuItem.Enabled = commitToolStripMenuItem.Enabled = false;
+            commitToolStripMenuItem.Enabled = false;
          }
          else
          {
             try
             {
-               currentSharesToolStripMenuItem.Enabled = commitToolStripMenuItem.Enabled = true;
+               commitToolStripMenuItem.Enabled = true;
                EndpointAddress endpointAddress = new EndpointAddress("net.pipe://localhost/LiquesceFacade");
                NetNamedPipeBinding namedPipeBindingpublish = new NetNamedPipeBinding();
                LiquesceProxy proxy = new LiquesceProxy(namedPipeBindingpublish, endpointAddress);
@@ -794,10 +793,25 @@ namespace Liquesce
          DisplayLog.LogDisplay(@"Liquesce\Logs");
       }
 
-      private void serviceLogViewToolStripMenuItem_Click(object sender, EventArgs e)
+      private void viewToolStripMenuItem_Click(object sender, EventArgs e)
       {
          DisplayLog.LogDisplay(@"LiquesceSvc\Logs");
+      }
 
+      private void tailToolStripMenuItem_Click(object sender, EventArgs e)
+      {
+         try
+         {
+            string logLocation = DisplayLog.FindLogLocation(@"LiquesceSvc\Logs");
+            if (!string.IsNullOrEmpty(logLocation))
+            {
+               new TailForm(logLocation).Show(this);
+            }
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException("OpenFile has an exception: ", ex);
+         }
       }
 
       private void globalConfigSettingsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -805,13 +819,6 @@ namespace Liquesce
          GridAdvancedSettings advancedSettings = new GridAdvancedSettings { AdvancedConfigDetails = cd };
          if (advancedSettings.ShowDialog(this) == DialogResult.OK)
             cd = advancedSettings.AdvancedConfigDetails;
-      }
-
-      private void currentSharesToolStripMenuItem_Click(object sender, EventArgs e)
-      {
-         CurrentShares shareSettings = new CurrentShares { ShareDetails = cd };
-         if (shareSettings.ShowDialog(this) == DialogResult.OK)
-            cd = shareSettings.ShareDetails;
       }
 
    }

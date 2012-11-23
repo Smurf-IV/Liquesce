@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="ManagementLayer.cs" company="Smurf-IV">
 // 
-//  Copyright (C) 2010-2012 Smurf-IV
+//  Copyright (C) 2010-2012 Simon Coghlan (Aka Smurf-IV)
 // 
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -46,7 +46,6 @@ namespace LiquesceSvc
       private ConfigDetails currentConfigDetails;
       private readonly DateTime startTime;
       private readonly string configFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "LiquesceSvc", Settings1.Default.ConfigFileName);
-      private char mountedDriveLetter;
       private LiquesceSvcState state = LiquesceSvcState.Stopped;
       private static readonly Dictionary<Client, IStateChange> subscribers = new Dictionary<Client, IStateChange>();
       private static readonly ReaderWriterLockSlim subscribersLock = new ReaderWriterLockSlim();
@@ -149,14 +148,24 @@ namespace LiquesceSvc
                   return;
                   // ReSharper restore HeuristicUnreachableCode
                }
+               Log.Info(currentConfigDetails.ToString());
+               dokanOperations = new LiquesceOps(currentConfigDetails);
+               ulong freeBytesAvailable = 0;
+               ulong totalBytes = 0;
+               ulong totalFreeBytes = 0;
+               dokanOperations.GetDiskFreeSpace(ref freeBytesAvailable, ref totalBytes, ref totalFreeBytes, null);
                SetNLogLevel(currentConfigDetails.ServiceLogLevel);
-               string mountPoint = currentConfigDetails.DriveLetter;
-               mountedDriveLetter = currentConfigDetails.DriveLetter[0];
                try
                {
                   Log.Info("DokanVersion:[{0}], DokanDriverVersion[{1}]", Dokan.DokanVersion(), Dokan.DokanDriverVersion());
-                  Dokan.DokanUnmount(mountedDriveLetter);
-                  ShellChangeNotify.Unmount(mountedDriveLetter);
+                  if (currentConfigDetails.DriveLetter.Length > 1)
+                     Dokan.DokanRemoveMountPoint(currentConfigDetails.DriveLetter);
+                  else
+                  {
+                     char mountedDriveLetter = currentConfigDetails.DriveLetter[0];
+                     Dokan.DokanUnmount(mountedDriveLetter);
+                     ShellChangeNotify.Unmount(mountedDriveLetter);
+                  }
                }
                catch (Exception ex)
                {
@@ -177,25 +186,20 @@ namespace LiquesceSvc
                }
 
                // TODO: Search all usages of the DriveLetter and make sure they become MountPoint compatible
-               //if (mountPoint.Length == 1)
-               //   mountPoint += ":\\"; // Make this into a MountPoint for V 0.6.0
                DokanOptions options = new DokanOptions
                {
-                  MountPoint = mountPoint,
+                  MountPoint = currentConfigDetails.DriveLetter,
                   ThreadCount = currentConfigDetails.ThreadCount,
-                  DebugMode = currentConfigDetails.DebugMode,
+                  DebugMode = currentConfigDetails.ServiceLogLevel=="Trace",
                   // public bool UseStdErr;
                   // UseAltStream = true, // This needs all sorts of extra API's
                   UseKeepAlive = true,  // When you set TRUE on DokanOptions->UseKeepAlive, dokan library automatically unmounts 15 seconds after user-mode file system hanged up
                   NetworkDrive = false,  // Set this to true to see if it stops the recycler bin question until [workitem:7253] is sorted
                   // If the network is true then also need to have the correct version of the dokannp.dll that works on the installed OS
                   VolumeLabel = currentConfigDetails.VolumeLabel
-                  //,RemovableDrive = true
+                  ,RemovableDrive = true
                };
 
-
-               dokanOperations = new LiquesceOps(currentConfigDetails);
-               ThreadPool.QueueUserWorkItem(dokanOperations.InitialiseShares, dokanOperations);
 
                int retVal = Dokan.DokanMain(options, dokanOperations);
                Log.Warn("Dokan.DokanMain has exited");
@@ -222,6 +226,9 @@ namespace LiquesceSvc
                   case Dokan.DOKAN_MOUNT_ERROR: // = -5; // Can't assign drive letter
                      FireStateChange(LiquesceSvcState.InError, "Dokan is not mounted [DOKAN_MOUNT_ERROR] - Can't assign drive letter");
                      break;
+                  case Dokan.DOKAN_MOUNT_POINT_ERROR:
+                     FireStateChange(LiquesceSvcState.InError, "Dokan is not mounted [DOKAN_MOUNT_POINT_ERROR] - Mount point is invalid");
+                     break;
                   default:
                      FireStateChange(LiquesceSvcState.InError, String.Format("Dokan is not mounted [Uknown Error: {0}]", retVal));
                      Environment.Exit(-1);
@@ -247,7 +254,6 @@ namespace LiquesceSvc
       private void SetNLogLevel(string serviceLogLevel)
       {
          LoggingConfiguration currentConfig = LogManager.Configuration;
-         //LogManager.DisableLogging();
          foreach (LoggingRule rule in currentConfig.LoggingRules)
          {
             rule.EnableLoggingForLevel(LogLevel.Fatal);
@@ -282,10 +288,7 @@ namespace LiquesceSvc
                   break;
             }
          }
-         //LogManager.EnableLogging();
-         //LogManager.Configuration = null;
          LogManager.ReconfigExistingLoggers();
-         //LogManager.Configuration = currentConfig;
          Log.Warn("Test @ [{0}]", serviceLogLevel);
          Log.Debug("Test @ [{0}]", serviceLogLevel);
          Log.Trace("Test @ [{0}]", serviceLogLevel);
@@ -346,15 +349,16 @@ namespace LiquesceSvc
       public void Stop()
       {
          FireStateChange(LiquesceSvcState.Unknown, "Stop has been requested");
-         int retVal = Dokan.DokanUnmount(mountedDriveLetter);
-         ShellChangeNotify.Unmount(mountedDriveLetter);
+         int retVal;
+         if (currentConfigDetails.DriveLetter.Length > 1)
+            retVal = Dokan.DokanRemoveMountPoint(currentConfigDetails.DriveLetter);
+         else
+         {
+            char mountedDriveLetter = currentConfigDetails.DriveLetter[0];
+            retVal = Dokan.DokanUnmount(mountedDriveLetter);
+            ShellChangeNotify.Unmount(mountedDriveLetter);
+         }
          Log.Info("Stop returned[{0}]", retVal);
-      }
-
-      public List<LanManShareDetails> GetPossibleShares()
-      {
-         // TODO: Phase 2 will have a foreach onthe drive letter
-         return (LanManShareHandler.MatchDriveLanManShares(currentConfigDetails.DriveLetter));
       }
 
       private void ReadConfigDetails()
@@ -460,7 +464,6 @@ namespace LiquesceSvc
             {
                currentConfigDetails = new ConfigDetails
                                          {
-                                            DebugMode = true,
                                             DelayStartMilliSec = (uint)short.MaxValue,
                                             DriveLetter = "N",
                                             SourceLocations = new List<string>(1),

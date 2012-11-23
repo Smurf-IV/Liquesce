@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="Roots.cs" company="Smurf-IV">
 // 
-//  Copyright (C) 2010-2012 Smurf-IV
+//  Copyright (C) 2010-2012 Simon Coghlan (Aka Smurf-IV)
 // 
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -129,51 +129,6 @@ namespace LiquesceSvc
          return fsi;
       }
 
-      /// <summary>
-      /// Takes the SMB offset name and attempt to match against a knwon location.
-      /// This is indended to be used for the MoveFile workaround
-      /// </summary>
-      /// <param name="searchOffsetFilename"></param>
-      /// <param name="spaceRequired"></param>
-      /// <returns>will return string.Empty if not found</returns>
-      public NativeFileOps GetPathRelatedtoShare(string searchOffsetFilename, ulong spaceRequired = 0)
-      {
-         NativeFileOps fsi = null;
-         try
-         {
-            // Even A directory requires 4K to be created !
-            spaceRequired += 16384;
-
-            if (configDetails.KnownSharePaths != null)
-            {
-               string foundPath = FindAllocationRootPath(PathDirectorySeparatorChar, spaceRequired);
-
-// ReSharper disable LoopCanBeConvertedToQuery
-               // Do not allow Resharper to mangle this one, as it gets the variable scoping wrong !
-               foreach (string sharePath in configDetails.KnownSharePaths)
-// ReSharper restore LoopCanBeConvertedToQuery
-               {
-                  string newPath = Path.GetFullPath(Path.Combine(sharePath, searchOffsetFilename));
-                  string relPath = newPath.Replace(Path.GetPathRoot(newPath), String.Empty);
-                  if (!CheckAndGetType(Path.Combine(foundPath, relPath), out fsi))
-                  {
-                     // if (configDetails.SourceLocations != null)
-                     if (configDetails.SourceLocations.Select(sourceLocation => Path.Combine(sourceLocation, relPath)).
-                           Any(newTarget => CheckAndGetType(newTarget, out fsi)))
-                     {
-                        Log.Trace("Found in source list");
-                        return fsi;
-                     }
-                  }
-               }
-            }
-         }
-         catch (Exception ex)
-         {
-            Log.ErrorException("GetPath threw: ", ex);
-         }
-         return fsi;
-      }
 
       private bool CheckAndGetType(string newTarget, out NativeFileOps fsi)
       {
@@ -266,7 +221,7 @@ namespace LiquesceSvc
          {
             // first get free space
             ulong lpFreeBytesAvailable, num2, num3;
-            if (GetDiskFreeSpaceEx(t, out lpFreeBytesAvailable, out num2, out num3))
+            if (GetDiskFreeSpaceExW(t, out lpFreeBytesAvailable, out num2, out num3))
             {
                // see if enough space
                if (lpFreeBytesAvailable > spaceRequired)
@@ -288,7 +243,7 @@ namespace LiquesceSvc
       {
          ulong lpFreeBytesAvailable = 0, num2, num3;
          foreach (string t in from t in configDetails.SourceLocations
-                              where GetDiskFreeSpaceEx(t, out lpFreeBytesAvailable, out num2, out num3)
+                              where GetDiskFreeSpaceExW(t, out lpFreeBytesAvailable, out num2, out num3)
                               where lpFreeBytesAvailable > spaceRequired
                               select t)
          {
@@ -307,7 +262,7 @@ namespace LiquesceSvc
          configDetails.SourceLocations.ForEach(str =>
          {
             ulong num, num2, num3;
-            if (GetDiskFreeSpaceEx(str, out num, out num2, out num3))
+            if (GetDiskFreeSpaceExW(str, out num, out num2, out num3))
             {
                if (highestFreeSpace < num)
                {
@@ -371,8 +326,8 @@ namespace LiquesceSvc
 
       #region DLL Imports
 
-      [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-      private static extern bool GetDiskFreeSpaceEx(string lpDirectoryName, out ulong lpFreeBytesAvailable, out ulong lpTotalNumberOfBytes, out ulong lpTotalNumberOfFreeBytes);
+      [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+      private static extern bool GetDiskFreeSpaceExW(string lpDirectoryName, out ulong lpFreeBytesAvailable, out ulong lpTotalNumberOfBytes, out ulong lpTotalNumberOfFreeBytes);
 
       #endregion
 

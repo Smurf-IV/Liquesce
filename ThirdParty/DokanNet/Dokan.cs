@@ -48,6 +48,7 @@ namespace DokanNet
       public const int DOKAN_DRIVER_INSTALL_ERROR = -3; // Can't install driver
       public const int DOKAN_START_ERROR = -4; // Driver something wrong
       public const int DOKAN_MOUNT_ERROR = -5; // Can't assign drive letter
+      public const int DOKAN_MOUNT_POINT_ERROR = -6; // Mount point is invalid
       #endregion
 
       private const ushort DOKAN_VERSION = 600; // ver 0.6.0
@@ -67,8 +68,11 @@ namespace DokanNet
 
       public static int DokanMain(DokanOptions options, IDokanOperations operations)
       {
+         if (operations == null) 
+            throw new ArgumentNullException("operations");
+
          Log.Info("Start DokanMain");
-         if (String.IsNullOrEmpty(options.VolumeLabel))
+         if (string.IsNullOrEmpty(options.VolumeLabel))
          {
             options.VolumeLabel = "DOKAN";
          }
@@ -129,7 +133,7 @@ namespace DokanNet
 
       public static int DokanRemoveMountPoint(string mountPoint)
       {
-         return Dokan.DokanRemoveMountPoint(mountPoint);
+         return DokanDll.DokanRemoveMountPoint(mountPoint);
       }
 
       public static uint DokanVersion()

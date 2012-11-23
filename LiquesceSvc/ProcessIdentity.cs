@@ -1,18 +1,24 @@
 ﻿#region Copyright (C)
 // ---------------------------------------------------------------------------------------------------------------
-//  <copyright file="CacheHelper.cs" company="Smurf-IV">
+//  <copyright file="ProcessIdentity.cs" company="Smurf-IV">
 // 
-//  Copyright (C) 2011 Smurf-IV
+//  Copyright (C) 2011-2012 Simon Coghlan (Aka Smurf-IV)
 // 
-//  This program is free software: you can redistribute it and/or modify.
+//  This program is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation, either version 2 of the License, or
+//   any later version.
 // 
 //  This program is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+//  GNU General Public License for more details.
 // 
+//  You should have received a copy of the GNU General Public License
+//  along with this program. If not, see http://www.gnu.org/licenses/.
 //  </copyright>
 //  <summary>
-//  Url: http://liquesce.wordpress.com/2011/06/07/c-dictionary-cache-that-has-a-timeout-on-its-values/
+//  Url: http://Liquesce.codeplex.com/
 //  Email: http://www.codeplex.com/site/users/view/smurfiv
 //  </summary>
 // --------------------------------------------------------------------------------------------------------------------
@@ -49,7 +55,7 @@ namespace LiquesceSvc
       /// <param name="processId"></param>
       /// <param name="act"></param>
       /// <remarks>
-      /// If the process is the Syste.exe, then this has probably come over the SMB2 or other network protocol.
+      /// If the process is the System.exe, then this has probably come over the SMB2 or other network protocol.
       /// Which means that it will have checked the access permissions for whatever the action is going to be.
       /// http://msdn.microsoft.com/en-us/library/gg465326%28v=PROT.10%29.aspx
       /// </remarks>
@@ -66,7 +72,7 @@ namespace LiquesceSvc
       /// </summary>
       /// <param name="processId"></param>
       /// <returns></returns>
-      public static bool CouldBeSMB(uint processId)
+      private static bool CouldBeSMB(uint processId)
       {
          return (systemProcessId == processId);
       }
@@ -85,7 +91,7 @@ namespace LiquesceSvc
          }
          else
             cacheProcessIdToWi.Touch(processId);
-         using (WindowsImpersonationContext impersonationContext = wi.Impersonate())
+         using (wi.Impersonate())
          {
             act();
          }

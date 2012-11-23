@@ -34,7 +34,7 @@
       <!-- Support Information shown in Add/Remove programs (this is optional) -->
       <Property Id="ARPHELPLINK" Value="http://liquesce.codeplex.com/documentation" />
       <Property Id="ARPCOMMENTS" Value="http://liquesce.codeplex.com/discussions"/>
-      <Property Id="ARPCONTACT" Value="Smurf-IV" />
+      <Property Id="ARPCONTACT" Value="Simon Coghlan (Aka Smurf-IV)" />
       <Property Id="ARPURLINFOABOUT" Value="http://liquesce.codeplex.com/" />
       <Icon Id="InstallerIcon" SourceFile="$(sys.SOURCEFILEDIR)..\Liquesce\Resources\Liquesce.ico" />
       <Property Id="ARPPRODUCTICON" Value="InstallerIcon" />
@@ -150,13 +150,25 @@
             <ServiceControl Id='LiquesceSvcControl' Name='LiquesceSvc' Start='install' Stop='both' Remove='uninstall' Wait='yes' />
          </Component>
          <Component Id="DokanNet.dll" Directory="ServiceDIR">
-            <File Source="$(var.SvcSource)\DokanNet.dll" KeyPath="yes" />
+            <File Source="$(var.SvcSource)\DokanNet.dll" KeyPath="yes" >
+               <netfx:NativeImage Id="ngen_DokanNet.dll" Platform="32bit" Priority="1" AppBaseDirectory="ServiceDIR"/>
+            </File>
          </Component>
          <Component Id="LiquesceFacade.dll" Directory="ServiceDIR">
-            <File Source="$(var.SvcSource)\LiquesceFacade.dll" KeyPath="yes" />
+            <File Source="$(var.SvcSource)\LiquesceFacade.dll" KeyPath="yes">
+               <netfx:NativeImage Id="ngen_LiquesceFacade.dll" Platform="32bit" Priority="1" AppBaseDirectory="ServiceDIR"/>
+            </File>
          </Component>
+         <Component Id="ChinhDo.Transactions.dll" Directory="ServiceDIR">
+            <File Source="$(var.SvcSource)\ChinhDo.Transactions.dll" KeyPath="yes">
+               <netfx:NativeImage Id="ChinhDo.Transactions.dll" Platform="32bit" Priority="1" AppBaseDirectory="ServiceDIR"/>
+            </File>
+         </Component>
+         
          <Component Id="NLog.dll" Directory="ServiceDIR">
-            <File Source="$(var.SvcSource)\NLog.dll" KeyPath="yes" />
+            <File Source="$(var.SvcSource)\NLog.dll" KeyPath="yes">
+               <netfx:NativeImage Id="ngen_NLog.dll" Platform="32bit" Priority="1" AppBaseDirectory="ServiceDIR"/>
+            </File>
          </Component>
       </ComponentGroup>
       <DirectoryRef Id="ProgramMenuDir">

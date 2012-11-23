@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="LogDisplay.cs" company="Smurf-IV">
 // 
-//  Copyright (C) 2010-2011 Smurf-IV
+//  Copyright (C) 2010-2012 Simon Coghlan (Aka Smurf-IV)
 // 
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -38,13 +38,8 @@ namespace Liquesce
    {
       static private readonly Logger Log = LogManager.GetCurrentClassLogger();
 
-      /// <summary>
-      /// 
-      /// </summary>
-      static public void LogDisplay(string logLocation)
+      static public string FindLogLocation(string logLocation)
       {
-         try
-         {
             OpenFileDialog openFileDialog = new OpenFileDialog
                                                {
                                                   InitialDirectory =
@@ -57,9 +52,19 @@ namespace Liquesce
                                                   Title = "Select name to view contents"
                                                };
 
-            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            return (openFileDialog.ShowDialog() == DialogResult.OK) ? openFileDialog.FileName : string.Empty;
+      }
+      /// <summary>
+      /// 
+      /// </summary>
+      static public void LogDisplay(string logLocation)
+      {
+         try
+         {
+            logLocation = FindLogLocation(logLocation);
+            if (!string.IsNullOrEmpty(logLocation))
             {
-               Process word = Process.Start("Wordpad.exe", '"' + openFileDialog.FileName + '"');
+               Process word = Process.Start("Wordpad.exe", '"' + logLocation + '"');
                if (word != null)
                {
                   word.WaitForInputIdle();
