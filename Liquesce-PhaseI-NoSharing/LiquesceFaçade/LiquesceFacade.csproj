@@ -106,7 +106,6 @@
     <Compile Include="ConfigDetails.cs" />
     <Compile Include="ILiquesce.cs" />
     <Compile Include="ILiquesceCallBack.cs" />
-    <Compile Include="LanManShareHandler.cs" />
     <Compile Include="LiquesceCallBackProxy.cs" />
     <Compile Include="LiquesceProxy.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -150,7 +149,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="YearStamp.MonthStamp.DayStamp.Increment" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UseGlobalSettings="True" />
+      <UserProperties BuildVersion_UseGlobalSettings="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="YearStamp.MonthStamp.DayStamp.Increment" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

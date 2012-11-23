@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="AssemblyInfo.cs" company="Smurf-IV">
 // 
-//  Copyright (C) 2010-2011 Smurf-IV
+//  Copyright (C) 2010-2012 Simon Coghlan (Aka Smurf-IV)
 // 
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Smurf-IV")]
 [assembly: AssemblyProduct("Liquesce")]
-[assembly: AssemblyCopyright("Copyright © Smurf-IV 2010 - 2012")]
+[assembly: AssemblyCopyright("Copyright © Simon Coghlan (Aka Smurf-IV) 2010 - 2012")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -57,5 +57,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("12.5.934.29")]
-[assembly: AssemblyFileVersion("12.5.934.29")]
+[assembly: AssemblyVersion("12.11.941.23")]
+[assembly: AssemblyFileVersion("12.11.941.23")]

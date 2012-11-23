@@ -108,12 +108,6 @@
       <Link>WindowLocation.cs</Link>
     </Compile>
     <Compile Include="AdvancedPropertiesDisplay.cs" />
-    <Compile Include="CurrentShares.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="CurrentShares.Designer.cs">
-      <DependentUpon>CurrentShares.cs</DependentUpon>
-    </Compile>
     <Compile Include="GridAdvancedSettings.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -138,6 +132,12 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
+    <Compile Include="TailForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="TailForm.Designer.cs">
+      <DependentUpon>TailForm.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -148,15 +148,15 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="CurrentShares.resx">
-      <DependentUpon>CurrentShares.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="GridAdvancedSettings.resx">
       <DependentUpon>GridAdvancedSettings.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="TailForm.resx">
+      <DependentUpon>TailForm.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
@@ -195,7 +195,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_UseGlobalSettings="True" BuildVersion_BuildVersioningStyle="YearStamp.MonthStamp.DayStamp.Increment" />
+      <UserProperties BuildVersion_BuildVersioningStyle="YearStamp.MonthStamp.DayStamp.Increment" BuildVersion_UseGlobalSettings="True" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

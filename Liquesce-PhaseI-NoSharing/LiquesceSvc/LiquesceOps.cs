@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="LiquesceOps.cs" company="Smurf-IV">
 // 
-//  Copyright (C) 2010-2012 Smurf-IV
+//  Copyright (C) 2010-2012 Simon Coghlan (Aka Smurf-IV)
 // 
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -66,7 +66,7 @@ namespace LiquesceSvc
 
       /// <summary>
       /// The information given in the Dokan info is a bit misleading about the return codes
-      /// This is what the Win OS suystem is expecting http://msdn.microsoft.com/en-us/library/aa363858%28VS.85%29.aspx
+      /// This is what the Win OS system is expecting http://msdn.microsoft.com/en-us/library/aa363858%28VS.85%29.aspx
       /// So.. Everything succeeds but the Return code is ERROR_ALREADY_EXISTS
       /// </summary>
       /// <param name="filename"></param>
@@ -591,11 +591,6 @@ namespace LiquesceSvc
                )
             {
                NativeFileOps fsi = roots.GetPath(filename);
-               // Now attempt workaround for issue "http://code.google.com/p/dokan/issues/detail?id=239" 
-               if (!fsi.Exists
-                  && ProcessIdentity.CouldBeSMB(info.ProcessId)
-                  )
-                  fsi = roots.GetPathRelatedtoShare(filename);
                PID.Invoke(info.ProcessId, delegate
                {
                   const uint rawAccessMode = Proxy.GENERIC_READ/* | Proxy.GENERIC_WRITE*/;
@@ -688,7 +683,7 @@ namespace LiquesceSvc
             // FindFiles should not return an empty array. It should return parent ("..") and self ("."). That wasn't obvious!
             PID.Invoke(processId, delegate
             {
-               // Do this in reverse, so that the preferred refreences overwrite the older files
+               // Do this in reverse, so that the preferred references overwrite the older files
                for (int i = configDetails.SourceLocations.Count - 1; i >= 0; i--)
                {
                   NativeFileFind.AddFiles(configDetails.SourceLocations[i] + filename, uniqueFiles, pattern);
@@ -1147,7 +1142,8 @@ namespace LiquesceSvc
          int dokanReturn = Dokan.DOKAN_ERROR;
          try
          {
-            Log.Trace("GetDiskFreeSpace IN DokanProcessId[{0}]", info.ProcessId);
+            if ( info != null )
+               Log.Trace("GetDiskFreeSpace IN DokanProcessId[{0}]", info.ProcessId);
             freeBytesAvailable = totalBytes = totalFreeBytes = 0;
 
             HashSet<string> uniqueSources = new HashSet<string>();
@@ -1164,6 +1160,8 @@ namespace LiquesceSvc
                   totalBytes += num2;
                   totalFreeBytes += num3;
                }
+               Log.Debug("DirectoryName=[{0}], FreeBytesAvailable=[{1}], TotalNumberOfBytes=[{2}], TotalNumberOfFreeBytes=[{3}]",
+                     source, num, num2, num3);
             }
             dokanReturn = Dokan.DOKAN_SUCCESS;
          }
@@ -1451,57 +1449,6 @@ namespace LiquesceSvc
             }
          }
          info.refFileHandleContext = 0;
-      }
-
-      public void InitialiseShares(object state)
-      {
-         Log.Debug("InitialiseShares IN");
-         try
-         {
-            Thread.Sleep(250); // Give the driver some time to mount
-            // Now check (in 2 phases) the existence of the drive
-            ShellChangeNotify.Mount(configDetails.DriveLetter[0]);
-            string path = configDetails.DriveLetter + ":" + Roots.PathDirectorySeparatorChar;
-            while (!Directory.Exists(path))
-            {
-               Log.Info("Waiting for Dokan to create the drive letter before reapplying the shares");
-               Thread.Sleep(1000);
-            }
-            // 2nd phase as the above is supposed to be cheap but can return false +ves
-            do
-            {
-               string[] drives = Environment.GetLogicalDrives();
-               if (Array.Exists(drives, dr => dr.Remove(1) == configDetails.DriveLetter))
-                  break;
-               Log.Info("Waiting for Dokan to create the drive letter before reapplying the shares (Phase 2)");
-               Thread.Sleep(100);
-            } while (ManagementLayer.Instance.State == LiquesceSvcState.Running);
-
-            configDetails.KnownSharePaths = new List<string>(configDetails.SharesToRestore.Count);
-            foreach (LanManShareDetails shareDetails in configDetails.SharesToRestore)
-            {
-               configDetails.KnownSharePaths.Add(shareDetails.Path);
-               try
-               {
-                  Log.Info("Restore share for : [{0}] [{1} : {2}]", shareDetails.Path, shareDetails.Name, shareDetails.Description);
-                  LanManShareHandler.SetLanManShare(shareDetails);
-               }
-               catch (Exception ex)
-               {
-                  Log.ErrorException("Unable to restore share for : " + shareDetails.Path, ex);
-               }
-            }
-            ManagementLayer.Instance.FireStateChange(LiquesceSvcState.Running, "Shares restored - good to go");
-         }
-         catch (Exception ex)
-         {
-            Log.ErrorException("Init shares threw: ", ex);
-            ManagementLayer.Instance.FireStateChange(LiquesceSvcState.InError, "Init shares reports: " + ex.Message);
-         }
-         finally
-         {
-            Log.Debug("InitialiseShares OUT");
-         }
       }
 
       #region DLL Imports

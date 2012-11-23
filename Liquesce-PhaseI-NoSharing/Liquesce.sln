@@ -16,6 +16,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiquesceSvc", "LiquesceSvc\
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ThirdParty", "ThirdParty", "{C1ADA293-B55A-4B33-AE5A-6FC40323FC39}"
 	ProjectSection(SolutionItems) = preProject
+		ThirdParty\ChinhDo.Transactions.dll = ThirdParty\ChinhDo.Transactions.dll
 		ThirdParty\dokan.dll = ThirdParty\dokan.dll
 		ThirdParty\NLog.dll = ThirdParty\NLog.dll
 	EndProjectSection
@@ -97,8 +98,8 @@ Global
 		{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C} = {C1ADA293-B55A-4B33-AE5A-6FC40323FC39}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		BuildVersion_UseGlobalSettings = True
-		BuildVersion_AssemblyInfoFilename = LiquesceSvc\Properties\AssemblyInfo.cs
 		BuildVersion_BuildVersioningStyle = YearStamp.MonthStamp.DayStamp.Increment
+		BuildVersion_AssemblyInfoFilename = LiquesceSvc\Properties\AssemblyInfo.cs
+		BuildVersion_UseGlobalSettings = True
 	EndGlobalSection
 EndGlobal
