@@ -28,6 +28,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -85,6 +86,7 @@ namespace Liquesce
          }
          if (serviceStatus != ServiceControllerStatus.Running)
          {
+            commitToolStripMenuItem.ToolTipText = "Service is not running";
             commitToolStripMenuItem.Enabled = false;
          }
          else
@@ -132,6 +134,8 @@ namespace Liquesce
             // Add the drive letter back in as this would already have been removed
             MountPoint.Items.Add(cd.DriveLetter);
             MountPoint.Text = cd.DriveLetter;
+            if (cd.DriveLetter.Length > 1)
+               txtFolder.Text = cd.DriveLetter;
             if (cd.SourceLocations != null)
                foreach (TreeNode tn in cd.SourceLocations.Select(sourceLocation => new TreeNode
                                                                                       {
@@ -143,7 +147,7 @@ namespace Liquesce
                {
                   mergeList.Nodes.Add(tn);
                }
-            DelayCreation.Text = cd.DelayStartMilliSec.ToString();
+            DelayCreation.Text = cd.DelayStartMilliSec.ToString(CultureInfo.InvariantCulture);
             VolumeLabel.Text = cd.VolumeLabel;
             RestartExpectedOutput();
          }
@@ -237,7 +241,9 @@ namespace Liquesce
                      di_DriveFormat = driveType.ToString();
                      break;
                   default:
+                     // ReSharper disable NotResolvedInText
                      throw new ArgumentOutOfRangeException("driveType", "Unknown type detected");
+                  // ReSharper restore NotResolvedInText
                }
                SafelyAddIcon(di.Name);
                label = (di.IsReady && !String.IsNullOrWhiteSpace(di.VolumeLabel)) ? di.VolumeLabel : di_DriveFormat;
@@ -505,7 +511,7 @@ namespace Liquesce
          ConfigDetails configDetails = new ConfigDetails
                                {
                                   DelayStartMilliSec = (uint)DelayCreation.Value,
-                                  DriveLetter = MountPoint.Text,
+                                  DriveLetter = string.IsNullOrWhiteSpace(txtFolder.Text)?MountPoint.Text : txtFolder.Text,
                                   VolumeLabel = VolumeLabel.Text,
                                   SourceLocations = new List<string>(mergeList.Nodes.Count)
                                };
@@ -584,7 +590,7 @@ namespace Liquesce
          if (expectedTreeView.InvokeRequired)
          {
             AddExpecteddNodeCallBack d = AddExpectedNode;
-            Invoke(d, new object[] { parent, child });
+            BeginInvoke(d, new object[] { parent, child });
          }
          else
          {
@@ -606,7 +612,7 @@ namespace Liquesce
          if (progressBar1.InvokeRequired)
          {
             SetProgressBarStyleCallback d = SetProgressBarStyle;
-            Invoke(d, new object[] { style });
+            BeginInvoke(d, new object[] { style });
          }
          else
          {
@@ -622,7 +628,7 @@ namespace Liquesce
          if (expectedTreeView.InvokeRequired)
          {
             ClearExpectedListCallBack d = ClearExpectedList;
-            Invoke(d);
+            BeginInvoke(d);
          }
          else
          {
@@ -701,7 +707,7 @@ namespace Liquesce
                else
                {
                   AddFileNodeCallBack d = AddFileNode;
-                  Invoke(d, new object[] { kvp, parent });
+                  BeginInvoke(d, new object[] { kvp, parent });
                }
             }
       }
@@ -740,7 +746,7 @@ namespace Liquesce
             {
                SetProgressBarStyle(ProgressBarStyle.Marquee);
                cd.DelayStartMilliSec = (uint)DelayCreation.Value;
-               cd.DriveLetter = MountPoint.Text;
+               cd.DriveLetter = string.IsNullOrWhiteSpace(txtFolder.Text) ? MountPoint.Text : txtFolder.Text;
                cd.VolumeLabel = VolumeLabel.Text;
                cd.SourceLocations = new List<string>(mergeList.Nodes.Count);
                // if (mergeList.Nodes != null) // Apperently always true
@@ -775,6 +781,7 @@ namespace Liquesce
 
       private void MountPoint_TextChanged(object sender, EventArgs e)
       {
+         txtFolder.Text = (MountPoint.Text.Length > 1) ? MountPoint.Text : string.Empty;
          RestartExpectedOutput();
       }
 
@@ -819,6 +826,60 @@ namespace Liquesce
          GridAdvancedSettings advancedSettings = new GridAdvancedSettings { AdvancedConfigDetails = cd };
          if (advancedSettings.ShowDialog(this) == DialogResult.OK)
             cd = advancedSettings.AdvancedConfigDetails;
+      }
+
+      private void txtFolder_DragDrop(object sender, DragEventArgs e)
+      {
+         // Is it a valid format?
+         DragDropItem ud = e.Data.GetData(typeof(DragDropItem)) as DragDropItem;
+         if (ud != null)
+         {
+            txtFolder.Text = ud.Name;
+         }
+      }
+
+      private void txtFolder_DragOver(object sender, DragEventArgs e)
+      {
+         // Drag and drop denied by default.
+         e.Effect = DragDropEffects.None;
+
+         // Is it a valid format?
+         DragDropItem ud = e.Data.GetData(typeof(DragDropItem)) as DragDropItem;
+         if (ud != null)
+         {
+            e.Effect = DragDropEffects.Copy;
+         }
+      }
+
+      private readonly List<string> hardDrives = (from dr in Environment.GetLogicalDrives() 
+                                                  let di = new DriveInfo(dr) 
+                                                  where di.DriveType == DriveType.Fixed 
+                                                  select dr).ToList();
+
+      private void txtFolder_TextChanged(object sender, EventArgs e)
+      {
+         string error = string.Empty;
+         try
+         {
+            if (!string.IsNullOrWhiteSpace(txtFolder.Text))
+            {
+               DirectoryInfo dir = new DirectoryInfo(txtFolder.Text);
+               if (!hardDrives.Contains(dir.Root.Name.ToUpperInvariant()))
+                  error = @"Drive does not exist";
+               else if (!dir.Exists)
+                  error = string.Empty;
+               else if (!MountPoint.Items.Contains(txtFolder.Text) // may already be mounted
+                  && dir.EnumerateFileSystemInfos().Any()
+                  )
+                  error = @"Directory is not empty";
+            }
+         }
+         catch (Exception ex)
+         {
+            error = ex.Message;
+         }
+         errorProvider1.SetError(lblFolder, error);
+         commitToolStripMenuItem.Enabled = string.IsNullOrEmpty(error);
       }
 
    }

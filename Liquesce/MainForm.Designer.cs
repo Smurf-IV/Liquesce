@@ -42,7 +42,6 @@
          this.groupBox1 = new System.Windows.Forms.GroupBox();
          this.VolumeLabel = new System.Windows.Forms.TextBox();
          this.MountPoint = new System.Windows.Forms.ComboBox();
-         this.label5 = new System.Windows.Forms.Label();
          this.label4 = new System.Windows.Forms.Label();
          this.DelayCreation = new System.Windows.Forms.NumericUpDown();
          this.label2 = new System.Windows.Forms.Label();
@@ -56,6 +55,8 @@
          this.commitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.logsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.serviceLogViewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+         this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+         this.tailToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.userLogViewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.advancedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.globalConfigSettingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -63,8 +64,11 @@
          this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
          this.FillExpectedLayoutWorker = new System.ComponentModel.BackgroundWorker();
          this.serviceController1 = new System.ServiceProcess.ServiceController();
-         this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-         this.tailToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+         this.groupBox2 = new System.Windows.Forms.GroupBox();
+         this.label5 = new System.Windows.Forms.Label();
+         this.lblFolder = new System.Windows.Forms.Label();
+         this.txtFolder = new System.Windows.Forms.TextBox();
+         this.errorProvider1 = new System.Windows.Forms.ErrorProvider(this.components);
          ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
          this.splitContainer1.Panel1.SuspendLayout();
          this.splitContainer1.Panel2.SuspendLayout();
@@ -82,6 +86,8 @@
          ((System.ComponentModel.ISupportInitialize)(this.DelayCreation)).BeginInit();
          this.refreshExpected.SuspendLayout();
          this.menuStrip1.SuspendLayout();
+         this.groupBox2.SuspendLayout();
+         ((System.ComponentModel.ISupportInitialize)(this.errorProvider1)).BeginInit();
          this.SuspendLayout();
          // 
          // splitContainer1
@@ -168,13 +174,12 @@
          // 
          // splitContainer3.Panel2
          // 
+         this.splitContainer3.Panel2.Controls.Add(this.groupBox2);
          this.splitContainer3.Panel2.Controls.Add(this.groupBox1);
-         this.splitContainer3.Panel2.Controls.Add(this.MountPoint);
-         this.splitContainer3.Panel2.Controls.Add(this.label5);
          this.splitContainer3.Panel2.Controls.Add(this.label4);
          this.splitContainer3.Panel2.Controls.Add(this.DelayCreation);
          this.splitContainer3.Size = new System.Drawing.Size(247, 448);
-         this.splitContainer3.SplitterDistance = 344;
+         this.splitContainer3.SplitterDistance = 293;
          this.splitContainer3.TabIndex = 7;
          // 
          // mergeList
@@ -189,7 +194,7 @@
          this.mergeList.Location = new System.Drawing.Point(0, 0);
          this.mergeList.Name = "mergeList";
          this.mergeList.SelectedImageIndex = 0;
-         this.mergeList.Size = new System.Drawing.Size(247, 344);
+         this.mergeList.Size = new System.Drawing.Size(247, 293);
          this.mergeList.TabIndex = 3;
          this.toolTip1.SetToolTip(this.mergeList, "Drop the Entries here");
          this.mergeList.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.mergeList_NodeMouseClick);
@@ -217,9 +222,10 @@
          // 
          // groupBox1
          // 
+         this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
          this.groupBox1.Controls.Add(this.VolumeLabel);
-         this.groupBox1.Dock = System.Windows.Forms.DockStyle.Bottom;
-         this.groupBox1.Location = new System.Drawing.Point(0, 56);
+         this.groupBox1.Location = new System.Drawing.Point(0, 107);
          this.groupBox1.Margin = new System.Windows.Forms.Padding(0);
          this.groupBox1.Name = "groupBox1";
          this.groupBox1.Size = new System.Drawing.Size(247, 44);
@@ -229,7 +235,7 @@
          // 
          // VolumeLabel
          // 
-         this.VolumeLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+         this.VolumeLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
          this.VolumeLabel.Location = new System.Drawing.Point(7, 18);
          this.VolumeLabel.MaxLength = 32;
@@ -241,6 +247,8 @@
          // 
          // MountPoint
          // 
+         this.MountPoint.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
          this.MountPoint.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
          this.MountPoint.FormattingEnabled = true;
          this.MountPoint.Items.AddRange(new object[] {
@@ -267,22 +275,13 @@
             "X",
             "Y",
             "Z"});
-         this.MountPoint.Location = new System.Drawing.Point(87, 30);
+         this.MountPoint.Location = new System.Drawing.Point(57, 21);
          this.MountPoint.Name = "MountPoint";
-         this.MountPoint.Size = new System.Drawing.Size(154, 22);
+         this.MountPoint.Size = new System.Drawing.Size(183, 22);
          this.MountPoint.Sorted = true;
          this.MountPoint.TabIndex = 3;
          this.toolTip1.SetToolTip(this.MountPoint, "Drive letter to be used for the new volume");
          this.MountPoint.TextChanged += new System.EventHandler(this.MountPoint_TextChanged);
-         // 
-         // label5
-         // 
-         this.label5.AutoSize = true;
-         this.label5.Location = new System.Drawing.Point(4, 33);
-         this.label5.Name = "label5";
-         this.label5.Size = new System.Drawing.Size(77, 14);
-         this.label5.TabIndex = 2;
-         this.label5.Text = "Drive &Mount:";
          // 
          // label4
          // 
@@ -314,7 +313,7 @@
         "le extra to mount Networks and USB devices before attempting to start the Pool d" +
         "river.\r\n");
          this.DelayCreation.Value = new decimal(new int[] {
-            250,
+            50,
             0,
             0,
             0});
@@ -432,6 +431,20 @@
          this.serviceLogViewToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
          this.serviceLogViewToolStripMenuItem.Text = "&Service Log";
          // 
+         // viewToolStripMenuItem
+         // 
+         this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
+         this.viewToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+         this.viewToolStripMenuItem.Text = "&View...";
+         this.viewToolStripMenuItem.Click += new System.EventHandler(this.viewToolStripMenuItem_Click);
+         // 
+         // tailToolStripMenuItem
+         // 
+         this.tailToolStripMenuItem.Name = "tailToolStripMenuItem";
+         this.tailToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+         this.tailToolStripMenuItem.Text = "&Tail...";
+         this.tailToolStripMenuItem.Click += new System.EventHandler(this.tailToolStripMenuItem_Click);
+         // 
          // userLogViewToolStripMenuItem
          // 
          this.userLogViewToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
@@ -481,19 +494,60 @@
          this.serviceController1.MachineName = "127.0.0.1";
          this.serviceController1.ServiceName = "LiquesceSvc";
          // 
-         // viewToolStripMenuItem
+         // groupBox2
          // 
-         this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
-         this.viewToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-         this.viewToolStripMenuItem.Text = "&View...";
-         this.viewToolStripMenuItem.Click += new System.EventHandler(this.viewToolStripMenuItem_Click);
+         this.groupBox2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+         this.groupBox2.Controls.Add(this.txtFolder);
+         this.groupBox2.Controls.Add(this.lblFolder);
+         this.groupBox2.Controls.Add(this.label5);
+         this.groupBox2.Controls.Add(this.MountPoint);
+         this.groupBox2.Location = new System.Drawing.Point(0, 22);
+         this.groupBox2.Name = "groupBox2";
+         this.groupBox2.Size = new System.Drawing.Size(246, 81);
+         this.groupBox2.TabIndex = 5;
+         this.groupBox2.TabStop = false;
+         this.groupBox2.Text = "Drive &Mount:";
          // 
-         // tailToolStripMenuItem
+         // label5
          // 
-         this.tailToolStripMenuItem.Name = "tailToolStripMenuItem";
-         this.tailToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-         this.tailToolStripMenuItem.Text = "&Tail...";
-         this.tailToolStripMenuItem.Click += new System.EventHandler(this.tailToolStripMenuItem_Click);
+         this.label5.AutoSize = true;
+         this.label5.Location = new System.Drawing.Point(6, 24);
+         this.label5.Name = "label5";
+         this.label5.Size = new System.Drawing.Size(45, 14);
+         this.label5.TabIndex = 4;
+         this.label5.Text = "&Letter:";
+         this.toolTip1.SetToolTip(this.label5, "Drive letter to be used for the new volume");
+         // 
+         // lblFolder
+         // 
+         this.lblFolder.AutoSize = true;
+         this.lblFolder.Location = new System.Drawing.Point(7, 52);
+         this.lblFolder.Name = "lblFolder";
+         this.lblFolder.Size = new System.Drawing.Size(44, 14);
+         this.lblFolder.TabIndex = 5;
+         this.lblFolder.Text = "&Folder:";
+         this.toolTip1.SetToolTip(this.lblFolder, "NTFS folder mount point.\r\nWill override the above \"Drive Letter\".");
+         // 
+         // txtFolder
+         // 
+         this.txtFolder.AllowDrop = true;
+         this.txtFolder.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+         this.txtFolder.Location = new System.Drawing.Point(56, 49);
+         this.txtFolder.Name = "txtFolder";
+         this.txtFolder.Size = new System.Drawing.Size(183, 22);
+         this.txtFolder.TabIndex = 6;
+         this.toolTip1.SetToolTip(this.txtFolder, "NTFS folder mount point.\r\nWill override the above \"Drive Letter\".");
+         this.txtFolder.TextChanged += new System.EventHandler(this.txtFolder_TextChanged);
+         this.txtFolder.DragDrop += new System.Windows.Forms.DragEventHandler(this.txtFolder_DragDrop);
+         this.txtFolder.DragOver += new System.Windows.Forms.DragEventHandler(this.txtFolder_DragOver);
+         // 
+         // errorProvider1
+         // 
+         this.errorProvider1.BlinkStyle = System.Windows.Forms.ErrorBlinkStyle.AlwaysBlink;
+         this.errorProvider1.ContainerControl = this;
          // 
          // MainForm
          // 
@@ -530,6 +584,9 @@
          this.refreshExpected.ResumeLayout(false);
          this.menuStrip1.ResumeLayout(false);
          this.menuStrip1.PerformLayout();
+         this.groupBox2.ResumeLayout(false);
+         this.groupBox2.PerformLayout();
+         ((System.ComponentModel.ISupportInitialize)(this.errorProvider1)).EndInit();
          this.ResumeLayout(false);
          this.PerformLayout();
 
@@ -553,7 +610,6 @@
       private System.Windows.Forms.Label label4;
       private System.Windows.Forms.NumericUpDown DelayCreation;
       private System.Windows.Forms.ComboBox MountPoint;
-      private System.Windows.Forms.Label label5;
       private System.Windows.Forms.GroupBox groupBox1;
       private System.Windows.Forms.TextBox VolumeLabel;
       private System.Windows.Forms.ToolStripMenuItem advancedToolStripMenuItem;
@@ -572,5 +628,10 @@
       private System.Windows.Forms.ToolStripMenuItem versionNumberToolStripMenuItem;
       private System.Windows.Forms.ToolStripMenuItem viewToolStripMenuItem;
       private System.Windows.Forms.ToolStripMenuItem tailToolStripMenuItem;
+      private System.Windows.Forms.GroupBox groupBox2;
+      private System.Windows.Forms.TextBox txtFolder;
+      private System.Windows.Forms.Label lblFolder;
+      private System.Windows.Forms.Label label5;
+      private System.Windows.Forms.ErrorProvider errorProvider1;
    }
 }

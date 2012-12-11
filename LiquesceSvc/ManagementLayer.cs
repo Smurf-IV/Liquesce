@@ -26,10 +26,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.ServiceModel;
+using System.Text;
 using System.Threading;
 using System.Xml.Serialization;
 using DokanNet;
@@ -115,6 +118,7 @@ namespace LiquesceSvc
          get;
          private set;
       }
+
       /// <summary>
       /// Invokes DokanNet.DokanMain function to mount a drive. 
       /// The function blocks until the file system is unmounted.
@@ -155,11 +159,16 @@ namespace LiquesceSvc
                ulong totalFreeBytes = 0;
                dokanOperations.GetDiskFreeSpace(ref freeBytesAvailable, ref totalBytes, ref totalFreeBytes, null);
                SetNLogLevel(currentConfigDetails.ServiceLogLevel);
+               DirectoryInfo dir = new DirectoryInfo(currentConfigDetails.DriveLetter);
+
                try
                {
                   Log.Info("DokanVersion:[{0}], DokanDriverVersion[{1}]", Dokan.DokanVersion(), Dokan.DokanDriverVersion());
                   if (currentConfigDetails.DriveLetter.Length > 1)
-                     Dokan.DokanRemoveMountPoint(currentConfigDetails.DriveLetter);
+                  {
+                     if (dir.Exists)
+                        Dokan.DokanRemoveMountPoint(currentConfigDetails.DriveLetter);
+                  }
                   else
                   {
                      char mountedDriveLetter = currentConfigDetails.DriveLetter[0];
@@ -186,18 +195,30 @@ namespace LiquesceSvc
                }
 
                // TODO: Search all usages of the DriveLetter and make sure they become MountPoint compatible
+               if (currentConfigDetails.DriveLetter.Length > 1)
+               {
+                  if (dir.Exists)
+               {
+                  Log.Warn("Removing directory [{0}]", dir.FullName);
+                  dir.Delete(true);
+               }
+               Log.Warn("Recreate the directory [{0}]", dir.FullName);
+               dir.Create();
+               }
+
                DokanOptions options = new DokanOptions
                {
                   MountPoint = currentConfigDetails.DriveLetter,
                   ThreadCount = currentConfigDetails.ThreadCount,
-                  DebugMode = currentConfigDetails.ServiceLogLevel=="Trace",
+                  DebugMode = currentConfigDetails.ServiceLogLevel == "Trace",
                   // public bool UseStdErr;
                   // UseAltStream = true, // This needs all sorts of extra API's
                   UseKeepAlive = true,  // When you set TRUE on DokanOptions->UseKeepAlive, dokan library automatically unmounts 15 seconds after user-mode file system hanged up
                   NetworkDrive = false,  // Set this to true to see if it stops the recycler bin question until [workitem:7253] is sorted
                   // If the network is true then also need to have the correct version of the dokannp.dll that works on the installed OS
                   VolumeLabel = currentConfigDetails.VolumeLabel
-                  ,RemovableDrive = true
+                  ,
+                  RemovableDrive = true
                };
 
 
@@ -217,11 +238,9 @@ namespace LiquesceSvc
                      break;
                   case Dokan.DOKAN_DRIVER_INSTALL_ERROR: // = -3; // Can't install driver
                      FireStateChange(LiquesceSvcState.InError, "Dokan is not mounted [DOKAN_DRIVER_INSTALL_ERROR]");
-                     Environment.Exit(-1);
                      break;
                   case Dokan.DOKAN_START_ERROR: // = -4; // Driver something wrong
                      FireStateChange(LiquesceSvcState.InError, "Dokan is not mounted [DOKAN_START_ERROR] - Driver Something is wrong");
-                     Environment.Exit(-1);
                      break;
                   case Dokan.DOKAN_MOUNT_ERROR: // = -5; // Can't assign drive letter
                      FireStateChange(LiquesceSvcState.InError, "Dokan is not mounted [DOKAN_MOUNT_ERROR] - Can't assign drive letter");
@@ -231,19 +250,21 @@ namespace LiquesceSvc
                      break;
                   default:
                      FireStateChange(LiquesceSvcState.InError, String.Format("Dokan is not mounted [Uknown Error: {0}]", retVal));
-                     Environment.Exit(-1);
                      break;
                }
+               if (retVal != Dokan.DOKAN_SUCCESS)
+                  Environment.Exit(retVal);
             }
             else
             {
                FireStateChange(LiquesceSvcState.InError, "Seems like the last exit request into Dokan did not exit in time");
+               Environment.Exit(-7);
             }
          }
          catch (Exception ex)
          {
             Log.ErrorException("Start has failed in an uncontrolled way: ", ex);
-            Environment.Exit(-1);
+            Environment.Exit(-8);
          }
          finally
          {
