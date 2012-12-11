@@ -115,6 +115,7 @@
             <File Id="InstallerIcon" Name="Liquesce.ico" Source="$(sys.SOURCEFILEDIR)..\Liquesce\Resources\Liquesce.ico" />
             <File Id="Liquesce.exe" Name="Liquesce.exe" Source="$(var.MgtSource)\Liquesce.exe" KeyPath="yes">
                <fire:FirewallException Id="LiquesceFWX1" Name="Liquesce Mount Management" Scope="localSubnet" IgnoreFailure="yes" />
+               <netfx:NativeImage Id="ngen_Liquesce.exe" Platform="32bit" Priority="1" AppBaseDirectory="ClientDIR"/>
             </File>
          </Component>
          <Component Id="ChangeLog" Directory="ClientDIR">
@@ -127,13 +128,17 @@
             <File Id="C_NLog.dll" Source="$(var.MgtSource)\NLog.dll" KeyPath="yes" />
          </Component>
          <Component Id="C_LiquesceFacade.dll" Directory="ClientDIR">
-            <File Id="C_LiquesceFacade.dll" Source="$(var.MgtSource)\LiquesceFacade.dll" KeyPath="yes" />
+            <File Id="C_LiquesceFacade.dll" Source="$(var.MgtSource)\LiquesceFacade.dll" KeyPath="yes" >
+               <netfx:NativeImage Id="ngen_C_LiquesceFacade.dll" Platform="32bit" Priority="1" AppBaseDirectory="ClientDIR"/>
+            </File>
          </Component>
          <Component Id="LiquesceTray.exe.config" Directory="ClientDIR">
             <File Source="$(var.TraySource)\LiquesceTray.exe.config" KeyPath="yes" />
          </Component>
          <Component Id="LiquesceTray.exe" Directory="ClientDIR">
-            <File Source="$(var.TraySource)\LiquesceTray.exe" KeyPath="yes" />
+            <File Source="$(var.TraySource)\LiquesceTray.exe" KeyPath="yes" >
+               <netfx:NativeImage Id="ngen_LiquesceTray.exe" Platform="32bit" Priority="1" AppBaseDirectory="ClientDIR"/>
+            </File>
          </Component>
          <Component Id="LiquesceTrayHelper.exe" Directory="ClientDIR">
             <File Source="$(sys.SOURCEFILEDIR)..\LiquesceTrayHelper\bin\Release\LiquesceTrayHelper.exe" KeyPath="yes" />
@@ -160,15 +165,11 @@
             </File>
          </Component>
          <Component Id="ChinhDo.Transactions.dll" Directory="ServiceDIR">
-            <File Source="$(var.SvcSource)\ChinhDo.Transactions.dll" KeyPath="yes">
-               <netfx:NativeImage Id="ChinhDo.Transactions.dll" Platform="32bit" Priority="1" AppBaseDirectory="ServiceDIR"/>
-            </File>
+            <File Source="$(var.SvcSource)\ChinhDo.Transactions.dll" KeyPath="yes" />
          </Component>
          
          <Component Id="NLog.dll" Directory="ServiceDIR">
-            <File Source="$(var.SvcSource)\NLog.dll" KeyPath="yes">
-               <netfx:NativeImage Id="ngen_NLog.dll" Platform="32bit" Priority="1" AppBaseDirectory="ServiceDIR"/>
-            </File>
+            <File Source="$(var.SvcSource)\NLog.dll" KeyPath="yes" />
          </Component>
       </ComponentGroup>
       <DirectoryRef Id="ProgramMenuDir">
