@@ -27,6 +27,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -483,15 +484,8 @@ namespace LiquesceSvc
          {
             if (currentConfigDetails == null)
             {
-               currentConfigDetails = new ConfigDetails
-                                         {
-                                            DelayStartMilliSec = (uint)short.MaxValue,
-                                            DriveLetter = "N",
-                                            SourceLocations = new List<string>(1),
-                                            ThreadCount = 1,
-                                            //HoldOffBufferBytes = 1*1024*1024*1024, // ==1GB
-                                            VolumeLabel = "InternallyCreated"
-                                         };
+               currentConfigDetails = new ConfigDetails();
+               currentConfigDetails.InitConfigDetails();
                currentConfigDetails.SourceLocations.Add(@"C:\");
             }
          }

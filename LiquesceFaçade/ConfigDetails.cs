@@ -26,6 +26,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
@@ -39,6 +41,28 @@ namespace LiquesceFacade
    [DataContract]
    public class ConfigDetails
    {
+      public void InitConfigDetails()
+      {
+         string[] drives = Environment.GetLogicalDrives();
+         List<char> driveLetters = new List<char>(26);
+         driveLetters.AddRange(drives.Select(dr => dr.ToUpper()[0]));
+         // Reverse find the 1st letter not used (Dokan does not support ower than D)
+         for (int i = 0; i < 22; i++)
+         {
+            char letter = (char) ('Z' - i);
+            if ( !driveLetters.Contains(letter) )
+            {
+               DriveLetter = letter.ToString(CultureInfo.InvariantCulture);
+               break;
+            }
+         }
+         if (string.IsNullOrEmpty(DriveLetter))
+         {
+            DriveLetter = "C:\\" + new Guid();
+            Directory.CreateDirectory(DriveLetter);
+         }
+      }
+
       public enum AllocationModes
       {
          folder
@@ -52,7 +76,7 @@ namespace LiquesceFacade
       // Make this is a string so that the XML looks better (Rather than exporting 72 for 'N')
       // Also the V 0.6 of Dokan is supposed to be able to use Mount points so this can then be reused for that..
       [DataMember(IsRequired = true)]
-      public string DriveLetter = "N";
+      public string DriveLetter;
 
       [DataMember]
       public ushort ThreadCount = 0;
@@ -67,7 +91,7 @@ namespace LiquesceFacade
       public UInt64 HoldOffBufferBytes = 1L << 10 << 10 << 10; // ==1GB;
 
       [DataMember(IsRequired = true)]
-      public List<string> SourceLocations;
+      public List<string> SourceLocations = new List<string>();
 
       [DataMember]
       public string ServiceLogLevel = "Warn"; // NLog's LogLevel.Debug.ToString()
