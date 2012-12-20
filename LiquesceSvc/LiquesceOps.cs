@@ -84,10 +84,14 @@ namespace LiquesceSvc
          bool createNew = false;
          try
          {
-            Log.Debug("CreateFile IN filename [{0}], rawAccessMode[0x{1:X8}], rawShare[{2}], rawCreationDisposition[{3}], rawFlagsAndAttributes[{4}|{5}], ProcessId[{6}]",
-              filename, rawAccessMode, (FileShare)rawShare, (FileMode)rawCreationDisposition, (rawFlagsAndAttributes&0xFFFE0000), (FileAttributes)(rawFlagsAndAttributes&0x0001FFFF), info.ProcessId);
-            createNew = (rawCreationDisposition == Proxy.CREATE_NEW) || (rawCreationDisposition == Proxy.CREATE_ALWAYS);
-            NativeFileOps foundFileInfo = roots.GetPath(filename,  (!createNew?0:configDetails.HoldOffBufferBytes));
+            Log.Debug(
+               "CreateFile IN filename [{0}], rawAccessMode[0x{1:X8}], rawShare[{2}], rawCreationDisposition[{3}], rawFlagsAndAttributes[{4}|{5}], ProcessId[{6}]",
+               filename, rawAccessMode, (FileShare)rawShare, (FileMode)rawCreationDisposition,
+               (rawFlagsAndAttributes & 0xFFFE0000), (FileAttributes)(rawFlagsAndAttributes & 0x0001FFFF),
+               info.ProcessId);
+            createNew = (rawCreationDisposition == Proxy.CREATE_NEW) || (rawCreationDisposition == Proxy.CREATE_ALWAYS) ||
+               (rawCreationDisposition == Proxy.OPEN_ALWAYS);
+            NativeFileOps foundFileInfo = roots.GetPath(filename, (!createNew ? 0 : configDetails.HoldOffBufferBytes));
 
             //bool fileExists = foundFileInfo.Exists;
             //if (fileExists
@@ -129,74 +133,69 @@ namespace LiquesceSvc
             //      break;
             //}
 
-            PID.Invoke(info.ProcessId, delegate
+            if (!foundFileInfo.Exists
+               && createNew)
             {
-               if (!foundFileInfo.Exists
-                  && createNew)
-               {
-                  // force it to be "Looked up" next time
-                  roots.RemoveFromLookup(filename);
-                  NativeFileOps.CreateDirectory( foundFileInfo.DirectoryPathOnly );
-               }
+               Log.Trace("force it to be \"Looked up\" next time");
+               roots.RemoveFromLookup(filename);
+               PID.Invoke(info.ProcessId, () => NativeFileOps.CreateDirectory(foundFileInfo.DirectoryPathOnly));
+            }
+            // TODO: The DokanFileInfo structure has the following extra things that need to be mapped tothe file open
+            //public bool PagingIo;
+            //public bool SynchronousIo;
+            //public bool Nocache;
+            // See http://msdn.microsoft.com/en-us/library/aa363858%28VS.85%29.aspx#caching_behavior
+            if (info.PagingIo)
+            {
+               rawFlagsAndAttributes |= Proxy.FILE_FLAG_RANDOM_ACCESS;
+               Log.Trace("Adding rawFlagsAndAttributes |= Proxy.FILE_FLAG_RANDOM_ACCESS");
+            }
+            if (info.Nocache)
+            {
+               rawFlagsAndAttributes |= Proxy.FILE_FLAG_WRITE_THROUGH; // | Proxy.FILE_FLAG_NO_BUFFERING;
+               Log.Trace("Adding rawFlagsAndAttributes |= Proxy.FILE_FLAG_WRITE_THROUGH; // | Proxy.FILE_FLAG_NO_BUFFERING;");
+            }
+            // FILE_FLAG_NO_BUFFERING flag requires that all I/O operations on the file handle be in multiples of the sector size, 
+            // AND that the I/O buffers also be aligned on addresses which are multiples of the sector size
+            if (info.SynchronousIo)
+            {
+               rawFlagsAndAttributes |= Proxy.FILE_FLAG_SEQUENTIAL_SCAN;
+               Log.Trace("Adding rawFlagsAndAttributes |= Proxy.FILE_FLAG_SEQUENTIAL_SCAN");
+            }
+            if (foundFileInfo.IsDirectory)
+            {
+               info.IsDirectory = true;
+               rawFlagsAndAttributes |= Proxy.FILE_FLAG_BACKUP_SEMANTICS;
+               Log.Trace("Adding rawFlagsAndAttributes |= Proxy.FILE_FLAG_BACKUP_SEMANTICS");
+            }
 
-               // TODO: The DokanFileInfo structure has the following extra things that need to be mapped tothe file open
-               //public bool PagingIo;
-               //public bool SynchronousIo;
-               //public bool Nocache;
-               // See http://msdn.microsoft.com/en-us/library/aa363858%28VS.85%29.aspx#caching_behavior
-               if (info.PagingIo)
-               {
-                  rawFlagsAndAttributes |= Proxy.FILE_FLAG_RANDOM_ACCESS;
-                  Log.Trace("Adding rawFlagsAndAttributes |= Proxy.FILE_FLAG_RANDOM_ACCESS");
-               }
-               if (info.Nocache)
-               {
-                  rawFlagsAndAttributes |= Proxy.FILE_FLAG_WRITE_THROUGH; // | Proxy.FILE_FLAG_NO_BUFFERING;
-                  Log.Trace("Adding rawFlagsAndAttributes |= Proxy.FILE_FLAG_WRITE_THROUGH; // | Proxy.FILE_FLAG_NO_BUFFERING;");
-               }
-               // FILE_FLAG_NO_BUFFERING flag requires that all I/O operations on the file handle be in multiples of the sector size, 
-               // AND that the I/O buffers also be aligned on addresses which are multiples of the sector size
-               if (info.SynchronousIo)
-               {
-                  rawFlagsAndAttributes |= Proxy.FILE_FLAG_SEQUENTIAL_SCAN;
-                  Log.Trace("Adding rawFlagsAndAttributes |= Proxy.FILE_FLAG_SEQUENTIAL_SCAN");
-               }
-               if (foundFileInfo.IsDirectory)
-               {
-                  info.IsDirectory = true;
-                  rawFlagsAndAttributes |= Proxy.FILE_FLAG_BACKUP_SEMANTICS;
-                  Log.Trace("Adding rawFlagsAndAttributes |= Proxy.FILE_FLAG_BACKUP_SEMANTICS");
-               }
+            Log.Debug("Modified rawFlagsAndAttributes[{0}]", rawFlagsAndAttributes);
 
-               Log.Debug("Modified rawFlagsAndAttributes[{0}]", rawFlagsAndAttributes);
-
-               fs = NativeFileOps.CreateFile(fullName, rawAccessMode, rawShare,
-                                                   rawCreationDisposition, rawFlagsAndAttributes);
-               // If a specified file exists before the function call and dwCreationDisposition is CREATE_ALWAYS 
-               // or OPEN_ALWAYS, a call to GetLastError returns ERROR_ALREADY_EXISTS, even when the function succeeds.
-               int lastError = Marshal.GetLastWin32Error();
-               if (lastError != 0)
-               {
-                  // observe what is happening in the Dokan Code @ https://code.google.com/p/dokan/source/browse/trunk/dokan/create.c?r=127
-                  // if a 
-                  // throw new System.ComponentModel.Win32Exception(lastError);
-                  // is used then a -ve result will be ruturned and Dokan will then return the incorrect result to the caller.
-                  // In this case where an open has succedded but the error code has been set we need to return it as a +ve value
-                  dokanReturn = lastError;
-               }
-
-            });
+            PID.Invoke(info.ProcessId, () => fs = NativeFileOps.CreateFile(fullName, rawAccessMode, rawShare,
+                                                                           rawCreationDisposition, rawFlagsAndAttributes));
+            // If a specified file exists before the function call and dwCreationDisposition is CREATE_ALWAYS 
+            // or OPEN_ALWAYS, a call to GetLastError returns ERROR_ALREADY_EXISTS, even when the function succeeds.
+            int lastError = Marshal.GetLastWin32Error();
+            if (lastError != 0)
+            {
+               // observe what is happening in the Dokan Code @ https://code.google.com/p/dokan/source/browse/trunk/dokan/create.c?r=127
+               // if a 
+               // throw new System.ComponentModel.Win32Exception(lastError);
+               // is used then a -ve result will be ruturned and Dokan will then return the incorrect result to the caller.
+               // In this case where an open has succedded but the error code has been set we need to return it as a +ve value
+               dokanReturn = lastError;
+            }
          }
          catch (Exception ex)
          {
             Log.Error("CreateFile filename [{0}], rawAccessMode[{1}], rawShare[{2}], rawCreationDisposition[{3}], rawFlagsAndAttributes[{4}|{5}], ProcessId[{6}]",
-              filename, rawAccessMode, (FileShare)rawShare, (FileMode)rawCreationDisposition, (rawFlagsAndAttributes&0xFFFE0000), (FileAttributes)(rawFlagsAndAttributes&0x0001FFFF), info.ProcessId);
+              filename, rawAccessMode, (FileShare)rawShare, (FileMode)rawCreationDisposition, (rawFlagsAndAttributes & 0xFFFE0000), (FileAttributes)(rawFlagsAndAttributes & 0x0001FFFF), info.ProcessId);
             Log.ErrorException("CreateFile threw: ", ex);
             dokanReturn = Utils.BestAttemptToWin32(ex);
          }
          finally
          {
-            if ( fs != null )
+            if (fs != null)
             {
                // If a specified file exists before the function call and dwCreationDisposition is CREATE_ALWAYS 
                // or OPEN_ALWAYS, a call to GetLastError returns ERROR_ALREADY_EXISTS, even when the function succeeds.
@@ -221,9 +220,9 @@ namespace LiquesceSvc
          try
          {
             Log.Debug("OpenDirectory [{0}] IN DokanProcessId[{1}]", filename, info.ProcessId);
-            NativeFileOps foundDirInfo = roots.GetPath(filename);
             PID.Invoke(info.ProcessId, delegate
             {
+               NativeFileOps foundDirInfo = roots.GetPath(filename);
                if (foundDirInfo.Exists
                   && foundDirInfo.IsDirectory
                   )
@@ -256,16 +255,13 @@ namespace LiquesceSvc
          try
          {
             Log.Debug("CreateDirectory [{0}] IN DokanProcessId[{1}]", filename, info.ProcessId);
-            PID.Invoke(info.ProcessId, delegate
-            {
-               NativeFileOps foundDirInfo = roots.GetPath(filename);
-               foundDirInfo.CreateDirectory();
-               Log.Debug("By the time it gets here the dir should exist, or have existed by another method / thread");
-               info.IsDirectory = true;
-               roots.TrimAndAddUnique(foundDirInfo);
-               notifyOf.CreateDirectory(foundDirInfo.FullName, info.refFileHandleContext);
-               dokanReturn = Dokan.DOKAN_SUCCESS;
-            });
+            NativeFileOps foundDirInfo = roots.GetPath(filename, configDetails.HoldOffBufferBytes);
+            PID.Invoke(info.ProcessId, foundDirInfo.CreateDirectory);
+            Log.Debug("By the time it gets here the dir should exist, or have existed by another method / thread");
+            info.IsDirectory = true;
+            roots.TrimAndAddUnique(foundDirInfo);
+            notifyOf.CreateDirectory(foundDirInfo.FullName, info.refFileHandleContext);
+            dokanReturn = Dokan.DOKAN_SUCCESS;
          }
          catch (Exception ex)
          {
@@ -300,32 +296,29 @@ namespace LiquesceSvc
          try
          {
             Log.Trace("Cleanup IN DokanProcessId[{0}] with filename [{1}] handle[{2}] isDir[{3}]", info.ProcessId, filename, info.refFileHandleContext, info.IsDirectory);
-            
+
             NativeFileOps foundInfo = roots.GetPath(filename);
             // Make a copy for use later as the CloseAndRemove will remove this value
             ulong shellFireContext = info.refFileHandleContext;
             CloseAndRemove(info);
-            PID.Invoke(info.ProcessId, delegate
+            if (info.DeleteOnClose)
             {
-               if (info.DeleteOnClose)
+               if (info.IsDirectory)
                {
-                  if (info.IsDirectory)
-                  {
-                     Log.Trace("DeleteOnClose Directory");
-                     roots.DeleteDirectory(filename);
-                     notifyOf.DeleteDirectory(foundInfo.FullName, shellFireContext);
-                  }
-                  else
-                  {
-                     roots.DeleteFile(filename);
-                     notifyOf.DeleteFile(foundInfo.FullName, shellFireContext);
-                  }
+                  Log.Trace("DeleteOnClose Directory");
+                  PID.Invoke(info.ProcessId, () => roots.DeleteDirectory(filename) );
+                  notifyOf.DeleteDirectory(foundInfo.FullName, shellFireContext);
                }
-            });
+               else
+               {
+                  PID.Invoke(info.ProcessId, () => roots.DeleteFile(filename) );
+                  notifyOf.DeleteFile(foundInfo.FullName, shellFireContext);
+               }
+            }
             ShellChangeNotify.UpdateType type = notifyOf.Cleanup(foundInfo.FullName, shellFireContext);
             if (type != 0)
             {
-               notifyOf.CombinedNotify(roots.ReturnMountFileName(foundInfo.FullName), type );
+               notifyOf.CombinedNotify(roots.ReturnMountFileName(foundInfo.FullName), type);
                roots.RemoveFromLookup(filename);
             }
 
@@ -355,7 +348,7 @@ namespace LiquesceSvc
          catch (Exception ex)
          {
             Log.ErrorException("CloseFile threw: ", ex);
-            dokanReturn =  Utils.BestAttemptToWin32(ex);
+            dokanReturn = Utils.BestAttemptToWin32(ex);
          }
          finally
          {
@@ -396,19 +389,19 @@ namespace LiquesceSvc
                )
             {
                NativeFileOps fsi = roots.GetPath(filename);
+               Log.Warn("No context handle for [{0}]", fsi.FullName);
                PID.Invoke(info.ProcessId, delegate
                   {
-                     Log.Warn("No context handle for [{0}]", fsi.FullName);
-                  const uint rawAccessMode = Proxy.GENERIC_READ | Proxy.GENERIC_WRITE;
-                  const uint rawShare = Proxy.FILE_SHARE_READ | Proxy.FILE_SHARE_WRITE;
-                  const uint rawCreationDisposition = Proxy.OPEN_EXISTING;
-                  uint rawFlagsAndAttributes = info.IsDirectory
-                                                  ? Proxy.FILE_FLAG_BACKUP_SEMANTICS
-                                                  : 0;
-                  fileStream = NativeFileOps.CreateFile(fsi.FullName, rawAccessMode, rawShare,
-                                                   rawCreationDisposition, rawFlagsAndAttributes);
+                     const uint rawAccessMode = Proxy.GENERIC_READ | Proxy.GENERIC_WRITE;
+                     const uint rawShare = Proxy.FILE_SHARE_READ | Proxy.FILE_SHARE_WRITE;
+                     const uint rawCreationDisposition = Proxy.OPEN_EXISTING;
+                     uint rawFlagsAndAttributes = info.IsDirectory
+                                                     ? Proxy.FILE_FLAG_BACKUP_SEMANTICS
+                                                     : 0;
+                     fileStream = NativeFileOps.CreateFile(fsi.FullName, rawAccessMode, rawShare,
+                                                      rawCreationDisposition, rawFlagsAndAttributes);
                      closeOnReturn = true;
-                  }); 
+                  });
             }
 
             // Some programs the file offset to extend the file length to write past the end of the file
@@ -482,14 +475,14 @@ namespace LiquesceSvc
                   openFiles.TryGetValue(info.refFileHandleContext, out fileStream);
                }
             }
-            if ( (fileStream == null)
+            if ((fileStream == null)
                || fileStream.IsInvalid
                )
             {
                NativeFileOps fsi = roots.GetPath(filename);
+               Log.Warn("No context handle for [{0}]", fsi.FullName);
                PID.Invoke(info.ProcessId, delegate
                {
-                  Log.Warn("No context handle for [{0}]", fsi.FullName);
                   const uint rawAccessMode = Proxy.GENERIC_READ | Proxy.GENERIC_WRITE;
                   const uint rawShare = Proxy.FILE_SHARE_READ | Proxy.FILE_SHARE_WRITE;
                   const uint rawCreationDisposition = Proxy.OPEN_EXISTING;
@@ -497,13 +490,13 @@ namespace LiquesceSvc
                                                    ? Proxy.FILE_FLAG_BACKUP_SEMANTICS
                                                    : 0;
                   fileStream = NativeFileOps.CreateFile(fsi.FullName, rawAccessMode, rawShare,
-                                                rawCreationDisposition, rawFlagsAndAttributes );
+                                                rawCreationDisposition, rawFlagsAndAttributes);
                   closeOnReturn = true;
                });
             }
 
             if (info.WriteToEndOfFile)//  If true, write to the current end of file instead of Offset parameter.
-               fileStream.SetFilePointer( 0, SeekOrigin.End);
+               fileStream.SetFilePointer(0, SeekOrigin.End);
             else
                // Use the current offset as a check first to speed up access in large sequential file reads
                fileStream.SetFilePointer(rawOffset, SeekOrigin.Begin);
@@ -586,23 +579,21 @@ namespace LiquesceSvc
                Log.Trace("info.refFileHandleContext [{0}]", info.refFileHandleContext);
                openFiles.TryGetValue(info.refFileHandleContext, out stream);
             }
-            if ( (stream == null)
+            if ((stream == null)
                || stream.IsInvalid
                )
             {
                NativeFileOps fsi = roots.GetPath(filename);
-               PID.Invoke(info.ProcessId, delegate
-               {
-                  const uint rawAccessMode = Proxy.GENERIC_READ/* | Proxy.GENERIC_WRITE*/;
-                  const uint rawShare = Proxy.FILE_SHARE_READ | Proxy.FILE_SHARE_WRITE;
-                  const uint rawCreationDisposition = Proxy.OPEN_EXISTING;
-                  uint rawFlagsAndAttributes = info.IsDirectory
-                                                  ? Proxy.FILE_FLAG_BACKUP_SEMANTICS
-                                                  : 0;
-                  stream = NativeFileOps.CreateFile(fsi.FullName, rawAccessMode, rawShare,
-                                               rawCreationDisposition, rawFlagsAndAttributes);
-                  needToClose = true;
-                });
+               const uint rawAccessMode = Proxy.GENERIC_READ/* | Proxy.GENERIC_WRITE*/;
+               const uint rawShare = Proxy.FILE_SHARE_READ | Proxy.FILE_SHARE_WRITE;
+               const uint rawCreationDisposition = Proxy.OPEN_EXISTING;
+               uint rawFlagsAndAttributes = info.IsDirectory
+                                               ? Proxy.FILE_FLAG_BACKUP_SEMANTICS
+                                               : 0;
+               PID.Invoke(info.ProcessId, () => stream = NativeFileOps.CreateFile(fsi.FullName, rawAccessMode, rawShare,
+                                                                                  rawCreationDisposition,
+                                                                                  rawFlagsAndAttributes));
+               needToClose = true;
             }
 
             if ((stream != null)
@@ -743,14 +734,11 @@ namespace LiquesceSvc
                NativeFileOps foundFileInfo = roots.GetPath(filename);
                if (foundFileInfo.Exists)
                {
-                  PID.Invoke(info.ProcessId, delegate
-                                                {
-                                                   // This uses  if (!Win32Native.SetFileAttributes(fullPathInternal, (int) fileAttributes))
+// This uses  if (!Win32Native.SetFileAttributes(fullPathInternal, (int) fileAttributes))
                                                    // And can throw PathTOOLong
-                                                   foundFileInfo.SetFileAttributes(attr);
-                                                });
-                  notifyOf.SetFileAttributes(foundFileInfo.FullName, info.refFileHandleContext);
+                  PID.Invoke(info.ProcessId, () => foundFileInfo.SetFileAttributes(attr));
                }
+               notifyOf.SetFileAttributes(foundFileInfo.FullName, info.refFileHandleContext);
             }
             else
             {
@@ -786,28 +774,26 @@ namespace LiquesceSvc
                Log.Trace("info.refFileHandleContext [{0}]", info.refFileHandleContext);
                openFiles.TryGetValue(info.refFileHandleContext, out stream);
             }
-            if ( (stream == null) 
-               || stream.IsInvalid 
+            if ((stream == null)
+               || stream.IsInvalid
                )
             {
                NativeFileOps fsi = roots.GetPath(filename);
                if (fsi.IsDirectory)
                   info.IsDirectory = true;
-               PID.Invoke(info.ProcessId, delegate
-               {
-                  // Workaround the dir set
-                  // ERROR LiquesceSvc.LiquesceOps: SetFileTime threw:  System.UnauthorizedAccessException: Access to the path 'G:\_backup\Kylie Minogue\Dir1' is denied.
-                  // To create a handle to a directory, you have to use FILE_FLAG_BACK_SEMANTICS.
-                  const uint rawAccessMode = Proxy.GENERIC_READ | Proxy.GENERIC_WRITE;
-                  const uint rawShare = Proxy.FILE_SHARE_READ | Proxy.FILE_SHARE_WRITE;
-                  const uint rawCreationDisposition = Proxy.OPEN_EXISTING;
-                  uint rawFlagsAndAttributes = info.IsDirectory
-                                                   ? Proxy.FILE_FLAG_BACKUP_SEMANTICS
-                                                   : 0;
-                  stream = NativeFileOps.CreateFile(fsi.FullName, rawAccessMode, rawShare,
-                                                rawCreationDisposition, rawFlagsAndAttributes);
-                  needToClose = true;
-               });
+               // Workaround the dir set
+               // ERROR LiquesceSvc.LiquesceOps: SetFileTime threw:  System.UnauthorizedAccessException: Access to the path 'G:\_backup\Kylie Minogue\Dir1' is denied.
+               // To create a handle to a directory, you have to use FILE_FLAG_BACK_SEMANTICS.
+               const uint rawAccessMode = Proxy.GENERIC_READ | Proxy.GENERIC_WRITE;
+               const uint rawShare = Proxy.FILE_SHARE_READ | Proxy.FILE_SHARE_WRITE;
+               const uint rawCreationDisposition = Proxy.OPEN_EXISTING;
+               uint rawFlagsAndAttributes = info.IsDirectory
+                                                ? Proxy.FILE_FLAG_BACKUP_SEMANTICS
+                                                : 0;
+               PID.Invoke(info.ProcessId, () => stream = NativeFileOps.CreateFile(fsi.FullName, rawAccessMode, rawShare,
+                                                                                  rawCreationDisposition,
+                                                                                  rawFlagsAndAttributes));
+               needToClose = true;
             }
             if ((stream != null)
                   && !stream.IsInvalid
@@ -875,13 +861,15 @@ namespace LiquesceSvc
             if (stream != null)
                dokanReturn = Dokan.DOKAN_SUCCESS;
             else
-            PID.Invoke(info.ProcessId, delegate
             {
-               NativeFileOps foundFileInfo = roots.GetPath(filename);
-               dokanReturn = (foundFileInfo.Exists && !foundFileInfo.IsDirectory)
-                                ? Dokan.DOKAN_SUCCESS
-                                : Dokan.ERROR_FILE_NOT_FOUND;
-            });
+               PID.Invoke(info.ProcessId, delegate
+                  {
+                     NativeFileOps foundFileInfo = roots.GetPath(filename);
+                     dokanReturn = (foundFileInfo.Exists && !foundFileInfo.IsDirectory)
+                        ? Dokan.DOKAN_SUCCESS
+                        : Dokan.ERROR_FILE_NOT_FOUND;
+                  });
+            }
          }
          catch (Exception ex)
          {
@@ -957,10 +945,10 @@ namespace LiquesceSvc
                }
                else
                {
-                  PID.Invoke(info.ProcessId, delegate
-                  {
-                     XMoveFile.Move(roots, dokanFilename, newname, replaceIfExisting, info.IsDirectory, info.ProcessId);
-                  });
+                  PID.Invoke(info.ProcessId,
+                             () =>
+                                XMoveFile.Move(roots, dokanFilename, newname, replaceIfExisting, info.IsDirectory,
+                                               info.ProcessId));
                }
                // If we get this far, then everything is probably ok (No exeptions thrown :-)
                notifyOf.MoveFile(nfo.FullName, roots.GetPath(newname).FullName, nfo.IsDirectory, info.refFileHandleContext);
@@ -985,21 +973,18 @@ namespace LiquesceSvc
          try
          {
             Log.Debug("SetEndOfFile [{0}] IN DokanProcessId[{1}]", filename, info.ProcessId);
-            PID.Invoke(info.ProcessId, delegate
+            Log.Trace("info.refFileHandleContext [{0}]", info.refFileHandleContext);
+            dokanReturn = Dokan.ERROR_FILE_NOT_FOUND;
+            using (openFilesSync.ReadLock())
             {
-               Log.Trace("info.refFileHandleContext [{0}]", info.refFileHandleContext);
-               dokanReturn = Dokan.ERROR_FILE_NOT_FOUND;
-               using (openFilesSync.ReadLock())
+               NativeFileOps stream;
+               if (openFiles.TryGetValue(info.refFileHandleContext, out stream))
                {
-                  NativeFileOps stream;
-                  if ( openFiles.TryGetValue(info.refFileHandleContext, out stream ) )
-                  {
-                     stream.SetLength(length);
-                     notifyOf.SetEndOfFile(stream.FullName, info.refFileHandleContext);
-                     dokanReturn = Dokan.DOKAN_SUCCESS;
-                  }
+                  PID.Invoke(info.ProcessId, () => stream.SetLength(length));
+                  notifyOf.SetEndOfFile(stream.FullName, info.refFileHandleContext);
+                  dokanReturn = Dokan.DOKAN_SUCCESS;
                }
-            });
+            }
          }
          catch (Exception ex)
          {
@@ -1142,12 +1127,12 @@ namespace LiquesceSvc
          int dokanReturn = Dokan.DOKAN_ERROR;
          try
          {
-            if ( info != null )
+            if (info != null)
                Log.Trace("GetDiskFreeSpace IN DokanProcessId[{0}]", info.ProcessId);
             freeBytesAvailable = totalBytes = totalFreeBytes = 0;
 
             HashSet<string> uniqueSources = new HashSet<string>();
-            configDetails.SourceLocations.ForEach(str => uniqueSources.Add(NativeFileOps.GetRootOrMountFor(str)) );
+            configDetails.SourceLocations.ForEach(str => uniqueSources.Add(NativeFileOps.GetRootOrMountFor(str)));
 
             foreach (string source in uniqueSources)
             {
@@ -1180,7 +1165,7 @@ namespace LiquesceSvc
       private const uint volumeSerialNumber = 0x20101112;
 
       public int GetVolumeInformation(IntPtr rawVolumeNameBuffer, uint rawVolumeNameSize, ref uint rawVolumeSerialNumber,
-                                       ref uint rawMaximumComponentLength, ref uint rawFileSystemFlags, IntPtr rawFileSystemNameBuffer, 
+                                       ref uint rawMaximumComponentLength, ref uint rawFileSystemFlags, IntPtr rawFileSystemNameBuffer,
                                        uint rawFileSystemNameSize, DokanFileInfo info)
       {
          int dokanReturn = Dokan.DOKAN_ERROR;
@@ -1278,15 +1263,15 @@ namespace LiquesceSvc
 
             SECURITY_INFORMATION reqInfo = rawRequestedInformation;
             byte[] managedDescriptor = null;
-                  AccessControlSections includeSections = AccessControlSections.None;
-                  if ((reqInfo & SECURITY_INFORMATION.OWNER_SECURITY_INFORMATION) == SECURITY_INFORMATION.OWNER_SECURITY_INFORMATION)
-                     includeSections |= AccessControlSections.Owner;
-                  if ((reqInfo & SECURITY_INFORMATION.GROUP_SECURITY_INFORMATION) == SECURITY_INFORMATION.GROUP_SECURITY_INFORMATION)
-                     includeSections |= AccessControlSections.Group;
-                  if ((reqInfo & SECURITY_INFORMATION.DACL_SECURITY_INFORMATION) == SECURITY_INFORMATION.DACL_SECURITY_INFORMATION)
-                     includeSections |= AccessControlSections.Access;
-                  if ((reqInfo & SECURITY_INFORMATION.SACL_SECURITY_INFORMATION) == SECURITY_INFORMATION.SACL_SECURITY_INFORMATION)
-                     includeSections |= AccessControlSections.Audit;
+            AccessControlSections includeSections = AccessControlSections.None;
+            if ((reqInfo & SECURITY_INFORMATION.OWNER_SECURITY_INFORMATION) == SECURITY_INFORMATION.OWNER_SECURITY_INFORMATION)
+               includeSections |= AccessControlSections.Owner;
+            if ((reqInfo & SECURITY_INFORMATION.GROUP_SECURITY_INFORMATION) == SECURITY_INFORMATION.GROUP_SECURITY_INFORMATION)
+               includeSections |= AccessControlSections.Group;
+            if ((reqInfo & SECURITY_INFORMATION.DACL_SECURITY_INFORMATION) == SECURITY_INFORMATION.DACL_SECURITY_INFORMATION)
+               includeSections |= AccessControlSections.Access;
+            if ((reqInfo & SECURITY_INFORMATION.SACL_SECURITY_INFORMATION) == SECURITY_INFORMATION.SACL_SECURITY_INFORMATION)
+               includeSections |= AccessControlSections.Audit;
             FileSystemSecurity pSD = null;
             NativeFileOps stream;
             using (openFilesSync.ReadLock())
@@ -1297,7 +1282,7 @@ namespace LiquesceSvc
             if (stream != null)
             {
                FullName = stream.FullName;
-               pSD = (!stream.IsDirectory)? (FileSystemSecurity)File.GetAccessControl(FullName, includeSections)
+               pSD = (!stream.IsDirectory) ? (FileSystemSecurity)File.GetAccessControl(FullName, includeSections)
                                                       : Directory.GetAccessControl(FullName, includeSections);
             }
             else
@@ -1306,11 +1291,10 @@ namespace LiquesceSvc
                FullName = foundFileInfo.FullName;
                if (foundFileInfo.Exists)
                {
-                  PID.Invoke(info.ProcessId, delegate
-                                                {
-                                                   pSD = (!foundFileInfo.IsDirectory) ? (FileSystemSecurity)File.GetAccessControl(FullName, includeSections)
-                                                      : Directory.GetAccessControl(FullName, includeSections);
-                                                });
+                  PID.Invoke(info.ProcessId, () => pSD = (!foundFileInfo.IsDirectory)
+                                   ? (FileSystemSecurity) File.GetAccessControl(FullName, includeSections)
+                                   : Directory.GetAccessControl(FullName, includeSections)
+                                   );
                }
                else
                {
@@ -1328,7 +1312,7 @@ namespace LiquesceSvc
             }
             if (managedDescriptor != null)
             {
-               rawSecurityDescriptorLengthNeeded = (uint) managedDescriptor.Length;
+               rawSecurityDescriptorLengthNeeded = (uint)managedDescriptor.Length;
                // if the buffer is not enough the we must pass the correct error
                // If the returned number of bytes is less than or equal to nLength, the entire security descriptor is returned in the output buffer; otherwise, none of the descriptor is returned.
                if (rawSecurityDescriptorLength < rawSecurityDescriptorLengthNeeded)
