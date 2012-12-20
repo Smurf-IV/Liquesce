@@ -247,7 +247,7 @@ UNPROTECTED_SACL_SECURITY_INFORMATION  The SACL inherits ACEs from the parent ob
       public const uint CREATE_NEW = 1;
       public const uint CREATE_ALWAYS = 2;
       public const uint OPEN_EXISTING = 3;
-      private const uint OPEN_ALWAYS = 4;
+      public const uint OPEN_ALWAYS = 4;
       public const uint TRUNCATE_EXISTING = 5;
 
       private const uint FILE_ATTRIBUTE_READONLY            = 0x00000001;

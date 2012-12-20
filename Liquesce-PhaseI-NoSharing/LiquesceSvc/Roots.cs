@@ -116,7 +116,9 @@ namespace LiquesceSvc
          }
          finally
          {
-            if (fsi != null)
+            if ( (fsi != null)
+               && fsi.Exists
+               )
             {
                Log.Debug("GetPath from [{0}] found [{1}]", filename, fsi.FullName);
                cachedRootPathsSystemInfo[filename] = fsi;
@@ -209,10 +211,10 @@ namespace LiquesceSvc
 
 
       // returns the root for:
-      //  1. the first disk where relativeFolder exists and there is enough free space
-      //  2. priority mode
+      //  The first disk where relativeFolder exists and if there is enough free space
       private string GetSourceThatMatchesThisFolderWithSpace(string relativeFolder, ulong spaceRequired)
       {
+         Log.Trace("Trying GetSourceThatMatchesThisFolderWithSpace([{0}],[{1}])", relativeFolder, spaceRequired);
          // remove the last \ to delete the last directory
          relativeFolder = relativeFolder.TrimEnd(new char[] { Path.DirectorySeparatorChar });
 
@@ -223,7 +225,8 @@ namespace LiquesceSvc
             ulong lpFreeBytesAvailable, num2, num3;
             if (GetDiskFreeSpaceExW(t, out lpFreeBytesAvailable, out num2, out num3))
             {
-               // see if enough space
+               Log.Trace("See if enough space on [{0}] lpFreeBytesAvailable[{1}] > spaceRequired[{2}]", t,
+                         lpFreeBytesAvailable, spaceRequired);
                if (lpFreeBytesAvailable > spaceRequired)
                {
                   string testpath = t + relativeFolder;
@@ -238,24 +241,20 @@ namespace LiquesceSvc
       }
 
 
-      // returns the next root with the highest priority
+      // returns the next root with the highest priority and the space
       private string GetHighestPrioritySourceWithSpace(ulong spaceRequired)
       {
+         Log.Trace("Trying GetHighestPrioritySourceWithSpace([{0}])", spaceRequired);
          ulong lpFreeBytesAvailable = 0, num2, num3;
-         foreach (string t in from t in configDetails.SourceLocations
-                              where GetDiskFreeSpaceExW(t, out lpFreeBytesAvailable, out num2, out num3)
-                              where lpFreeBytesAvailable > spaceRequired
-                              select t)
-         {
-            return t;
-         }
-         return string.Empty;
+         return configDetails.SourceLocations.FirstOrDefault(w => GetDiskFreeSpaceExW(w, out lpFreeBytesAvailable, out num2, out num3) 
+            && lpFreeBytesAvailable > spaceRequired);
       }
 
 
       // returns the root with the most free space
       private string GetSourceWithMostFreeSpace(ulong spaceRequired)
       {
+         Log.Trace("Trying GetSourceWithMostFreeSpace([{0}])", spaceRequired);
          ulong highestFreeSpace = 0;
          string sourceWithMostFreeSpace = string.Empty;
 
