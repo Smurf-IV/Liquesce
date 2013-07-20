@@ -1,0 +1,337 @@
+{\rtf1\ansi\ansicpg1252\deff0{\fonttbl{\f0\fswiss\fprq2\fcharset0 Tahoma;}{\f1\fnil\fcharset0 Courier New;}{\f2\fmodern\fprq1\fcharset0 Courier New;}{\f3\fnil Courier New;}{\f4\fnil\fcharset0 Tahoma;}{\f5\fnil Consolas;}{\f6\fnil\fcharset0 Consolas;}}
+{\colortbl ;\red0\green0\blue0;\red0\green0\blue255;\red192\green80\blue77;\red0\green128\blue0;}
+{\*\generator Msftedit 5.41.21.2510;}\viewkind4\uc1\pard\cf1\lang2057\ul\b\f0\fs20 Welcome to the \i Liquesce \i0 Changelog\cf0\ulnone\b0\f1\par
+\cf1\f0\par
+Currently this is just a place holder for all the cool stuff that has happened to this project :-)\par
+\par
+Keep an open eye on the \cf0\b{\field{\*\fldinst{HYPERLINK "http://liquesce.codeplex.com/"}}{\fldrslt{\ul\cf2 http://liquesce.codeplex.com/}}}\cf1\b0\f0\fs20  site.\par
+\par
+\cf0\ul\b Some Helpful Information:\ulnone\b0\par
+\ul How to get an install log to send if you have a problem:\ulnone\par
+\pard\sb100\sa100 To obtain a log of an installation use the {\field{\*\fldinst{HYPERLINK "http://support.microsoft.com/kb/227091"}}{\fldrslt{\cf2\ul command line msiexec tool}}}\cf0\ulnone\f0\fs20 :\par
+\f2 msiexec /i Liquesce_Setup.msi /l*v MyLogFile.txt\par
+\f0 and this for uninstall issues\par
+\f2 msiexec /l*v MyLogFile.txt /uninstall Liquesce_Setup.msi\par
+\f0 This will install your application and write a verbose log to MyLogFile.txt in the current directory.\par
+\pard\par
+\ul Logs\par
+\ulnone GUI logs will go into \f3\fs19 "\cf2 $\{specialfolder:folder=CommonApplicationData\}/Liquesce/Logs\cf0 "\par
+\f0\fs20 Service logs will go into \f3\fs19 "\cf2 $\{specialfolder:folder=CommonApplicationData\}/LiquesceSvc/Logs\cf0 "\par
+\f0\fs20\par
+\ul\b TODO \par
+\cf3\ulnone\b0 - Fix Issues\par
+- Change the space usage to be a table with scroll-bars to give better layout options (And sorting etc.)\par
+- Error 1450: Insufficient System Resources for Service\par
+- Find an FTP service that works well with this and Amalgam to allow sharing.\par
+\cf0\ul\b\par
+\cf1\ulnone\b0\par
+\cf0\ul\b Done\par
+2012-12-##\par
+\ulnone\b0 - 1st install, does not use a non used drive for demo mapping.\par
+- Sort out the usage of the Folder vs Priority vs space for uTorrent creation\par
+\ul\b\par
+2012-12-11 RC 2\par
+\cf3\ulnone\b0 - Mounting into a folder\par
+\cf0 -- Need to create it as an access point in XP\par
+-- Check Drive exists\par
+-- Create folder if it does not exist\par
+-- Allow drag drop into the mount point\par
+- Start to investigate Mgt app start-up invokes.\par
+- Add "Service not running" text back in\par
+- Modify service exit state to capture when mounting is not successful and force service close with the appropriate error code.\par
+\par
+\ul\b\par
+2012-11-23 RC 1\par
+\ulnone\b0 - Remove FileSharing and will decline any further support for \i Phase I\i0   shares.\par
+- Start to investigate mounting as a folder\par
+\ul\b\par
+2012-06-##\par
+\ulnone\b0 - Add TailForm to the Management application to see the Service log files changing.\par
+\par
+\ul\b 2012-05-29 Test Release\par
+\ulnone\b0 - Add numericUpDown range control to the property Gird\par
+\cf3 - Advanced Settings - File Detail Cache Seconds\par
+\cf0 - Addition of buttons to allow user to perform the workarouns for SMB and EnableOpLocks overrides.\par
+- fix \cf3 Create new files when All the sources have below the Hold-Off area is not handled well.\cf0\par
+- Change default thread value to 0, now that it has been tested.\par
+- unable to reproduce \cf3 Number of Folders not showing up over a share\par
+\cf0 - Fix \cf3 Cannot rename folders with 12-01-beta2 in XP Server\par
+\cf0 - Start to convert project over to using 64 Native API's and Builds\par
+-- Fix compile warnings\par
+-- Start to optimise usage of variables to give the optimising compiler a chance\cf3\par
+\cf0\par
+\ul\b\par
+2012-04-29 (RC2)\par
+\ulnone\b0 - Fix some exceptions thrown when format syntax strings where not done properly\par
+- Fix \cf3 Deleting directories\par
+\cf0 - Solved \cf3 Problems sharing a drive (Hosted on XP)\cf0  (See workaround in Item)\par
+- Solved \cf3 0.6.0 Sharing on Win 7 x64 & x32 Host Locks up XP Client\cf0  (See workaround in Item) \par
+\cf3\f4 - NTFS is case-preserving but case-insensitive in the Win32 namespace\cf4\f5\fs19\par
+\cf0\ul\b\f0\fs20\par
+\par
+2012-01-28 (Release Candidate)\par
+\ulnone\b0 - Testing\par
+- Fix the \cf3 Multiple mounted points from the same drive will increase reported drive space\par
+- The "Re-Focused" release (Alpha4) does not allow files to be edited over a share -  \cf0 solved by\cf3  \cf0{\field{\*\fldinst{HYPERLINK "http://liquesce.codeplex.com/discussions/236580"}}{\fldrslt{\ul\cf2 http://liquesce.codeplex.com/discussions/236580}}}\ul\b\f0\fs20\par
+\ulnone\b0 - Add Window location restore\par
+- Add config file upgrade for user settings\par
+\cf3 - On Windows Server 2003, Dokan 0.6.0 Version is not detected Correctly\par
+- Tested and unable reproduce "Appears to be a 4GB File Limit over a share"\par
+- Tested and closed "Teracopy 2.2 does not copy from Liquesce shares"\par
+- Tested and closed "VLC cannot access File Over Dokan Hosted Share"\cf0\ul\b\par
+\ulnone\b0 - Fix the \cf3 "The TrayHelper GPF's when trying to start a service that is already started"\par
+\par
+\cf0\ul\b\par
+2012-01-04 (Alpha 5)\par
+\ulnone\b0 - Add new warning to the share dialog, indicating that shares my not work.\par
+\cf3 - \cf0 Fix t\cf3 he License warning in the installer needs to change.\par
+\cf0 - Fix the "Features" introduced by the last lot of .Net to Win32 API replacements.\par
+- Sort out the firing of the ShellNotify for file updates for both source and mounted names.\par
+\par
+\ul\b\par
+2011-12-01\par
+\ulnone\b0 - Creating a directory - when that dir name already exists - can make the directory appear twice in explorer\par
+- Rename directory (Folder mode) will not rename all sources of that directory (via a share)\par
+- Remove the Stream usage for File API's\par
+- Removed C# File and now use Native API's for all file access\par
+- Use the Native handle as much as possible to speed up access to those API's\par
+- Use Transaction (And emulation for FAT32) for Directory renames\par
+- Make sure the Files are not actually moved (remain on source drive) during directory rename / move\par
+- Removed unused BufferSize, and LockTieout values\par
+- In XP, the System Volume Information is explorable\par
+- Default startup value needs to be set to Min value\par
+- Detect Drive Format of "FAT" and remove from the selection list\par
+- On initial install, New Drive N shows in Management App\cf3\par
+\cf0 - 0.6.0 Sharing on x64 Host Locks up network XP Host\par
+- Tested and shown to work: Sharing on restart is broken in Win 7x32 Ultimate\par
+\cf3 - \cf0 Fix the \cf3 Messages sent to Application Tray fail for some users and on some OS's\par
+- \cf0 Fix the \cf3 Investigate why New *.rtf does not work in Win 7x64\cf0\par
+- Add NativeFileFind to speed up to remove Win32 -> C# -> FileFind -> Win32 -> Dokan conversions\par
+- Correct usage of the FileTime and the FileAttributes types to ease logging\par
+- Add "Fastest" method to discover if a directory is empty\par
+- Use lowlevel API for FindFullPath (This can be LongPath enabled :-)\par
+\par
+\ul\b\par
+2011-11-17\par
+\ulnone\b0 - Switch to using for the \f5\fs19 GetFileInformationByHandle\f6 () \f0\fs20 for speed (Probably) and direct return of upto date information from the native file system.\par
+- Fix the "Left over" text for the backup in the space display.\par
+- Re-focused the need for security on the GetFileInformation and SetFile operations.\par
+- Add code to inform explorer (And other Apps via OS) that things have changed in the mounted drive [\f5\fs19 SHChangeNotify\f6  API]\f0\fs20 .\par
+- Sort out the code for the file renames in Win 7 and \cf4\f5\fs19 "\cf0{\field{\*\fldinst{HYPERLINK "http://code.google.com/p/dokan/issues/detail?id=238"}}{\fldrslt{\ul\cf2 http://code.google.com/p/dokan/issues/detail?id=238}}}\cf4\f5\fs19 " \par
+\cf0\par
+\ul\b\f0\fs20\par
+2011-10-30\par
+\ulnone\b0 - XP Testing - Network access - Found Problems\par
+- Win7 x64 Testing - Netowrk Access  - Found Problems\par
+- Find the System.exe ID to prevent impersonation of it. - This is to workaround the impersonation of a user coming over the share access\par
+\par
+\ul\b\par
+2011-10-15\par
+\ulnone\b0 - Remove the "Old" client share enabler projects from Source control\par
+- Add GNU header requirements to the cs files\par
+- Created the current Test Document\par
+- Add security impersonation to all the API's\par
+- Add some speed up with some of the functions\par
+- Completely re-write the security API's And test under various account types (SACL_### now works :-)\par
+- Perform testing with Kernel 6.1 OS's\par
+\par
+\ul\b\par
+2011-10-04\par
+\ulnone\b0 - Remove the \f1 .backup\f0  option\par
+- Remove the \f1 .mirror\f0  option\par
+- Fix code from the options removal\par
+- Add the Cache Helper class\par
+- Remove the defunct ShareEnabler code\par
+- Change how file Read and write detect if a context has been passed in (Thanks NightThunder)\par
+- Add some more focused exception messages in MainForm\par
+- Add manifest file to the service to run as high as possible (For FileSecurity API's)\par
+- Implement workaround for \f5\fs19{\field{\*\fldinst{HYPERLINK "http://code.google.com/p/dokan/issues/detail?id=209"}}{\fldrslt{\ul\cf2 http://code.google.com/p/dokan/issues/detail?id=209}}}\f6\fs19  as manifest does not work for share access\f0\fs20\par
+- Fix the tray menu to only have service control when the correct key sequence is held.\par
+\par
+\ul\b\par
+2011-06-01\par
+\ulnone\b0 Merge fixes from Jose:\par
+- Optimisation in fileOpen to minimise use of File.Exists(...)\par
+- Optimisation in MoveFile to keep the files on the same drive (Faster move result)\par
+- Change implementation of GetFileSecurityNative(...)\par
+\par
+\ul\b\par
+2011-04-27\par
+\ulnone\b0 - Add correction for IsDirectory in CreateFile open\par
+- Add in function usage of Set / Get File security (Not Tested)\par
+\par
+\ul\b\par
+2011-03-09 - Alpha\par
+\ulnone\b0 - SetFileTime fixes\par
+- Add Build / Version number to all the projects and display in the management app \par
+- Allow Start / Stop to occurr on Win 7 and above via UAC Aware helper App\par
+- Prevent multiple trays and management apps from running\par
+- Sort out the drag and drop in the Middle window\par
+- Investigations of the Directory rename when in "Folder" mode\par
+- Investigations of the "Open with Notepad over Share"\par
+\par
+\ul\b\par
+2011-02-14\ulnone\b0\par
+Fix the Dokan Proxy.Net call that returns the Volume information to fill in the Preserve ACL's \par
+Use wordpad instead of trying to re-invent the wheel \par
+Make word goto the end of the file when opening \par
+Add installer sequence \par
+Add EULA display of GPLv2 \par
+Error in install state is now displayed at then end of the sequence \par
+Check to ensure that Dokan 0.6.0 has been installed \par
+Recycle bin is not populated in XP \par
+Bring the code upto the changes needed to implement Dokan 0.6.0 \par
+[workitem:7039] - There are 3 file sizes now !! \par
+Fix DriveLetter to mountPoint conversion \par
+Update Dokan.dll binary for dll referencing \par
+Implement the #etFileSecurity functions to route through to the Native API's \par
+Fix for {\field{\*\fldinst{HYPERLINK "http://code.google.com/p/dokan/issues/detail?id=198"}}{\fldrslt{\ul\cf2 http://code.google.com/p/dokan/issues/detail?id=198}}}\f0\fs20  \par
+Revert back to the char drive letter, Seems to be a bit more reliable (Needs proving) \par
+\par
+\par
+\ul\b 2010-11-25 \ulnone\b0\par
+- Fix Write at end of file logic \par
+- Start to test the code for the ShareEnabler \par
+- Use the Native Read / Write Kernel Api's so that memory is not duplicated in the system; See {\field{\*\fldinst{HYPERLINK "http://code.google.com/p/dokan/issues/detail?id=174"}}{\fldrslt{\ul\cf2 http://code.google.com/p/dokan/issues/detail?id=174}}}\f0\fs20  \par
+- Fix the recreation of the share by forcing a delete first. \par
+- Changed the way the data is stored in the DokanNet proxy(By removing it !) \par
+- All CreateFiles will now increment the counter to try and find who did what \par
+- Added Logging of the filename when in trace \par
+- Sorted the 1st pass of the remote share enabler service \par
+- Add in better handling of the exceptions taht are thrown to try and get back to "Known" Win32 errors \par
+- Add timeouts to the Share Enabler interface \par
+FreeSpace Form: \par
+* improved design: fat border indication borders, window resize locked, free space color \par
+* changed colors \par
+* added separator \par
+* now the next write disk is marked depending on the configured disk allocation mode \par
+* added scroll mode to view many disks \par
+* added align to right checkbox to align it also to the left \par
+- Make sure the SyncToy Works. \par
+- Fix SetFileTime on Directories \par
+- Fix Creation of Files / Directories in root when in folder mode \par
+- Remove the rubish that was introduced to attempt to workaround PureSync and Dokan Bug \par
+added dropzone to the tray app. \par
+you can easily find out on which physical disk a file or folder is placed by liquesce \par
+\par
+\par
+\ul\b 2010-10-26 \ulnone\b0\par
+- Fix the log viewing from inside the management application \par
+- Changed to remove the \'e7 and replace with c in Facade in the Code only. Directory names remain still. \par
+- Awaiting all code before attempting the Dir Renam \par
+- Make the Locks a little tighter around the access to the Dokan raw storage lookup \par
+\par
+\par
+\ul\b 2010-10-10 \par
+\ulnone\b0 - Add in the "Ctrl" key addition to the Tray Application right click \par
+- Added the default Double click handler to the tray \par
+- Fix the Tooltip text for the state changes in the Tray \par
+- Merged changed to allow the order of the mount points via the mouse\par
+- Add in the "Ctrl" key addition to the Tray Application right click \par
+- Added the default Double click handler to the tray \par
+- Fix the Tooltip text for the state changes in the Tray\par
+- Fix the usage of the "Builtin" SIDS, so that the share restore uses WellKnownSidType\par
+- Move the "Get Shares" functionality into a call in the service so that the user does not need to run the Management application with administrative user mode \par
+- Changed the re-creating and retrieval of the shares over to the WMI functions rather than trying to use the .Net Directory ACL\par
+- Tidy up the exception being thrown (And caught) when a ROM Drive does not contain a disc\par
+\par
+\par
+\ul\b 2010-10-06 \par
+\ulnone\b0 - Force 32 bit in 64 bit OS's (Have to wait for Dokan dll to be really 64 bit) \par
+- Make sure Icon usage is consistent (Use the new icons!) \par
+- Switched to using the P/Invoke for the create file, so that the temporary attributes etc are used in the file creation \par
+- Optimised the GetAttributes function \par
+- Spent a load of time on the notepad issue in XP and in Win 7 and have not got anywhere (updated finding on Dokan issues) \par
+- Detect issue where sometimes in Win7 64 the Dokan Installer does not place Dokan into the Services section. \par
+- When "Trace" log level is set, then the Fileattributes will be returned with Offline flag set as well. \par
+- Sort out the restore of the Share settings when the machine is restarted. \par
+- Some bits of test code to try and track down that elusive Win 7 x64 share issue\par
+\par
+\par
+\ul\b 2010-09-30 \ulnone\b0\par
+- Tinker with some of the layout in the management application (Menu's and progress bar) \par
+- Fix the spanned Delete directory \par
+- Fixed the Rename spanned directory \par
+- Fix most of the scenarios of copying from the mount to the sources (Not all) \par
+- Fix the Move spanned directories \par
+- Fix copy / move over when the dir / file already exists. Should now ask and then perform the action requested. \par
+- Investigate the Drive letters available via Dokan (Found that Dokan Only allows between D <-> Z inclusive) \par
+- Fix Issue when copying files that need to be spanned over the end of the drive space \par
+- Tested the Quota limit being returned correctly \par
+- Tested WMP on win7 x64 \par
+- Changed the way the shares are reactivated (Needs testing in Win 7) \par
+- Fix the exception handling for the "Full Disk" Quota error thrower \par
+- Fix the need to ask the user to stop the service in the install.\par
+\par
+\par
+\ul\b 2010-09-22 \ulnone\b0\par
+- Fix the layout - by not attempting to use rescaled fonts \par
+- Advanced settings \par
+- Log viewer(s) \par
+- Use a property grid can be used for the advanced settings \par
+- Move the menus around and rename some items\par
+\par
+\par
+\ul\b 2010-09-19 \ulnone\b0\par
+- Start to add in the information the Application tray will need \par
+- Addition of the NotifyIcon without a winform \par
+- Use the correct namespaces for NLog in the app.config files and autoReload="true" \par
+- Potential fix for the startup forgetting settings issue \par
+- Make sure uninstall stops the application tray\par
+\par
+\par
+\ul\b 2010-09-05 \ulnone\b0\par
+- Tested create a folder over a share from Win7 (64) client to win 7 (32) Dokan Host \par
+- Fixed The check for the correct ("Sizeof" version of Dokan = 0.5.3) \par
+- Better Icon added the Executable (It's the one for this project page) \par
+- Test Upgrades \par
+- Sorted the Win7 (x64) passing in an empty string and the service then throwing an exception \par
+- Made the "File Not found not be reported by an exception \par
+- Do not stop the associated services (But attempt restart if they are not running) \par
+\par
+\par
+\ul\b 2010-08-30 \ulnone\b0\par
+- Fixed the duplicate directories showing up in the GUI Expected area \par
+- Put in a warning that the Shares will be interrupted when the commit action is done. \par
+- Fixed Meta<Browser> adding new Xml files over a share (Tested on XP and win 7) \par
+- Tested Copying to the network share (On Win 7) using Terracopy \par
+- Tested Create of a new directory on Win 7 share \par
+\ul\b\par
+\par
+2010-08-29 \par
+\ulnone\b0 - Fixed the Computer Browser service not being restarted. \par
+- Added Extra logging to try and trace the Notepad Issue on Win 7 (Works in XP !) - Still no luck - So opened a ticket on the Dokan Site \par
+- Now ignores the Synchronized open attribute as FileStreams are always open synchronized ! \par
+\ul\b\par
+\par
+2010-08-28 \par
+\ulnone\b0 - Fixed creating anew share while the service is running and giving the correct listing contents \par
+- Fixed the share recreate when the service is started - Tested in XP and Win 7 \par
+- Start to upgrade the Wix Project to use the 3.5 features \par
+- Test Upgrade installs \par
+- Tested while the service was running \par
+- Fixed the Share browsing \par
+- Fixed when a share is created after the drive is created. \par
+\ul\b\par
+\par
+2010-08-27 \par
+\ulnone\b0 - Fixed: Added the code to implement the faster search with pattern \par
+- Tinkered with some of the trace logging to make it clearer as to why shares are not working as expected. \par
+- Fixed: When the "1st" drive does not have "All" the directories possible then it fails to allow a drill down into the displayed directory \par
+- Tested installer without "Full" .Net 4 installed \par
+- Add Test for the correct version of Dokan (Must be 0.5.3 !) \par
+- Changing volume name is not reflected in the "Expected" until after lose focus \par
+- Stopping the Mounted drive now actually stops the correct drive. \par
+- Start does not return a status, but executes in a separate thread (DokanMount does not return !) \par
+- Send new data to the service. \par
+\ul\b\par
+\par
+2010-08-26 \par
+\ulnone\b0 - Service changed to use WCF \par
+- Client application reads from the service \par
+- Icon added the Executable (Really needs a better one !) \par
+- Client allow drag and drop, and then shows (Visible inspection only) the conflicts that might occur, These can the found from the tooltips on the actual file entries \par
+- Installer installs the service and enables it through the local firewall (May not be needed now using WCF ?) \par
+- Service Starts and defaults to the C: drive as the source, producing a Mirror, N as the drive letter\ul\b\par
+}
+ 
