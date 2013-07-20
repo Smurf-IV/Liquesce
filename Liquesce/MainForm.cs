@@ -1,7 +1,34 @@
-﻿using System;
+﻿#region Copyright (C)
+// ---------------------------------------------------------------------------------------------------------------
+//  <copyright file="MainForm.cs" company="Smurf-IV">
+// 
+//  Copyright (C) 2010-2012 Simon Coghlan (Aka Smurf-IV)
+// 
+//  This program is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation, either version 2 of the License, or
+//   any later version.
+// 
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+//  GNU General Public License for more details.
+// 
+//  You should have received a copy of the GNU General Public License
+//  along with this program. If not, see http://www.gnu.org/licenses/.
+//  </copyright>
+//  <summary>
+//  Url: http://Liquesce.codeplex.com/
+//  Email: http://www.codeplex.com/site/users/view/smurfiv
+//  </summary>
+// --------------------------------------------------------------------------------------------------------------------
+#endregion
+
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -10,6 +37,7 @@ using System.ServiceProcess;
 using System.Threading;
 using System.Windows.Forms;
 using LiquesceFacade;
+using LiquesceTray;
 using NLog;
 
 namespace Liquesce
@@ -28,6 +56,14 @@ namespace Liquesce
          //   Font = SystemFonts.MessageBoxFont;
 
          InitializeComponent();
+         if (Properties.Settings.Default.UpdateRequired)
+         {
+            // Thanks go to http://cs.rthand.com/blogs/blog_with_righthand/archive/2005/12/09/246.aspx
+            Properties.Settings.Default.Upgrade();
+            Properties.Settings.Default.UpdateRequired = false;
+            Properties.Settings.Default.Save();
+         }
+         WindowLocation.GeometryFromString(Properties.Settings.Default.WindowLocation, this);
          Icon icon = ExtractIcon.GetIconForFilename(Environment.GetFolderPath(Environment.SpecialFolder.MyComputer), true);
          imageListUnits.Images.Add("MyComputer", icon.ToBitmap());
          versionNumberToolStripMenuItem.Text = Assembly.GetExecutingAssembly().GetName().Version.ToString();
@@ -50,21 +86,22 @@ namespace Liquesce
          }
          if (serviceStatus != ServiceControllerStatus.Running)
          {
-            currentSharesToolStripMenuItem.ToolTipText = commitToolStripMenuItem.ToolTipText = "Service is not running";
-            currentSharesToolStripMenuItem.Enabled = commitToolStripMenuItem.Enabled = false;
+            commitToolStripMenuItem.ToolTipText = "Service is not running";
+            commitToolStripMenuItem.Enabled = false;
          }
          else
          {
             try
             {
-               currentSharesToolStripMenuItem.Enabled = commitToolStripMenuItem.Enabled = true;
-               ChannelFactory<ILiquesce> factory = new ChannelFactory<ILiquesce>("LiquesceFacade");
-               ILiquesce remoteIF = factory.CreateChannel();
-               cd = remoteIF.ConfigDetails;
+               commitToolStripMenuItem.Enabled = true;
+               EndpointAddress endpointAddress = new EndpointAddress("net.pipe://localhost/LiquesceFacade");
+               NetNamedPipeBinding namedPipeBindingpublish = new NetNamedPipeBinding();
+               LiquesceProxy proxy = new LiquesceProxy(namedPipeBindingpublish, endpointAddress);
+               cd = proxy.ConfigDetails;
             }
             catch (Exception ex)
             {
-               Log.ErrorException("Unable to attach to the service, even tho it is running", ex);
+               Log.ErrorException("MainForm_Shown: Unable to attach to the service, even tho it is running", ex);
                UseWaitCursor = false;
                Enabled = true;
                MessageBox.Show(this, ex.Message, "Has the firewall blocked the communications ?", MessageBoxButtons.OK,
@@ -80,6 +117,9 @@ namespace Liquesce
       {
          isClosing = true;
          FillExpectedLayoutWorker.CancelAsync();
+         // persist our geometry string.
+         Properties.Settings.Default.WindowLocation = WindowLocation.GeometryToString(this);
+         Properties.Settings.Default.Save();
       }
 
       private bool IsClosing
@@ -94,6 +134,8 @@ namespace Liquesce
             // Add the drive letter back in as this would already have been removed
             MountPoint.Items.Add(cd.DriveLetter);
             MountPoint.Text = cd.DriveLetter;
+            if (cd.DriveLetter.Length > 1)
+               txtFolder.Text = cd.DriveLetter;
             if (cd.SourceLocations != null)
                foreach (TreeNode tn in cd.SourceLocations.Select(sourceLocation => new TreeNode
                                                                                       {
@@ -105,6 +147,7 @@ namespace Liquesce
                {
                   mergeList.Nodes.Add(tn);
                }
+            DelayCreation.Text = cd.DelayStartMilliSec.ToString(CultureInfo.InvariantCulture);
             VolumeLabel.Text = cd.VolumeLabel;
             RestartExpectedOutput();
          }
@@ -124,7 +167,6 @@ namespace Liquesce
       // Code stolen from the http://frwingui.codeplex.com project
       private void StartTree()
       {
-         TreeNode tvwRoot;
          // Code taken and adapted from http://msdn.microsoft.com/en-us/library/bb513869.aspx
          try
          {
@@ -133,12 +175,12 @@ namespace Liquesce
             driveAndDirTreeView.Nodes.Clear();
 
             Log.Debug("Create the root node.");
-            tvwRoot = new TreeNode
-                         {
-                            Text = Environment.MachineName,
-                            ImageKey = "MyComputer",
-                            SelectedImageKey = "MyComputer"
-                         };
+            TreeNode tvwRoot = new TreeNode
+                                  {
+                                     Text = Environment.MachineName,
+                                     ImageKey = "MyComputer",
+                                     SelectedImageKey = "MyComputer"
+                                  };
             driveAndDirTreeView.Nodes.Add(tvwRoot);
             Log.Debug("Now we need to add any children to the root node.");
 
@@ -148,7 +190,6 @@ namespace Liquesce
             {
                Log.Debug(dr);
                DriveInfo di = new DriveInfo(dr);
-
                FillInDirectoryType(tvwRoot, di);
             }
 
@@ -169,25 +210,48 @@ namespace Liquesce
       {
          if (di != null)
          {
-            if (((di.DriveType == DriveType.Fixed)
-                  || (di.DriveType == DriveType.Network)
-                  )
-               && (di.DriveFormat == "DOKAN")
-               )
-            {
-               Log.Info("Removing the existing DOKAN drive as this would cause confusion ! [{0}]", di.Name);
-               return;
-            }
-            SafelyAddIcon(di.Name);
             string label;
+            string di_DriveFormat = "Unknown Format";
             try
             {
-               label = (di.IsReady && !String.IsNullOrWhiteSpace(di.VolumeLabel)) ? di.VolumeLabel : di.DriveType.ToString();
+               DriveType driveType = di.DriveType;
+               switch (driveType)
+               {
+                  case DriveType.Removable:
+                  case DriveType.Fixed:
+                     {
+                        di_DriveFormat = di.DriveFormat;
+                        switch (di_DriveFormat.ToUpper())
+                        {
+                           case "DOKAN":
+                              Log.Warn("Removing the existing DOKAN drive as this would cause confusion ! [{0}]",
+                                       di.Name);
+                              return;
+                           case "FAT":
+                              Log.Warn("Removing FAT formated drive type, as this causes ACL Failures [{0}]", di.Name);
+                              return;
+                        }
+                     }
+                     break;
+                  case DriveType.Unknown:
+                  case DriveType.NoRootDirectory:
+                  case DriveType.Network:
+                  case DriveType.CDRom:
+                  case DriveType.Ram:
+                     di_DriveFormat = driveType.ToString();
+                     break;
+                  default:
+                     // ReSharper disable NotResolvedInText
+                     throw new ArgumentOutOfRangeException("driveType", "Unknown type detected");
+                  // ReSharper restore NotResolvedInText
+               }
+               SafelyAddIcon(di.Name);
+               label = (di.IsReady && !String.IsNullOrWhiteSpace(di.VolumeLabel)) ? di.VolumeLabel : di_DriveFormat;
             }
             catch
             {
                // The above throws a wobble e.g. if the CD_Rom does not have a disk in it
-               label = di.DriveType.ToString();
+               label = di_DriveFormat;
             }
             label += " (" + di.Name + ")";
             TreeNode thisNode = new TreeNode
@@ -256,7 +320,7 @@ namespace Liquesce
          UseWaitCursor = true;
          try
          {
-            Log.Debug("Remove the placeholder node.");
+            Log.Debug("driveAndDirTreeView_BeforeExpand");
             DirectoryInfo root = e.Node.Tag as DirectoryInfo;
             if (root != null)
             {
@@ -446,7 +510,8 @@ namespace Liquesce
          }
          ConfigDetails configDetails = new ConfigDetails
                                {
-                                  DriveLetter = MountPoint.Text,
+                                  DelayStartMilliSec = (uint)DelayCreation.Value,
+                                  DriveLetter = string.IsNullOrWhiteSpace(txtFolder.Text)?MountPoint.Text : txtFolder.Text,
                                   VolumeLabel = VolumeLabel.Text,
                                   SourceLocations = new List<string>(mergeList.Nodes.Count)
                                };
@@ -525,7 +590,7 @@ namespace Liquesce
          if (expectedTreeView.InvokeRequired)
          {
             AddExpecteddNodeCallBack d = AddExpectedNode;
-            Invoke(d, new object[] { parent, child });
+            BeginInvoke(d, new object[] { parent, child });
          }
          else
          {
@@ -547,7 +612,7 @@ namespace Liquesce
          if (progressBar1.InvokeRequired)
          {
             SetProgressBarStyleCallback d = SetProgressBarStyle;
-            Invoke(d, new object[] { style });
+            BeginInvoke(d, new object[] { style });
          }
          else
          {
@@ -563,7 +628,7 @@ namespace Liquesce
          if (expectedTreeView.InvokeRequired)
          {
             ClearExpectedListCallBack d = ClearExpectedList;
-            Invoke(d);
+            BeginInvoke(d);
          }
          else
          {
@@ -576,7 +641,7 @@ namespace Liquesce
          try
          {
             SetProgressBarStyle(ProgressBarStyle.Marquee);
-            Log.Debug("Remove the placeholder node.");
+            Log.Debug("expectedTreeView_BeforeExpand");
             string root = e.Node.Tag as string;
             if (!String.IsNullOrEmpty(root))
             {
@@ -642,7 +707,7 @@ namespace Liquesce
                else
                {
                   AddFileNodeCallBack d = AddFileNode;
-                  Invoke(d, new object[] { kvp, parent });
+                  BeginInvoke(d, new object[] { kvp, parent });
                }
             }
       }
@@ -680,7 +745,8 @@ namespace Liquesce
             if (DialogResult.Yes == MessageBox.Show(this, "Performing this action will \"Remove the Mounted drive(s)\" on this machine.\n All open files will be forceably closed by this.\nDo you wish to continue ?", "Caution..", MessageBoxButtons.YesNo, MessageBoxIcon.Question))
             {
                SetProgressBarStyle(ProgressBarStyle.Marquee);
-               cd.DriveLetter = MountPoint.Text;
+               cd.DelayStartMilliSec = (uint)DelayCreation.Value;
+               cd.DriveLetter = string.IsNullOrWhiteSpace(txtFolder.Text) ? MountPoint.Text : txtFolder.Text;
                cd.VolumeLabel = VolumeLabel.Text;
                cd.SourceLocations = new List<string>(mergeList.Nodes.Count);
                // if (mergeList.Nodes != null) // Apperently always true
@@ -689,20 +755,21 @@ namespace Liquesce
                   cd.SourceLocations.Add(node.Text);
                }
 
-               ChannelFactory<ILiquesce> factory = new ChannelFactory<ILiquesce>("LiquesceFacade");
-               ILiquesce remoteIF = factory.CreateChannel();
+               EndpointAddress endpointAddress = new EndpointAddress("net.pipe://localhost/LiquesceFacade");
+               NetNamedPipeBinding namedPipeBindingpublish = new NetNamedPipeBinding();
+               LiquesceProxy proxy = new LiquesceProxy(namedPipeBindingpublish, endpointAddress);
                Log.Info("Didn't go bang so stop");
-               remoteIF.Stop();
+               proxy.Stop();
                Log.Info("Send the new details");
-               remoteIF.ConfigDetails = cd;
+               proxy.ConfigDetails = cd;
                Log.Info("Now start, may need a small sleep to allow things to settle");
-               Thread.Sleep(2500);
-               remoteIF.Start();
+               Thread.Sleep(Math.Max(1000, 2500 - (int)cd.DelayStartMilliSec));
+               proxy.Start();
             }
          }
          catch (Exception ex)
          {
-            Log.ErrorException("Unable to attach to the service, even tho it is running", ex);
+            Log.ErrorException("commitToolStripMenuItem_Click: Unable to attach to the service, even tho it is running", ex);
             MessageBox.Show(this, ex.Message, "Has the firewall blocked the communications ?", MessageBoxButtons.OK,
                             MessageBoxIcon.Stop);
          }
@@ -714,6 +781,7 @@ namespace Liquesce
 
       private void MountPoint_TextChanged(object sender, EventArgs e)
       {
+         txtFolder.Text = (MountPoint.Text.Length > 1) ? MountPoint.Text : string.Empty;
          RestartExpectedOutput();
       }
 
@@ -732,10 +800,25 @@ namespace Liquesce
          DisplayLog.LogDisplay(@"Liquesce\Logs");
       }
 
-      private void serviceLogViewToolStripMenuItem_Click(object sender, EventArgs e)
+      private void viewToolStripMenuItem_Click(object sender, EventArgs e)
       {
          DisplayLog.LogDisplay(@"LiquesceSvc\Logs");
+      }
 
+      private void tailToolStripMenuItem_Click(object sender, EventArgs e)
+      {
+         try
+         {
+            string logLocation = DisplayLog.FindLogLocation(@"LiquesceSvc\Logs");
+            if (!string.IsNullOrEmpty(logLocation))
+            {
+               new TailForm(logLocation).Show(this);
+            }
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException("OpenFile has an exception: ", ex);
+         }
       }
 
       private void globalConfigSettingsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -745,11 +828,58 @@ namespace Liquesce
             cd = advancedSettings.AdvancedConfigDetails;
       }
 
-      private void currentSharesToolStripMenuItem_Click(object sender, EventArgs e)
+      private void txtFolder_DragDrop(object sender, DragEventArgs e)
       {
-         CurrentShares shareSettings = new CurrentShares { ShareDetails = cd };
-         if (shareSettings.ShowDialog(this) == DialogResult.OK)
-            cd = shareSettings.ShareDetails;
+         // Is it a valid format?
+         DragDropItem ud = e.Data.GetData(typeof(DragDropItem)) as DragDropItem;
+         if (ud != null)
+         {
+            txtFolder.Text = ud.Name;
+         }
+      }
+
+      private void txtFolder_DragOver(object sender, DragEventArgs e)
+      {
+         // Drag and drop denied by default.
+         e.Effect = DragDropEffects.None;
+
+         // Is it a valid format?
+         DragDropItem ud = e.Data.GetData(typeof(DragDropItem)) as DragDropItem;
+         if (ud != null)
+         {
+            e.Effect = DragDropEffects.Copy;
+         }
+      }
+
+      private readonly List<string> hardDrives = (from dr in Environment.GetLogicalDrives() 
+                                                  let di = new DriveInfo(dr) 
+                                                  where di.DriveType == DriveType.Fixed 
+                                                  select dr).ToList();
+
+      private void txtFolder_TextChanged(object sender, EventArgs e)
+      {
+         string error = string.Empty;
+         try
+         {
+            if (!string.IsNullOrWhiteSpace(txtFolder.Text))
+            {
+               DirectoryInfo dir = new DirectoryInfo(txtFolder.Text);
+               if (!hardDrives.Contains(dir.Root.Name.ToUpperInvariant()))
+                  error = @"Drive does not exist";
+               else if (!dir.Exists)
+                  error = string.Empty;
+               else if (!MountPoint.Items.Contains(txtFolder.Text) // may already be mounted
+                  && dir.EnumerateFileSystemInfos().Any()
+                  )
+                  error = @"Directory is not empty";
+            }
+         }
+         catch (Exception ex)
+         {
+            error = ex.Message;
+         }
+         errorProvider1.SetError(lblFolder, error);
+         commitToolStripMenuItem.Enabled = string.IsNullOrEmpty(error);
       }
 
    }

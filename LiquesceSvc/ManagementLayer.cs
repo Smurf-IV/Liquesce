@@ -1,17 +1,43 @@
-﻿using System;
+﻿#region Copyright (C)
+// ---------------------------------------------------------------------------------------------------------------
+//  <copyright file="ManagementLayer.cs" company="Smurf-IV">
+// 
+//  Copyright (C) 2010-2012 Simon Coghlan (Aka Smurf-IV)
+// 
+//  This program is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation, either version 2 of the License, or
+//   any later version.
+// 
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+//  GNU General Public License for more details.
+// 
+//  You should have received a copy of the GNU General Public License
+//  along with this program. If not, see http://www.gnu.org/licenses/.
+//  </copyright>
+//  <summary>
+//  Url: http://Liquesce.codeplex.com/
+//  Email: http://www.codeplex.com/site/users/view/smurfiv
+//  </summary>
+// --------------------------------------------------------------------------------------------------------------------
+#endregion
+
+using System;
 using System.Collections.Generic;
-using System.ComponentModel.Composition;
-using System.ComponentModel.Composition.Hosting;
+using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.ServiceModel;
+using System.Text;
 using System.Threading;
 using System.Xml.Serialization;
 using DokanNet;
 using LiquesceFacade;
-using LiquesceSvc.Properties;
-using LiquesceSvcMEF;
 using NLog;
 using NLog.Config;
 
@@ -24,7 +50,6 @@ namespace LiquesceSvc
       private ConfigDetails currentConfigDetails;
       private readonly DateTime startTime;
       private readonly string configFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "LiquesceSvc", Settings1.Default.ConfigFileName);
-      private char mountedDriveLetter;
       private LiquesceSvcState state = LiquesceSvcState.Stopped;
       private static readonly Dictionary<Client, IStateChange> subscribers = new Dictionary<Client, IStateChange>();
       private static readonly ReaderWriterLockSlim subscribersLock = new ReaderWriterLockSlim();
@@ -37,34 +62,6 @@ namespace LiquesceSvc
          get { return instance ?? (instance = new ManagementLayer()); }
       }
 
-
-      [ImportMany(typeof(ICreateFactory))]
-      public IEnumerable<Lazy<ICreateFactory, IDescription>> pluginProviders;
-
-      private void DoImport()
-      {
-         //An aggregate catalog that combines multiple catalogs
-         //Adds all the parts found in all assemblies in the same directory as the executing program
-         var catalog = new SafeDirectoryCatalog(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
-
-         //Create the CompositionContainer with the parts in the catalog
-         CompositionContainer container = new CompositionContainer(catalog);
-
-         //Fill the imports of this object
-         container.ComposeParts(this);
-         foreach (Lazy<ICreateFactory, IDescription> plugin in pluginProviders)
-         {
-            try 
-            {
-               var val = plugin.Value;
-            }
-            catch (CompositionException ex)
-            {
-               Log.ErrorException("pluginProviders have an invalid value: ", ex);
-            }
-         }   
-      }
-
       /// <summary>
       /// Private constructor to prevent multiple instances
       /// </summary>
@@ -74,7 +71,6 @@ namespace LiquesceSvc
          {
             Log.Debug("New ManagementLayer created.");
             startTime = DateTime.UtcNow;
-            DoImport();
          }
          catch (Exception ex)
          {
@@ -82,13 +78,13 @@ namespace LiquesceSvc
          }
       }
 
-      public void Subscribe(Guid guid)
+      public void Subscribe(Client id)
       {
          try
          {
             IStateChange callback = OperationContext.Current.GetCallbackChannel<IStateChange>();
             using (subscribersLock.WriteLock())
-               subscribers.Add(new Client { id = guid }, callback);
+               subscribers.Add(id, callback);
          }
          catch (Exception ex)
          {
@@ -96,17 +92,17 @@ namespace LiquesceSvc
          }
       }
 
-      public void Unsubscribe(Guid guid)
+      public void Unsubscribe(Client id)
       {
          try
          {
-            IStateChange callback = OperationContext.Current.GetCallbackChannel<IStateChange>();
-            using (subscribersLock.WriteLock())
+            using (subscribersLock.UpgradableReadLock())
             {
                var query = from c in subscribers.Keys
-                           where c.id == guid
+                           where c.id == id.id
                            select c;
-               subscribers.Remove(query.First());
+               using (subscribersLock.WriteLock())
+                  subscribers.Remove(query.First());
             }
          }
          catch (Exception ex)
@@ -123,6 +119,7 @@ namespace LiquesceSvc
          get;
          private set;
       }
+
       /// <summary>
       /// Invokes DokanNet.DokanMain function to mount a drive. 
       /// The function blocks until the file system is unmounted.
@@ -134,6 +131,7 @@ namespace LiquesceSvc
       {
          try
          {
+            TimeSpan delayStart = DateTime.UtcNow - startTime;
             int repeatWait = 0;
             while (IsRunning
                && (repeatWait++ < 100)
@@ -155,44 +153,76 @@ namespace LiquesceSvc
                   return;
                   // ReSharper restore HeuristicUnreachableCode
                }
+               Log.Info(currentConfigDetails.ToString());
+               dokanOperations = new LiquesceOps(currentConfigDetails);
+               ulong freeBytesAvailable = 0;
+               ulong totalBytes = 0;
+               ulong totalFreeBytes = 0;
+               dokanOperations.GetDiskFreeSpace(ref freeBytesAvailable, ref totalBytes, ref totalFreeBytes, null);
                SetNLogLevel(currentConfigDetails.ServiceLogLevel);
-
-               FireStateChange(LiquesceSvcState.Unknown, "Dokan initialised");
-               IsRunning = true;
-
-               // TODO: Search all usages of the DriveLetter and make sure they become MountPoint compatible
-               string mountPoint = currentConfigDetails.DriveLetter;
-               //if (mountPoint.Length == 1)
-               //   mountPoint += ":\\"; // Make this into a MountPoint for V 0.6.0
-               DokanOptions options = new DokanOptions
-               {
-                  MountPoint = mountPoint,
-                  ThreadCount = currentConfigDetails.ThreadCount,
-                  DebugMode = currentConfigDetails.DebugMode,
-                  //      public bool UseStdErr;
-                  // UseAltStream = true, // This needs all sorts of extra API's
-                  UseKeepAlive = true,  // When you set TRUE on DokanOptions->UseKeepAlive, dokan library automatically unmounts 15 seconds after user-mode file system hanged up
-                  NetworkDrive = false,  // Set this to true to see if it stops the recycler bin question until [workitem:7253] is sorted
-                  VolumeLabel = currentConfigDetails.VolumeLabel
-               };
-
-               IServicePlugin plugin = pluginProviders.Where(pluginProvider => 0 == String.Compare(pluginProvider.Metadata.Description, currentConfigDetails.PluginMode, true)).Select(pluginProvider => pluginProvider.Value.Create()).FirstOrDefault(); 
-               plugin.Initialise(currentConfigDetails.DriveLetter, currentConfigDetails.HoldOffBufferBytes);
-               dokanOperations = new LiquesceOps(currentConfigDetails, plugin);
-               ThreadPool.QueueUserWorkItem(dokanOperations.InitialiseShares, dokanOperations);
-
-               mountedDriveLetter = currentConfigDetails.DriveLetter[0];
-
+               DirectoryInfo dir = new DirectoryInfo(currentConfigDetails.DriveLetter);
 
                try
                {
                   Log.Info("DokanVersion:[{0}], DokanDriverVersion[{1}]", Dokan.DokanVersion(), Dokan.DokanDriverVersion());
-                  Dokan.DokanUnmount(mountedDriveLetter);
+                  if (currentConfigDetails.DriveLetter.Length > 1)
+                  {
+                     if (dir.Exists)
+                        Dokan.DokanRemoveMountPoint(currentConfigDetails.DriveLetter);
+                  }
+                  else
+                  {
+                     char mountedDriveLetter = currentConfigDetails.DriveLetter[0];
+                     Dokan.DokanUnmount(mountedDriveLetter);
+                     ShellChangeNotify.Unmount(mountedDriveLetter);
+                  }
                }
                catch (Exception ex)
                {
                   Log.InfoException("Make sure it's unmounted threw:", ex);
                }
+
+               FireStateChange(LiquesceSvcState.Unknown, "Dokan initialised");
+               IsRunning = true;
+
+               // Sometimes the math gets all confused due to the casting !!
+               int delayStartMilliseconds = (int)(currentConfigDetails.DelayStartMilliSec - delayStart.Milliseconds);
+               if ((delayStartMilliseconds > 0)
+                  && (delayStartMilliseconds < UInt16.MaxValue)
+                  )
+               {
+                  Log.Info("Delay Start needs to be obeyed");
+                  Thread.Sleep(delayStartMilliseconds);
+               }
+
+               // TODO: Search all usages of the DriveLetter and make sure they become MountPoint compatible
+               if (currentConfigDetails.DriveLetter.Length > 1)
+               {
+                  if (dir.Exists)
+               {
+                  Log.Warn("Removing directory [{0}]", dir.FullName);
+                  dir.Delete(true);
+               }
+               Log.Warn("Recreate the directory [{0}]", dir.FullName);
+               dir.Create();
+               }
+
+               DokanOptions options = new DokanOptions
+               {
+                  MountPoint = currentConfigDetails.DriveLetter,
+                  ThreadCount = currentConfigDetails.ThreadCount,
+                  DebugMode = currentConfigDetails.ServiceLogLevel == "Trace",
+                  // public bool UseStdErr;
+                  // UseAltStream = true, // This needs all sorts of extra API's
+                  UseKeepAlive = true,  // When you set TRUE on DokanOptions->UseKeepAlive, dokan library automatically unmounts 15 seconds after user-mode file system hanged up
+                  NetworkDrive = false,  // Set this to true to see if it stops the recycler bin question until [workitem:7253] is sorted
+                  // If the network is true then also need to have the correct version of the dokannp.dll that works on the installed OS
+                  VolumeLabel = currentConfigDetails.VolumeLabel
+                  ,
+                  RemovableDrive = true
+               };
+
+
                int retVal = Dokan.DokanMain(options, dokanOperations);
                Log.Warn("Dokan.DokanMain has exited");
                IsRunning = false;
@@ -209,30 +239,33 @@ namespace LiquesceSvc
                      break;
                   case Dokan.DOKAN_DRIVER_INSTALL_ERROR: // = -3; // Can't install driver
                      FireStateChange(LiquesceSvcState.InError, "Dokan is not mounted [DOKAN_DRIVER_INSTALL_ERROR]");
-                     Environment.Exit(-1);
                      break;
                   case Dokan.DOKAN_START_ERROR: // = -4; // Driver something wrong
                      FireStateChange(LiquesceSvcState.InError, "Dokan is not mounted [DOKAN_START_ERROR] - Driver Something is wrong");
-                     Environment.Exit(-1);
                      break;
                   case Dokan.DOKAN_MOUNT_ERROR: // = -5; // Can't assign drive letter
                      FireStateChange(LiquesceSvcState.InError, "Dokan is not mounted [DOKAN_MOUNT_ERROR] - Can't assign drive letter");
                      break;
+                  case Dokan.DOKAN_MOUNT_POINT_ERROR:
+                     FireStateChange(LiquesceSvcState.InError, "Dokan is not mounted [DOKAN_MOUNT_POINT_ERROR] - Mount point is invalid");
+                     break;
                   default:
                      FireStateChange(LiquesceSvcState.InError, String.Format("Dokan is not mounted [Uknown Error: {0}]", retVal));
-                     Environment.Exit(-1);
                      break;
                }
+               if (retVal != Dokan.DOKAN_SUCCESS)
+                  Environment.Exit(retVal);
             }
             else
             {
                FireStateChange(LiquesceSvcState.InError, "Seems like the last exit request into Dokan did not exit in time");
+               Environment.Exit(-7);
             }
          }
          catch (Exception ex)
          {
             Log.ErrorException("Start has failed in an uncontrolled way: ", ex);
-            Environment.Exit(-1);
+            Environment.Exit(-8);
          }
          finally
          {
@@ -243,7 +276,6 @@ namespace LiquesceSvc
       private void SetNLogLevel(string serviceLogLevel)
       {
          LoggingConfiguration currentConfig = LogManager.Configuration;
-         //LogManager.DisableLogging();
          foreach (LoggingRule rule in currentConfig.LoggingRules)
          {
             rule.EnableLoggingForLevel(LogLevel.Fatal);
@@ -278,10 +310,7 @@ namespace LiquesceSvc
                   break;
             }
          }
-         //LogManager.EnableLogging();
-         //LogManager.Configuration = null;
          LogManager.ReconfigExistingLoggers();
-         //LogManager.Configuration = currentConfig;
          Log.Warn("Test @ [{0}]", serviceLogLevel);
          Log.Debug("Test @ [{0}]", serviceLogLevel);
          Log.Trace("Test @ [{0}]", serviceLogLevel);
@@ -310,12 +339,22 @@ namespace LiquesceSvc
             {
                // Get all the clients in dictionary
                var query = (from c in subscribers
-                            select c.Value).ToList();
+                            select c.Value).ToArray();
                // Create the callback action
-               Action<IStateChange> action = callback => callback.Update(newState, message);
+               Type type = typeof(IStateChange);
+               MethodInfo methodInfo = type.GetMethod("Update");
 
                // For each connected client, invoke the callback
-               query.ForEach(action);
+               foreach (IStateChange stateChange in query)
+               {
+                  try
+                  {
+                     methodInfo.Invoke(stateChange, new object[] { newState, message });
+                  }
+                  catch
+                  {
+                  }
+               }
             }
          }
          catch (Exception ex)
@@ -331,20 +370,18 @@ namespace LiquesceSvc
 
       public void Stop()
       {
-         if (IsRunning)
+         FireStateChange(LiquesceSvcState.Unknown, "Stop has been requested");
+         int retVal;
+         if (currentConfigDetails.DriveLetter.Length > 1)
+            retVal = Dokan.DokanRemoveMountPoint(currentConfigDetails.DriveLetter);
+         else
          {
-            FireStateChange(LiquesceSvcState.Unknown, "Stop has been requested");
-            int retVal = Dokan.DokanUnmount(mountedDriveLetter);
-            Log.Info("Stop returned[{0}]", retVal);
+            char mountedDriveLetter = currentConfigDetails.DriveLetter[0];
+            retVal = Dokan.DokanUnmount(mountedDriveLetter);
+            ShellChangeNotify.Unmount(mountedDriveLetter);
          }
+         Log.Info("Stop returned[{0}]", retVal);
       }
-
-      public List<LanManShareDetails> GetPossibleShares()
-      {
-         // TODO: Phase 2 will have a foreach onthe drive letter
-         return (LanManShareHandler.MatchDriveLanManShares(currentConfigDetails.DriveLetter));
-      }
-
 
       private void ReadConfigDetails()
       {
@@ -363,8 +400,13 @@ namespace LiquesceSvc
                List<string> fileSourceLocations = new List<string>(currentConfigDetails.SourceLocations);
                currentConfigDetails.SourceLocations.Clear();
 
-               fileSourceLocations.ForEach(
-                  location => currentConfigDetails.SourceLocations.Add(Path.GetFullPath(location).TrimEnd(Path.DirectorySeparatorChar)));
+               foreach (string location in fileSourceLocations.Select(fileSourceLocation => Path.GetFullPath(fileSourceLocation).TrimEnd(Path.DirectorySeparatorChar))
+                                    .Where(location => OkToAddThisDriveType(location))
+                                    )
+               {
+                  currentConfigDetails.SourceLocations.Add(location);
+               }
+
             }
          }
          catch (Exception ex)
@@ -384,21 +426,66 @@ namespace LiquesceSvc
 
       }
 
+      private bool OkToAddThisDriveType(string dr)
+      {
+         bool seemsOK = false;
+         try
+         {
+            Log.Debug(dr);
+            DriveInfo di = new DriveInfo(dr);
+            DriveType driveType = di.DriveType;
+            switch (driveType)
+            {
+               case DriveType.Removable:
+               case DriveType.Fixed:
+                  {
+                     string di_DriveFormat = di.DriveFormat;
+                     switch (di_DriveFormat.ToUpper())
+                     {
+                        case "DOKAN":
+                           Log.Warn("Removing the existing DOKAN drive as this would cause confusion ! [{0}]",
+                                    di.Name);
+                           seemsOK = false;
+                           break;
+                        case "FAT":
+                           Log.Warn("Removing FAT formated drive type, as this causes ACL Failures [{0}]", di.Name);
+                           seemsOK = false;
+                           break;
+                        default:
+                           seemsOK = true;
+                           break;
+                     }
+                  }
+                  break;
+               case DriveType.Unknown:
+               case DriveType.NoRootDirectory:
+               case DriveType.Network:
+               case DriveType.CDRom:
+               case DriveType.Ram:
+                  seemsOK = true;
+                  break;
+               default:
+                  throw new ArgumentOutOfRangeException("driveType", "Unknown type detected");
+            }
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException("Check Drive Format Type threw:", ex);
+            seemsOK = false;
+
+         }
+         return seemsOK;
+
+      }
+
       private void InitialiseToDefault()
       {
          try
          {
             if (currentConfigDetails == null)
             {
-               currentConfigDetails = new ConfigDetails
-                                         {
-                                            DebugMode = true,
-                                            DriveLetter = "N",
-                                            SourceLocations = new List<string>(1),
-                                            ThreadCount = 1,
-                                            //HoldOffBufferBytes = 1*1024*1024*1024, // ==1GB
-                                            VolumeLabel = "InternallyCreated"
-                                         };
+               currentConfigDetails = new ConfigDetails();
+               currentConfigDetails.InitConfigDetails();
                currentConfigDetails.SourceLocations.Add(@"C:\");
             }
          }
@@ -426,9 +513,5 @@ namespace LiquesceSvc
             }
       }
 
-      public List<string> GetCurrentPluginModes()
-      {
-         return pluginProviders.Select(pluginProvider => pluginProvider.Metadata.Description).ToList();
-      }
    }
 }

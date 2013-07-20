@@ -1,131 +1,118 @@
-﻿using System;
+﻿#region Copyright (C)
+// ---------------------------------------------------------------------------------------------------------------
+//  <copyright file="ConfigDetails.cs" company="Smurf-IV">
+// 
+//  Copyright (C) 2010-2012 Simon Coghlan (Aka Smurf-IV)
+// 
+//  This program is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation, either version 2 of the License, or
+//   any later version.
+// 
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+//  GNU General Public License for more details.
+// 
+//  You should have received a copy of the GNU General Public License
+//  along with this program. If not, see http://www.gnu.org/licenses/.
+//  </copyright>
+//  <summary>
+//  Url: http://Liquesce.codeplex.com/
+//  Email: http://www.codeplex.com/site/users/view/smurfiv
+//  </summary>
+// --------------------------------------------------------------------------------------------------------------------
+#endregion
+
+using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
 using System.Runtime.Serialization;
+using System.Text;
 
 namespace LiquesceFacade
 {
-    [Flags]
-    public enum Mask : uint
-    {
-        FILE_READ_DATA = 0x00000001,
-        FILE_WRITE_DATA = 0x00000002,
-        FILE_APPEND_DATA = 0x00000004,
-        FILE_READ_EA = 0x00000008,
-        FILE_WRITE_EA = 0x00000010,
-        FILE_EXECUTE = 0x00000020,
-        FILE_DELETE_CHILD = 0x00000040,
-        FILE_READ_ATTRIBUTES = 0x00000080,
-        FILE_WRITE_ATTRIBUTES = 0x00000100,
 
-        DELETE = 0x00010000,
-        READ_CONTROL = 0x00020000,
-        WRITE_DAC = 0x00040000,
-        WRITE_OWNER = 0x00080000,
-        SYNCHRONIZE = 0x00100000,
+   /// <summary>
+   /// This is the class that will dump out the details to the XML File.
+   /// </summary>
+   [DataContract]
+   public class ConfigDetails
+   {
+      public void InitConfigDetails()
+      {
+         string[] drives = Environment.GetLogicalDrives();
+         List<char> driveLetters = new List<char>(26);
+         driveLetters.AddRange(drives.Select(dr => dr.ToUpper()[0]));
+         // Reverse find the 1st letter not used (Dokan does not support ower than D)
+         for (int i = 0; i < 22; i++)
+         {
+            char letter = (char) ('Z' - i);
+            if ( !driveLetters.Contains(letter) )
+            {
+               DriveLetter = letter.ToString(CultureInfo.InvariantCulture);
+               break;
+            }
+         }
+         if (string.IsNullOrEmpty(DriveLetter))
+         {
+            DriveLetter = "C:\\" + new Guid();
+            Directory.CreateDirectory(DriveLetter);
+         }
+      }
 
-        ACCESS_SYSTEM_SECURITY = 0x01000000,
-        MAXIMUM_ALLOWED = 0x02000000,
+      public enum AllocationModes
+      {
+         folder
+        ,priority
+        ,balanced
+      };
 
-        GENERIC_ALL = 0x10000000,
-        GENERIC_EXECUTE = 0x20000000,
-        GENERIC_WRITE = 0x40000000,
-        GENERIC_READ = 0x80000000,
+      [DataMember(IsRequired = true)]
+      public uint DelayStartMilliSec = 250;
 
-        READ_NTFS = FILE_READ_DATA | FILE_READ_EA | FILE_EXECUTE | FILE_READ_ATTRIBUTES | READ_CONTROL | SYNCHRONIZE,
-        CHANGE_NTFS = READ_NTFS + FILE_WRITE_DATA + FILE_APPEND_DATA + FILE_WRITE_EA + FILE_WRITE_ATTRIBUTES + DELETE,
-        FULLCONTROL_NTFS = CHANGE_NTFS + FILE_DELETE_CHILD + WRITE_DAC + WRITE_OWNER,
-    }
+      // Make this is a string so that the XML looks better (Rather than exporting 72 for 'N')
+      // Also the V 0.6 of Dokan is supposed to be able to use Mount points so this can then be reused for that..
+      [DataMember(IsRequired = true)]
+      public string DriveLetter;
 
-    [Flags]
-    public enum AceFlags : int
-    {
-        ObjectInheritAce = 1,
-        ContainerInheritAce = 2,
-        NoPropagateInheritAce = 4,
-        InheritOnlyAce = 8,
-        InheritedAce = 16
-    }
+      [DataMember]
+      public ushort ThreadCount = 0;
 
-    [Flags]
-    public enum AceType : int
-    {
-        AccessAllowed = 0,
-        AccessDenied = 1,
-        Audit = 2
-    }
+      [DataMember(IsRequired = true)]
+      public string VolumeLabel = "Mirror of C";
 
-    [DataContract]
-    public class UserAccessRuleExport
-    {
-        [DataMember(IsRequired = true)]
-        public string DomainUserIdentity;
-        [DataMember(IsRequired = true)]
-        public Mask AccessMask;
-        [DataMember(IsRequired = true)]
-        public AceFlags InheritanceFlags;
-        [DataMember(IsRequired = true)]
-        public AceType Type;
-    }
-    /// <summary>
-    /// struct to hold the details required be the WMI objects to recreate the share
-    /// </summary>
-    [DataContract]
-    public class LanManShareDetails
-    {
-        [DataMember(IsRequired = true)]
-        public string Name;
-        [DataMember(IsRequired = true)]
-        public string Path; // *** Strip off trailing backslash - it isn't supported
-        [DataMember]
-        public string Description;
-        [DataMember]
-        public UInt32 MaxConnectionsNum;
-        [DataMember]
-        public List<UserAccessRuleExport> UserAccessRules;
-    }
+      [DataMember]
+      public AllocationModes AllocationMode = AllocationModes.folder;
 
-    /// <summary>
-    /// This is the class that will dump out the details to the XML File.
-    /// </summary>
-    [DataContract]
-    public class ConfigDetails
-    {
+      [DataMember]
+      public UInt64 HoldOffBufferBytes = 1L << 10 << 10 << 10; // ==1GB;
 
-        // Make this is a string so that the XML looks better (Rather than exporting 72 for 'N')
-        // Also the V 0.6 of Dokan is supposed to be able to use Mount points so this can then be reused for that..
-        [DataMember(IsRequired = true)]
-        public string DriveLetter = "N";
+      [DataMember(IsRequired = true)]
+      public List<string> SourceLocations = new List<string>();
 
-        [DataMember]
-        public ushort ThreadCount = 5;
+      [DataMember]
+      public string ServiceLogLevel = "Warn"; // NLog's LogLevel.Debug.ToString()
 
-        [DataMember]
-        public int LockTimeout = short.MaxValue; // Useful if you are getting locks in the multiple threads - Can be set to -1 for infinite
+      [DataMember]
+      public UInt16 CacheLifetimeSeconds = 32; // Set to zero to disable
 
-        [DataMember]
-        public bool DebugMode = false;
-
-        [DataMember(IsRequired = true)]
-        public string VolumeLabel = "Mirror of C";
-
-        [DataMember]
-        public string PluginMode = "Priority";
-
-        [DataMember]
-        public UInt64 HoldOffBufferBytes = 1L << 10 << 10 << 10; // ==1GB;
-
-        [DataMember]
-        public UInt32 BufferReadSize = 4 << 10;   // == 4K Standard OS build block size
-
-        [DataMember(IsRequired = true)]
-        public List<string> SourceLocations;
-
-        [DataMember]
-        public string ServiceLogLevel = "Debug"; // NLog's LogLevel.Debug.ToString()
-
-        [DataMember]
-        public List<LanManShareDetails> SharesToRestore;
-
-        public List<string> KnownSharePaths;
-    }
+      public new string ToString()
+      {
+         StringBuilder sb = new StringBuilder();
+         sb = sb.AppendFormat("DelayStartMilliSec=[{0}]",DelayStartMilliSec).AppendLine();
+         sb = sb.AppendFormat("DriveLetter=[{0}]", DriveLetter).AppendLine();
+         sb = sb.AppendFormat("ThreadCount=[{0}]",ThreadCount).AppendLine();
+         sb = sb.AppendFormat("VolumeLabel=[{0}]",VolumeLabel).AppendLine();
+         sb = sb.AppendFormat("AllocationMode=[{0}]",AllocationMode).AppendLine();
+         sb = sb.AppendFormat("HoldOffBufferBytes=[{0}]", HoldOffBufferBytes).AppendLine();
+         sb = sb.AppendLine("SourceLocations:");
+         sb = SourceLocations.Aggregate(sb, (current, location) => current.AppendLine(location));
+         sb = sb.AppendFormat("ServiceLogLevel[{0}]",ServiceLogLevel).AppendLine();
+         sb = sb.AppendFormat("CacheLifetimeSeconds=[{0}]", CacheLifetimeSeconds).AppendLine();
+         return sb.ToString();
+      }
+   }
 }

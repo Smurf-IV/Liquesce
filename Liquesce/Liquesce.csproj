@@ -104,13 +104,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\LiquesceTray\WindowLocation.cs">
+      <Link>WindowLocation.cs</Link>
+    </Compile>
     <Compile Include="AdvancedPropertiesDisplay.cs" />
-    <Compile Include="CurrentShares.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="CurrentShares.Designer.cs">
-      <DependentUpon>CurrentShares.cs</DependentUpon>
-    </Compile>
     <Compile Include="GridAdvancedSettings.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -127,23 +124,39 @@
     <Compile Include="MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="NumericUpDownTypeEditor.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+    <Compile Include="TailForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="TailForm.Designer.cs">
+      <DependentUpon>TailForm.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="ChangeLog.rtf" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="CurrentShares.resx">
-      <DependentUpon>CurrentShares.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="GridAdvancedSettings.resx">
       <DependentUpon>GridAdvancedSettings.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="TailForm.resx">
+      <DependentUpon>TailForm.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
@@ -182,7 +195,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="YearStamp.MonthStamp.DayStamp.Increment" BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" />
+      <UserProperties BuildVersion_BuildVersioningStyle="YearStamp.MonthStamp.DayStamp.Increment" BuildVersion_UseGlobalSettings="True" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
