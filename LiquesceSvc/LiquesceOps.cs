@@ -31,15 +31,14 @@ using System.Runtime.InteropServices;
 using System.Security.AccessControl;
 using System.Text;
 using System.Threading;
-
-using DokanNet;
+using CBFS;
 using LiquesceFacade;
 using NLog;
 using PID = LiquesceSvc.ProcessIdentity;
 
 namespace LiquesceSvc
 {
-   internal class LiquesceOps : IDokanOperations
+   internal class LiquesceOps : CBFSHandlers
    {
       static private readonly Logger Log = LogManager.GetCurrentClassLogger();
 

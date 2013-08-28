@@ -1,5 +1,5 @@
-{\rtf1\ansi\ansicpg1252\deff0{\fonttbl{\f0\fswiss\fprq2\fcharset0 Tahoma;}{\f1\fnil\fcharset0 Courier New;}{\f2\fmodern\fprq1\fcharset0 Courier New;}{\f3\fnil Courier New;}{\f4\fnil\fcharset0 Tahoma;}{\f5\fnil Consolas;}{\f6\fnil\fcharset0 Consolas;}}
-{\colortbl ;\red0\green0\blue0;\red0\green0\blue255;\red192\green80\blue77;\red0\green128\blue0;}
+{\rtf1\ansi\ansicpg1252\deff0{\fonttbl{\f0\fswiss\fprq2\fcharset0 Tahoma;}{\f1\fnil\fcharset0 Courier New;}{\f2\fmodern\fprq1\fcharset0 Courier New;}{\f3\fnil Courier New;}{\f4\fnil Consolas;}{\f5\fnil\fcharset0 Consolas;}{\f6\fnil\fcharset0 Tahoma;}}
+{\colortbl ;\red0\green0\blue0;\red0\green0\blue255;\red192\green80\blue77;\red255\green0\blue0;\red0\green128\blue0;}
 {\*\generator Msftedit 5.41.21.2510;}\viewkind4\uc1\pard\cf1\lang2057\ul\b\f0\fs20 Welcome to the \i Liquesce \i0 Changelog\cf0\ulnone\b0\f1\par
 \cf1\f0\par
 Currently this is just a place holder for all the cool stuff that has happened to this project :-)\par
@@ -26,6 +26,16 @@ Keep an open eye on the \cf0\b{\field{\*\fldinst{HYPERLINK "http://liquesce.code
 \cf0\ul\b\par
 \cf1\ulnone\b0\par
 \cf0\ul\b Done\par
+2013-07-##\par
+\ulnone\b0 - Over the year I have been slowly learning how to use the CBFS and implementing test applications\par
+- Move back to using IDE 2010 (Do not like 2012!)\par
+- Use new transaction DLL \cf4\f4\fs19 ChinhDo\f5  1.3\f4\par
+\cf0\f0\fs20 - Branch code to start Phase][\par
+- Move over to using newer CBFS V4\par
+- Remove DokanNet\par
+- New Resharper Usages\par
+- Start to implement the Unit Testing framework.\par
+\ul\b\par
 2012-12-##\par
 \ulnone\b0 - 1st install, does not use a non used drive for demo mapping.\par
 - Sort out the usage of the Folder vs Priority vs space for uTorrent creation\par
@@ -66,7 +76,7 @@ Keep an open eye on the \cf0\b{\field{\*\fldinst{HYPERLINK "http://liquesce.code
 - Fix \cf3 Deleting directories\par
 \cf0 - Solved \cf3 Problems sharing a drive (Hosted on XP)\cf0  (See workaround in Item)\par
 - Solved \cf3 0.6.0 Sharing on Win 7 x64 & x32 Host Locks up XP Client\cf0  (See workaround in Item) \par
-\cf3\f4 - NTFS is case-preserving but case-insensitive in the Win32 namespace\cf4\f5\fs19\par
+\cf3\f6 - NTFS is case-preserving but case-insensitive in the Win32 namespace\cf5\f4\fs19\par
 \cf0\ul\b\f0\fs20\par
 \par
 2012-01-28 (Release Candidate)\par
@@ -113,11 +123,11 @@ Keep an open eye on the \cf0\b{\field{\*\fldinst{HYPERLINK "http://liquesce.code
 \par
 \ul\b\par
 2011-11-17\par
-\ulnone\b0 - Switch to using for the \f5\fs19 GetFileInformationByHandle\f6 () \f0\fs20 for speed (Probably) and direct return of upto date information from the native file system.\par
+\ulnone\b0 - Switch to using for the \f4\fs19 GetFileInformationByHandle\f5 () \f0\fs20 for speed (Probably) and direct return of upto date information from the native file system.\par
 - Fix the "Left over" text for the backup in the space display.\par
 - Re-focused the need for security on the GetFileInformation and SetFile operations.\par
-- Add code to inform explorer (And other Apps via OS) that things have changed in the mounted drive [\f5\fs19 SHChangeNotify\f6  API]\f0\fs20 .\par
-- Sort out the code for the file renames in Win 7 and \cf4\f5\fs19 "\cf0{\field{\*\fldinst{HYPERLINK "http://code.google.com/p/dokan/issues/detail?id=238"}}{\fldrslt{\ul\cf2 http://code.google.com/p/dokan/issues/detail?id=238}}}\cf4\f5\fs19 " \par
+- Add code to inform explorer (And other Apps via OS) that things have changed in the mounted drive [\f4\fs19 SHChangeNotify\f5  API]\f0\fs20 .\par
+- Sort out the code for the file renames in Win 7 and \cf5\f4\fs19 "\cf0{\field{\*\fldinst{HYPERLINK "http://code.google.com/p/dokan/issues/detail?id=238"}}{\fldrslt{\ul\cf2 http://code.google.com/p/dokan/issues/detail?id=238}}}\cf5\f4\fs19 " \par
 \cf0\par
 \ul\b\f0\fs20\par
 2011-10-30\par
@@ -145,7 +155,7 @@ Keep an open eye on the \cf0\b{\field{\*\fldinst{HYPERLINK "http://liquesce.code
 - Change how file Read and write detect if a context has been passed in (Thanks NightThunder)\par
 - Add some more focused exception messages in MainForm\par
 - Add manifest file to the service to run as high as possible (For FileSecurity API's)\par
-- Implement workaround for \f5\fs19{\field{\*\fldinst{HYPERLINK "http://code.google.com/p/dokan/issues/detail?id=209"}}{\fldrslt{\ul\cf2 http://code.google.com/p/dokan/issues/detail?id=209}}}\f6\fs19  as manifest does not work for share access\f0\fs20\par
+- Implement workaround for \f4\fs19{\field{\*\fldinst{HYPERLINK "http://code.google.com/p/dokan/issues/detail?id=209"}}{\fldrslt{\ul\cf2 http://code.google.com/p/dokan/issues/detail?id=209}}}\f5\fs19  as manifest does not work for share access\f0\fs20\par
 - Fix the tray menu to only have service control when the correct key sequence is held.\par
 \par
 \ul\b\par

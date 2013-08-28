@@ -27,7 +27,8 @@
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
-using DokanNet;
+using CallbackFS;
+using CBFS;
 using NLog;
 
 // ReSharper disable UnusedMember.Local
@@ -60,7 +61,7 @@ namespace LiquesceSvc
             && !replaceIfExisting
             )
          {
-            throw new System.ComponentModel.Win32Exception(Dokan.ERROR_ALREADY_EXISTS* -1); // Need to remove the Dokan -ve, It will be put back in the catch
+            throw new ECBFSError(CBFSWinError.ERROR_ALREADY_EXISTS);
          }
 
          if (!isDirectory)
