@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="MainForm.cs" company="Smurf-IV">
 // 
-//  Copyright (C) 2010-2012 Simon Coghlan (Aka Smurf-IV)
+//  Copyright (C) 2010-2013 Simon Coghlan (Aka Smurf-IV)
 // 
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -33,7 +33,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.ServiceModel;
-using System.ServiceProcess;
 using System.Threading;
 using System.Windows.Forms;
 using LiquesceFacade;
@@ -50,11 +49,6 @@ namespace Liquesce
 
       public MainForm()
       {
-         // Force use of Segou UI Font in Vista and above
-         // But this makes a mess of the layouts when they are autoscaled !!!
-         //if (SystemFonts.MessageBoxFont.Size >= 9)
-         //   Font = SystemFonts.MessageBoxFont;
-
          InitializeComponent();
          if (Properties.Settings.Default.UpdateRequired)
          {
@@ -75,42 +69,20 @@ namespace Liquesce
          UseWaitCursor = true;
          StartTree();
          PopulatePoolSettings();
-         ServiceControllerStatus serviceStatus = ServiceControllerStatus.Stopped;
-         try
-         {
-            serviceStatus = serviceController1.Status;
-         }
-         catch (Exception ex)
-         {
-            Log.ErrorException("Service is probably not installed", ex);
-         }
-         if (serviceStatus != ServiceControllerStatus.Running)
-         {
-            commitToolStripMenuItem.ToolTipText = "Service is not running";
-            commitToolStripMenuItem.Enabled = false;
-         }
-         else
-         {
-            try
-            {
-               commitToolStripMenuItem.Enabled = true;
-               EndpointAddress endpointAddress = new EndpointAddress("net.pipe://localhost/LiquesceFacade");
-               NetNamedPipeBinding namedPipeBindingpublish = new NetNamedPipeBinding();
-               LiquesceProxy proxy = new LiquesceProxy(namedPipeBindingpublish, endpointAddress);
-               cd = proxy.ConfigDetails;
-            }
-            catch (Exception ex)
-            {
-               Log.ErrorException("MainForm_Shown: Unable to attach to the service, even tho it is running", ex);
-               UseWaitCursor = false;
-               Enabled = true;
-               MessageBox.Show(this, ex.Message, "Has the firewall blocked the communications ?", MessageBoxButtons.OK,
-                               MessageBoxIcon.Stop);
-            }
-         }
+
+         ReadConfigDetails();
+
          InitialiseWith();
          UseWaitCursor = false;
          Enabled = true;
+      }
+
+      // TODO: Read the values from the config file
+      private void ReadConfigDetails()
+      {
+         // Find install location
+         // Find config file (Store expected location)
+         // Serialise config file ine
       }
 
       private void MainForm_FormClosing(object sender, FormClosingEventArgs e)

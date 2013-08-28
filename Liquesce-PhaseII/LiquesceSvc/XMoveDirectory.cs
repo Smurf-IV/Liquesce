@@ -28,7 +28,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Transactions;
-using LiquesceSvc.FileSystemTransact;
+using ChinhDo.Transactions;
 using NLog;
 
 namespace LiquesceSvc
@@ -46,7 +46,7 @@ namespace LiquesceSvc
          Log.Trace("XMoveDirectory.Move(roots[{0}], dirSource[{1}], currentNewTarget[{2}], replaceIfExisting[{3}])", roots, source, pathTarget_FullName, replaceIfExisting);
          try
          {
-            TransFileManager fileManager = new TransFileManager();
+            TxFileManager fileManager = new TxFileManager();
             using (TransactionScope scope1 = new TransactionScope())
             {
                Move(roots, new DirectoryInfo(source), pathTarget_FullName, replaceIfExisting, fileManager);
@@ -60,7 +60,7 @@ namespace LiquesceSvc
          }
       }
 
-      private void Move(Roots roots, DirectoryInfo pathSource, string pathTarget_FullName, bool replaceIfExisting, TransFileManager fileManager)
+      private void Move(Roots roots, DirectoryInfo pathSource, string pathTarget_FullName, bool replaceIfExisting, TxFileManager fileManager)
       {
          string pathSource_FullName = pathSource.FullName;
          Log.Trace("Move(pathSource[{0}], pathTarget[{1}], replaceIfExisting[{2}])", pathSource_FullName, pathTarget_FullName, replaceIfExisting);
@@ -84,12 +84,12 @@ namespace LiquesceSvc
          }
 
          Log.Trace("Delete this Dir[{0}]", pathSource_FullName);
-         TransFileManager.DeleteDirectory(pathSource_FullName);
+         fileManager.DeleteDirectory(pathSource_FullName);
          // While we are here, remove 
          roots.RemoveTargetFromLookup(roots.GetRelative(pathSource_FullName));
       }
 
-      private void CreateDirTrans(string fullPathName, TransFileManager fileManager)
+      private void CreateDirTrans(string fullPathName, TxFileManager fileManager)
       {
          if (!dirAllreadyCreatedInThisTrans.Contains(fullPathName))
          {

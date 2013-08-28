@@ -30,9 +30,10 @@ using System.IO;
 using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Security;
+using System.Security.Permissions;
 using System.Text;
-using DokanNet;
 using Microsoft.Win32.SafeHandles;
+using NLog;
 
 namespace LiquesceSvc
 {
@@ -45,6 +46,8 @@ namespace LiquesceSvc
    {
       public string FullName { get; private set; }
       private readonly SafeFileHandle handle;
+      static private readonly Logger Log = LogManager.GetCurrentClassLogger();
+
       /// <summary>
       /// Not all file systems can record creation and last access times, and not all file systems record them in the same manner. 
       /// For example, on the FAT file system, create time has a resolution of 10 milliseconds, write time has a resolution of 2 seconds,
@@ -545,4 +548,6 @@ namespace LiquesceSvc
 
       #endregion
    }
+
+
 }

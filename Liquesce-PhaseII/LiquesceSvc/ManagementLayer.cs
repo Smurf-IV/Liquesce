@@ -36,7 +36,7 @@ using System.ServiceModel;
 using System.Text;
 using System.Threading;
 using System.Xml.Serialization;
-using DokanNet;
+using CallbackFS;
 using LiquesceFacade;
 using NLog;
 using NLog.Config;
@@ -113,7 +113,7 @@ namespace LiquesceSvc
 
       // ReSharper disable MemberCanBeMadeStatic.Local
       // This will need to be changed to be a map of drive to ops
-      public LiquesceOps dokanOperations
+      public LiquesceOps liquesceOperations
       // ReSharper restore MemberCanBeMadeStatic.Local
       {
          get;
@@ -121,7 +121,7 @@ namespace LiquesceSvc
       }
 
       /// <summary>
-      /// Invokes DokanNet.DokanMain function to mount a drive. 
+      /// Mount a drive. 
       /// The function blocks until the file system is unmounted.
       /// Administrator privilege is needed to communicate with Dokan driver. 
       /// You need a manifest file for .NET application.
@@ -154,11 +154,17 @@ namespace LiquesceSvc
                   // ReSharper restore HeuristicUnreachableCode
                }
                Log.Info(currentConfigDetails.ToString());
-               dokanOperations = new LiquesceOps(currentConfigDetails);
+               bool installed = false;
+               int versionHigh = 0, versionLow = 0;
+               SERVICE_STATUS status = new SERVICE_STATUS();
+
+               CallbackFileSystem.GetModuleStatus(DRIVER_NAME, CallbackFileSystem.CBFS_MODULE_DRIVER, ref installed, ref versionHigh, ref versionLow, ref status);
+
+               liquesceOperations = new LiquesceOps(currentConfigDetails);
                ulong freeBytesAvailable = 0;
                ulong totalBytes = 0;
                ulong totalFreeBytes = 0;
-               dokanOperations.GetDiskFreeSpace(ref freeBytesAvailable, ref totalBytes, ref totalFreeBytes, null);
+               liquesceOperations.GetDiskFreeSpace(ref freeBytesAvailable, ref totalBytes, ref totalFreeBytes, null);
                SetNLogLevel(currentConfigDetails.ServiceLogLevel);
                DirectoryInfo dir = new DirectoryInfo(currentConfigDetails.DriveLetter);
 
@@ -223,7 +229,7 @@ namespace LiquesceSvc
                };
 
 
-               int retVal = Dokan.DokanMain(options, dokanOperations);
+               int retVal = Dokan.DokanMain(options, liquesceOperations);
                Log.Warn("Dokan.DokanMain has exited");
                IsRunning = false;
                switch (retVal)

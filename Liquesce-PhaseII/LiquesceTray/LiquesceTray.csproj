@@ -191,10 +191,6 @@
       <Project>{CFE5DC7B-25FB-45C4-AF18-1963853375E1}</Project>
       <Name>LiquesceFacade</Name>
     </ProjectReference>
-    <ProjectReference Include="..\LiquesceTrayHelper\LiquesceTrayHelper.csproj">
-      <Project>{F216D80D-2D70-4B3B-8632-813F6C399948}</Project>
-      <Name>LiquesceTrayHelper</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Liquesce\Liquesce.csproj">
       <Project>{74447D1D-F52F-485C-BDEE-66B114A45460}</Project>
       <Name>Liquesce</Name>
@@ -245,7 +241,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="YearStamp.MonthStamp.DayStamp.Increment" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UseGlobalSettings="True" />
+      <UserProperties BuildVersion_UseGlobalSettings="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="YearStamp.MonthStamp.DayStamp.Increment" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

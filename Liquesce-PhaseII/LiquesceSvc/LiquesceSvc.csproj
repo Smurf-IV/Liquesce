@@ -14,7 +14,7 @@
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
-    <SccProjectName>%24/Liquesce/Liquesce-PhaseI-NoSharing/LiquesceSvc</SccProjectName>
+    <SccProjectName>%24/Liquesce/Liquesce-PhaseII/LiquesceSvc</SccProjectName>
     <SccLocalPath>.</SccLocalPath>
     <SccAuxPath>https://tfs.codeplex.com/tfs/tfs08</SccAuxPath>
     <SccProvider>{4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}</SccProvider>
@@ -129,6 +129,9 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="CBFS4Net, Version=4.0.135.0, Culture=neutral, PublicKeyToken=0f194b348c109bec, processorArchitecture=x86">
+      <HintPath>..\..\..\Amalgam\Phase III\ThirdParty\CBFS\32bit\CBFS4Net.dll</HintPath>
+    </Reference>
     <Reference Include="ChinhDo.Transactions">
       <HintPath>..\ThirdParty\ChinhDo.Transactions.dll</HintPath>
     </Reference>
@@ -146,14 +149,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\..\Amalgam\Phase III\AmalgamClientTray\CBFS\Handlers.cs">
+      <Link>CBFS\Handlers.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\Amalgam\Phase III\AmalgamClientTray\CBFS\ICBFSFuncs.cs">
+      <Link>CBFS\ICBFSFuncs.cs</Link>
+    </Compile>
     <Compile Include="CacheHelper.cs" />
-    <Compile Include="FileManager.cs" />
-    <Compile Include="FileSystemTransact\RollbackDirectory.cs" />
-    <Compile Include="FileSystemTransact\TransFileManager.cs" />
-    <Compile Include="NativeFileFind.cs" />
-    <Compile Include="NativeFileOps.cs" />
-    <Compile Include="ProcessExtensions.cs" />
-    <Compile Include="ProcessIdentity.cs" />
+    <Compile Include="LowLevelOSAccess\FileManager.cs" />
+    <Compile Include="LowLevelOSAccess\NativeFileFind.cs" />
+    <Compile Include="LowLevelOSAccess\NativeFileOps.cs" />
+    <Compile Include="LowLevelOSAccess\ProcessExtensions.cs" />
+    <Compile Include="LowLevelOSAccess\ProcessIdentity.cs" />
+    <Compile Include="LowLevelOSAccess\Win32Structs.cs" />
     <Compile Include="Roots.cs" />
     <Compile Include="LiquesceCallBackFacade.cs" />
     <Compile Include="LiquesceFacade.cs" />
@@ -173,14 +181,15 @@
       <DependentUpon>ProjectInstaller.cs</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Salt.cs" />
     <Compile Include="Settings1.cs" />
     <Compile Include="Settings1.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings1.settings</DependentUpon>
     </Compile>
-    <Compile Include="ShellAPI.cs" />
-    <Compile Include="ShellChangeNotify.cs" />
+    <Compile Include="LowLevelOSAccess\ShellAPI.cs" />
+    <Compile Include="LowLevelOSAccess\ShellChangeNotify.cs" />
     <Compile Include="XMoveDirectory.cs" />
     <Compile Include="XMoveFile.cs" />
   </ItemGroup>
@@ -198,10 +207,6 @@
     <ProjectReference Include="..\LiquesceFaçade\LiquesceFacade.csproj">
       <Project>{CFE5DC7B-25FB-45C4-AF18-1963853375E1}</Project>
       <Name>LiquesceFacade</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ThirdParty\DokanNet\DokanNet.csproj">
-      <Project>{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C}</Project>
-      <Name>DokanNet</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

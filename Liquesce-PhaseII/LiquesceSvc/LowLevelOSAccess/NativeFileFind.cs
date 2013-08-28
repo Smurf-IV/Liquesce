@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Security.Permissions;
-using DokanNet;
 using Microsoft.Win32.SafeHandles;
 using NLog;
 

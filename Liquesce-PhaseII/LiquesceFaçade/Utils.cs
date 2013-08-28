@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="Utils.cs" company="Smurf-IV">
 // 
-//  Copyright (C) 2010-2012 Simon Coghlan (Aka Smurf-IV)
+//  Copyright (C) 2010-2013 Simon Coghlan (Aka Smurf-IV)
 // 
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -25,50 +25,12 @@
 #endregion
 
 using System;
-using System.IO;
-using System.Net.Sockets;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using DokanNet;
 
 namespace LiquesceFacade
 {
    public static class Utils
    {
-      public static int HiWord(int number)
-      {
-         return ((number & 0x80000000) == 0x80000000) ? number >> 16 : (number >> 16) & 0xffff;
-      }
-
-      public static int LoWord(int number)
-      {
-         return number & 0xffff;
-      }
-
-      /// <summary>
-      /// #define ERROR_DISK_OPERATION_FAILED 1127L //  While accessing the hard disk, a disk operation failed even after retries.
-      /// The above might be a better error code ??
-      /// </summary>
-      /// <param name="ex">The list of exception types can grow in here</param>
-      /// <returns>!! Must be negative !!</returns>
-      public static int BestAttemptToWin32(Exception ex)
-      {
-         if (ex is System.ComponentModel.Win32Exception)
-         {
-            return (ex as System.ComponentModel.Win32Exception).NativeErrorCode * -1;
-         }
-         else if ( ex.InnerException is SocketException)
-         {
-            return -((SocketException) ex.InnerException).ErrorCode;
-         }
-         else
-         {
-            int HrForException = Marshal.GetHRForException(ex);
-            // Check http://msdn.microsoft.com/en-us/library/ms819772.aspx (WinError.h) for error codes
-            return (HiWord(HrForException) == -32761/*0x8007*/) ? -LoWord(HrForException) : Dokan.ERROR_EXCEPTION_IN_SERVICE;
-         }
-      }
-
       public static void ResizeDescriptionArea(ref PropertyGrid grid, int nNumLines)
       {
          try
