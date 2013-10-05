@@ -59,9 +59,9 @@ namespace LiquesceSvc
       }
 
       public static bool RunningAsService
-      { 
-         get; 
-         set; 
+      {
+         get;
+         set;
       }
 
       private static void LogUnhandledException(object sender, UnhandledExceptionEventArgs e)
@@ -88,13 +88,13 @@ namespace LiquesceSvc
       private static ServiceHost _ILiquesceHostCallBack;
 
       public void StartService(string[] args)
-      { 
-         OnStart(args); 
+      {
+         OnStart(args);
       }
 
       public void StopService()
-      { 
-         OnStop(); 
+      {
+         OnStop();
       }
 
       protected override void OnStart(string[] args)
@@ -104,7 +104,7 @@ namespace LiquesceSvc
          {
             if (RunningAsService)
                RequestAdditionalTime(30000);
-               // let the SCM know that this part could take a while due to other services starting up
+            // let the SCM know that this part could take a while due to other services starting up
             foreach (string arg in args)
             {
                Log.Debug(arg);
@@ -117,19 +117,11 @@ namespace LiquesceSvc
                }
             }
             _ILiquesceHost = new ServiceHost(typeof(LiquesceFacade));
-            //System.ServiceModel.Channels.Binding wsDualBinding = new WSDualHttpBinding(WSDualHttpSecurityMode.None);
-            //System.ServiceModel.Channels.Binding tcpBinding = new NetTcpBinding(SecurityMode.None);
             System.ServiceModel.Channels.Binding namedPipeBinding = new NetNamedPipeBinding();
-            //_ILiquesceHost.AddServiceEndpoint(typeof(ILiquesce), wsDualBinding, "http://localhost:41013/LiquesceFacade/");
-            //_ILiquesceHost.AddServiceEndpoint(typeof(ILiquesce), tcpBinding, "net.tcp://localhost:41014/LiquesceFacade");
             _ILiquesceHost.AddServiceEndpoint(typeof(ILiquesce), namedPipeBinding, "net.pipe://localhost/LiquesceFacade");
 
             _ILiquesceHostCallBack = new ServiceHost(typeof(LiquesceCallBackFacade));
-            //System.ServiceModel.Channels.Binding wsDualBindingpublish = new WSDualHttpBinding();
-            //System.ServiceModel.Channels.Binding tcpBindingpublish = new NetTcpBinding();
             System.ServiceModel.Channels.Binding namedPipeBindingpublish = new NetNamedPipeBinding();
-            //_ILiquesceHostCallBack.AddServiceEndpoint(typeof(ILiquesceCallBack), wsDualBindingpublish, "http://localhost:41015/LiquesceCallBackFacade/");
-            //_ILiquesceHostCallBack.AddServiceEndpoint(typeof(ILiquesceCallBack), tcpBindingpublish, "net.tcp://localhost:41016/LiquesceCallBackFacade");
             _ILiquesceHostCallBack.AddServiceEndpoint(typeof(ILiquesceCallBack), namedPipeBindingpublish, "net.pipe://localhost/LiquesceCallBackFacade");
 
             _ILiquesceHost.Open();
@@ -138,12 +130,12 @@ namespace LiquesceSvc
             if (RunningAsService)
             {
                RequestAdditionalTime(30000);
-                  // let the SCM know that this part could take a while due to other services starting up
+               // let the SCM know that this part could take a while due to other services starting up
                base.OnStart(args);
 
                Log.Info("Create Management object to hold the listeners etc.");
                RequestAdditionalTime(30000);
-                  // let the SCM know that this part could take a while due to other services starting up
+               // let the SCM know that this part could take a while due to other services starting up
             }
             // Queue the main work as a thread pool task as we want this method to finish promptly.
             ThreadPool.QueueUserWorkItem(ThreadProc, this);
@@ -160,10 +152,10 @@ HTTP could not register URL http://+:8731/Design_Time_Addresses/LiquesceSvc/Liqu
     8000 here is your port number, you can replace this with a port number of  your choice (using which your WCF service is hosted)            
              */
             Log.ErrorException("LiquesceService startup error.", ex);
-               base.EventLog.WriteEntry(ex.Message, EventLogEntryType.Error);
-               OnStop();
-               if (RunningAsService)
-                  Stop();
+            base.EventLog.WriteEntry(ex.Message, EventLogEntryType.Error);
+            OnStop();
+            if (RunningAsService)
+               Stop();
             throw;
          }
       }
@@ -206,9 +198,9 @@ HTTP could not register URL http://+:8731/Design_Time_Addresses/LiquesceSvc/Liqu
             Log.Info("Stop the ManagementLayer and remove");
             if (RunningAsService)
                RequestAdditionalTime(30000);
-            
+
             // Then stop the host calling in
-            if ( _ILiquesceHost != null )
+            if (_ILiquesceHost != null)
                _ILiquesceHost.Close();
             // Now stop the drives
             ManagementLayer.Instance.Stop();

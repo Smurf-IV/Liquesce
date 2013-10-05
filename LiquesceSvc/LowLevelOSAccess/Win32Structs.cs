@@ -30,6 +30,7 @@ using System.Runtime.InteropServices;
 
 namespace LiquesceSvc
 {
+
    ////
    /// <summary>
    /// Structure used for Windows API calls related to file information.
@@ -53,7 +54,7 @@ namespace LiquesceSvc
    [StructLayout(LayoutKind.Sequential, Pack = 4)]
    public struct BY_HANDLE_FILE_INFORMATION
    {
-      public FileAttributes dwFileAttributes;
+      public uint dwFileAttributes;
       public WIN32_FIND_FILETIME ftCreationTime;
       public WIN32_FIND_FILETIME ftLastAccessTime;
       public WIN32_FIND_FILETIME ftLastWriteTime;
@@ -70,7 +71,7 @@ namespace LiquesceSvc
    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto, Pack = 4)]
    public struct WIN32_FIND_DATA
    {
-      public FileAttributes dwFileAttributes;
+      public uint dwFileAttributes;
       public WIN32_FIND_FILETIME ftCreationTime;
       public WIN32_FIND_FILETIME ftLastAccessTime;
       public WIN32_FIND_FILETIME ftLastWriteTime;
@@ -80,8 +81,7 @@ namespace LiquesceSvc
       private readonly uint dwReserved1;
       [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
       public string cFileName;
-      [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 14)]
-      private readonly string cAlternateFileName;
+      [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 14)] public readonly string cAlternateFileName;
    }
    // ReSharper restore FieldCanBeMadeReadOnly.Global
 

@@ -64,11 +64,6 @@ namespace LiquesceSvc
             // Even A directory requires 4K to be created !
             spaceRequired += 16384;
             Log.Trace("GetPath [{0}] spaceRequired [{1}]", filename, spaceRequired);
-            if (string.IsNullOrWhiteSpace(filename))
-            {
-               Log.Trace("Win 7 (x64) sometimes passes in a blank");
-               filename = PathDirectorySeparatorChar;
-            }
 
             if (cachedRootPathsSystemInfo.TryGetValue(filename, out fsi))
             {

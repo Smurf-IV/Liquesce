@@ -74,7 +74,6 @@ namespace LiquesceFacade
       public uint DelayStartMilliSec = 250;
 
       // Make this is a string so that the XML looks better (Rather than exporting 72 for 'N')
-      // Also the V 0.6 of Dokan is supposed to be able to use Mount points so this can then be reused for that..
       [DataMember(IsRequired = true)]
       public string DriveLetter;
 

@@ -107,10 +107,10 @@ namespace LiquesceSvc
          if (!string.IsNullOrWhiteSpace(info2.cFileName))
          {
             // Prevent expensive time spent allowing indexing == FileAttributes.NotContentIndexed
+            info2.dwFileAttributes |= (uint) NativeFileOps.EFileAttributes.NotContentIndexed;
             // Prevent the system from timing out due to slow access through the driver == FileAttributes.Offline
-            info2.dwFileAttributes |= FileAttributes.NotContentIndexed;
             if (Log.IsTraceEnabled)
-               info2.dwFileAttributes |= FileAttributes.Offline;
+               info2.dwFileAttributes |= (uint) NativeFileOps.EFileAttributes.Offline;
             files[info2.cFileName] = info2;
          }
       }

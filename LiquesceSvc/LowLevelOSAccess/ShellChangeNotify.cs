@@ -35,6 +35,15 @@ namespace LiquesceSvc
    /// This takes all(most) the operations of the Dokan Interface and implement the apropriate function to notift the OS of changes to the mounted drive
    /// </summary>
    /// <see cref="http://msdn.microsoft.com/en-us/library/bb762118.aspx"/>
+   /// <remarks>
+   /// Explorer Notification helper DLL is a module for Windows Explorer that receives notification from the driver 
+   /// about the added or removed mounting points. This DLL then broadcasts a system message which tells Explorer to 
+   /// refresh the list of the disks. Without such DLL Explorer won't refresh the disk list if the mounting point is 
+   /// added or removed from the service application or from other user session. 
+   /// This DLL also deals with custom icons for virtual disks in Explorer. 
+   /// Explorer Notification helper DLL has the name CbFsMntNtf4.dll and is shipped in 32-bit and 64-bit variants. 
+   /// Read deployment instructions to find out how to correctly deploy this helper DLL with your application. 
+   /// </remarks>
    internal class ShellChangeNotify /*: IDokanOperations*/
    {
       [Flags]

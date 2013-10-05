@@ -33,7 +33,7 @@ namespace LiquesceSvc
    internal static class ProcessIdentity
    {
       private static readonly CacheHelper<int, WindowsIdentity> cacheProcessIdToWi = new CacheHelper<int, WindowsIdentity>(60);
-      private static readonly uint systemProcessId = GetSystemProcessId();
+      internal static readonly int systemProcessId = GetSystemProcessId();
 
       /// <summary>
       /// Find the System.exe ID to prevent impersonation of it.
@@ -41,11 +41,11 @@ namespace LiquesceSvc
       /// </summary>
       /// <exception cref="SystemException">thrown if system.exe is not found</exception>
       /// <returns>systemProcessId</returns>
-      private static uint GetSystemProcessId()
+      private static int GetSystemProcessId()
       {
          Process[] processesByName = Process.GetProcessesByName("System");
          if (processesByName.Length > 0)
-            return (uint) processesByName[0].Id;
+            return processesByName[0].Id;
          throw new SystemException("Unable to identify System.exe process ID");
       }
 
@@ -59,12 +59,12 @@ namespace LiquesceSvc
       /// Which means that it will have checked the access permissions for whatever the action is going to be.
       /// http://msdn.microsoft.com/en-us/library/gg465326%28v=PROT.10%29.aspx
       /// </remarks>
-      static public void Invoke(uint processId, Action act)
+      static public void Invoke(int processId, Action act)
       {
          if (CouldBeSMB(processId))
             act();
          else
-            InvokeHelper((int)processId, act);
+            InvokeHelper(processId, act);
       }
 
       /// <summary>
@@ -72,7 +72,7 @@ namespace LiquesceSvc
       /// </summary>
       /// <param name="processId"></param>
       /// <returns></returns>
-      private static bool CouldBeSMB(uint processId)
+      private static bool CouldBeSMB(int processId)
       {
          return (systemProcessId == processId);
       }
@@ -91,9 +91,10 @@ namespace LiquesceSvc
          }
          else
             cacheProcessIdToWi.Touch(processId);
-         using (wi.Impersonate())
+         using (WindowsImpersonationContext context = wi.Impersonate())
          {
             act();
+            context.Undo();
          }
       }
 
