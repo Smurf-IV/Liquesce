@@ -41,22 +41,29 @@ namespace LiquesceSvc
       [SecuritySafeCritical]
       [SecurityPermission(SecurityAction.Demand, Flags = SecurityPermissionFlag.UnmanagedCode)]
       [SecurityPermission(SecurityAction.Demand, Flags = SecurityPermissionFlag.ControlPrincipal)]
+      [PermissionSetAttribute(SecurityAction.Demand, Name = "FullTrust")]
       public static WindowsIdentity WindowsIdentity(this Process process)
       {
          IntPtr ph = IntPtr.Zero;
          IntPtr dupeTokenHandle = IntPtr.Zero;
-         WindowsIdentity wi;
 
          try
          {
-            OpenProcessToken(process.Handle, TOKEN_DUPLICATE | TOKEN_IMPERSONATE | TOKEN_QUERY, out ph);
-            // Hint of Duplicate handle from
-            // http://msdn.microsoft.com/en-us/library/system.security.principal.windowsidentity.impersonate%28v=vs.71%29.aspx
-            wi = new WindowsIdentity(DuplicateToken(ph, SecurityImpersonation, ref dupeTokenHandle)?dupeTokenHandle:ph);
-         }
-         catch
-         {
-            throw;
+            WindowsIdentity wi;
+            // If you absolutely need every process identity without exception or guesswork, you’ll need to run this code under an NT Service running as System.
+// ReSharper disable once ConvertIfStatementToConditionalTernaryExpression
+            if ( OpenProcessToken(process.Handle, TOKEN_DUPLICATE | TOKEN_IMPERSONATE | TOKEN_QUERY, out ph) )
+            {
+               // Hint of Duplicate handle from
+               // http://msdn.microsoft.com/en-us/library/system.security.principal.windowsidentity.impersonate%28v=vs.71%29.aspx
+               wi = new WindowsIdentity(DuplicateToken(ph, SecurityImpersonation, ref dupeTokenHandle)?dupeTokenHandle:ph);
+            }
+            else
+            {
+               // Might be running under a console app without the correct permissions
+               wi = System.Security.Principal.WindowsIdentity.GetCurrent();
+            }
+            return wi;
          }
          finally
          {
@@ -66,7 +73,6 @@ namespace LiquesceSvc
             if (ph != IntPtr.Zero)
                CloseHandle(ph);
          }
-         return wi;
       }
 
 

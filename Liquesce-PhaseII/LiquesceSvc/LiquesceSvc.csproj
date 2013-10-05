@@ -44,6 +44,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -54,6 +55,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Liquesce.ico</ApplicationIcon>
@@ -129,7 +131,7 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="CBFS4Net, Version=4.0.135.0, Culture=neutral, PublicKeyToken=0f194b348c109bec, processorArchitecture=x86">
+    <Reference Include="CBFS4Net, Version=4.0.136.0, Culture=neutral, PublicKeyToken=0f194b348c109bec, processorArchitecture=x86">
       <HintPath>..\..\..\Amalgam\Phase III\ThirdParty\CBFS\32bit\CBFS4Net.dll</HintPath>
     </Reference>
     <Reference Include="ChinhDo.Transactions">
@@ -149,13 +151,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\..\..\Amalgam\Phase III\AmalgamClientTray\CBFS\Handlers.cs">
-      <Link>CBFS\Handlers.cs</Link>
-    </Compile>
     <Compile Include="..\..\..\Amalgam\Phase III\AmalgamClientTray\CBFS\ICBFSFuncs.cs">
       <Link>CBFS\ICBFSFuncs.cs</Link>
     </Compile>
     <Compile Include="CacheHelper.cs" />
+    <Compile Include="CBFS\CBFSWinUtil.cs" />
+    <Compile Include="CBFS\ICBFSFuncsAdvanced.cs" />
+    <Compile Include="LiquescOpsCBFSImp.cs" />
     <Compile Include="LowLevelOSAccess\FileManager.cs" />
     <Compile Include="LowLevelOSAccess\NativeFileFind.cs" />
     <Compile Include="LowLevelOSAccess\NativeFileOps.cs" />
@@ -182,11 +184,10 @@
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Salt.cs" />
-    <Compile Include="Settings1.cs" />
-    <Compile Include="Settings1.Designer.cs">
+    <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
-      <DependentUpon>Settings1.settings</DependentUpon>
+      <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
     <Compile Include="LowLevelOSAccess\ShellAPI.cs" />
     <Compile Include="LowLevelOSAccess\ShellChangeNotify.cs" />
@@ -198,9 +199,9 @@
       <SubType>Designer</SubType>
     </None>
     <None Include="app.manifest" />
-    <None Include="Settings1.settings">
+    <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings1.Designer.cs</LastGenOutput>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -245,7 +246,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="YearStamp.MonthStamp.DayStamp.Increment" />
+      <UserProperties BuildVersion_BuildVersioningStyle="YearStamp.MonthStamp.DayStamp.Increment" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UseGlobalSettings="True" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

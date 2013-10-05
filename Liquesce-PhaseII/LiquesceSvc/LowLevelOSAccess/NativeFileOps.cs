@@ -32,6 +32,7 @@ using System.Runtime.InteropServices;
 using System.Security;
 using System.Security.Permissions;
 using System.Text;
+using System.Threading;
 using Microsoft.Win32.SafeHandles;
 using NLog;
 
@@ -159,12 +160,12 @@ namespace LiquesceSvc
          RemoveCachedFileInformation();
       }
 
-      public int ReadFile(IntPtr bytes, uint numBytesToRead, out uint numBytesRead_mustBeZero)
+      public int ReadFile(byte[] bytes, int numBytesToRead, out int numBytesRead_mustBeZero)
       {
          numBytesRead_mustBeZero = 0;
          try
          {
-            return ReadFile(handle, bytes, numBytesToRead, out numBytesRead_mustBeZero, IntPtr.Zero);
+            return ReadFile(handle, bytes, numBytesToRead, ref numBytesRead_mustBeZero, null);
          }
          finally
          {
@@ -178,12 +179,12 @@ namespace LiquesceSvc
          handle.Close();
       }
 
-      public int WriteFile(IntPtr buffer, uint numBytesToWrite, out uint numBytesWritten)
+      public int WriteFile(byte[] buffer, int numBytesToWrite, out int numBytesWritten)
       {
          numBytesWritten = 0;
          try
          {
-            return WriteFile(handle, buffer, numBytesToWrite, out numBytesWritten, IntPtr.Zero);
+            return WriteFile(handle, buffer, numBytesToWrite, ref numBytesWritten, null);
          }
          finally
          {
@@ -218,13 +219,13 @@ namespace LiquesceSvc
          do
          {
             NativeFileOps dirInfo = new NativeFileOps(path);
-            FileAttributes attr = dirInfo.Attributes;
-            if ((attr & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint)
+            EFileAttributes attr = (EFileAttributes) dirInfo.Attributes;
+            if ((attr & EFileAttributes.ReparsePoint) == EFileAttributes.ReparsePoint)
             {
                path = AddTrailingSeperator(path);
                const int MaxVolumeNameLength = 100;
                StringBuilder sb = new StringBuilder(MaxVolumeNameLength);
-               if (GetVolumeNameForVolumeMountPointW(path, sb, (uint)MaxVolumeNameLength))
+               if (GetVolumeNameForVolumeMountPointW(path, sb, MaxVolumeNameLength))
                   return sb.ToString();
             }
             DirectoryInfo tmp = Directory.GetParent(path);
@@ -251,16 +252,28 @@ namespace LiquesceSvc
          cachedAttributeData = null;
       }
 
-      public void SetFileTime(ref WIN32_FIND_FILETIME lpCreationTime, ref WIN32_FIND_FILETIME lpLastAccessTime, ref WIN32_FIND_FILETIME lpLastWriteTime)
+      public static WIN32_FIND_FILETIME ConvertDateTimeToFiletime(DateTime time)
       {
-         if (!SetFileTime(handle, ref lpCreationTime, ref lpLastAccessTime, ref lpLastWriteTime))
-            throw new Win32Exception();
-         RemoveCachedFileInformation();
+         WIN32_FIND_FILETIME ft;
+         long hFT1 = time.ToFileTimeUtc();
+         ft.dwLowDateTime = (uint)(hFT1 & 0xFFFFFFFF);
+         ft.dwHighDateTime = (uint)(hFT1 >> 32);
+         return ft;
       }
 
       public static DateTime ConvertFileTimeToDateTime(WIN32_FIND_FILETIME data)
       {
          return DateTime.FromFileTimeUtc((long)data.dwHighDateTime << 32 | data.dwLowDateTime);
+      }
+
+      public void SetFileTime(DateTime creationTime, DateTime lastAccessTime, DateTime lastWriteTime)
+      {
+         WIN32_FIND_FILETIME lpCreationTime = ConvertDateTimeToFiletime(creationTime);
+         WIN32_FIND_FILETIME lpLastAccessTime = ConvertDateTimeToFiletime(lastAccessTime);
+         WIN32_FIND_FILETIME lpLastWriteTime = ConvertDateTimeToFiletime(lastWriteTime);
+         if (!SetFileTime(handle, ref lpCreationTime, ref lpLastAccessTime, ref lpLastWriteTime))
+            throw new Win32Exception();
+         RemoveCachedFileInformation();
       }
 
       /// <summary>
@@ -298,7 +311,7 @@ namespace LiquesceSvc
          }
       }
 
-      public FileAttributes Attributes
+      public uint Attributes
       {
          get
          {
@@ -351,7 +364,7 @@ namespace LiquesceSvc
          {
             try
             {
-               return (Attributes & FileAttributes.Directory) == FileAttributes.Directory;
+               return ((EFileAttributes)Attributes & EFileAttributes.Directory) == EFileAttributes.Directory;
             }
             catch (Exception)
             {
@@ -370,9 +383,9 @@ namespace LiquesceSvc
       }
 
 
-      public void SetFileAttributes(FileAttributes attr)
+      public void SetFileAttributes(uint attr)
       {
-         if (!SetFileAttributesW(FullName, attr))
+         if (!SetFileAttributesW(FullName, (FileAttributes)attr))
             throw new Win32Exception();
          RemoveCachedFileInformation();
       }
@@ -403,6 +416,9 @@ namespace LiquesceSvc
          public IntPtr lpSecurityDescriptor;
          public int bInheritHandle;
       }
+
+      #region Create File
+
       /// <summary>
       /// The CreateFile function creates or opens a file, file stream, directory, physical disk, volume, console buffer, tape drive,
       /// communications resource, mailslot, or named pipe. The function returns a handle that can be used to access an object.
@@ -417,11 +433,12 @@ namespace LiquesceSvc
       /// <param name="hTemplateFile">A handle to a template file with the GENERIC_READ access right. The template file supplies file attributes
       /// and extended attributes for the file that is being created. This parameter can be null</param>
       /// <returns>If the function succeeds, the return value is an open handle to a specified file. If a specified file exists before the function
-      /// all and dwCreationDisposition is CREATE_ALWAYS or OPEN_ALWAYS, a call to GetLastError returns ERROR_ALREADY_EXISTS, even when the function
+      /// call and dwCreationDisposition is CREATE_ALWAYS or OPEN_ALWAYS, a call to GetLastError returns ERROR_ALREADY_EXISTS, even when the function
       /// succeeds. If a file does not exist before the call, GetLastError returns 0 (zero).
       /// If the function fails, the return value is INVALID_HANDLE_VALUE. To get extended error information, call GetLastError.
       /// </returns>
-      [DllImport("kernel32.dll", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.StdCall, SetLastError = true)]
+      [DllImport("kernel32.dll", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.StdCall,
+         SetLastError = true)]
       private static extern SafeFileHandle CreateFileW(
          string lpFileName,
          uint dwDesiredAccess,
@@ -431,6 +448,116 @@ namespace LiquesceSvc
          uint dwFlagsAndAttributes,
          IntPtr hTemplateFile
          );
+
+      // ReSharper disable UnusedMember.Global
+      [Flags]
+      public enum EFileAttributes : uint
+      {
+         Readonly = 0x00000001,
+         Hidden = 0x00000002,
+         System = 0x00000004,
+         Directory = 0x00000010,
+         Archive = 0x00000020,
+         Device = 0x00000040,
+         Normal = 0x00000080,
+         Temporary = 0x00000100,
+         SparseFile = 0x00000200,
+         ReparsePoint = 0x00000400,
+         Compressed = 0x00000800,
+         Offline = 0x00001000,
+         NotContentIndexed = 0x00002000,
+         Encrypted = 0x00004000,
+         Write_Through = 0x80000000,
+         Overlapped = 0x40000000,
+         NoBuffering = 0x20000000,
+         RandomAccess = 0x10000000,
+         SequentialScan = 0x08000000,
+         DeleteOnClose = 0x04000000,
+         BackupSemantics = 0x02000000,
+         PosixSemantics = 0x01000000,
+         OpenReparsePoint = 0x00200000,
+         OpenNoRecall = 0x00100000,
+         FirstPipeInstance = 0x00080000
+      }
+
+      [Flags]
+      public enum EFileAccess : uint
+      {
+         //
+         // Standard Section
+         //
+
+         AccessSystemSecurity = 0x1000000, // AccessSystemAcl access type
+         MaximumAllowed = 0x2000000, // MaximumAllowed access type
+
+         Delete = 0x10000,
+         ReadControl = 0x20000,
+         WriteDAC = 0x40000,
+         WriteOwner = 0x80000,
+         Synchronize = 0x100000,
+
+         StandardRightsRequired = 0xF0000,
+         StandardRightsRead = ReadControl,
+         StandardRightsWrite = ReadControl,
+         StandardRightsExecute = ReadControl,
+         StandardRightsAll = 0x1F0000,
+         SpecificRightsAll = 0xFFFF,
+
+         FILE_READ_DATA = 0x0001, // file & pipe
+         FILE_LIST_DIRECTORY = 0x0001, // directory
+         FILE_WRITE_DATA = 0x0002, // file & pipe
+         FILE_ADD_FILE = 0x0002, // directory
+         FILE_APPEND_DATA = 0x0004, // file
+         FILE_ADD_SUBDIRECTORY = 0x0004, // directory
+         FILE_CREATE_PIPE_INSTANCE = 0x0004, // named pipe
+         FILE_READ_EA = 0x0008, // file & directory
+         FILE_WRITE_EA = 0x0010, // file & directory
+         FILE_EXECUTE = 0x0020, // file
+         FILE_TRAVERSE = 0x0020, // directory
+         FILE_DELETE_CHILD = 0x0040, // directory
+         FILE_READ_ATTRIBUTES = 0x0080, // all
+         FILE_WRITE_ATTRIBUTES = 0x0100, // all
+
+         //
+         // Generic Section
+         //
+
+         GenericRead = 0x80000000,
+         GenericWrite = 0x40000000,
+         GenericExecute = 0x20000000,
+         GenericAll = 0x10000000,
+
+         SPECIFIC_RIGHTS_ALL = 0x00FFFF,
+
+         FILE_ALL_ACCESS =
+            StandardRightsRequired |
+            Synchronize |
+            0x1FF,
+
+         FILE_GENERIC_READ =
+            StandardRightsRead |
+            FILE_READ_DATA |
+            FILE_READ_ATTRIBUTES |
+            FILE_READ_EA |
+            Synchronize,
+
+         FILE_GENERIC_WRITE =
+            StandardRightsWrite |
+            FILE_WRITE_DATA |
+            FILE_WRITE_ATTRIBUTES |
+            FILE_WRITE_EA |
+            FILE_APPEND_DATA |
+            Synchronize,
+
+         FILE_GENERIC_EXECUTE =
+            StandardRightsExecute |
+            FILE_READ_ATTRIBUTES |
+            FILE_EXECUTE |
+            Synchronize
+      }
+      // ReSharper restore UnusedMember.Global
+
+      #endregion
 
       [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
       [return: MarshalAs(UnmanagedType.Bool)]
@@ -464,12 +591,12 @@ namespace LiquesceSvc
       static extern bool SetFilePointerEx(SafeFileHandle Handle, Int64 i64DistanceToMove, IntPtr ptrNewFilePointer, int origin);
 
       [DllImport("kernel32.dll", SetLastError = true)]
-      private static extern int WriteFile(SafeFileHandle handle, IntPtr buffer,
-                                          uint numBytesToWrite, out uint numBytesWritten, IntPtr /*NativeOverlapped* */ lpOverlapped);
+      private static extern int WriteFile(SafeFileHandle handle, byte[] lpBuffer,
+                                          int numBytesToWrite, ref int lpNumBytesWritten, NativeOverlapped? lpOverlapped);
 
       [DllImport("kernel32.dll", SetLastError = true)]
-      private static extern int ReadFile(SafeFileHandle handle, IntPtr bytes,
-                                         uint numBytesToRead, out uint numBytesRead_mustBeZero, IntPtr /*NativeOverlapped* */ overlapped);
+      private static extern int ReadFile(SafeFileHandle handle, byte[] lpBuffer,
+                                         int numBytesToRead, ref int lpNumBytesRead_mustBeZero, NativeOverlapped? overlapped);
 
       [DllImport("kernel32.dll", SetLastError = true)]
       [return: MarshalAs(UnmanagedType.Bool)]
@@ -493,7 +620,6 @@ namespace LiquesceSvc
       private static extern bool GetVolumeNameForVolumeMountPointW(string lpszVolumeMountPoint, [Out] StringBuilder lpszVolumeName,
                                                                    uint cchBufferLength);
 
-
       [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
       [return: MarshalAs(UnmanagedType.Bool)]
       private static extern bool SetFileAttributesW(string name, FileAttributes attr);
@@ -502,7 +628,7 @@ namespace LiquesceSvc
       [StructLayout(LayoutKind.Sequential, Pack = 4)]
       public struct WIN32_FILE_ATTRIBUTE_DATA
       {
-         public FileAttributes dwFileAttributes;
+         public uint dwFileAttributes;
          public WIN32_FIND_FILETIME ftCreationTime;
          public WIN32_FIND_FILETIME ftLastAccessTime;
          public WIN32_FIND_FILETIME ftLastWriteTime;
@@ -531,7 +657,7 @@ namespace LiquesceSvc
       [return: MarshalAs(UnmanagedType.Bool)]
       private static extern bool PathIsDirectoryEmptyW([MarshalAs(UnmanagedType.LPWStr), In] string pszPath);
 
-      private static readonly int MAX_PATH = 260;
+      private const int MAX_PATH = 260;
       // ReSharper disable UnusedMember.Local
       private static readonly int MaxLongPath = 32000;
       private static readonly string Prefix = "\\\\?\\";

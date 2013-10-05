@@ -46,8 +46,7 @@ namespace LiquesceSvc
       /// <param name="newName">FullPath to new</param>
       /// <param name="replaceIfExisting"></param>
       /// <param name="isDirectory"> </param>
-      /// <param name="processID"> </param>
-      public static void Move(Roots roots, string oldName, string newName, bool replaceIfExisting, bool isDirectory, uint processID)
+      public static void Move(Roots roots, string oldName, string newName, bool replaceIfExisting, bool isDirectory)
       {
          Log.Info("MoveFile replaceIfExisting [{0}] filename: [{1}] newname: [{2}] isDirectory:[{3}]", replaceIfExisting, oldName, newName, isDirectory);
 
@@ -61,7 +60,7 @@ namespace LiquesceSvc
             && !replaceIfExisting
             )
          {
-            throw new ECBFSError(CBFSWinError.ERROR_ALREADY_EXISTS);
+            throw new ECBFSError(CBFSWinUtil.ERROR_ALREADY_EXISTS);
          }
 
          if (!isDirectory)

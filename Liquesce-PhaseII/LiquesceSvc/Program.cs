@@ -39,12 +39,13 @@ namespace LiquesceSvc
       /// <summary>
       /// The main entry point for the application.
       /// </summary>
-      /// 
-      
+      /// <remarks>
+      /// Option to either start from SCM or from Console to allow debugging
+      /// </remarks>
       static void Main(string[] args)
       {
          Log.Error("=====================================================================");
-         Log.Error("File Re-opened: Ver :" + Assembly.GetExecutingAssembly().GetName().Version.ToString());
+         Log.Error("File Re-opened: Ver :" + Assembly.GetExecutingAssembly().GetName().Version);
          var runner = new LiquesceService();
          if ((args.Length > 0) && ("/debug" == args[0].ToLower()))
          {
@@ -64,18 +65,5 @@ namespace LiquesceSvc
          }
          Log.Error("========================Clean=Exit===================================");
       }
-      /*
-      static void Main()
-      {
-         Log.Error("=====================================================================");
-         Log.Error("File Re-opened: Ver :" + Assembly.GetExecutingAssembly().GetName().Version.ToString());
-         var runner = new LiquesceService();
-         {
-            LiquesceService.RunningAsService = true;
-            ServiceBase.Run(new ServiceBase[] { runner });
-         }
-         Log.Error("========================Clean=Exit===================================");
-      }
-       * */
    }
 }
