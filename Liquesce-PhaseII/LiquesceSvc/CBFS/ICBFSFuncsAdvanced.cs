@@ -21,15 +21,20 @@ namespace CBFS
       /// i.e. subsequent calls to OnEnumerateNamedStreams event handler. 
       /// </summary>
       /// <param name="fileInfo"></param>
-      /// <param name="handleinfo"></param>
-      /// <param name="namedstreamsenumerationinfo"></param>
-      /// <param name="streamname"></param>
-      /// <param name="streamsize"></param>
-      /// <param name="streamallocationsize"></param>
-      /// <param name="namedstreamfound"></param>
-      void EnumerateNamedStreams(CbFsFileInfo fileInfo, CbFsHandleInfo handleinfo,
-                                 CbFsNamedStreamsEnumerationInfo namedstreamsenumerationinfo, ref string streamname,
-                                 ref long streamsize, ref long streamallocationsize, ref bool namedstreamfound);
+      /// <param name="userContextInfo"></param>
+      /// <param name="namedStreamsEnumerationInfo"></param>
+      /// <param name="streamName"></param>
+      /// <param name="streamSize"></param>
+      /// <param name="streamAllocationSize"></param>
+      /// <param name="aNamedStreamFound"></param>
+      void EnumerateNamedStreams(CbFsFileInfo fileInfo, CbFsHandleInfo userContextInfo, CbFsNamedStreamsEnumerationInfo namedStreamsEnumerationInfo, ref string streamName, ref long streamSize, ref long streamAllocationSize, out bool aNamedStreamFound);
+
+      /// <summary>
+      /// This event is fired when the OS has finished enumerating named streams of the file and requests the resources, allocated for enumeration, to be released. 
+      /// </summary>
+      /// <param name="fileInfo"></param>
+      /// <param name="namedStreamsEnumerationInfo"></param>
+      void CloseNamedStreamsEnumeration(CbFsFileInfo fileInfo, CbFsNamedStreamsEnumerationInfo namedStreamsEnumerationInfo);
 
    }
 
@@ -48,9 +53,7 @@ namespace CBFS
       /// <param name="securityInformation"></param>
       /// <param name="SecurityDescriptor"></param>
       /// <param name="Length"></param>
-      void SetFileSecurity(CbFsFileInfo fileInfo, CbFsHandleInfo userContextInfo,
-                           SECURITY_INFORMATION securityInformation,
-                           IntPtr /*ref SECURITY_DESCRIPTOR*/ SecurityDescriptor, uint Length);
+      void SetFileSecurity(CbFsFileInfo fileInfo, CbFsHandleInfo userContextInfo, uint securityInformation, IntPtr SecurityDescriptor, uint Length);
 
       /// <summary>
       /// This event is fired when the OS wants to obtain file security attributes. 
@@ -71,15 +74,13 @@ namespace CBFS
       /// <param name="RequestedInformation"></param>
       /// <param name="SecurityDescriptor"></param>
       /// <param name="Length"></param>
-      /// <returns>LengthNeeded</returns>
-      uint GetFileSecurity(CbFsFileInfo fileInfo, CbFsHandleInfo userContextInfo,
-                           SECURITY_INFORMATION RequestedInformation,
-                           IntPtr /*ref SECURITY_DESCRIPTOR*/ SecurityDescriptor, uint Length);
+      /// <param name="lengthNeeded"></param>
+      void GetFileSecurity(CbFsFileInfo fileInfo, CbFsHandleInfo userContextInfo, uint RequestedInformation, IntPtr SecurityDescriptor, uint Length, out uint lengthNeeded);
    }
-      interface ICBFSFuncsAdvancedFile
+
+   interface ICBFSFuncsAdvancedFile
    {
-
-
+      
    /// <summary>
       /// Use this event to provide file path by it's unique ID.
       /// </summary>
@@ -181,7 +182,6 @@ UNPROTECTED_SACL_SECURITY_INFORMATION  The SACL inherits ACEs from the parent ob
 
       public CBFSHandlersAdvancedStreams()
       {
-         CbFs.OnEnumerateNamedStreams = EnumerateNamedStreams;
       }
 
       private void EnumerateNamedStreams(CallbackFileSystem sender, CbFsFileInfo fileInfo, CbFsHandleInfo handleinfo,
@@ -193,7 +193,81 @@ UNPROTECTED_SACL_SECURITY_INFORMATION  The SACL inherits ACEs from the parent ob
          try
          {
             EnumerateNamedStreams(fileInfo, handleinfo, namedstreamsenumerationinfo,
-               ref streamname, ref streamsize, ref streamallocationsize, ref namedstreamfound);
+               ref streamname, ref streamsize, ref streamallocationsize, out namedstreamfound);
+         }
+         catch (Exception ex)
+         {
+            CBFSWinUtil.BestAttemptToECBFSError(ex);
+         }
+         finally
+         {
+            Log.Trace("EnumerateNamedStreams OUT");
+         }
+      }
+      public abstract void EnumerateNamedStreams(CbFsFileInfo fileInfo, CbFsHandleInfo userContextInfo, CbFsNamedStreamsEnumerationInfo namedStreamsEnumerationInfo, ref string streamName, ref long streamSize, ref long streamAllocationSize, out bool aNamedStreamFound);
+
+      private void CloseNamedStreamsEnumeration(CallbackFileSystem sender, CbFsFileInfo fileInfo, CbFsNamedStreamsEnumerationInfo namedStreamsEnumerationInfo)
+      {
+         CBFSWinUtil.Invoke("CloseNamedStreamsEnumeration", () => CloseNamedStreamsEnumeration(fileInfo, namedStreamsEnumerationInfo));
+      }
+      public abstract void CloseNamedStreamsEnumeration(CbFsFileInfo fileInfo, CbFsNamedStreamsEnumerationInfo namedStreamsEnumerationInfo);
+   }
+
+   public abstract class CBFSHandlersAdvanced : CBFSHandlers, ICBFSFuncsAdvancedSecurity, ICBFSFuncsAdvancedStreams
+   {
+      private static readonly Logger Log = LogManager.GetCurrentClassLogger();
+
+      public CBFSHandlersAdvanced()
+      {
+         CbFs.OnSetFileSecurity = SetFileSecurity;
+         CbFs.OnGetFileSecurity = GetFileSecurity;
+         CbFs.OnEnumerateNamedStreams = EnumerateNamedStreams;
+         CbFs.OnCloseNamedStreamsEnumeration = CloseNamedStreamsEnumeration;
+
+      }
+
+
+      private void SetFileSecurity(CallbackFileSystem sender, CbFsFileInfo fileInfo, CbFsHandleInfo handleinfo,
+                                   uint securityinformation, IntPtr securitydescriptor, uint length)
+      {
+         CBFSWinUtil.Invoke("SetFileSecurity", () =>
+                                          SetFileSecurity(fileInfo, handleinfo, securityinformation, securitydescriptor, length));
+      }
+
+      public abstract void SetFileSecurity(CbFsFileInfo fileInfo, CbFsHandleInfo userContextInfo, uint securityInformation, IntPtr SecurityDescriptor, uint Length);
+
+      private void GetFileSecurity(CallbackFileSystem sender, CbFsFileInfo fileInfo, CbFsHandleInfo handleinfo,
+                                   uint securityinformation, IntPtr securitydescriptor, uint length,
+                                   ref uint lengthNeeded)
+      {
+         Log.Trace("GetFileSecurity IN");
+         try
+         {
+            GetFileSecurity(fileInfo, handleinfo, securityinformation, securitydescriptor, length, out lengthNeeded);
+         }
+         catch (Exception ex)
+         {
+            CBFSWinUtil.BestAttemptToECBFSError(ex);
+         }
+         finally
+         {
+            Log.Trace("GetFileSecurity OUT");
+         }
+      }
+
+      public abstract void GetFileSecurity(CbFsFileInfo fileInfo, CbFsHandleInfo userContextInfo, uint RequestedInformation, IntPtr SecurityDescriptor, uint Length, out uint lengthNeeded);
+
+
+      private void EnumerateNamedStreams(CallbackFileSystem sender, CbFsFileInfo fileInfo, CbFsHandleInfo handleinfo,
+                                   CbFsNamedStreamsEnumerationInfo namedstreamsenumerationinfo,
+                                   ref string streamname, ref long streamsize, ref long streamallocationsize,
+                                   ref bool namedstreamfound)
+      {
+         Log.Trace("EnumerateNamedStreams IN");
+         try
+         {
+            EnumerateNamedStreams(fileInfo, handleinfo, namedstreamsenumerationinfo,
+               ref streamname, ref streamsize, ref streamallocationsize, out namedstreamfound);
          }
          catch (Exception ex)
          {
@@ -205,52 +279,18 @@ UNPROTECTED_SACL_SECURITY_INFORMATION  The SACL inherits ACEs from the parent ob
          }
       }
 
-      public abstract void EnumerateNamedStreams(CbFsFileInfo fileInfo, CbFsHandleInfo handleinfo,
-                                                 CbFsNamedStreamsEnumerationInfo namedstreamsenumerationinfo,
-                                                 ref string streamname, ref long streamsize,
-                                                 ref long streamallocationsize, ref bool namedstreamfound);
+      public abstract void EnumerateNamedStreams(CbFsFileInfo fileInfo, CbFsHandleInfo userContextInfo, CbFsNamedStreamsEnumerationInfo namedStreamsEnumerationInfo, ref string streamName, ref long streamSize, ref long streamAllocationSize, out bool aNamedStreamFound);
+
+      private void CloseNamedStreamsEnumeration(CallbackFileSystem sender, CbFsFileInfo fileInfo, CbFsNamedStreamsEnumerationInfo namedStreamsEnumerationInfo)
+      {
+         CBFSWinUtil.Invoke("CloseNamedStreamsEnumeration", () => CloseNamedStreamsEnumeration(fileInfo, namedStreamsEnumerationInfo));
+      }
+      public abstract void CloseNamedStreamsEnumeration(CbFsFileInfo fileInfo, CbFsNamedStreamsEnumerationInfo namedStreamsEnumerationInfo);
+
    }
-
-   public abstract class CBFSHandlersAdvancedSecurity : CBFSHandlers, ICBFSFuncsAdvancedSecurity
-   {
-      private static readonly Logger Log = LogManager.GetCurrentClassLogger();
-
-      public CBFSHandlersAdvancedSecurity()
-      {
-         CbFs.OnSetFileSecurity = SetFileSecurity;
-         CbFs.OnGetFileSecurity = GetFileSecurity;
-      }
-
-
-      private void SetFileSecurity(CallbackFileSystem sender, CbFsFileInfo fileInfo, CbFsHandleInfo handleinfo,
-                                   uint securityinformation, IntPtr securitydescriptor, uint length)
-      {
-         CBFSWinUtil.Invoke("CreateFile", () =>
-                                          SetFileSecurity(fileInfo, handleinfo,
-                                             (SECURITY_INFORMATION) securityinformation, securitydescriptor, length));
-      }
-
-      public abstract void SetFileSecurity(CbFsFileInfo fileInfo, CbFsHandleInfo userContextInfo,
-                                           SECURITY_INFORMATION securityInformation, IntPtr SecurityDescriptor,
-                                           uint Length);
-
-      private void GetFileSecurity(CallbackFileSystem sender, CbFsFileInfo fileInfo, CbFsHandleInfo handleinfo,
-                                   uint securityinformation, IntPtr securitydescriptor, uint length,
-                                   ref uint LengthNeeded)
-      {
-         uint lengthNeeded = 0;
-         CBFSWinUtil.Invoke("CreateFile",
-            () =>
-            lengthNeeded =
-            GetFileSecurity(fileInfo, handleinfo, (SECURITY_INFORMATION) securityinformation, securitydescriptor, length));
-         LengthNeeded = lengthNeeded;
-      }
-
-      public abstract uint GetFileSecurity(CbFsFileInfo fileInfo, CbFsHandleInfo userContextInfo,
-                                           SECURITY_INFORMATION RequestedInformation, IntPtr SecurityDescriptor,
-                                           uint Length);
-   }
-      public abstract class CBFSHandlersAdvancedFile : CBFSHandlers, ICBFSFuncsAdvancedFile
+      
+   
+   public abstract class CBFSHandlersAdvancedFile : CBFSHandlers, ICBFSFuncsAdvancedFile
    {
       static private readonly Logger Log = LogManager.GetCurrentClassLogger();
 
@@ -264,7 +304,7 @@ UNPROTECTED_SACL_SECURITY_INFORMATION  The SACL inherits ACEs from the parent ob
    private void GetFileNameByFileId(CallbackFileSystem sender, long fileId, ref string FilePath, ref ushort filePathLength)
       {
          string filePath = string.Empty;
-         CBFSWinUtil.Invoke("CreateFile", () => filePath = GetFileNameByFileId(fileId));
+         CBFSWinUtil.Invoke("GetFileNameByFileId", () => filePath = GetFileNameByFileId(fileId));
          FilePath = filePath;
          filePathLength = (ushort)FilePath.Length;
       }
@@ -272,7 +312,7 @@ UNPROTECTED_SACL_SECURITY_INFORMATION  The SACL inherits ACEs from the parent ob
 
       private void StorageEjected(CallbackFileSystem sender)
       {
-         CBFSWinUtil.Invoke("CreateFile", StorageEjected);
+         CBFSWinUtil.Invoke("StorageEjected", StorageEjected);
       }
       public abstract void StorageEjected();
    }

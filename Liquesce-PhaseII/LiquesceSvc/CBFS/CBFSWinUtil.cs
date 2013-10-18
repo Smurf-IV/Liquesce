@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using CallbackFS;
@@ -30,6 +31,7 @@ namespace CBFS
       /// The error code will be reported to the operating system.
       /// </summary>
       /// <param name="ex"></param>
+      [DebuggerHidden]
       public static void BestAttemptToECBFSError(Exception ex)
       {
          Log.ErrorException("CBFSWinError", ex);
@@ -149,10 +151,10 @@ namespace CBFS
       
       #endregion
 
-      #region Win32 Constants fro file controls
+      #region Win32 Constants for file controls
       public const uint FILE_SHARE_READ = 0x00000001;
       public const uint FILE_SHARE_WRITE = 0x00000002;
-      private const uint FILE_SHARE_DELETE = 0x00000004;
+      public const uint FILE_SHARE_DELETE = 0x00000004;
 
       public const uint CREATE_NEW = 1;
       public const uint CREATE_ALWAYS = 2;
@@ -165,6 +167,7 @@ namespace CBFS
       // ReSharper restore MemberCanBePrivate.Global
       // ReSharper restore InconsistentNaming
       
+      [DebuggerHidden]
       public static void ThrowNotFound(uint attributes)
       {
          var isDirectoy = IsDirectoy(attributes);

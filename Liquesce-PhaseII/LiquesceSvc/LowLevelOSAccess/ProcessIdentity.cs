@@ -25,13 +25,16 @@
 #endregion
 
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Security.Principal;
+using NLog;
 
 namespace LiquesceSvc
 {
    internal static class ProcessIdentity
    {
+      static private readonly Logger Log = LogManager.GetCurrentClassLogger();
       private static readonly CacheHelper<int, WindowsIdentity> cacheProcessIdToWi = new CacheHelper<int, WindowsIdentity>(60);
       internal static readonly int systemProcessId = GetSystemProcessId();
 
@@ -64,7 +67,11 @@ namespace LiquesceSvc
          if (CouldBeSMB(processId))
             act();
          else
-            InvokeHelper(processId, act);
+            using (WindowsImpersonationContext context = InvokeHelper(processId))
+            {
+               act();
+               context.Undo();
+            }
       }
 
       /// <summary>
@@ -77,25 +84,24 @@ namespace LiquesceSvc
          return (systemProcessId == processId);
       }
 
-      private static void InvokeHelper(int processId, Action act)
+      public static WindowsImpersonationContext InvokeHelper(int processId)
       {
+         if (processId == 0)
+            throw new Win32Exception(1314); // ERROR_PRIVILEGE_NOT_HELD
          // To minimise the cache footrint.. All that is needed is the WindowsIdentity from the process
          WindowsIdentity wi;
          if (!cacheProcessIdToWi.TryGetValue(processId, out wi))
          {
             using (Process ownerProcess = Process.GetProcessById(processId))
             {
+               Log.Info("Obtaining processName [{0}] from ID of [{1}]", ownerProcess.ProcessName, processId);
                wi = ownerProcess.WindowsIdentity();
                cacheProcessIdToWi[processId] = wi;
             }
          }
          else
             cacheProcessIdToWi.Touch(processId);
-         using (WindowsImpersonationContext context = wi.Impersonate())
-         {
-            act();
-            context.Undo();
-         }
+         return wi.Impersonate();
       }
 
    }
