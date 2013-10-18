@@ -25,7 +25,6 @@
 #endregion
 
 using System;
-using System.IO;
 using System.Runtime.InteropServices;
 
 namespace LiquesceSvc
@@ -84,5 +83,44 @@ namespace LiquesceSvc
       [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 14)] public readonly string cAlternateFileName;
    }
    // ReSharper restore FieldCanBeMadeReadOnly.Global
+
+   // ReSharper disable UnusedMember.Global
+   // http://msdn.microsoft.com/en-us/library/windows/desktop/aa362667(v=vs.85).aspx
+   public enum FileStreamType
+   {
+      Data = 1,
+      ExternalData = 2,
+      SecurityData = 3,
+      AlternateData = 4,
+      Link = 5,
+      PropertyData = 6,
+      ObjectID = 7,
+      ReparseData = 8,
+      SparseDock = 9,
+      BACKUP_TXFS_DATA  // Transactional NTFS (TxF) data stream. This corresponds to the NTFS $TXF_DATA stream type.
+   }
+   [Flags]
+   public enum FileStreamAttributes
+   {
+      None = 0,
+      ModifiedWhenRead = 1,
+      ContainsSecurity = 2,
+      ContainsProperties = 4,
+      Sparse = 8,
+   }
+   // ReSharper restore UnusedMember.Global
+
+   // ReSharper disable FieldCanBeMadeReadOnly.Global
+   [StructLayout(LayoutKind.Sequential, Pack = 4)]
+   public struct WIN32_STREAM_ID
+   {
+      public UInt32 dwStreamType;
+      public UInt32 dwStreamAttributes;
+      public long Size;
+      public UInt32 dwStreamNameSize;
+      // WCHAR cStreamName[1]; 
+   }
+   // ReSharper restore FieldCanBeMadeReadOnly.Global
+
 
 }

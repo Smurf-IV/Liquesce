@@ -1,5 +1,5 @@
-{\rtf1\ansi\ansicpg1252\deff0{\fonttbl{\f0\fswiss\fprq2\fcharset0 Tahoma;}{\f1\fnil\fcharset0 Courier New;}{\f2\fmodern\fprq1\fcharset0 Courier New;}{\f3\fnil Courier New;}{\f4\fnil Consolas;}{\f5\fnil\fcharset0 Consolas;}{\f6\fnil\fcharset0 Tahoma;}}
-{\colortbl ;\red0\green0\blue0;\red0\green0\blue255;\red192\green80\blue77;\red255\green0\blue0;\red0\green128\blue0;}
+{\rtf1\ansi\ansicpg1252\deff0{\fonttbl{\f0\fswiss\fprq2\fcharset0 Tahoma;}{\f1\fnil\fcharset0 Courier New;}{\f2\fmodern\fprq1\fcharset0 Courier New;}{\f3\fnil Courier New;}{\f4\fnil Consolas;}{\f5\fnil\fcharset0 Tahoma;}{\f6\fnil\fcharset0 Consolas;}}
+{\colortbl ;\red0\green0\blue0;\red0\green0\blue255;\red192\green80\blue77;\red0\green128\blue0;\red255\green0\blue0;}
 {\*\generator Msftedit 5.41.21.2510;}\viewkind4\uc1\pard\cf1\lang2057\ul\b\f0\fs20 Welcome to the \i Liquesce \i0 Changelog\cf0\ulnone\b0\f1\par
 \cf1\f0\par
 Currently this is just a place holder for all the cool stuff that has happened to this project :-)\par
@@ -19,23 +19,61 @@ Keep an open eye on the \cf0\b{\field{\*\fldinst{HYPERLINK "http://liquesce.code
 \f0\fs20 Service logs will go into \f3\fs19 "\cf2 $\{specialfolder:folder=CommonApplicationData\}/LiquesceSvc/Logs\cf0 "\par
 \f0\fs20\par
 \ul\b TODO \par
-\cf3\ulnone\b0 - Fix Issues\par
-- Change the space usage to be a table with scroll-bars to give better layout options (And sorting etc.)\par
+\cf3\ulnone\b0 - Test Each API callback\par
+- - ThreadPoolSize\par
+- - ParallelProcessingAllowed    \par
+- - Fix Event messages\par
+- Test if moving most of the functions of NativeFileOps, to use FileStream base class, as it has lot's of useful things already derived.\par
+- Fix Tray Application\par
+- Fix Mgt application to "Talk" to the config directly\par
+- - \cf0\f4\fs19 IsCBFSVolume\par
+\cf3\f0\fs20 - Fix CBFS install for V4/V5\par
+- Fix Installer\par
+- Test Suite of operations\par
+- \b Release 1st CBFS implementation\b0\par
+- Usage stats to be reported in Tray\ul\b\par
+\ulnone\b0 - Change the space usage to be a table with scroll-bars to give better layout options (And sorting etc.)\par
+- Start to move Mgt app to use the WizardTracker\par
+- Explorer plugin\par
 - Find an FTP service that works well with this and Amalgam to allow sharing.\par
-\cf0\ul\b\par
-\cf1\ulnone\b0\par
+- Fix Issues\par
+\cf1\par
 \cf0\ul\b Done\par
-2013-10-##\par
+2013-10-18\par
+\ulnone\b0\f5  - \cf4 If a recycler is required then request usage of an existing one from a root drive.\cf0\par
+- Directory Create\par
+- GetFileInfo\par
+- FileRead\par
+- FileWrite\par
+\f0 - Change SetFileAttributes to only set if things have changed\par
+- Check for "DateTime.MinValue" when converting times for attributes.\par
+- The Read and write locks now span the functions to prevent closure whilst in use.\par
+- Remove "FileAttributes.Offline" whilst in Trace, as this prevent the files from being read\par
+- Implement a "FileName" function to extract out from Paths.\par
+- Add logging for the ProcessId to Name lookup\par
+- - What have I found from this:\par
+- - - Open file is passing the context of the previous File context if it already open via CBFS\par
+- - - The context is not reset if another application is opening the same file\par
+- - - Therefore the CBFS handle used must allow full access\par
+- - - And that means the check for the actual user requested Shared / Access has to be indepenedent to this initial open.\par
+- - - Sharing of the user request has to be tested first before the CBFS handle is created.\par
+- - Implement OpenUnderTheRadarFileStream for the "Global" CBFSHandle\par
+- Add Stream Enumeration\par
+- Wordpad, Notepad, Media Player, Image Preview, 7Zip tests\par
+- GetSecurityInfo (Too Small and then full read)\par
+\par
+\ul\b\par
+2013-10-06\par
 \ulnone\b0 - Sort out VolumeLabel\par
 - VolumeID\par
 - Use the RamDisk\par
 - Set type to "NTFS"\par
-- Use CBFS Caching (All of them)\par
+- Use of CBFS Caching (All of them)\par
 - GetSecurity\par
 - Directory Delete\par
 - Directory Open\par
-- Directory Create -  Problem\par
-- File read - not firing\par
+- Directory Create -  \cf5 Problem\cf0\par
+- File read - \cf5 not firing\cf0\par
 \par
 \ul\b\par
 2013-09-##\par
@@ -50,7 +88,7 @@ Keep an open eye on the \cf0\b{\field{\*\fldinst{HYPERLINK "http://liquesce.code
 2013-07-##\par
 \ulnone\b0 - Over the year I have been slowly learning how to use the CBFS and implementing test applications\par
 - Move back to using IDE 2010 (Do not like 2012!)\par
-- Use new transaction DLL \cf4\f4\fs19 ChinhDo\f5  1.3\f4\par
+- Use new transaction DLL \cf5\f4\fs19 ChinhDo\f6  1.3\f4\par
 \cf0\f0\fs20 - Branch code to start Phase][\par
 - Move over to using newer CBFS V4\par
 - Remove DokanNet\par
@@ -97,7 +135,7 @@ Keep an open eye on the \cf0\b{\field{\*\fldinst{HYPERLINK "http://liquesce.code
 - Fix \cf3 Deleting directories\par
 \cf0 - Solved \cf3 Problems sharing a drive (Hosted on XP)\cf0  (See workaround in Item)\par
 - Solved \cf3 0.6.0 Sharing on Win 7 x64 & x32 Host Locks up XP Client\cf0  (See workaround in Item) \par
-\cf3\f6 - NTFS is case-preserving but case-insensitive in the Win32 namespace\cf5\f4\fs19\par
+\cf3\f5 - NTFS is case-preserving but case-insensitive in the Win32 namespace\cf4\f4\fs19\par
 \cf0\ul\b\f0\fs20\par
 \par
 2012-01-28 (Release Candidate)\par
@@ -144,11 +182,11 @@ Keep an open eye on the \cf0\b{\field{\*\fldinst{HYPERLINK "http://liquesce.code
 \par
 \ul\b\par
 2011-11-17\par
-\ulnone\b0 - Switch to using for the \f4\fs19 GetFileInformationByHandle\f5 () \f0\fs20 for speed (Probably) and direct return of upto date information from the native file system.\par
+\ulnone\b0 - Switch to using for the \f4\fs19 GetFileInformationByHandle\f6 () \f0\fs20 for speed (Probably) and direct return of upto date information from the native file system.\par
 - Fix the "Left over" text for the backup in the space display.\par
 - Re-focused the need for security on the GetFileInformation and SetFile operations.\par
-- Add code to inform explorer (And other Apps via OS) that things have changed in the mounted drive [\f4\fs19 SHChangeNotify\f5  API]\f0\fs20 .\par
-- Sort out the code for the file renames in Win 7 and \cf5\f4\fs19 "\cf0{\field{\*\fldinst{HYPERLINK "http://code.google.com/p/dokan/issues/detail?id=238"}}{\fldrslt{\ul\cf2 http://code.google.com/p/dokan/issues/detail?id=238}}}\cf5\f4\fs19 " \par
+- Add code to inform explorer (And other Apps via OS) that things have changed in the mounted drive [\f4\fs19 SHChangeNotify\f6  API]\f0\fs20 .\par
+- Sort out the code for the file renames in Win 7 and \cf4\f4\fs19 "\cf0{\field{\*\fldinst{HYPERLINK "http://code.google.com/p/dokan/issues/detail?id=238"}}{\fldrslt{\ul\cf2 http://code.google.com/p/dokan/issues/detail?id=238}}}\cf4\f4\fs19 " \par
 \cf0\par
 \ul\b\f0\fs20\par
 2011-10-30\par
@@ -176,7 +214,7 @@ Keep an open eye on the \cf0\b{\field{\*\fldinst{HYPERLINK "http://liquesce.code
 - Change how file Read and write detect if a context has been passed in (Thanks NightThunder)\par
 - Add some more focused exception messages in MainForm\par
 - Add manifest file to the service to run as high as possible (For FileSecurity API's)\par
-- Implement workaround for \f4\fs19{\field{\*\fldinst{HYPERLINK "http://code.google.com/p/dokan/issues/detail?id=209"}}{\fldrslt{\ul\cf2 http://code.google.com/p/dokan/issues/detail?id=209}}}\f5\fs19  as manifest does not work for share access\f0\fs20\par
+- Implement workaround for \f4\fs19{\field{\*\fldinst{HYPERLINK "http://code.google.com/p/dokan/issues/detail?id=209"}}{\fldrslt{\ul\cf2 http://code.google.com/p/dokan/issues/detail?id=209}}}\f6\fs19  as manifest does not work for share access\f0\fs20\par
 - Fix the tray menu to only have service control when the correct key sequence is held.\par
 \par
 \ul\b\par

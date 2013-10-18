@@ -64,12 +64,14 @@ namespace LiquesceSvc
 
       #region IDokanOperations Implementation
 
-      private void FindFiles(string filename, int processId, out WIN32_FIND_DATA[] files, string pattern = "*")
+      // TODO: Need a away to make the IEnumberable, so that large dir counts do not get bogged down.
+      // yield return WIN32_FIND_DATA
+      private void FindFiles(string startPath, int processId, out WIN32_FIND_DATA[] files, string pattern = "*")
       {
          files = null;
          try
          {
-            Log.Debug("FindFiles IN [{0}], pattern[{1}]", filename, pattern);
+            Log.Debug("FindFiles IN startPath[{0}], pattern[{1}]", startPath, pattern);
             // NTFS is case-preserving but case-insensitive in the Win32 namespace
             Dictionary<string, WIN32_FIND_DATA> uniqueFiles =
                new Dictionary<string, WIN32_FIND_DATA>(StringComparer.OrdinalIgnoreCase);
@@ -80,7 +82,7 @@ namespace LiquesceSvc
                // Do this in reverse, so that the preferred references overwrite the older files
                for (int i = configDetails.SourceLocations.Count - 1; i >= 0; i--)
                {
-                  NativeFileFind.AddFiles(configDetails.SourceLocations[i] + filename, uniqueFiles, pattern);
+                  NativeFileFind.AddFiles(configDetails.SourceLocations[i] + startPath, uniqueFiles, pattern);
                }
             });
             // If these are not found then the loop speed of a "failed remove" and "not finding" is the same !

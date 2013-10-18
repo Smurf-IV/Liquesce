@@ -59,6 +59,8 @@ namespace LiquesceSvc
       public NativeFileOps GetPath(string filename, ulong spaceRequired = 0)
       {
          NativeFileOps fsi = null;
+         bool isNamedStream = false;
+         string namedStream = string.Empty;
          try
          {
             // Even A directory requires 4K to be created !
@@ -69,6 +71,16 @@ namespace LiquesceSvc
             {
                Log.Trace("Found in cache");
                return fsi;
+            }
+            string[] splits = filename.Split(new[] {':'}, StringSplitOptions.RemoveEmptyEntries);
+            int offset = Path.IsPathRooted( filename )?2:1;
+            if ( (splits != null)
+               && (splits.Length > offset)
+               )
+            {
+               isNamedStream = true;
+               filename = splits[offset-1];
+               namedStream = splits[offset];
             }
             string foundPath = FindAllocationRootPath(filename, spaceRequired);
             if (string.IsNullOrEmpty(foundPath))
@@ -117,6 +129,11 @@ namespace LiquesceSvc
             {
                Log.Debug("GetPath from [{0}] found [{1}]", filename, fsi.FullName);
                cachedRootPathsSystemInfo[filename] = fsi;
+               if (isNamedStream)
+               {
+                  Log.Warn("isNamedStream [{0}] found [{1}]", filename, namedStream);
+                  cachedRootPathsSystemInfo[string.Format("{0}:{1}",filename, namedStream)] = fsi;
+               }
             }
             else
             {

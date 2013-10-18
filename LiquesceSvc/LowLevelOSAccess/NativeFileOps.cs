@@ -25,16 +25,17 @@
 #endregion
 
 using System;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Security;
-using System.Security.Permissions;
+using System.Security.AccessControl;
+using System.Security.Principal;
 using System.Text;
 using System.Threading;
 using Microsoft.Win32.SafeHandles;
-using NLog;
 
 namespace LiquesceSvc
 {
@@ -43,11 +44,10 @@ namespace LiquesceSvc
    /// </summary>
    [SuppressUnmanagedCodeSecurity]
    [SecurityCritical]
-   internal class NativeFileOps
+   internal class NativeFileOps : IDisposable
    {
       public string FullName { get; private set; }
       private readonly SafeFileHandle handle;
-      static private readonly Logger Log = LogManager.GetCurrentClassLogger();
 
       /// <summary>
       /// Not all file systems can record creation and last access times, and not all file systems record them in the same manner. 
@@ -114,14 +114,17 @@ namespace LiquesceSvc
       static public void CreateDirectory(string pathName)
       {
          Directory.CreateDirectory(pathName);
+         DirectorySecurity sec = Directory.GetAccessControl(pathName);
+         // Using this instead of the "Everyone" string means we work on non-English systems.
+         SecurityIdentifier everyone = new SecurityIdentifier(WellKnownSidType.WorldSid, null);
+         // Aim for: Everyone | Modify, Synchronize | ContainerInherit, ObjectInherit | None | Allow
+         sec.AddAccessRule(new FileSystemAccessRule(everyone, FileSystemRights.Modify | FileSystemRights.Synchronize, InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit, PropagationFlags.None, AccessControlType.Allow));
+         Directory.SetAccessControl(pathName, sec);
       }
 
       public void CreateDirectory()
       {
-         if (!Exists)
-         {
-            CreateDirectory(FullName);
-         }
+         CreateDirectory(FullName);
       }
 
       static public void DeleteDirectory(string path)
@@ -160,31 +163,25 @@ namespace LiquesceSvc
          RemoveCachedFileInformation();
       }
 
-      public int ReadFile(byte[] bytes, int numBytesToRead, out int numBytesRead_mustBeZero)
+      public bool ReadFile(byte[] bytes, UInt32 numBytesToRead, out UInt32 numBytesRead_mustBeZero)
       {
          numBytesRead_mustBeZero = 0;
-         try
-         {
-            return ReadFile(handle, bytes, numBytesToRead, ref numBytesRead_mustBeZero, null);
-         }
-         finally
-         {
-            if (numBytesRead_mustBeZero != 0)
-               RemoveCachedFileInformation();
-         }
+         //NativeOverlapped overlapped = new NativeOverlapped();
+         return ReadFile(handle, bytes, numBytesToRead, out numBytesRead_mustBeZero, IntPtr.Zero);
       }
 
       public void Close()
       {
-         handle.Close();
+         this.Dispose(true);
       }
 
-      public int WriteFile(byte[] buffer, int numBytesToWrite, out int numBytesWritten)
+      public bool WriteFile(byte[] buffer, UInt32 numBytesToWrite, out UInt32 numBytesWritten)
       {
          numBytesWritten = 0;
          try
          {
-            return WriteFile(handle, buffer, numBytesToWrite, ref numBytesWritten, null);
+            //NativeOverlapped overlapped = new NativeOverlapped();
+            return WriteFile(handle, buffer, numBytesToWrite, out numBytesWritten, IntPtr.Zero);
          }
          finally
          {
@@ -219,7 +216,7 @@ namespace LiquesceSvc
          do
          {
             NativeFileOps dirInfo = new NativeFileOps(path);
-            EFileAttributes attr = (EFileAttributes) dirInfo.Attributes;
+            EFileAttributes attr = (EFileAttributes)dirInfo.Attributes;
             if ((attr & EFileAttributes.ReparsePoint) == EFileAttributes.ReparsePoint)
             {
                path = AddTrailingSeperator(path);
@@ -252,10 +249,10 @@ namespace LiquesceSvc
          cachedAttributeData = null;
       }
 
-      public static WIN32_FIND_FILETIME ConvertDateTimeToFiletime(DateTime time)
+      private static WIN32_FIND_FILETIME ConvertDateTimeToFiletime(DateTime time)
       {
          WIN32_FIND_FILETIME ft;
-         long hFT1 = time.ToFileTimeUtc();
+         long hFT1 = (time != DateTime.MinValue) ? time.ToFileTimeUtc() : 0;
          ft.dwLowDateTime = (uint)(hFT1 & 0xFFFFFFFF);
          ft.dwHighDateTime = (uint)(hFT1 >> 32);
          return ft;
@@ -263,7 +260,8 @@ namespace LiquesceSvc
 
       public static DateTime ConvertFileTimeToDateTime(WIN32_FIND_FILETIME data)
       {
-         return DateTime.FromFileTimeUtc((long)data.dwHighDateTime << 32 | data.dwLowDateTime);
+         long fileTime = ((long)data.dwHighDateTime << 32) | data.dwLowDateTime;
+         return (fileTime != 0) ? DateTime.FromFileTimeUtc(fileTime) : DateTime.MinValue;
       }
 
       public void SetFileTime(DateTime creationTime, DateTime lastAccessTime, DateTime lastWriteTime)
@@ -325,12 +323,32 @@ namespace LiquesceSvc
          {
             // Stolen from Path.GetDirectoryName() then simplified
             int length = FullName.Length;
+            char ch;
             do
             {
-            } while ((FullName[--length] != Path.DirectorySeparatorChar)
-               && (FullName[length] != Path.AltDirectorySeparatorChar)
+               ch = FullName[--length];
+            } while ((ch != Path.DirectorySeparatorChar)
+               && (ch != Path.AltDirectorySeparatorChar)
                );
             return FullName.Substring(0, length);
+         }
+      }
+
+      public string FileName
+      {
+         get
+         {
+            // Stolen from Path.GetFileName() then simplified
+            int length = FullName.Length;
+            int index = length;
+            char ch;
+            do
+            {
+               ch = FullName[--index];
+            } while ((ch != Path.DirectorySeparatorChar)
+               && (ch != Path.AltDirectorySeparatorChar)
+               );
+            return FullName.Substring(index + 1, length - index - 1);
          }
       }
 
@@ -338,7 +356,7 @@ namespace LiquesceSvc
       {
          get
          {
-            return (!Exists || IsDirectory) ? 0 : (long)cachedAttributeData.Value.nFileSizeHigh << 32 | (long)cachedAttributeData.Value.nFileSizeLow & (long)UInt32.MaxValue;
+            return (!Exists || IsDirectory) ? 0 : ((long)cachedAttributeData.Value.nFileSizeHigh << 32) | (cachedAttributeData.Value.nFileSizeLow & UInt32.MaxValue);
          }
       }
 
@@ -382,6 +400,11 @@ namespace LiquesceSvc
          }
       }
 
+      public WIN32_FIND_DATA GetFindData()
+      {
+         WIN32_FIND_DATA findData = new WIN32_FIND_DATA();
+         return (NativeFileFind.FindFirstOnly(FullName, ref findData) ? findData : new WIN32_FIND_DATA());
+      }
 
       public void SetFileAttributes(uint attr)
       {
@@ -405,6 +428,30 @@ namespace LiquesceSvc
          }
          return buffer.ToString();
       }
+
+      public ReadOnlyCollection<AlternateNativeInfo> ListAlternateDataStreams()
+      {
+         return NativeFileFind.ListAlternateDataStreams(handle).AsReadOnly();
+      }
+
+      public void SetFileSecurity(uint SecurityInformation, IntPtr SecurityDecriptor)
+      {
+         if (! SetFileSecurityW(FullName, SecurityInformation, SecurityDecriptor))
+         {
+            throw new Win32Exception();
+         }
+      }
+
+      public void GetFileSecurity(uint SecurityInformation, IntPtr SecurityDescriptor, uint length, ref uint lengthNeeded)
+      {
+         if (!GetFileSecurityW(FullName, SecurityInformation, SecurityDescriptor, length, ref lengthNeeded))
+         {
+            throw new Win32Exception();
+         }
+         if (0 == lengthNeeded)
+            lengthNeeded = GetSecurityDescriptorLength(SecurityDescriptor);
+      }
+
 
       #region DLL Imports
       // Stolen from http://www.123aspx.com/Rotor/RotorSrc.aspx?rot=42415
@@ -591,12 +638,14 @@ namespace LiquesceSvc
       static extern bool SetFilePointerEx(SafeFileHandle Handle, Int64 i64DistanceToMove, IntPtr ptrNewFilePointer, int origin);
 
       [DllImport("kernel32.dll", SetLastError = true)]
-      private static extern int WriteFile(SafeFileHandle handle, byte[] lpBuffer,
-                                          int numBytesToWrite, ref int lpNumBytesWritten, NativeOverlapped? lpOverlapped);
+      [return: MarshalAs(UnmanagedType.Bool)]
+      private static extern bool WriteFile(SafeFileHandle handle, [In] byte[] lpBuffer,
+                                          [In] UInt32 numBytesToWrite, out UInt32 lpNumBytesWritten, [In] IntPtr lpOverlapped);
 
       [DllImport("kernel32.dll", SetLastError = true)]
-      private static extern int ReadFile(SafeFileHandle handle, byte[] lpBuffer,
-                                         int numBytesToRead, ref int lpNumBytesRead_mustBeZero, NativeOverlapped? overlapped);
+      [return: MarshalAs(UnmanagedType.Bool)]
+      private static extern bool ReadFile(SafeFileHandle handle, [Out] byte[] lpBuffer,
+                                         [In] UInt32 numBytesToRead, out UInt32 lpNumBytesRead_mustBeZero, [In] IntPtr overlapped);
 
       [DllImport("kernel32.dll", SetLastError = true)]
       [return: MarshalAs(UnmanagedType.Bool)]
@@ -626,7 +675,7 @@ namespace LiquesceSvc
 
       // Stolen from 
       [StructLayout(LayoutKind.Sequential, Pack = 4)]
-      public struct WIN32_FILE_ATTRIBUTE_DATA
+      private struct WIN32_FILE_ATTRIBUTE_DATA
       {
          public uint dwFileAttributes;
          public WIN32_FIND_FILETIME ftCreationTime;
@@ -672,7 +721,70 @@ namespace LiquesceSvc
       [return: MarshalAs(UnmanagedType.Bool)]
       private static extern bool DeleteFileW([MarshalAs(UnmanagedType.LPWStr), In] string path);
 
+      [DllImport("Advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+      [return: MarshalAs(UnmanagedType.Bool)]
+      private static extern bool SetFileSecurityW([In] string FileName, [In] uint SecurityInformation, [In] IntPtr SecurityDecriptor);
+
+      [DllImport("Advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+      [return: MarshalAs(UnmanagedType.Bool)]
+      private static extern bool GetFileSecurityW( [In] string FileName,
+          [In] uint SecurityInformation, IntPtr SecurityDecriptor, [In] uint Length, ref uint LengthNeeded);
+
+      [DllImport("advapi32.dll")]
+      private static extern UInt32 GetSecurityDescriptorLength( [In] IntPtr pSecurityDescriptor);
+
       #endregion
+
+      #region Disposing!
+
+      ~NativeFileOps()
+      {
+         Dispose(false);
+      }
+
+      public void Dispose()
+      {
+         Dispose(true);
+      }
+
+      // Should this also dispose of the Win32 structores as well ?
+      private void Dispose(bool disposing)
+      {
+         if ( disposing
+            && !handle.IsInvalid
+             && !handle.IsClosed
+            )
+         {
+            handle.Close();
+         }
+      }
+
+      #endregion
+
+      /// <summary>
+      /// Stores the user side process ID
+      /// </summary>
+      public int ProcessID { get; set; }
+
+      private int openCount;
+      /// <summary>
+      /// Increment the open counter (for internal usage)
+      /// </summary>
+      /// <returns></returns>
+      public int IncrementOpenCount()
+      {
+         return Interlocked.Increment(ref openCount);
+      }
+
+      /// <summary>
+      /// Decrement the counter (for internal usage)
+      /// </summary>
+      /// <returns>The value after the decrement</returns>
+      public int DecrementOpenCount()
+      {
+         return Interlocked.Decrement(ref openCount);
+      }
+
    }
 
 
