@@ -60,7 +60,7 @@ namespace Liquesce
 
       [DescriptionAttribute("0 is automatic (Number of processing units * 2), use 1 for problem finding scenario's.\rRange 0 <-> 31"),
        DisplayName("Thread Count")
-      , CategoryAttribute("Dokan")
+      , CategoryAttribute("CBFS")
       ]
       [TypeConverter(typeof(NumericUpDownTypeConverter))]
       [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMaxAttribute(0, 31)]

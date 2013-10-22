@@ -28,11 +28,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Security.AccessControl;
-using System.Security.Principal;
 using CallbackFS;
 using CBFS;
 using LiquesceFacade;
@@ -132,17 +131,18 @@ namespace LiquesceSvc
       private void CallOpenCreateFile(uint DesiredAccess, NativeFileOps.EFileAttributes fileAttributes, uint ShareMode, CbFsFileInfo fileInfo,
                                            uint creation, int processId, string fullName, CbFsHandleInfo userContextInfo)
       {
+         long openFileKey = fileInfo.UserContext.ToInt64();
          Log.Debug(
-            "CallOpenCreateFile IN fullName [{0}], DesiredAccess[{1}], fileAttributes[{2}], ShareMode[{3}], creation [{4}], ProcessId[{5}]",
-            fullName, (NativeFileOps.EFileAccess)DesiredAccess, fileAttributes, (FileShare)ShareMode, creation, processId);
+            "CallOpenCreateFile IN fullName [{0}], DesiredAccess[{1}], fileAttributes[{2}], ShareMode[{3}], creation [{4}], ProcessId[{5}], openFileKey [{6}]",
+            fullName, (NativeFileOps.EFileAccess)DesiredAccess, fileAttributes, (FileShare)ShareMode, creation, processId, openFileKey);
+         int lastError = 0;
          if (CBFSWinUtil.IsDirectoy(fileAttributes))
          {
             fileAttributes |= NativeFileOps.EFileAttributes.BackupSemantics;
          }
-         using (openFilesSync.UpgradableReadLock())
+         NativeFileOps userFileStream = null;
+         try
          {
-            int lastError = 0;
-            NativeFileOps userFileStream = null;
             PID.Invoke(processId, () =>
             {
                userFileStream = NativeFileOps.CreateFile(fullName, DesiredAccess, ShareMode, creation, (uint)fileAttributes);
@@ -151,32 +151,24 @@ namespace LiquesceSvc
                lastError = Marshal.GetLastWin32Error();
             });
             Log.Trace("It's not gone boom, so it must be okay..");
-            if ((userFileStream == null)
-               || userFileStream.IsInvalid
-               )
+            userFileStream.Close();
+         }
+         catch (Win32Exception w32e)
+         {
+            if (w32e.NativeErrorCode == CBFSWinUtil.ERROR_SHARING_VIOLATION)
             {
-               throw new Win32Exception(lastError);
+               // For some reason when the dllhost (Photo viewer) attempts to open, it throws an "In-Use" error
+               // Probably caused by the explorer already opening when performing the double click launch
+               if (PID.GetProcessName(processId) != "dllhost")
+                  throw;
             }
-            using (openFilesSync.WriteLock())
-            {
-               userContextInfo.UserContext = new IntPtr(++openFilesLastKey);
-               openFiles.Add(openFilesLastKey, userFileStream);
-               Log.Debug("CallOpenCreateFile userContextInfo openFilesLastKey[{0}]", openFilesLastKey);
-               userFileStream.ProcessID = processId;
-            }
-            long openFileKey = fileInfo.UserContext.ToInt64();
+         }
+         using (openFilesSync.UpgradableReadLock())
+         {
             NativeFileOps fileStream;
             if (!openFiles.TryGetValue(openFileKey, out fileStream))
             {
-               try
-               {
-                  fileStream = OpenUnderTheRadarFileStream(fullName);
-               }
-               catch (Win32Exception w32e)
-               {
-                  Log.WarnException("2nd open failed, so reuse the user version", w32e);
-                  fileStream = userFileStream;
-               }
+               fileStream = OpenUnderTheRadarFileStream(fullName, fileAttributes);
                using (openFilesSync.WriteLock())
                {
                   fileInfo.UserContext = new IntPtr(++openFilesLastKey);
@@ -184,10 +176,20 @@ namespace LiquesceSvc
                   Log.Debug("CallOpenCreateFile fileInfo openFilesLastKey[{0}]", openFilesLastKey);
                }
             }
-            Log.Debug("CallOpenCreateFile fileInfo IncrementOpenCount[{0}]", fileStream.IncrementOpenCount());
+            int currentOpenCount = fileStream.IncrementOpenCount();
+            userFileStream = NativeFileOps.DuplicateHandle(fileStream);
+            using (openFilesSync.WriteLock())
+            {
+               userContextInfo.UserContext = new IntPtr(++openFilesLastKey);
+               openFiles.Add(openFilesLastKey, userFileStream);
+               Log.Debug("CallOpenCreateFile userContextInfo openFilesLastKey[{0}]", openFilesLastKey);
+               userFileStream.ProcessID = processId;
+            }
+
+            Log.Debug("CallOpenCreateFile fileInfo IncrementOpenCount[{0}]", currentOpenCount);
 
             if ((lastError != 0)
-               && (lastError != CBFSWinUtil.ERROR_ALREADY_EXISTS)
+               //&& (lastError != CBFSWinUtil.ERROR_ALREADY_EXISTS)
                )
             {
                throw new Win32Exception(lastError);
@@ -195,30 +197,30 @@ namespace LiquesceSvc
          }
       }
 
-      private NativeFileOps OpenUnderTheRadarFileStream(string fileName)
+      private NativeFileOps OpenUnderTheRadarFileStream(string fileName, NativeFileOps.EFileAttributes fileAttributes)
       {
-         NativeFileOps.EFileAccess accessMode;
+         const NativeFileOps.EFileAccess accessMode = NativeFileOps.EFileAccess.FILE_GENERIC_READ | NativeFileOps.EFileAccess.FILE_GENERIC_WRITE;
          NativeFileOps.EFileAttributes flagsAndAttributes;
 
-         NativeFileOps fsi = roots.GetPath(fileName);
-         Log.Warn("No context handle for [{0}]", fsi.FullName);
+         Log.Info("OpenUnderTheRadarFileStream for [{0}]", fileName);
          const uint share = CBFSWinUtil.FILE_SHARE_READ | CBFSWinUtil.FILE_SHARE_WRITE | CBFSWinUtil.FILE_SHARE_DELETE;
 
          const uint creationDisposition = CBFSWinUtil.OPEN_EXISTING;
-         if (fsi.IsDirectory)
+         if (CBFSWinUtil.IsDirectoy(fileAttributes))
          {
-            accessMode = 0;
-            flagsAndAttributes = NativeFileOps.EFileAttributes.BackupSemantics;
+            Log.Trace("Detected as a Directory");
+            flagsAndAttributes = NativeFileOps.EFileAttributes.BackupSemantics ;
          }
          else
          {
-            accessMode = NativeFileOps.EFileAccess.FILE_GENERIC_READ | NativeFileOps.EFileAccess.FILE_GENERIC_WRITE;
-            flagsAndAttributes = NativeFileOps.EFileAttributes.Normal;
+            Log.Trace("Detected as a File");
+            flagsAndAttributes = NativeFileOps.EFileAttributes.RandomAccess;
          }
 
          try
          {
-            return NativeFileOps.CreateFile(fsi.FullName, (uint)accessMode, share, creationDisposition, (uint)flagsAndAttributes);
+            Log.Debug("Open with [{0}]", accessMode);
+            return NativeFileOps.CreateFile(fileName, (uint)accessMode, share, creationDisposition, (uint)flagsAndAttributes);
          }
          catch (Win32Exception w32e)
          {
@@ -226,7 +228,8 @@ namespace LiquesceSvc
                || (w32e.NativeErrorCode == CBFSWinUtil.ERROR_ACCESS_DENIED)
                )
             {
-               return NativeFileOps.CreateFile(fsi.FullName, (uint)NativeFileOps.EFileAccess.FILE_GENERIC_READ, share,
+               Log.Warn("ERROR_SHARING_VIOLATION: Open with [FILE_GENERIC_READ]");
+               return NativeFileOps.CreateFile(fileName, (uint)NativeFileOps.EFileAccess.FILE_GENERIC_READ, share,
                   creationDisposition, (uint) flagsAndAttributes);
             }
             throw;
@@ -250,8 +253,9 @@ namespace LiquesceSvc
       public override void CloseFile(CbFsFileInfo fileInfo, CbFsHandleInfo userContextInfo)
       {
          long openFileKey = fileInfo.UserContext.ToInt64();
-         Log.Debug("CloseFile IN filename [{0}], fileInfo[{1}], userContextInfo [{2}]",
+         Log.Debug("CloseFile Dummy filename [{0}], fileInfo[{1}], userContextInfo [{2}]",
             fileInfo.FileName, openFileKey, userContextInfo.UserContext.ToInt64());
+         CloseFile(fileInfo);
       }
       private void CloseFile(CbFsFileInfo fileInfo)
       {
@@ -263,8 +267,7 @@ namespace LiquesceSvc
          {
             using (openFilesSync.UpgradableReadLock())
             {
-               // The File can be closed by the remote client via Delete (as it does not know to close first!)
-               // Now decrement the internal open handle
+               // Decrement the internal open handle
                // https://www.eldos.com/documentation/cbfs/ref_gen_contexts.html
                NativeFileOps fileStream;
                if (openFiles.TryGetValue(openFileKey, out fileStream))
@@ -277,12 +280,12 @@ namespace LiquesceSvc
                      using (openFilesSync.WriteLock())
                      {
                         openFiles.Remove(openFileKey);
-                        fileInfo.UserContext = IntPtr.Zero;
                      }
+                     fileInfo.UserContext = IntPtr.Zero;
                   }
                   else
                   {
-                     Log.Debug("decrementOpenCount [{0}]", decrementOpenCount);
+                     Log.Debug("Remaining OpenCount [{0}]", decrementOpenCount);
                   }
                }
                else
@@ -321,7 +324,6 @@ namespace LiquesceSvc
             }
          }
          userContextInfo.UserContext = IntPtr.Zero;
-         CloseFile(fileInfo);
       }
 
 
@@ -440,9 +442,8 @@ namespace LiquesceSvc
       */
       public override void SetAllocationSize(CbFsFileInfo fileInfo, long AllocationSize)
       {
-         Log.Debug("SetAllocationSize [{0}] AllocationSize[{1}]", fileInfo.FileName, AllocationSize);
          long refFileHandleContext = fileInfo.UserContext.ToInt64();
-         Log.Trace("refFileHandleContext [{0}]", refFileHandleContext);
+         Log.Debug("SetAllocationSize [{0}] AllocationSize[{1}] refFileHandleContext[{2}]", fileInfo.FileName, AllocationSize, refFileHandleContext);
 
          using (openFilesSync.ReadLock())
          {
@@ -521,9 +522,7 @@ namespace LiquesceSvc
          NativeFileOps stream = null;
          using (openFilesSync.ReadLock())
          {
-            Log.Trace("info.refFileHandleContext [{0}]", userFileKey);
             openFiles.TryGetValue(userFileKey, out stream);
-
             if ((stream == null)
                 || stream.IsInvalid
                )
@@ -545,7 +544,7 @@ namespace LiquesceSvc
                   )
                {
                   Log.Trace("changing Times");
-                  //PID.Invoke(stream.ProcessID, () => stream.SetFileTime(creationTime, lastAccessTime, lastWriteTime));
+                  PID.Invoke(stream.ProcessID, () => stream.SetFileTime(creationTime, lastAccessTime, lastWriteTime));
                }
             }
          }
@@ -648,12 +647,12 @@ namespace LiquesceSvc
       #region CBFSHandlersAdvanced
 
 
-      public override void SetFileSecurity(CbFsFileInfo fileInfo, CbFsHandleInfo userContextInfo, uint securityInformation, IntPtr SecurityDescriptor, uint Length)
+      public override void SetFileSecurity(CbFsFileInfo fileInfo, CbFsHandleInfo userContextInfo, uint securityInformation, IntPtr SecurityDescriptor, uint length)
       {
          long userFileKey = userContextInfo.UserContext.ToInt64();
          long refFileHandleContext = fileInfo.UserContext.ToInt64();
          Log.Debug("SetFileSecurityNative[{0}][{1}] with Length[{2}], refFileHandleContext[{3}], userFileKey[{4}]",
-            fileInfo.FileName, (SECURITY_INFORMATION)securityInformation, Length, refFileHandleContext, userFileKey);
+            fileInfo.FileName, (NativeFileOps.SECURITY_INFORMATION)securityInformation, length, refFileHandleContext, userFileKey);
 
          NativeFileOps stream;
          using (openFilesSync.ReadLock())
@@ -661,7 +660,7 @@ namespace LiquesceSvc
             openFiles.TryGetValue(userFileKey, out stream);
             if (stream != null)
             {
-               PID.Invoke(stream.ProcessID, () => stream.SetFileSecurity(securityInformation, SecurityDescriptor));
+               PID.Invoke(stream.ProcessID, () => stream.SetFileSecurity(securityInformation, SecurityDescriptor, length));
             }
          }
          if (stream == null)
@@ -670,12 +669,13 @@ namespace LiquesceSvc
          }
       }
 
+      [DebuggerHidden] // Stop firing for the "Too small buffer" error
       public override void GetFileSecurity(CbFsFileInfo fileInfo, CbFsHandleInfo userContextInfo, uint RequestedInformation, IntPtr SecurityDescriptor, uint Length, out uint lengthNeeded)
       {
          long userFileKey = userContextInfo.UserContext.ToInt64();
          long refFileHandleContext = fileInfo.UserContext.ToInt64();
          Log.Debug("GetFileSecurity[{0}][{1}] with Length[{2}], refFileHandleContext[{3}], userFileKey[{4}]",
-            fileInfo.FileName, (SECURITY_INFORMATION)RequestedInformation, Length, refFileHandleContext, userFileKey);
+            fileInfo.FileName, (NativeFileOps.SECURITY_INFORMATION)RequestedInformation, Length, refFileHandleContext, userFileKey);
          lengthNeeded = 0;
 
          NativeFileOps stream;
@@ -684,10 +684,9 @@ namespace LiquesceSvc
             openFiles.TryGetValue(userFileKey, out stream);
             if (stream != null)
             {
-               using (WindowsImpersonationContext context = PID.InvokeHelper(stream.ProcessID))
+               using (PID.InvokeHelper(stream.ProcessID))
                {
                   stream.GetFileSecurity(RequestedInformation, SecurityDescriptor, Length, ref lengthNeeded);
-                  context.Undo();
                }
             }
          }

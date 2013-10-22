@@ -77,7 +77,7 @@ namespace LiquesceSvc
             //   But the Direcotory [\Test1\ds\test.txt] exists ! Resulting in the correct Explorer message
             //
             //4 Rename a file to be the same name as the parent directory
-            //   MoveFile [\Test1\ds\test.txt\New Text Document (2).txt] to [\test.txt] IN DokanProcessId[2240]
+            //   MoveFile [\Test1\ds\test.txt\New Text Document (2).txt] to [\test.txt] 
             //   Should result in [\Test1\ds\test.txt\test.txt]
             //
             //5 Move a file to be Closer to the Mount point (higher) in the directory structure

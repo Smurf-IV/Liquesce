@@ -29,7 +29,7 @@ UINT __stdcall InstallCBFS_CA(MSIHANDLE hInstall)
 
       pszwProductName = wcstok( pwzData, L";" );
       iModulesToInstall = _wtoi(wcstok( NULL, L"," ));
- 
+
       if ( wcslen(pszwProductName) == 0 )
          WcaLogError(SCHED_E_NAMESPACE, "ProductName value is not set");
       else
@@ -112,7 +112,6 @@ UINT __stdcall UninstallCBFS_CA(MSIHANDLE hInstall)
    HRESULT hr = WcaInitialize(hInstall, "UninstallCBFS_CA");
    ExitOnFailure(hr, "Failed to initialize");
    {
-      USES_CONVERSION;
       WcaLog(LOGMSG_STANDARD, "Initialized.");
       hr = WcaGetProperty( __TEXT("CustomActionData"), &pszwProductName);
       ExitOnFailure(hr, "failed to get CustomActionData");
@@ -126,6 +125,8 @@ UINT __stdcall UninstallCBFS_CA(MSIHANDLE hInstall)
       {
          ExitWithLastError(hr, "Failed CBFSCab.ExtractResource");
       }
+      // Following brakets due to the macros and
+      // http://msdn.microsoft.com/en-us/library/s6s80d9f%28v=vs.71%29.aspx
       {
          WcaLog(LOGMSG_STANDARD, "CBFSInstaller(g_hInst,IDR_CBFSINST_X32_DLL1)");
          CExtractUtils CBFSInstaller(g_hInst,IDR_CBFSINST_X32_DLL1);
@@ -134,7 +135,7 @@ UINT __stdcall UninstallCBFS_CA(MSIHANDLE hInstall)
             ExitWithLastError(hr, "Failed CBFSInstaller.ExtractResource");
          }
          {
-            WcaLog(LOGMSG_STANDARD, "InstWrapper(CBFSInstaller.m_szOutputFilename)");
+            WcaLog(LOGMSG_STANDARD, "InstWrapper(CBFSInstaller.m_szOutputFilename: %ls)", CBFSInstaller.m_szOutputFilename);
             CBFSInstWrapper InstWrapper(CBFSInstaller.m_szOutputFilename);
             if ( !InstWrapper.IsValid() )
             {
@@ -144,19 +145,24 @@ UINT __stdcall UninstallCBFS_CA(MSIHANDLE hInstall)
                WcaLog(LOGMSG_STANDARD, "CBFSCab(g_hInst,IDR_CBFS_CAB1)");
                DWORD dwRebootNeeded(0UL);
 
+               USES_CONVERSION;
                if ( FALSE == InstWrapper.Uninstall(CBFSCab.m_szOutputFilename, W2CT(pszwProductName), NULL /* here you can put custom location if needed*/, &dwRebootNeeded) )
                {
                   ExitWithLastError(hr, "Failed InstWrapper.Install");
                }
                else if ( dwRebootNeeded != 0 )
+               {
+                  WcaLog(LOGMSG_STANDARD, "dwRebootNeeded");
                   WcaDeferredActionRequiresReboot();
-               // Following brakets due to the macros and
-               // http://msdn.microsoft.com/en-us/library/s6s80d9f%28v=vs.71%29.aspx
+               }
             }
+            WcaLog(LOGMSG_STANDARD, "End of CBFSInstWrapper");
          }
+         WcaLog(LOGMSG_STANDARD, "End of CExtractUtils");
       }
    }
 LExit:
    er = SUCCEEDED(hr) ? ERROR_SUCCESS : ERROR_INSTALL_FAILURE;
+   WcaLog(LOGMSG_STANDARD, "WcaFinalize(er:0x%08x)", er);
    return WcaFinalize(er);
 }

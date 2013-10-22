@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+   
+   <Product Id="*" Name="TestTheCBFSInstall" 
+            Language="1033" 
+            Version="1.0.0.0" 
+            Manufacturer="TestTheCBFSInstall"
+            UpgradeCode="7F8E12BB-C6F2-4534-881C-285595936996">
+      <Package Id="*" 
+               InstallerVersion="301"
+               InstallScope='perMachine'
+               Platform='x86'
+               AdminImage='no'
+               InstallPrivileges='elevated'
+              Compressed="yes" />
+
+      <Condition Message="You need to be an administrator to install this product.">
+         Privileged
+      </Condition>
+
+      <Media Id="1" Cabinet="media1.cab" EmbedCab="yes" />
+
+      <Directory Id="TARGETDIR" Name="SourceDir">
+         <Directory Id="ProgramFilesFolder">
+            <Directory Id="INSTALLLOCATION" Name="TestTheCBFSInstall" />
+         </Directory>
+      </Directory>
+
+      <?define MgtSource=$(sys.SOURCEFILEDIR).\AnyCPU ?>
+      <?define x64=$(sys.SOURCEFILEDIR)..\..\..\..\..\Amalgam\Phase III\ThirdParty\CBFS\x64 ?>
+      <?define x86=$(sys.SOURCEFILEDIR)..\..\..\..\..\Amalgam\Phase III\ThirdParty\CBFS\32bit ?>
+
+
+      <ComponentGroup Id="Client" >
+         <Component Directory="INSTALLLOCATION">
+            <File Id="LiquesceSvc.exe" Source="$(var.MgtSource)\LiquesceSvc.exe" KeyPath="yes" />
+         </Component>
+
+         <Component Directory="INSTALLLOCATION">
+            <Condition><![CDATA[VersionNT64]]></Condition>
+            <File Id="CBFS4Net.dll_x64" Source="$(var.x64)\CBFS4Net.dll" KeyPath="yes" />
+         </Component>
+         <Component  Directory="INSTALLLOCATION">
+            <File Id="CBFS4Net.dll_x86" Source="$(var.x86)\CBFS4Net.dll" KeyPath="yes" />
+            <Condition><![CDATA[Not VersionNT64]]></Condition>
+         </Component>
+
+         <Component Directory="INSTALLLOCATION">
+            <File Id="CBFSNet.dll_x64" Source="$(var.x64)\CBFSNet.dll" KeyPath="yes" />
+            <Condition><![CDATA[VersionNT64]]></Condition>
+         </Component>
+         <Component  Directory="INSTALLLOCATION">
+            <File Id="CBFSNet.dll_x86" Source="$(var.x86)\CBFSNet.dll" KeyPath="yes" />
+            <Condition><![CDATA[Not VersionNT64]]></Condition>
+         </Component>
+
+         <Component Directory="INSTALLLOCATION">
+            <File Id="msvcp100.dll_x64" Source="$(var.x64)\msvcp100.dll" KeyPath="yes" />
+            <Condition><![CDATA[VersionNT64]]></Condition>
+         </Component>
+         <Component  Directory="INSTALLLOCATION">
+            <File Id="msvcp100.dll_x86" Source="$(var.x86)\msvcp100.dll" KeyPath="yes" />
+            <Condition><![CDATA[Not VersionNT64]]></Condition>
+         </Component>
+
+         <Component Directory="INSTALLLOCATION">
+            <File Id="msvcr100.dll_x64" Source="$(var.x64)\msvcr100.dll" KeyPath="yes" />
+            <Condition><![CDATA[VersionNT64]]></Condition>
+         </Component>
+         <Component  Directory="INSTALLLOCATION">
+            <File Id="msvcr100.dll_x86" Source="$(var.x86)\msvcr100.dll" KeyPath="yes" />
+            <Condition><![CDATA[Not VersionNT64]]></Condition>
+         </Component>
+
+      </ComponentGroup>
+      
+      <Feature Id="ProductFeature" Title="WixCBFSInstall" Level="1">
+         <ComponentGroupRef Id='Client'/>
+         </Feature>
+
+      <!-- Name to be used for the registration key of the CBFS application -->
+      <Property Id="PRODUCTNAME" Value="LiquesceSvc" />
+      <!--Values of ModulesToInstall
+      [Pascal] [C++ (VCL)] [C++ (Lib)] [C++ (.NET)] [C#] [VB.NET] [Java] Value Meaning
+      CBFS_MODULE_DRIVER 1 The driver (.sys file)
+      CBFS_MODULE_NET_REDIRECTOR_DLL 65536 (0x00010000) Network redirector DLL (CbFsNetRdr3.dll)
+      CBFS_MODULE_MOUNT_NOTIFIER_DLL 131072 (0x00020000) Mount Notifier DLL (CbFsMntNtf3.dll)
+      http://www.eldos.com/documentation/cbfs/ref_gen_helper_dlls.html
+      //CBFSModule( 1UL + 0x00010000 + 0x00020000);
+      -->
+      <Property Id="CBFSMODULESTOINSTALL" Value="196609" />
+
+      <Binary Id="CBFSWixCA.dll" SourceFile="$(var.CBFSWixCA.TargetDir)$(var.CBFSWixCA.TargetName).dll" />
+      <CustomAction Id="SetCBFS_CA_Values" Return="check" Property="InstallCBFS_CA" Value="[PRODUCTNAME];[CBFSMODULESTOINSTALL]" />
+      <CustomAction Id="InstallCBFS_CA" BinaryKey="CBFSWixCA.dll" DllEntry="InstallCBFS_CA" Execute="deferred" Impersonate="no" Return="check" />
+      <CustomAction Id="SetUnCBFS_CA_Value" Return="check" Property="UninstallCBFS_CA" Value="[PRODUCTNAME]" />
+      <CustomAction Id="UninstallCBFS_CA" BinaryKey="CBFSWixCA.dll" DllEntry="UninstallCBFS_CA" Execute="deferred" Impersonate="no" Return="check" />
+
+      <UI>
+         <ProgressText Action="InstallCBFS_CA">Installing CBFS</ProgressText>
+         <ProgressText Action="UninstallCBFS_CA">Uninstalling CBFS</ProgressText>
+      </UI>
+
+      <InstallExecuteSequence>
+         <Custom Action="SetCBFS_CA_Values" Before="InstallCBFS_CA">NOT Installed AND NOT UPGRADINGPRODUCTCODE</Custom>
+         <Custom Action="InstallCBFS_CA" Before="InstallServices" >NOT Installed AND NOT UPGRADINGPRODUCTCODE</Custom>
+
+         <Custom Action="SetUnCBFS_CA_Value" After="MsiUnpublishAssemblies" >Installed AND NOT UPGRADINGPRODUCTCODE</Custom>
+         <Custom Action="UninstallCBFS_CA" After="SetUnCBFS_CA_Value" >Installed AND NOT UPGRADINGPRODUCTCODE</Custom>
+      </InstallExecuteSequence>
+
+
+   </Product>
+</Wix>

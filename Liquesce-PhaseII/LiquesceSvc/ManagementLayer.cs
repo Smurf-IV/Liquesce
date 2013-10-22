@@ -31,7 +31,7 @@ using System.Linq;
 using System.Reflection;
 using System.ServiceModel;
 using System.Threading;
-using System.Xml.Serialization;
+
 using CallbackFS;
 using CBFS;
 using LiquesceFacade;
@@ -46,8 +46,6 @@ namespace LiquesceSvc
       private static ManagementLayer instance;
       private ConfigDetails currentConfigDetails;
       private readonly DateTime startTime;
-      private const string ProductNameCBFS = "LiquesceSvc";
-      private readonly string configFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), ProductNameCBFS, Properties.Settings.Default.ConfigFileName);
       private LiquesceSvcState state = LiquesceSvcState.Stopped;
       private static readonly Dictionary<Client, IStateChange> subscribers = new Dictionary<Client, IStateChange>();
       private static readonly ReaderWriterLockSlim subscribersLock = new ReaderWriterLockSlim();
@@ -132,13 +130,13 @@ namespace LiquesceSvc
                && (repeatWait++ < 100)
                )
             {
-               Log.Warn("Last Dokan is still running");
+               Log.Warn("Last CBFS is still running");
                Thread.Sleep(250);
             }
             if (!IsRunning)
             {
                if (currentConfigDetails == null)
-                  ReadConfigDetails();
+                  ConfigDetails.ReadConfigDetails(ref currentConfigDetails);
                FireStateChange(LiquesceSvcState.InError, "Starting up");
                if (currentConfigDetails == null)
                {
@@ -151,7 +149,7 @@ namespace LiquesceSvc
 
                liquesceOperations = new LiquesceOps(currentConfigDetails);
 
-               if (!CBFSHandlers.CheckStatus(ProductNameCBFS))
+               if (!CBFSHandlers.CheckStatus(ConfigDetails.ProductNameCBFS))
                {
                   FireStateChange(LiquesceSvcState.InError, "Driver is not mounted - Driver Something is wrong");
 #if DEBUG
@@ -163,7 +161,7 @@ namespace LiquesceSvc
                   Environment.Exit(-4); // Driver something wrong
                   // return;
                }
-               liquesceOperations.RegisterAndInit(Properties.Settings.Default.Salt, ProductNameCBFS, currentConfigDetails.ThreadCount, CbFsStorageType.stDisk);
+               liquesceOperations.RegisterAndInit(Properties.Settings.Default.Salt, ConfigDetails.ProductNameCBFS, currentConfigDetails.ThreadCount, CbFsStorageType.stDisk);
                try
                {
                   // Attempt to remove a drive that may have been zombied by a crash etc.
@@ -286,7 +284,7 @@ namespace LiquesceSvc
          {
             currentConfigDetails = value;
             // I know.. Bad form calling a function in a setter !
-            WriteOutConfigDetails();
+            currentConfigDetails.WriteOutConfigDetails();
          }
       }
 
@@ -345,139 +343,8 @@ namespace LiquesceSvc
          if (currentConfigDetails.DriveLetter.Length == 1)
          {
             char mountedDriveLetter = currentConfigDetails.DriveLetter[0];
-            ShellChangeNotify.Unmount(mountedDriveLetter);
          }
          Log.Info("Stopped OUT");
-      }
-
-      private void ReadConfigDetails()
-      {
-         try
-         {
-            InitialiseToDefault();
-            XmlSerializer x = new XmlSerializer(currentConfigDetails.GetType());
-            Log.Info("Attempting to read Dokan Drive details from: [{0}]", configFile);
-            using (TextReader textReader = new StreamReader(configFile))
-            {
-               currentConfigDetails = x.Deserialize(textReader) as ConfigDetails;
-            }
-            Log.Info("Now normalise the paths to allow the file finders to work correctly");
-            if (currentConfigDetails != null)
-            {
-               List<string> fileSourceLocations = new List<string>(currentConfigDetails.SourceLocations);
-               currentConfigDetails.SourceLocations.Clear();
-
-               foreach (string location in fileSourceLocations.Select(fileSourceLocation => Path.GetFullPath(fileSourceLocation).TrimEnd(Path.DirectorySeparatorChar))
-                                    .Where(location => OkToAddThisDriveType(location))
-                                    )
-               {
-                  currentConfigDetails.SourceLocations.Add(location);
-               }
-
-            }
-         }
-         catch (Exception ex)
-         {
-            Log.ErrorException("Cannot read the configDetails: ", ex);
-            currentConfigDetails = null;
-         }
-         finally
-         {
-            if (currentConfigDetails == null)
-            {
-               InitialiseToDefault();
-               if (!File.Exists(configFile))
-                  WriteOutConfigDetails();
-            }
-         }
-
-      }
-
-      private bool OkToAddThisDriveType(string dr)
-      {
-         bool seemsOK = false;
-         try
-         {
-            Log.Debug(dr);
-            DriveInfo di = new DriveInfo(dr);
-            DriveType driveType = di.DriveType;
-            switch (driveType)
-            {
-               case DriveType.Removable:
-               case DriveType.Fixed:
-                  {
-                     string di_DriveFormat = di.DriveFormat;
-                     switch (di_DriveFormat.ToUpper())
-                     {
-                        case "DOKAN":
-                           Log.Warn("Removing the existing DOKAN drive as this would cause confusion ! [{0}]",
-                                    di.Name);
-                           seemsOK = false;
-                           break;
-                        case "FAT":
-                           Log.Warn("Removing FAT formated drive type, as this causes ACL Failures [{0}]", di.Name);
-                           seemsOK = false;
-                           break;
-                        default:
-                           seemsOK = true;
-                           break;
-                     }
-                  }
-                  break;
-               case DriveType.Unknown:
-               case DriveType.NoRootDirectory:
-               case DriveType.Network:
-               case DriveType.CDRom:
-               case DriveType.Ram:
-                  seemsOK = true;
-                  break;
-               default:
-                  throw new ArgumentOutOfRangeException("driveType", "Unknown type detected");
-            }
-         }
-         catch (Exception ex)
-         {
-            Log.ErrorException("Check Drive Format Type threw:", ex);
-            seemsOK = false;
-
-         }
-         return seemsOK;
-
-      }
-
-      private void InitialiseToDefault()
-      {
-         try
-         {
-            if (currentConfigDetails == null)
-            {
-               currentConfigDetails = new ConfigDetails();
-               currentConfigDetails.InitConfigDetails();
-               currentConfigDetails.SourceLocations.Add(@"C:\");
-            }
-         }
-         catch (Exception ex)
-         {
-            Log.ErrorException("Cannot create the default configDetails: ", ex);
-            currentConfigDetails = null;
-         }
-      }
-
-      private void WriteOutConfigDetails()
-      {
-         if (currentConfigDetails != null)
-            try
-            {
-               XmlSerializer x = new XmlSerializer(currentConfigDetails.GetType());
-               using (TextWriter textWriter = new StreamWriter(configFile))
-               {
-                  x.Serialize(textWriter, currentConfigDetails);
-               }
-            }
-            catch (Exception ex)
-            {
-               Log.ErrorException("Cannot save configDetails: ", ex);
-            }
       }
 
    }

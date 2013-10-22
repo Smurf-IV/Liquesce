@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension"
+     xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
+     >
+
+   <?define MgtSource=$(sys.SOURCEFILEDIR)..\Liquesce\bin\Release ?>
+   <?define TraySource=$(sys.SOURCEFILEDIR)..\LiquesceTray\bin\Release ?>
+
+   <Fragment>
+
+      <DirectoryRef Id="ProgramMenuDir">
+         <Component Id="ProgramMenuDir2" Guid="11234567-7E98-44CE-B049-C477CC0A2B01">
+            <Shortcut Id="Liquesce_Shortcut" Name="Liquesce MGT" Description="Liquesce Management Application" Target="[ClientDIR]Liquesce.exe" WorkingDirectory="ClientDIR" Icon="InstallerIcon" IconIndex="0" />
+            <Shortcut Id="LiquesceTray_Shortcut" Name="Liquesce Tray" Description="Liquesce Tray Application" Target="[ClientDIR]LiquesceTray.exe" WorkingDirectory="ClientDIR" Icon="InstallerIcon" IconIndex="0" />
+            <Shortcut Id="LiquesceTray_Start" Name="Liquesce Tray" Directory="StartupFolder" Description="Liquesce Tray Application" Target="[ClientDIR]LiquesceTray.exe" WorkingDirectory="ClientDIR" Icon="InstallerIcon" IconIndex="0" />
+            <util:InternetShortcut Type="url" Id="Home" Name="Liquesce Forum" Target="[ARPHELPLINK]" />
+            <util:InternetShortcut Type="link" Id="Change" Name="Change Log" Target="[ClientDIR]ChangeLog.rtf"/>
+            <RemoveFolder Id="ProgramMenuDir" On="uninstall"/>
+            <RegistryValue Root="HKCU" Key="Software\Microsoft\Liquesce" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+         </Component>
+      </DirectoryRef>
+
+      <DirectoryRef Id="ClientDIR" />
+      
+      <ComponentGroup Id="Client" >
+         <Component Id="Client" Guid="5EBF3F29-9CF1-44FE-A94C-CC1B4FE09367" Directory="ClientDIR">
+            <File Id="InstallerIcon" Name="Liquesce.ico" Source="$(sys.SOURCEFILEDIR)..\Liquesce\Resources\Liquesce.ico" />
+            <File Id="Liquesce.exe" Name="Liquesce.exe" Source="$(var.MgtSource)\Liquesce.exe" KeyPath="yes">
+               <fire:FirewallException Id="LiquesceFWX1" Name="Liquesce Mount Management" Scope="localSubnet" IgnoreFailure="yes" />
+               <netfx:NativeImage Id="ngen_Liquesce.exe" Platform="32bit" Priority="1" AppBaseDirectory="ClientDIR"/>
+            </File>
+         </Component>
+         <Component Id="ChangeLog" Directory="ClientDIR">
+            <File Source="$(sys.SOURCEFILEDIR)..\Liquesce\ChangeLog.rtf" KeyPath="yes" />
+         </Component>
+         <Component Id="Liquesce.exe.config" Directory="ClientDIR">
+            <File Source="$(var.MgtSource)\Liquesce.exe.config" KeyPath="yes" />
+         </Component>
+         <Component Id="C_NLog.dll" Directory="ClientDIR">
+            <File Id="C_NLog.dll" Source="$(var.MgtSource)\NLog.dll" KeyPath="yes" />
+         </Component>
+         <Component Id="C_LiquesceFacade.dll" Directory="ClientDIR">
+            <File Id="C_LiquesceFacade.dll" Source="$(var.MgtSource)\LiquesceFacade.dll" KeyPath="yes" >
+               <netfx:NativeImage Id="ngen_C_LiquesceFacade.dll" Platform="32bit" Priority="1" AppBaseDirectory="ClientDIR"/>
+            </File>
+         </Component>
+         <Component Id="LiquesceTray.exe.config" Directory="ClientDIR">
+            <File Source="$(var.TraySource)\LiquesceTray.exe.config" KeyPath="yes" />
+         </Component>
+         <Component Id="LiquesceTray.exe" Directory="ClientDIR">
+            <File Source="$(var.TraySource)\LiquesceTray.exe" KeyPath="yes" >
+               <netfx:NativeImage Id="ngen_LiquesceTray.exe" Platform="32bit" Priority="1" AppBaseDirectory="ClientDIR"/>
+            </File>
+         </Component>
+         <Component Id="LiquesceTrayHelper.exe" Directory="ClientDIR">
+            <File Source="$(sys.SOURCEFILEDIR)..\LiquesceTrayHelper\bin\Release\LiquesceTrayHelper.exe" KeyPath="yes" />
+         </Component>
+      </ComponentGroup>
+
+      <!--Custom Actions to start stop Application tray-->
+      <CustomAction Id="StartTrayApp" FileKey="LiquesceTray.exe" ExeCommand="" Return="asyncNoWait" />
+      <util:CloseApplication CloseMessage="yes" Id="CloseServerTray" Target="LiquesceTray.exe" RebootPrompt="no"/>
+      <CustomAction Id="MgtApp" FileKey="Liquesce.exe" ExeCommand="" Return="asyncNoWait" />
+      <util:CloseApplication CloseMessage="yes" Id="CloseMgtAppTray" Target="Liquesce.exe" RebootPrompt="no"/>
+
+
+      <InstallUISequence>
+         <Custom Action="WixCloseApplications" Before="LaunchConditions" />
+      </InstallUISequence>
+
+      <!-- Now to sequence these Custom Actions in the execute sequence -->
+      <InstallExecuteSequence>
+         <Custom Action="WixCloseApplications" Before="LaunchConditions" />
+
+         <Custom Action="StartTrayApp" After="InstallFinalize">Not Installed</Custom>
+         <Custom Action="MgtApp" After="StartTrayApp">Not Installed</Custom>
+      </InstallExecuteSequence>
+
+   </Fragment>
+   
+</Wix>

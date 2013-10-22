@@ -30,18 +30,22 @@
       {
          this.components = new System.ComponentModel.Container();
          System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
-         this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+         this.splitContainer1 = new Liquesce.SplitContainerEx();
          this.driveAndDirTreeView = new System.Windows.Forms.TreeView();
          this.imageListUnits = new System.Windows.Forms.ImageList(this.components);
          this.label1 = new System.Windows.Forms.Label();
-         this.splitContainer2 = new System.Windows.Forms.SplitContainer();
-         this.splitContainer3 = new System.Windows.Forms.SplitContainer();
+         this.splitContainer2 = new Liquesce.SplitContainerEx();
+         this.splitContainer3 = new Liquesce.SplitContainerEx();
          this.mergeList = new System.Windows.Forms.TreeView();
          this.mergeListContext = new System.Windows.Forms.ContextMenuStrip(this.components);
          this.deleteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+         this.groupBox2 = new System.Windows.Forms.GroupBox();
+         this.txtFolder = new System.Windows.Forms.TextBox();
+         this.lblFolder = new System.Windows.Forms.Label();
+         this.label5 = new System.Windows.Forms.Label();
+         this.MountPoint = new System.Windows.Forms.ComboBox();
          this.groupBox1 = new System.Windows.Forms.GroupBox();
          this.VolumeLabel = new System.Windows.Forms.TextBox();
-         this.MountPoint = new System.Windows.Forms.ComboBox();
          this.label4 = new System.Windows.Forms.Label();
          this.DelayCreation = new System.Windows.Forms.NumericUpDown();
          this.label2 = new System.Windows.Forms.Label();
@@ -64,10 +68,6 @@
          this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
          this.FillExpectedLayoutWorker = new System.ComponentModel.BackgroundWorker();
          this.serviceController1 = new System.ServiceProcess.ServiceController();
-         this.groupBox2 = new System.Windows.Forms.GroupBox();
-         this.label5 = new System.Windows.Forms.Label();
-         this.lblFolder = new System.Windows.Forms.Label();
-         this.txtFolder = new System.Windows.Forms.TextBox();
          this.errorProvider1 = new System.Windows.Forms.ErrorProvider(this.components);
          ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
          this.splitContainer1.Panel1.SuspendLayout();
@@ -82,11 +82,11 @@
          this.splitContainer3.Panel2.SuspendLayout();
          this.splitContainer3.SuspendLayout();
          this.mergeListContext.SuspendLayout();
+         this.groupBox2.SuspendLayout();
          this.groupBox1.SuspendLayout();
          ((System.ComponentModel.ISupportInitialize)(this.DelayCreation)).BeginInit();
          this.refreshExpected.SuspendLayout();
          this.menuStrip1.SuspendLayout();
-         this.groupBox2.SuspendLayout();
          ((System.ComponentModel.ISupportInitialize)(this.errorProvider1)).BeginInit();
          this.SuspendLayout();
          // 
@@ -105,7 +105,7 @@
          // 
          this.splitContainer1.Panel2.Controls.Add(this.splitContainer2);
          this.splitContainer1.Size = new System.Drawing.Size(770, 465);
-         this.splitContainer1.SplitterDistance = 256;
+         this.splitContainer1.SplitterDistance = 255;
          this.splitContainer1.SplitterWidth = 5;
          this.splitContainer1.TabIndex = 0;
          // 
@@ -118,7 +118,7 @@
          this.driveAndDirTreeView.Location = new System.Drawing.Point(0, 17);
          this.driveAndDirTreeView.Name = "driveAndDirTreeView";
          this.driveAndDirTreeView.SelectedImageIndex = 0;
-         this.driveAndDirTreeView.Size = new System.Drawing.Size(256, 448);
+         this.driveAndDirTreeView.Size = new System.Drawing.Size(255, 448);
          this.driveAndDirTreeView.TabIndex = 0;
          this.toolTip1.SetToolTip(this.driveAndDirTreeView, "Drag from here and drop in the middle");
          this.driveAndDirTreeView.BeforeExpand += new System.Windows.Forms.TreeViewCancelEventHandler(this.driveAndDirTreeView_BeforeExpand);
@@ -136,7 +136,7 @@
          this.label1.Dock = System.Windows.Forms.DockStyle.Top;
          this.label1.Location = new System.Drawing.Point(0, 0);
          this.label1.Name = "label1";
-         this.label1.Size = new System.Drawing.Size(256, 17);
+         this.label1.Size = new System.Drawing.Size(255, 17);
          this.label1.TabIndex = 1;
          this.label1.Text = "This file system:-";
          // 
@@ -156,7 +156,7 @@
          this.splitContainer2.Panel2.Controls.Add(this.expectedTreeView);
          this.splitContainer2.Panel2.Controls.Add(this.label3);
          this.splitContainer2.Panel2.Controls.Add(this.progressBar1);
-         this.splitContainer2.Size = new System.Drawing.Size(509, 465);
+         this.splitContainer2.Size = new System.Drawing.Size(510, 465);
          this.splitContainer2.SplitterDistance = 247;
          this.splitContainer2.SplitterWidth = 5;
          this.splitContainer2.TabIndex = 0;
@@ -180,6 +180,7 @@
          this.splitContainer3.Panel2.Controls.Add(this.DelayCreation);
          this.splitContainer3.Size = new System.Drawing.Size(247, 448);
          this.splitContainer3.SplitterDistance = 293;
+         this.splitContainer3.SplitterWidth = 5;
          this.splitContainer3.TabIndex = 7;
          // 
          // mergeList
@@ -209,41 +210,66 @@
          this.mergeListContext.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.deleteToolStripMenuItem});
          this.mergeListContext.Name = "mergeListContext";
-         this.mergeListContext.Size = new System.Drawing.Size(147, 26);
+         this.mergeListContext.Size = new System.Drawing.Size(135, 26);
          this.mergeListContext.Click += new System.EventHandler(this.mergeListContextMenuItem_Click);
          // 
          // deleteToolStripMenuItem
          // 
          this.deleteToolStripMenuItem.Name = "deleteToolStripMenuItem";
          this.deleteToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.Delete;
-         this.deleteToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
+         this.deleteToolStripMenuItem.Size = new System.Drawing.Size(134, 22);
          this.deleteToolStripMenuItem.Text = "&Delete";
          this.deleteToolStripMenuItem.ToolTipText = "Delete the current selected item.";
          // 
-         // groupBox1
+         // groupBox2
          // 
-         this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+         this.groupBox2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-         this.groupBox1.Controls.Add(this.VolumeLabel);
-         this.groupBox1.Location = new System.Drawing.Point(0, 107);
-         this.groupBox1.Margin = new System.Windows.Forms.Padding(0);
-         this.groupBox1.Name = "groupBox1";
-         this.groupBox1.Size = new System.Drawing.Size(247, 44);
-         this.groupBox1.TabIndex = 4;
-         this.groupBox1.TabStop = false;
-         this.groupBox1.Text = "&Volume Label :";
+         this.groupBox2.Controls.Add(this.txtFolder);
+         this.groupBox2.Controls.Add(this.lblFolder);
+         this.groupBox2.Controls.Add(this.label5);
+         this.groupBox2.Controls.Add(this.MountPoint);
+         this.groupBox2.Location = new System.Drawing.Point(0, 22);
+         this.groupBox2.Name = "groupBox2";
+         this.groupBox2.Size = new System.Drawing.Size(246, 81);
+         this.groupBox2.TabIndex = 5;
+         this.groupBox2.TabStop = false;
+         this.groupBox2.Text = "Drive &Mount:";
          // 
-         // VolumeLabel
+         // txtFolder
          // 
-         this.VolumeLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+         this.txtFolder.AllowDrop = true;
+         this.txtFolder.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-         this.VolumeLabel.Location = new System.Drawing.Point(7, 18);
-         this.VolumeLabel.MaxLength = 32;
-         this.VolumeLabel.Name = "VolumeLabel";
-         this.VolumeLabel.Size = new System.Drawing.Size(234, 22);
-         this.VolumeLabel.TabIndex = 0;
-         this.toolTip1.SetToolTip(this.VolumeLabel, "Label that will be visible in Windows explorer");
-         this.VolumeLabel.Validated += new System.EventHandler(this.VolumeLabel_Validated);
+         this.txtFolder.Location = new System.Drawing.Point(56, 49);
+         this.txtFolder.Name = "txtFolder";
+         this.txtFolder.Size = new System.Drawing.Size(183, 22);
+         this.txtFolder.TabIndex = 6;
+         this.toolTip1.SetToolTip(this.txtFolder, "NTFS folder mount point.\r\nWill override the above \"Drive Letter\".");
+         this.txtFolder.TextChanged += new System.EventHandler(this.txtFolder_TextChanged);
+         this.txtFolder.DragDrop += new System.Windows.Forms.DragEventHandler(this.txtFolder_DragDrop);
+         this.txtFolder.DragOver += new System.Windows.Forms.DragEventHandler(this.txtFolder_DragOver);
+         // 
+         // lblFolder
+         // 
+         this.lblFolder.AutoSize = true;
+         this.lblFolder.Location = new System.Drawing.Point(7, 52);
+         this.lblFolder.Name = "lblFolder";
+         this.lblFolder.Size = new System.Drawing.Size(44, 14);
+         this.lblFolder.TabIndex = 5;
+         this.lblFolder.Text = "&Folder:";
+         this.toolTip1.SetToolTip(this.lblFolder, "NTFS folder mount point.\r\nWill override the above \"Drive Letter\".");
+         // 
+         // label5
+         // 
+         this.label5.AutoSize = true;
+         this.label5.Location = new System.Drawing.Point(6, 24);
+         this.label5.Name = "label5";
+         this.label5.Size = new System.Drawing.Size(45, 14);
+         this.label5.TabIndex = 4;
+         this.label5.Text = "&Letter:";
+         this.toolTip1.SetToolTip(this.label5, "Drive letter to be used for the new volume");
          // 
          // MountPoint
          // 
@@ -282,6 +308,31 @@
          this.MountPoint.TabIndex = 3;
          this.toolTip1.SetToolTip(this.MountPoint, "Drive letter to be used for the new volume");
          this.MountPoint.TextChanged += new System.EventHandler(this.MountPoint_TextChanged);
+         // 
+         // groupBox1
+         // 
+         this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+         this.groupBox1.Controls.Add(this.VolumeLabel);
+         this.groupBox1.Location = new System.Drawing.Point(0, 107);
+         this.groupBox1.Margin = new System.Windows.Forms.Padding(0);
+         this.groupBox1.Name = "groupBox1";
+         this.groupBox1.Size = new System.Drawing.Size(247, 44);
+         this.groupBox1.TabIndex = 4;
+         this.groupBox1.TabStop = false;
+         this.groupBox1.Text = "&Volume Label :";
+         // 
+         // VolumeLabel
+         // 
+         this.VolumeLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+         this.VolumeLabel.Location = new System.Drawing.Point(7, 18);
+         this.VolumeLabel.MaxLength = 32;
+         this.VolumeLabel.Name = "VolumeLabel";
+         this.VolumeLabel.Size = new System.Drawing.Size(234, 22);
+         this.VolumeLabel.TabIndex = 0;
+         this.toolTip1.SetToolTip(this.VolumeLabel, "Label that will be visible in Windows explorer");
+         this.VolumeLabel.Validated += new System.EventHandler(this.VolumeLabel_Validated);
          // 
          // label4
          // 
@@ -339,7 +390,7 @@
          this.expectedTreeView.Name = "expectedTreeView";
          this.expectedTreeView.SelectedImageIndex = 0;
          this.expectedTreeView.ShowNodeToolTips = true;
-         this.expectedTreeView.Size = new System.Drawing.Size(257, 425);
+         this.expectedTreeView.Size = new System.Drawing.Size(258, 425);
          this.expectedTreeView.TabIndex = 0;
          this.toolTip1.SetToolTip(this.expectedTreeView, "Expand to see if any duplicates have been found");
          this.expectedTreeView.BeforeExpand += new System.Windows.Forms.TreeViewCancelEventHandler(this.expectedTreeView_BeforeExpand);
@@ -350,13 +401,13 @@
          this.refreshExpected.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.refreshExpectedToolStripMenuItem});
          this.refreshExpected.Name = "refreshExpected";
-         this.refreshExpected.Size = new System.Drawing.Size(204, 26);
+         this.refreshExpected.Size = new System.Drawing.Size(192, 26);
          // 
          // refreshExpectedToolStripMenuItem
          // 
          this.refreshExpectedToolStripMenuItem.Name = "refreshExpectedToolStripMenuItem";
          this.refreshExpectedToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F5;
-         this.refreshExpectedToolStripMenuItem.Size = new System.Drawing.Size(203, 22);
+         this.refreshExpectedToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
          this.refreshExpectedToolStripMenuItem.Text = "&Refresh Expected";
          this.refreshExpectedToolStripMenuItem.Click += new System.EventHandler(this.refreshExpectedToolStripMenuItem_Click);
          // 
@@ -366,7 +417,7 @@
          this.label3.Dock = System.Windows.Forms.DockStyle.Top;
          this.label3.Location = new System.Drawing.Point(0, 0);
          this.label3.Name = "label3";
-         this.label3.Size = new System.Drawing.Size(257, 17);
+         this.label3.Size = new System.Drawing.Size(258, 17);
          this.label3.TabIndex = 2;
          this.label3.Text = "Expected layout :-";
          // 
@@ -376,7 +427,7 @@
          this.progressBar1.ForeColor = System.Drawing.Color.LawnGreen;
          this.progressBar1.Location = new System.Drawing.Point(0, 442);
          this.progressBar1.Name = "progressBar1";
-         this.progressBar1.Size = new System.Drawing.Size(257, 23);
+         this.progressBar1.Size = new System.Drawing.Size(258, 23);
          this.progressBar1.Step = 5;
          this.progressBar1.TabIndex = 4;
          // 
@@ -403,10 +454,10 @@
          // commitToolStripMenuItem
          // 
          this.commitToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-         this.commitToolStripMenuItem.Enabled = false;
          this.commitToolStripMenuItem.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.commitToolStripMenuItem.Name = "commitToolStripMenuItem";
-         this.commitToolStripMenuItem.Size = new System.Drawing.Size(123, 20);
+         this.commitToolStripMenuItem.Padding = new System.Windows.Forms.Padding(0, 0, 4, 0);
+         this.commitToolStripMenuItem.Size = new System.Drawing.Size(119, 20);
          this.commitToolStripMenuItem.Text = "&Send Configuration";
          this.commitToolStripMenuItem.ToolTipText = "Send / Commit the stored information to the service";
          this.commitToolStripMenuItem.Click += new System.EventHandler(this.commitToolStripMenuItem_Click);
@@ -434,14 +485,14 @@
          // viewToolStripMenuItem
          // 
          this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
-         this.viewToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+         this.viewToolStripMenuItem.Size = new System.Drawing.Size(113, 22);
          this.viewToolStripMenuItem.Text = "&View...";
          this.viewToolStripMenuItem.Click += new System.EventHandler(this.viewToolStripMenuItem_Click);
          // 
          // tailToolStripMenuItem
          // 
          this.tailToolStripMenuItem.Name = "tailToolStripMenuItem";
-         this.tailToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+         this.tailToolStripMenuItem.Size = new System.Drawing.Size(113, 22);
          this.tailToolStripMenuItem.Text = "&Tail...";
          this.tailToolStripMenuItem.Click += new System.EventHandler(this.tailToolStripMenuItem_Click);
          // 
@@ -470,7 +521,7 @@
          this.globalConfigSettingsToolStripMenuItem.Name = "globalConfigSettingsToolStripMenuItem";
          this.globalConfigSettingsToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
          this.globalConfigSettingsToolStripMenuItem.Text = "&Global Config Settings...";
-         this.globalConfigSettingsToolStripMenuItem.ToolTipText = "Access to the settings that control access to the OS and the Dokan Driver";
+         this.globalConfigSettingsToolStripMenuItem.ToolTipText = "Access to the settings that control access to the OS and the CBFS Driver";
          this.globalConfigSettingsToolStripMenuItem.Click += new System.EventHandler(this.globalConfigSettingsToolStripMenuItem_Click);
          // 
          // versionNumberToolStripMenuItem
@@ -494,56 +545,6 @@
          this.serviceController1.MachineName = "127.0.0.1";
          this.serviceController1.ServiceName = "LiquesceSvc";
          // 
-         // groupBox2
-         // 
-         this.groupBox2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-         this.groupBox2.Controls.Add(this.txtFolder);
-         this.groupBox2.Controls.Add(this.lblFolder);
-         this.groupBox2.Controls.Add(this.label5);
-         this.groupBox2.Controls.Add(this.MountPoint);
-         this.groupBox2.Location = new System.Drawing.Point(0, 22);
-         this.groupBox2.Name = "groupBox2";
-         this.groupBox2.Size = new System.Drawing.Size(246, 81);
-         this.groupBox2.TabIndex = 5;
-         this.groupBox2.TabStop = false;
-         this.groupBox2.Text = "Drive &Mount:";
-         // 
-         // label5
-         // 
-         this.label5.AutoSize = true;
-         this.label5.Location = new System.Drawing.Point(6, 24);
-         this.label5.Name = "label5";
-         this.label5.Size = new System.Drawing.Size(45, 14);
-         this.label5.TabIndex = 4;
-         this.label5.Text = "&Letter:";
-         this.toolTip1.SetToolTip(this.label5, "Drive letter to be used for the new volume");
-         // 
-         // lblFolder
-         // 
-         this.lblFolder.AutoSize = true;
-         this.lblFolder.Location = new System.Drawing.Point(7, 52);
-         this.lblFolder.Name = "lblFolder";
-         this.lblFolder.Size = new System.Drawing.Size(44, 14);
-         this.lblFolder.TabIndex = 5;
-         this.lblFolder.Text = "&Folder:";
-         this.toolTip1.SetToolTip(this.lblFolder, "NTFS folder mount point.\r\nWill override the above \"Drive Letter\".");
-         // 
-         // txtFolder
-         // 
-         this.txtFolder.AllowDrop = true;
-         this.txtFolder.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-         this.txtFolder.Location = new System.Drawing.Point(56, 49);
-         this.txtFolder.Name = "txtFolder";
-         this.txtFolder.Size = new System.Drawing.Size(183, 22);
-         this.txtFolder.TabIndex = 6;
-         this.toolTip1.SetToolTip(this.txtFolder, "NTFS folder mount point.\r\nWill override the above \"Drive Letter\".");
-         this.txtFolder.TextChanged += new System.EventHandler(this.txtFolder_TextChanged);
-         this.txtFolder.DragDrop += new System.Windows.Forms.DragEventHandler(this.txtFolder_DragDrop);
-         this.txtFolder.DragOver += new System.Windows.Forms.DragEventHandler(this.txtFolder_DragOver);
-         // 
          // errorProvider1
          // 
          this.errorProvider1.BlinkStyle = System.Windows.Forms.ErrorBlinkStyle.AlwaysBlink;
@@ -561,7 +562,7 @@
          this.MainMenuStrip = this.menuStrip1;
          this.MinimumSize = new System.Drawing.Size(778, 516);
          this.Name = "MainForm";
-         this.Text = "Liquesce Mount Management - (Sans Share Management)";
+         this.Text = "Liquesce ][ Mount Manager";
          this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
          this.Shown += new System.EventHandler(this.MainForm_Shown);
          this.splitContainer1.Panel1.ResumeLayout(false);
@@ -578,14 +579,14 @@
          ((System.ComponentModel.ISupportInitialize)(this.splitContainer3)).EndInit();
          this.splitContainer3.ResumeLayout(false);
          this.mergeListContext.ResumeLayout(false);
+         this.groupBox2.ResumeLayout(false);
+         this.groupBox2.PerformLayout();
          this.groupBox1.ResumeLayout(false);
          this.groupBox1.PerformLayout();
          ((System.ComponentModel.ISupportInitialize)(this.DelayCreation)).EndInit();
          this.refreshExpected.ResumeLayout(false);
          this.menuStrip1.ResumeLayout(false);
          this.menuStrip1.PerformLayout();
-         this.groupBox2.ResumeLayout(false);
-         this.groupBox2.PerformLayout();
          ((System.ComponentModel.ISupportInitialize)(this.errorProvider1)).EndInit();
          this.ResumeLayout(false);
          this.PerformLayout();
@@ -594,11 +595,11 @@
 
       #endregion
 
-      private System.Windows.Forms.SplitContainer splitContainer1;
+      private SplitContainerEx splitContainer1;
       private System.Windows.Forms.TreeView driveAndDirTreeView;
       private System.Windows.Forms.ToolTip toolTip1;
       private System.Windows.Forms.Label label1;
-      private System.Windows.Forms.SplitContainer splitContainer2;
+      private SplitContainerEx splitContainer2;
       private System.Windows.Forms.TreeView mergeList;
       private System.Windows.Forms.ProgressBar progressBar1;
       private System.Windows.Forms.Label label2;
@@ -619,7 +620,7 @@
       private System.Windows.Forms.ToolStripMenuItem mergeListContextMenuItem;
       private System.Windows.Forms.ContextMenuStrip refreshExpected;
       private System.Windows.Forms.ToolStripMenuItem refreshExpectedToolStripMenuItem;
-      private System.Windows.Forms.SplitContainer splitContainer3;
+      private SplitContainerEx splitContainer3;
       private System.Windows.Forms.ToolStripMenuItem globalConfigSettingsToolStripMenuItem;
       private System.Windows.Forms.ToolStripMenuItem logsToolStripMenuItem;
       private System.Windows.Forms.ToolStripMenuItem serviceLogViewToolStripMenuItem;

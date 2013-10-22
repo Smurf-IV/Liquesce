@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using CallbackFS;
 using NLog;
@@ -52,8 +53,8 @@ namespace CBFS
       /// <param name="userContextInfo"></param>
       /// <param name="securityInformation"></param>
       /// <param name="SecurityDescriptor"></param>
-      /// <param name="Length"></param>
-      void SetFileSecurity(CbFsFileInfo fileInfo, CbFsHandleInfo userContextInfo, uint securityInformation, IntPtr SecurityDescriptor, uint Length);
+      /// <param name="length"></param>
+      void SetFileSecurity(CbFsFileInfo fileInfo, CbFsHandleInfo userContextInfo, uint securityInformation, IntPtr SecurityDescriptor, uint length);
 
       /// <summary>
       /// This event is fired when the OS wants to obtain file security attributes. 
@@ -104,74 +105,6 @@ namespace CBFS
       void StorageEjected();
    }
 
-   /// <summary>
-   /// Check http://msdn.microsoft.com/en-us/library/cc230369%28v=prot.13%29.aspx
-   /// and usage http://msdn.microsoft.com/en-us/library/ff556635%28v=vs.85%29.aspx
-   /// </summary>
-   [Flags]
-   public enum SECURITY_INFORMATION : uint
-   {
-      /// <summary>
-      /// Enums found @ http://msdn.microsoft.com/en-us/library/windows/desktop/aa379579(v=vs.85).aspx
-      /// </summary>
-      OWNER_SECURITY_INFORMATION = 0x00000001,
-      GROUP_SECURITY_INFORMATION = 0x00000002,
-      DACL_SECURITY_INFORMATION = 0x00000004,
-      SACL_SECURITY_INFORMATION = 0x00000008,
-      LABEL_SECURITY_INFORMATION = 0x00000010,
-      ATTRIBUTE_SECURITY_INFORMATION = 0x00000020,
-      SCOPE_SECURITY_INFORMATION = 0x00000040,
-      UNPROTECTED_SACL_SECURITY_INFORMATION = 0x10000000,
-      UNPROTECTED_DACL_SECURITY_INFORMATION = 0x20000000,
-      PROTECTED_SACL_SECURITY_INFORMATION = 0x40000000,
-      PROTECTED_DACL_SECURITY_INFORMATION = 0x80000000
-      /*
-ATTRIBUTE_SECURITY_INFORMATION      The security property of the object being referenced.
-
-BACKUP_SECURITY_INFORMATION         The backup properties of the object being referenced.
-
-DACL_SECURITY_INFORMATION           The DACL of the object is being referenced.
-
-GROUP_SECURITY_INFORMATION          The primary group identifier of the object is being referenced.
-
-LABEL_SECURITY_INFORMATION          The mandatory integrity label is being referenced.
-                                    The mandatory integrity label is an ACE in the SACL of the object.
-
-OWNER_SECURITY_INFORMATION          The owner identifier of the object is being referenced.
-
-PROTECTED_DACL_SECURITY_INFORMATION The DACL cannot inherit access control entries (ACEs).
-
-PROTECTED_SACL_SECURITY_INFORMATION The SACL cannot inherit ACEs.
-
-SACL_SECURITY_INFORMATION           The SACL of the object is being referenced.
-
-SCOPE_SECURITY_INFORMATION          The Central Access Policy (CAP) identifier applicable on the object that is being referenced. Each CAP identifier is stored in a SYSTEM_SCOPED_POLICY_ID_ACE type in the SACL of the SD.
-
-UNPROTECTED_DACL_SECURITY_INFORMATION  The DACL inherits ACEs from the parent object.
-
-UNPROTECTED_SACL_SECURITY_INFORMATION  The SACL inherits ACEs from the parent object.
-       * */
-   }
-
-   ///// <summary>
-   ///// See http://www.pinvoke.net/search.aspx?search=SECURITY_DESCRIPTOR&namespace=[All]
-   ///// </summary>
-   // ReSharper disable FieldCanBeMadeReadOnly.Global
-   [StructLayoutAttribute(LayoutKind.Sequential, Pack = 4)]
-   public struct SECURITY_DESCRIPTOR
-   {
-      /// <summary>
-      /// Structure taken from http://msdn.microsoft.com/en-us/library/ff556610%28v=vs.85%29.aspx
-      /// </summary>
-      public byte revision;
-      public byte size;
-      public short control;   // == SECURITY_DESCRIPTOR_CONTROL
-      public IntPtr owner;    // == PSID  
-      public IntPtr group;    // == PSID  
-      public IntPtr sacl;     // == PACL  
-      public IntPtr dacl;     // == PACL  
-   }
-   
    // ReSharper disable RedundantAssignment
    /// <summary>
    /// Class that forces the abstraction from the CBFS, and handles the error exception conversion.
@@ -234,8 +167,9 @@ UNPROTECTED_SACL_SECURITY_INFORMATION  The SACL inherits ACEs from the parent ob
                                           SetFileSecurity(fileInfo, handleinfo, securityinformation, securitydescriptor, length));
       }
 
-      public abstract void SetFileSecurity(CbFsFileInfo fileInfo, CbFsHandleInfo userContextInfo, uint securityInformation, IntPtr SecurityDescriptor, uint Length);
+      public abstract void SetFileSecurity(CbFsFileInfo fileInfo, CbFsHandleInfo userContextInfo, uint securityInformation, IntPtr SecurityDescriptor, uint length);
 
+      [DebuggerHidden] // Stop firing for the "Too small buffer" error
       private void GetFileSecurity(CallbackFileSystem sender, CbFsFileInfo fileInfo, CbFsHandleInfo handleinfo,
                                    uint securityinformation, IntPtr securitydescriptor, uint length,
                                    ref uint lengthNeeded)

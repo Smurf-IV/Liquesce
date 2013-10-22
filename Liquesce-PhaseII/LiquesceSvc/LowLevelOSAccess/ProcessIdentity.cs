@@ -53,7 +53,7 @@ namespace LiquesceSvc
       }
 
       /// <summary>
-      /// Pass in the processID from Dokan and the Anonymouse delegate Action.
+      /// Pass in the processID from CBFS and the Anonymouse delegate Action.
       /// </summary>
       /// <param name="processId"></param>
       /// <param name="act"></param>
@@ -67,10 +67,9 @@ namespace LiquesceSvc
          if (CouldBeSMB(processId))
             act();
          else
-            using (WindowsImpersonationContext context = InvokeHelper(processId))
+            using (InvokeHelper(processId))
             {
                act();
-               context.Undo();
             }
       }
 
@@ -82,6 +81,14 @@ namespace LiquesceSvc
       private static bool CouldBeSMB(int processId)
       {
          return (systemProcessId == processId);
+      }
+
+      public static string GetProcessName(int processId)
+      {
+         using (Process ownerProcess = Process.GetProcessById(processId))
+         {
+            return ownerProcess.ProcessName;
+         }
       }
 
       public static WindowsImpersonationContext InvokeHelper(int processId)
