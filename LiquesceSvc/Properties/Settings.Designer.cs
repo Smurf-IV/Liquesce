@@ -25,15 +25,6 @@ namespace LiquesceSvc.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Properties.config.xml")]
-        public string ConfigFileName {
-            get {
-                return ((string)(this["ConfigFileName"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
         [global::System.Configuration.DefaultSettingValueAttribute(@"76EIFEKdDCAUJW6OSZEMwsnAy9RuM62rrn+d+DDF4FoVLm1+eJ9u01k124cl5pixjDqBrh8NszxU1gSBQJJr5L2D/oZLwl0aJ23MYck9/+9ZE1GGOSWoy526HR8CwgdDoBRN3hE1wSzZFg0VK36KIj0k3ZJx4LM98UN+w+mpKexppcMECKlxV/JRyT9OrQa1cdf9tM/KcOPriJrTko0yWZZcKSh4KY/piwDSAjkgksw5tTDt8VWog+XTVK/DXz/3l8y1h9XCicGezUPJL0BZzmHUhzp8Zbh9u1SjquznX2DShUtaOiqFEK4h8wmPEJMb9ynbKZ2np9BEtN4zjN0yXJptEz5KqojzIE+zWqi2VRl/lWTYXv6KlD5Hz8gEnp6DY2jmYzpiRhfg37QKnMCpKhLHxWpeTk5a1XT5NyNtavF8R8Igc7+NOjgdkOPaGhV9/ibRMMmp/9DMRCa5uo3ypf6GjtunU6+yuhFKp53FgF2YBZmRTciYHpdD1yFApX5NNnNonFvPv+7W48wbmIlkUOUnPXa3IGa0k8z+m4Yb1pukPFganXh2GGcsd93oTyM19XUbjDQqvzCiF1nVlSPyQnA0eeBK+lb2cU2NB6KlHBK/kOYRgQqBw09ahE99S+EvC2dWi9NI/o1Z8uUqw+sgVBvRC2CtJIbo+/VZc9NS9SL8RxTniBocREL9Gv8mBBBPfxFLrpd5Qgd3BVB6biI121qlRse1m3d/hVoYKO/NSDVnnL4VsBMyEYq4+6ChOBIZpj+oGtviO1N6EaHFRvLGQwi22lNxBLjOZFG5kKCrpNg=")]
         public string Salt {

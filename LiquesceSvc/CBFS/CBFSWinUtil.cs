@@ -148,6 +148,7 @@ namespace CBFS
       public const int ERROR_CANNOT_IMPERSONATE = 1368;// Unable to impersonate using a named pipe until data has been read from that pipe.
       public const int ERROR_WRITE_PROTECT = 19;      // The media is write protected.
       public const int ERROR_LOGON_FAILURE = 1326;    // Logon failure: unknown user name or bad password.
+      public const int ERROR_NO_SECURITY_ON_OBJECT = 1350; // Unable to perform a security operation on an object that has no associated security.
       
       #endregion
 

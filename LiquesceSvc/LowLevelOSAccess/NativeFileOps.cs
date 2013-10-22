@@ -27,14 +27,15 @@
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
-using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Text;
 using System.Threading;
+using CBFS;
 using Microsoft.Win32.SafeHandles;
 
 namespace LiquesceSvc
@@ -44,7 +45,7 @@ namespace LiquesceSvc
    /// </summary>
    [SuppressUnmanagedCodeSecurity]
    [SecurityCritical]
-   internal class NativeFileOps : IDisposable
+   internal class NativeFileOps
    {
       public string FullName { get; private set; }
       private readonly SafeFileHandle handle;
@@ -68,7 +69,7 @@ namespace LiquesceSvc
       {
       }
 
-      public NativeFileOps(string fullName, SafeFileHandle handle)
+      private NativeFileOps(string fullName, SafeFileHandle handle)
       {
          this.handle = handle;
          FullName = GetFullPathName(fullName);
@@ -172,7 +173,12 @@ namespace LiquesceSvc
 
       public void Close()
       {
-         this.Dispose(true);
+         if (!handle.IsInvalid
+             && !handle.IsClosed
+            )
+         {
+            handle.Close();
+         }
       }
 
       public bool WriteFile(byte[] buffer, UInt32 numBytesToWrite, out UInt32 numBytesWritten)
@@ -249,13 +255,9 @@ namespace LiquesceSvc
          cachedAttributeData = null;
       }
 
-      private static WIN32_FIND_FILETIME ConvertDateTimeToFiletime(DateTime time)
+      private static long ConvertDateTimeToFiletime(DateTime time)
       {
-         WIN32_FIND_FILETIME ft;
-         long hFT1 = (time != DateTime.MinValue) ? time.ToFileTimeUtc() : 0;
-         ft.dwLowDateTime = (uint)(hFT1 & 0xFFFFFFFF);
-         ft.dwHighDateTime = (uint)(hFT1 >> 32);
-         return ft;
+         return (time == DateTime.MinValue) ? 0 : time.ToFileTimeUtc();
       }
 
       public static DateTime ConvertFileTimeToDateTime(WIN32_FIND_FILETIME data)
@@ -266,9 +268,9 @@ namespace LiquesceSvc
 
       public void SetFileTime(DateTime creationTime, DateTime lastAccessTime, DateTime lastWriteTime)
       {
-         WIN32_FIND_FILETIME lpCreationTime = ConvertDateTimeToFiletime(creationTime);
-         WIN32_FIND_FILETIME lpLastAccessTime = ConvertDateTimeToFiletime(lastAccessTime);
-         WIN32_FIND_FILETIME lpLastWriteTime = ConvertDateTimeToFiletime(lastWriteTime);
+         long lpCreationTime = ConvertDateTimeToFiletime(creationTime);
+         long lpLastAccessTime = ConvertDateTimeToFiletime(lastAccessTime);
+         long lpLastWriteTime = ConvertDateTimeToFiletime(lastWriteTime);
          if (!SetFileTime(handle, ref lpCreationTime, ref lpLastAccessTime, ref lpLastWriteTime))
             throw new Win32Exception();
          RemoveCachedFileInformation();
@@ -284,18 +286,6 @@ namespace LiquesceSvc
          if (!SetEndOfFile(handle))
             throw new Win32Exception();
          RemoveCachedFileInformation();
-      }
-
-      public void LockFile(long offset, long length)
-      {
-         if (!LockFile(handle, (int)offset, (int)(offset >> 32), (int)length, (int)(length >> 32)))
-            throw new Win32Exception();
-      }
-
-      public void UnlockFile(long offset, long length)
-      {
-         if (!UnlockFile(handle, (int)offset, (int)(offset >> 32), (int)length, (int)(length >> 32)))
-            throw new Win32Exception();
       }
 
       private void CheckData()
@@ -434,36 +424,156 @@ namespace LiquesceSvc
          return NativeFileFind.ListAlternateDataStreams(handle).AsReadOnly();
       }
 
-      public void SetFileSecurity(uint SecurityInformation, IntPtr SecurityDecriptor)
+      [DebuggerHidden] // Stop the "Buffer is too small" from breaking the debugger
+      public void GetFileSecurity(uint /*SECURITY_INFORMATION*/ securityInformation, IntPtr /*ref SECURITY_DESCRIPTOR*/ securityDescriptor, uint length, ref uint lengthNeeded)
       {
-         if (! SetFileSecurityW(FullName, SecurityInformation, SecurityDecriptor))
+         SECURITY_INFORMATION rawRequestedInformation = (SECURITY_INFORMATION)securityInformation;
+         // Following in an attempt to solve Win 7 and above share write access
+         //if ( PID.CouldBeSMB(info.ProcessId ) )
+         //   return ( dokanReturn = Dokan.ERROR_CALL_NOT_IMPLEMENTED);
+
+         SECURITY_INFORMATION reqInfo = rawRequestedInformation;
+         AccessControlSections includeSections = AccessControlSections.None;
+         if ((reqInfo & SECURITY_INFORMATION.OWNER_SECURITY_INFORMATION) == SECURITY_INFORMATION.OWNER_SECURITY_INFORMATION)
+            includeSections |= AccessControlSections.Owner;
+         if ((reqInfo & SECURITY_INFORMATION.GROUP_SECURITY_INFORMATION) == SECURITY_INFORMATION.GROUP_SECURITY_INFORMATION)
+            includeSections |= AccessControlSections.Group;
+         if ((reqInfo & SECURITY_INFORMATION.DACL_SECURITY_INFORMATION) == SECURITY_INFORMATION.DACL_SECURITY_INFORMATION)
+            includeSections |= AccessControlSections.Access;
+         if ((reqInfo & SECURITY_INFORMATION.SACL_SECURITY_INFORMATION) == SECURITY_INFORMATION.SACL_SECURITY_INFORMATION)
+            includeSections |= AccessControlSections.Audit;
+         FileSystemSecurity pSD = (!IsDirectory)
+                                     ? (FileSystemSecurity)File.GetAccessControl(FullName, includeSections)
+                                     : Directory.GetAccessControl(FullName, includeSections);
+         byte[] managedDescriptor = pSD.GetSecurityDescriptorBinaryForm();
+         lengthNeeded = (uint)managedDescriptor.Length;
+         if (lengthNeeded <= 32)
          {
-            throw new Win32Exception();
+            // Deal with FAT32 drives not being able to "Hold" ACL on files.
+            // This is turn will prevent explorer from allowing tab to be constructed to attempt to "Set" ACL on FAT32 files.
+            throw new Win32Exception(CBFSWinUtil.ERROR_NO_SECURITY_ON_OBJECT);
+         }
+         // if the buffer is not enough the we must pass the correct error
+         // If the returned number of bytes is less than or equal to nLength, the entire security descriptor is returned in the output buffer; otherwise, none of the descriptor is returned.
+         if (length < lengthNeeded)
+         {
+            throw new Win32Exception(CBFSWinUtil.ERROR_INSUFFICIENT_BUFFER);
+         }
+         else
+         {
+            Marshal.Copy(managedDescriptor, 0, securityDescriptor, managedDescriptor.Length);
          }
       }
 
-      public void GetFileSecurity(uint SecurityInformation, IntPtr SecurityDescriptor, uint length, ref uint lengthNeeded)
+      public void SetFileSecurity(uint /*SECURITY_INFORMATION*/ securityInformation, IntPtr /*ref SECURITY_DESCRIPTOR*/ securityDescriptor, uint Length)
       {
-         if (!GetFileSecurityW(FullName, SecurityInformation, SecurityDescriptor, length, ref lengthNeeded))
+         SECURITY_INFORMATION rawSecurityInformation = (SECURITY_INFORMATION)securityInformation;
+         SECURITY_INFORMATION reqInfo = rawSecurityInformation;
+         AccessControlSections includeSections = AccessControlSections.None;
+         if ((reqInfo & SECURITY_INFORMATION.OWNER_SECURITY_INFORMATION) == SECURITY_INFORMATION.OWNER_SECURITY_INFORMATION)
+            includeSections |= AccessControlSections.Owner;
+         if ((reqInfo & SECURITY_INFORMATION.GROUP_SECURITY_INFORMATION) == SECURITY_INFORMATION.GROUP_SECURITY_INFORMATION)
+            includeSections |= AccessControlSections.Group;
+         if ((reqInfo & SECURITY_INFORMATION.DACL_SECURITY_INFORMATION) == SECURITY_INFORMATION.DACL_SECURITY_INFORMATION)
+            includeSections |= AccessControlSections.Access;
+         if ((reqInfo & SECURITY_INFORMATION.SACL_SECURITY_INFORMATION) == SECURITY_INFORMATION.SACL_SECURITY_INFORMATION)
+            includeSections |= AccessControlSections.Audit;
+         FileSystemSecurity pSD = (!IsDirectory)
+                                     ? (FileSystemSecurity)File.GetAccessControl(FullName, includeSections)
+                                     : Directory.GetAccessControl(FullName, includeSections);
+         byte[] binaryForm = new byte[Length];
+         Marshal.Copy(securityDescriptor, binaryForm, 0, binaryForm.Length);
+         pSD.SetAccessRuleProtection(
+            (reqInfo & SECURITY_INFORMATION.PROTECTED_DACL_SECURITY_INFORMATION) ==
+            SECURITY_INFORMATION.PROTECTED_DACL_SECURITY_INFORMATION,
+            (reqInfo & SECURITY_INFORMATION.UNPROTECTED_DACL_SECURITY_INFORMATION) ==
+            SECURITY_INFORMATION.UNPROTECTED_DACL_SECURITY_INFORMATION);
+         pSD.SetAuditRuleProtection(
+            (reqInfo & SECURITY_INFORMATION.PROTECTED_SACL_SECURITY_INFORMATION) ==
+            SECURITY_INFORMATION.PROTECTED_SACL_SECURITY_INFORMATION,
+            (reqInfo & SECURITY_INFORMATION.UNPROTECTED_SACL_SECURITY_INFORMATION) ==
+            SECURITY_INFORMATION.UNPROTECTED_SACL_SECURITY_INFORMATION);
+         pSD.SetSecurityDescriptorBinaryForm(binaryForm, includeSections);
+         // Apply these changes.
+         if (IsDirectory)
+            Directory.SetAccessControl(FullName, (DirectorySecurity)pSD);
+         else
          {
-            throw new Win32Exception();
+            File.SetAccessControl(FullName, (FileSecurity)pSD);
          }
-         if (0 == lengthNeeded)
-            lengthNeeded = GetSecurityDescriptorLength(SecurityDescriptor);
       }
-
 
       #region DLL Imports
-      // Stolen from http://www.123aspx.com/Rotor/RotorSrc.aspx?rot=42415
 
-      [StructLayout(LayoutKind.Sequential, Pack = 4)]
-      public struct SECURITY_ATTRIBUTES
+      #region #etFileSecurity
+      /// <summary>
+      /// Check http://msdn.microsoft.com/en-us/library/cc230369%28v=prot.13%29.aspx
+      /// and usage http://msdn.microsoft.com/en-us/library/ff556635%28v=vs.85%29.aspx
+      /// </summary>
+      [Flags]
+      public enum SECURITY_INFORMATION : uint
       {
-         public int nLength;
-         public IntPtr lpSecurityDescriptor;
-         public int bInheritHandle;
+         /// <summary>
+         /// Enums found @ http://msdn.microsoft.com/en-us/library/windows/desktop/aa379579(v=vs.85).aspx
+         /// </summary>
+         OWNER_SECURITY_INFORMATION = 0x00000001,
+         GROUP_SECURITY_INFORMATION = 0x00000002,
+         DACL_SECURITY_INFORMATION = 0x00000004,
+         SACL_SECURITY_INFORMATION = 0x00000008,
+         LABEL_SECURITY_INFORMATION = 0x00000010,
+         ATTRIBUTE_SECURITY_INFORMATION = 0x00000020,
+         SCOPE_SECURITY_INFORMATION = 0x00000040,
+         UNPROTECTED_SACL_SECURITY_INFORMATION = 0x10000000,
+         UNPROTECTED_DACL_SECURITY_INFORMATION = 0x20000000,
+         PROTECTED_SACL_SECURITY_INFORMATION = 0x40000000,
+         PROTECTED_DACL_SECURITY_INFORMATION = 0x80000000
+         /*
+   ATTRIBUTE_SECURITY_INFORMATION      The security property of the object being referenced.
+
+   BACKUP_SECURITY_INFORMATION         The backup properties of the object being referenced.
+
+   DACL_SECURITY_INFORMATION           The DACL of the object is being referenced.
+
+   GROUP_SECURITY_INFORMATION          The primary group identifier of the object is being referenced.
+
+   LABEL_SECURITY_INFORMATION          The mandatory integrity label is being referenced.
+                                       The mandatory integrity label is an ACE in the SACL of the object.
+
+   OWNER_SECURITY_INFORMATION          The owner identifier of the object is being referenced.
+
+   PROTECTED_DACL_SECURITY_INFORMATION The DACL cannot inherit access control entries (ACEs).
+
+   PROTECTED_SACL_SECURITY_INFORMATION The SACL cannot inherit ACEs.
+
+   SACL_SECURITY_INFORMATION           The SACL of the object is being referenced.
+
+   SCOPE_SECURITY_INFORMATION          The Central Access Policy (CAP) identifier applicable on the object that is being referenced. Each CAP identifier is stored in a SYSTEM_SCOPED_POLICY_ID_ACE type in the SACL of the SD.
+
+   UNPROTECTED_DACL_SECURITY_INFORMATION  The DACL inherits ACEs from the parent object.
+
+   UNPROTECTED_SACL_SECURITY_INFORMATION  The SACL inherits ACEs from the parent object.
+          * */
       }
 
+      ///// <summary>
+      ///// See http://www.pinvoke.net/search.aspx?search=SECURITY_DESCRIPTOR&namespace=[All]
+      ///// </summary>
+      // ReSharper disable FieldCanBeMadeReadOnly.Global
+      [StructLayoutAttribute(LayoutKind.Sequential, Pack = 4)]
+      public struct SECURITY_DESCRIPTOR
+      {
+         /// <summary>
+         /// Structure taken from http://msdn.microsoft.com/en-us/library/ff556610%28v=vs.85%29.aspx
+         /// </summary>
+         public byte revision;
+         public byte size;
+         public short control;   // == SECURITY_DESCRIPTOR_CONTROL
+         public IntPtr owner;    // == PSID  
+         public IntPtr group;    // == PSID  
+         public IntPtr sacl;     // == PACL  
+         public IntPtr dacl;     // == PACL  
+      }
+      #endregion
       #region Create File
 
       /// <summary>
@@ -606,18 +716,6 @@ namespace LiquesceSvc
 
       #endregion
 
-      [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-      [return: MarshalAs(UnmanagedType.Bool)]
-      private static extern bool CreateDirectoryW(string lpPathName, IntPtr lpSecurityAttributes);
-
-      [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-      [DllImport("kernel32.dll", SetLastError = true)]
-      [return: MarshalAs(UnmanagedType.Bool)]
-      private static extern bool CloseHandle(SafeFileHandle handle);
-
-      [DllImport("kernel32.dll")]
-      private static extern int GetFileType(SafeFileHandle handle);
-
       [DllImport("kernel32.dll", SetLastError = true)]
       [return: MarshalAs(UnmanagedType.Bool)]
       private static extern bool GetFileInformationByHandle(SafeFileHandle hFile, [MarshalAs(UnmanagedType.Struct)] ref BY_HANDLE_FILE_INFORMATION lpFileInformation);
@@ -649,15 +747,7 @@ namespace LiquesceSvc
 
       [DllImport("kernel32.dll", SetLastError = true)]
       [return: MarshalAs(UnmanagedType.Bool)]
-      private static extern bool SetFileTime(SafeFileHandle hFile, ref WIN32_FIND_FILETIME lpCreationTime, ref WIN32_FIND_FILETIME lpLastAccessTime, ref WIN32_FIND_FILETIME lpLastWriteTime);
-
-      [DllImport("kernel32.dll", SetLastError = true)]
-      [return: MarshalAs(UnmanagedType.Bool)]
-      private static extern bool LockFile(SafeFileHandle handle, int offsetLow, int offsetHigh, int countLow, int countHigh);
-
-      [DllImport("kernel32.dll", SetLastError = true)]
-      [return: MarshalAs(UnmanagedType.Bool)]
-      private static extern bool UnlockFile(SafeFileHandle handle, int offsetLow, int offsetHigh, int countLow, int countHigh);
+      private static extern bool SetFileTime(SafeFileHandle hFile, ref long lpCreationTime, ref long lpLastAccessTime, ref long lpLastWriteTime);
 
       // http://msdn.microsoft.com/en-us/library/windows/desktop/aa364946%28v=vs.85%29.aspx
       [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
@@ -674,6 +764,7 @@ namespace LiquesceSvc
       private static extern bool SetFileAttributesW(string name, FileAttributes attr);
 
       // Stolen from 
+      // ReSharper disable MemberCanBePrivate.Local
       [StructLayout(LayoutKind.Sequential, Pack = 4)]
       private struct WIN32_FILE_ATTRIBUTE_DATA
       {
@@ -695,8 +786,9 @@ namespace LiquesceSvc
             this.nFileSizeLow = findData.nFileSizeLow;
          }
       }
+      // ReSharper restore MemberCanBePrivate.Local
 
-      public enum GET_FILEEX_INFO_LEVELS
+      private enum GET_FILEEX_INFO_LEVELS
       {
          GetFileExInfoStandard,
          GetFileExMaxInfoLevel
@@ -721,45 +813,8 @@ namespace LiquesceSvc
       [return: MarshalAs(UnmanagedType.Bool)]
       private static extern bool DeleteFileW([MarshalAs(UnmanagedType.LPWStr), In] string path);
 
-      [DllImport("Advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-      [return: MarshalAs(UnmanagedType.Bool)]
-      private static extern bool SetFileSecurityW([In] string FileName, [In] uint SecurityInformation, [In] IntPtr SecurityDecriptor);
-
-      [DllImport("Advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-      [return: MarshalAs(UnmanagedType.Bool)]
-      private static extern bool GetFileSecurityW( [In] string FileName,
-          [In] uint SecurityInformation, IntPtr SecurityDecriptor, [In] uint Length, ref uint LengthNeeded);
-
-      [DllImport("advapi32.dll")]
-      private static extern UInt32 GetSecurityDescriptorLength( [In] IntPtr pSecurityDescriptor);
-
       #endregion
 
-      #region Disposing!
-
-      ~NativeFileOps()
-      {
-         Dispose(false);
-      }
-
-      public void Dispose()
-      {
-         Dispose(true);
-      }
-
-      // Should this also dispose of the Win32 structores as well ?
-      private void Dispose(bool disposing)
-      {
-         if ( disposing
-            && !handle.IsInvalid
-             && !handle.IsClosed
-            )
-         {
-            handle.Close();
-         }
-      }
-
-      #endregion
 
       /// <summary>
       /// Stores the user side process ID
@@ -785,6 +840,29 @@ namespace LiquesceSvc
          return Interlocked.Decrement(ref openCount);
       }
 
+      [Flags]
+      private enum DuplicateOptions : uint
+      {
+         DUPLICATE_CLOSE_SOURCE = (0x00000001),// Closes the source handle. This occurs regardless of any error status returned.
+         DUPLICATE_SAME_ACCESS = (0x00000002), //Ignores the dwDesiredAccess parameter. The duplicate handle has the same access as the source handle.
+      }
+      [DllImport("kernel32.dll", SetLastError = true)]
+      [return: MarshalAs(UnmanagedType.Bool)]
+      static extern bool DuplicateHandle([In] IntPtr hSourceProcessHandle, [In] SafeFileHandle hSourceHandle,
+        [In] IntPtr hTargetProcessHandle, out SafeFileHandle lpTargetHandle,
+        [In] uint dwDesiredAccess, [In]  [MarshalAs(UnmanagedType.Bool)] bool bInheritHandle, [In] DuplicateOptions dwOptions);
+
+      public static NativeFileOps DuplicateHandle(NativeFileOps sourceHandle)
+      {
+         IntPtr currentProcess = Process.GetCurrentProcess().Handle;
+         SafeFileHandle lpTargetHandle;
+         if (!DuplicateHandle(currentProcess, sourceHandle.handle, currentProcess,
+                  out lpTargetHandle, 0, false, DuplicateOptions.DUPLICATE_SAME_ACCESS))
+         {
+            throw new Win32Exception();
+         }
+         return new NativeFileOps(sourceHandle.FullName, lpTargetHandle);
+      }
    }
 
 

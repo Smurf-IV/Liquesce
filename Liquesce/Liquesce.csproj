@@ -135,6 +135,9 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
+    <Compile Include="SplitContainerEx.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="TailForm.cs">
       <SubType>Form</SubType>
     </Compile>

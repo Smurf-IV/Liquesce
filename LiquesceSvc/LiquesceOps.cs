@@ -53,16 +53,14 @@ namespace LiquesceSvc
 
       private readonly Roots roots;
       private readonly ConfigDetails configDetails;
-      private readonly ShellChangeNotify notifyOf;
 
       public LiquesceOps(ConfigDetails configDetails)
       {
          this.configDetails = configDetails;
          roots = new Roots(configDetails); // Already been trimmed in ReadConfigDetails()
-         notifyOf = new ShellChangeNotify(roots);
       }
 
-      #region IDokanOperations Implementation
+      #region FindFiles etc. Implementation
 
       // TODO: Need a away to make the IEnumberable, so that large dir counts do not get bogged down.
       // yield return WIN32_FIND_DATA

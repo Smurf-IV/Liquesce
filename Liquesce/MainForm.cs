@@ -50,6 +50,7 @@ namespace Liquesce
       public MainForm()
       {
          InitializeComponent();
+
          if (Properties.Settings.Default.UpdateRequired)
          {
             // Thanks go to http://cs.rthand.com/blogs/blog_with_righthand/archive/2005/12/09/246.aspx
@@ -70,20 +71,13 @@ namespace Liquesce
          StartTree();
          PopulatePoolSettings();
 
-         ReadConfigDetails();
+         ConfigDetails.ReadConfigDetails(ref cd);
 
          InitialiseWith();
          UseWaitCursor = false;
          Enabled = true;
       }
 
-      // TODO: Read the values from the config file
-      private void ReadConfigDetails()
-      {
-         // Find install location
-         // Find config file (Store expected location)
-         // Serialise config file ine
-      }
 
       private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
       {
@@ -186,36 +180,17 @@ namespace Liquesce
             string di_DriveFormat = "Unknown Format";
             try
             {
-               DriveType driveType = di.DriveType;
-               switch (driveType)
+               di_DriveFormat = di.DriveFormat;
+               if (di_DriveFormat.ToUpper() == "FAT")
                {
-                  case DriveType.Removable:
-                  case DriveType.Fixed:
-                     {
-                        di_DriveFormat = di.DriveFormat;
-                        switch (di_DriveFormat.ToUpper())
-                        {
-                           case "DOKAN":
-                              Log.Warn("Removing the existing DOKAN drive as this would cause confusion ! [{0}]",
-                                       di.Name);
-                              return;
-                           case "FAT":
-                              Log.Warn("Removing FAT formated drive type, as this causes ACL Failures [{0}]", di.Name);
-                              return;
-                        }
-                     }
-                     break;
-                  case DriveType.Unknown:
-                  case DriveType.NoRootDirectory:
-                  case DriveType.Network:
-                  case DriveType.CDRom:
-                  case DriveType.Ram:
-                     di_DriveFormat = driveType.ToString();
-                     break;
-                  default:
-                     // ReSharper disable NotResolvedInText
-                     throw new ArgumentOutOfRangeException("driveType", "Unknown type detected");
-                  // ReSharper restore NotResolvedInText
+                     Log.Warn("Removing FAT formated drive type, as this causes ACL Failures [{0}]", di.Name);
+                     return;
+               }
+               if (di.VolumeLabel == "Liquesce")
+               {
+                  Log.Warn("Removing the existing CBFS drive as this would cause confusion ! [{0}]",
+                     di.Name);
+                  return;
                }
                SafelyAddIcon(di.Name);
                label = (di.IsReady && !String.IsNullOrWhiteSpace(di.VolumeLabel)) ? di.VolumeLabel : di_DriveFormat;
@@ -483,7 +458,7 @@ namespace Liquesce
          ConfigDetails configDetails = new ConfigDetails
                                {
                                   DelayStartMilliSec = (uint)DelayCreation.Value,
-                                  DriveLetter = string.IsNullOrWhiteSpace(txtFolder.Text)?MountPoint.Text : txtFolder.Text,
+                                  DriveLetter = string.IsNullOrWhiteSpace(txtFolder.Text) ? MountPoint.Text : txtFolder.Text,
                                   VolumeLabel = VolumeLabel.Text,
                                   SourceLocations = new List<string>(mergeList.Nodes.Count)
                                };
@@ -726,14 +701,14 @@ namespace Liquesce
                {
                   cd.SourceLocations.Add(node.Text);
                }
+               Log.Info("Save the new details");
+               cd.WriteOutConfigDetails();
 
                EndpointAddress endpointAddress = new EndpointAddress("net.pipe://localhost/LiquesceFacade");
                NetNamedPipeBinding namedPipeBindingpublish = new NetNamedPipeBinding();
                LiquesceProxy proxy = new LiquesceProxy(namedPipeBindingpublish, endpointAddress);
                Log.Info("Didn't go bang so stop");
                proxy.Stop();
-               Log.Info("Send the new details");
-               proxy.ConfigDetails = cd;
                Log.Info("Now start, may need a small sleep to allow things to settle");
                Thread.Sleep(Math.Max(1000, 2500 - (int)cd.DelayStartMilliSec));
                proxy.Start();
@@ -823,9 +798,9 @@ namespace Liquesce
          }
       }
 
-      private readonly List<string> hardDrives = (from dr in Environment.GetLogicalDrives() 
-                                                  let di = new DriveInfo(dr) 
-                                                  where di.DriveType == DriveType.Fixed 
+      private readonly List<string> hardDrives = (from dr in Environment.GetLogicalDrives()
+                                                  let di = new DriveInfo(dr)
+                                                  where di.DriveType == DriveType.Fixed
                                                   select dr).ToList();
 
       private void txtFolder_TextChanged(object sender, EventArgs e)
