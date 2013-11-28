@@ -210,8 +210,8 @@ Global
 		{0C0D70B9-1D85-4ECB-8051-E23E583BF83A} = {12942D9B-059F-4AC4-B11E-5FCA4C4BD35B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		BuildVersion_BuildVersioningStyle = YearStamp.MonthStamp.DayStamp.Increment
-		BuildVersion_AssemblyInfoFilename = LiquesceSvc\Properties\AssemblyInfo.cs
 		BuildVersion_UseGlobalSettings = True
+		BuildVersion_AssemblyInfoFilename = LiquesceSvc\Properties\AssemblyInfo.cs
+		BuildVersion_BuildVersioningStyle = YearStamp.MonthStamp.DayStamp.Increment
 	EndGlobalSection
 EndGlobal
