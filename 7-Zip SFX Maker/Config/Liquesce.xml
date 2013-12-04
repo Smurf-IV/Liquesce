@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<Settings>
+  <General>
+    <ExtractMode>Temp</ExtractMode>
+    <HideProgress>False</HideProgress>
+    <ProgressDisableCancel>True</ProgressDisableCancel>
+    <SelfDelete>False</SelfDelete>
+    <CompressStub>True</CompressStub>
+    <XPStyles>False</XPStyles>
+    <HideTitleIcon>True</HideTitleIcon>
+    <PromptShowSFXIcon>True</PromptShowSFXIcon>
+    <Overwrite>All</Overwrite>
+    <MessageBegin Show="False">Start extraction</MessageBegin>
+    <MessageCancel Show="False">Are you sure you want to cancel?</MessageCancel>
+    <MessageFinish Show="False">Files were successfully extracted</MessageFinish>
+    <TitleText>Liquesce 7Zip Self Extractor</TitleText>
+    <ExtractPathText>Select extraction path</ExtractPathText>
+    <ExtractCancelText>Abort</ExtractCancelText>
+    <ExtractDialogText>Extracting Liquesce, then will launch...</ExtractDialogText>
+    <ExtractTitleText>Extracting</ExtractTitleText>
+    <ExtractShowIcon>True</ExtractShowIcon>
+    <ProgressPercent>-1</ProgressPercent>
+    <ProgressShowIcon>True</ProgressShowIcon>
+    <Icon>Z:\7-Zip SFX Maker\Resources\Liquesce.ico</Icon>
+  </General>
+  <Tasks>
+    <Item Enabled="True">RunProgram="nowait:\"%%T\\Liquesce_Setup.msi\""</Item>
+  </Tasks>
+  <VersionString>
+    <Item Name="Comments" Value="This is a self extracting and then msi launcher for Liquesce" Enabled="True" />
+    <Item Name="CompanyName" Value="Simon Coghlan (Aka Smurf-IV)" Enabled="True" />
+    <Item Name="FileDescription" Value="Liquesce SFX" Enabled="True" />
+    <Item Name="FileVersion" Value="13.11.1000.30" Enabled="True" />
+    <Item Name="FILEVERSION" Value="13, 11, 1000, 30" Enabled="True" />
+    <Item Name="InternalName" Value="Liquesce SFX" Enabled="True" />
+    <Item Name="LegalCopyright" Value="Copyright © 2010-2013 Simon Coghlan (Aka Smurf-IV)" Enabled="True" />
+    <Item Name="LegalTrademarks" Value="" Enabled="False" />
+    <Item Name="OriginalFilename" Value="Liquesce_Setup.exe" Enabled="True" />
+    <Item Name="PrivateBuild" Value="2013-11-30" Enabled="True" />
+    <Item Name="ProductName" Value="Liquesce" Enabled="True" />
+    <Item Name="ProductVersion" Value="13.11.1000.30" Enabled="True" />
+    <Item Name="SpecialBuild" Value="" Enabled="False" />
+  </VersionString>
+</Settings>
