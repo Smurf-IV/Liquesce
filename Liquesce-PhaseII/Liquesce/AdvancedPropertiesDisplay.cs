@@ -113,7 +113,7 @@ namespace Liquesce
 
       public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
       {
-         return new StandardValuesCollection(new[] { LogLevel.Warn.ToString(), LogLevel.Debug.ToString(), LogLevel.Trace.ToString() });
+         return new StandardValuesCollection(new[] { LogLevel.Fatal.Name, LogLevel.Error.Name, LogLevel.Warn.Name, LogLevel.Info.Name, LogLevel.Debug.Name, LogLevel.Trace.Name });
       }
    }
 

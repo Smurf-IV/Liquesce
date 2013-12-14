@@ -235,7 +235,7 @@ namespace LiquesceFacade
       public List<string> SourceLocations = new List<string>();
 
       [DataMember]
-      public string ServiceLogLevel = "Warn"; // NLog's LogLevel.Debug.ToString()
+      public string ServiceLogLevel = LogLevel.Fatal.Name; 
 
       [DataMember]
       public UInt16 CacheLifetimeSeconds = 32; // Set to zero to disable
