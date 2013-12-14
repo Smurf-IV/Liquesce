@@ -8,7 +8,7 @@ Keep an open eye on the \cf0\b{\field{\*\fldinst{HYPERLINK "http://liquesce.code
 \par
 \cf0\ul\b Some Helpful Information:\ulnone\b0\par
 \ul How to get an install log to send if you have a problem:\ulnone\par
-\pard\sb100\sa100 The Log file is now auto generated via the SFX file and will be located in \cf3\f1\\"%ProgramData%\\\\Liquesce\\\\Logs\\\\Install.log\\"\cf0\f2\fs19\par
+\pard\sb100\sa100 The Log file is now auto generated via the SFX file and will be located in \cf3\f1 %ProgramData%\\Liquesce\\Logs\\Install.log\cf0\f2\fs19\par
 \f0\fs20 For uninstall issues use\par
 \f3 msiexec /l*v MyLogFile.txt /uninstall Liquesce_Setup.msi\par
 \f0 This will install your application and write a verbose log to MyLogFile.txt in the current directory.\par
@@ -50,8 +50,9 @@ Keep an open eye on the \cf0\b{\field{\*\fldinst{HYPERLINK "http://liquesce.code
 \cf0\ul\b Done\par
 2013-12-##\par
 \ulnone\b0 - Make service delay start and rely on PlugnPlay to allow CBFS drivers to start\par
-- Make the SFX produce a log file -> \cf3\f1\\"%ProgramData%\\\\Liquesce\\\\Logs\\\\Install.log\\"\cf0\f2\fs19\par
-\f0\fs20 - Start to work out why Writes do not work for the 2nd beta....\par
+- Make the SFX produce a log file -> \cf3\f1 %ProgramData%\\Liquesce\\Logs\\Install.log\cf0\f2\fs19\par
+\f0\fs20 - Start to work out why Writes do not work for the 2nd beta.... Not been able to reproduce !\par
+- Fix TeraCopy problem (Due to NoBuffering request from that app !)\par
 \ul\b\par
 2013-11-30\par
 \ulnone\b0 - Building VM's for Test (2k12 doesn't want to play !)\par
