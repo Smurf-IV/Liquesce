@@ -145,7 +145,8 @@ namespace LiquesceSvc
          {
             PID.Invoke(processId, () =>
             {
-               userFileStream = NativeFileOps.CreateFile(fullName, DesiredAccess, ShareMode, creation, (uint)fileAttributes);
+               // Turn off NoBuffering request because http://msdn.microsoft.com/en-us/library/windows/desktop/cc644950%28v=vs.85%29.aspx
+               userFileStream = NativeFileOps.CreateFile(fullName, DesiredAccess, ShareMode, creation, (uint)(fileAttributes & ~NativeFileOps.EFileAttributes.NoBuffering));
                // If a specified file exists before the function call and dwCreationDisposition is CREATE_ALWAYS 
                // or OPEN_ALWAYS, a call to GetLastError returns ERROR_ALREADY_EXISTS, even when the function succeeds.
                lastError = Marshal.GetLastWin32Error();
