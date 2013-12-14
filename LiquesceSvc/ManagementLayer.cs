@@ -237,9 +237,6 @@ namespace LiquesceSvc
          LoggingConfiguration currentConfig = LogManager.Configuration;
          foreach (LoggingRule rule in currentConfig.LoggingRules)
          {
-            rule.EnableLoggingForLevel(LogLevel.Fatal);
-            rule.EnableLoggingForLevel(LogLevel.Error);
-            rule.EnableLoggingForLevel(LogLevel.Info);
             // Turn on in order
             switch (serviceLogLevel)
             {
@@ -249,19 +246,43 @@ namespace LiquesceSvc
                default:
                case "Debug":
                   rule.EnableLoggingForLevel(LogLevel.Debug);
+                  goto case "Info"; // Drop through
+               case "Info":
+                  rule.EnableLoggingForLevel(LogLevel.Info);
                   goto case "Warn"; // Drop through
                case "Warn":
                   rule.EnableLoggingForLevel(LogLevel.Warn);
+                  goto case "Error"; // Drop through
+               case "Error":
+                  rule.EnableLoggingForLevel(LogLevel.Error);
+                  goto case "Fatal"; // Drop through
+               case "Fatal":
+                  rule.EnableLoggingForLevel(LogLevel.Fatal);
                   break;
+               //case "Off":
+               //   rule.EnableLoggingForLevel(LogLevel.Off);
+               //   break;
             }
             // Turn off the rest
             switch (serviceLogLevel)
             {
+                // rule.DisableLoggingForLevel(LogLevel.Off);
+               case "Off":
+                  rule.DisableLoggingForLevel(LogLevel.Fatal);
+                  goto case "Fatal";
+               case "Fatal":
+                  rule.DisableLoggingForLevel(LogLevel.Error);
+                  goto case "Error";
+               case "Error":
+                  rule.DisableLoggingForLevel(LogLevel.Warn);
+                  goto case "Warn";
                case "Warn":
+                  rule.DisableLoggingForLevel(LogLevel.Info);
+                  goto case "Info";
+               case "Info":
                   rule.DisableLoggingForLevel(LogLevel.Debug);
-                  goto default; // Drop through
-               default:
-                  //case "Debug":
+                  goto case "Debug";
+               case "Debug":
                   rule.DisableLoggingForLevel(LogLevel.Trace);
                   break;
                case "Trace":
@@ -270,7 +291,10 @@ namespace LiquesceSvc
             }
          }
          LogManager.ReconfigExistingLoggers();
+         Log.Fatal("Test @ [{0}]", serviceLogLevel);
+         Log.Error("Test @ [{0}]", serviceLogLevel);
          Log.Warn("Test @ [{0}]", serviceLogLevel);
+         Log.Info("Test @ [{0}]", serviceLogLevel);
          Log.Debug("Test @ [{0}]", serviceLogLevel);
          Log.Trace("Test @ [{0}]", serviceLogLevel);
       }
