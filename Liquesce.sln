@@ -49,6 +49,44 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiquesceTrayHelper", "Lique
 EndProject
 Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "TestTheCBFSInstall", "ThirdParty\CBFSWixCA\TestTheCBFSInstall\TestTheCBFSInstall.wixproj", "{3737E08F-FF33-4483-93EB-B71200AF17FA}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "7-Zip SFX Maker", "7-Zip SFX Maker", "{5818EFA1-F320-47BD-9075-19145F46E40A}"
+	ProjectSection(SolutionItems) = preProject
+		..\7-Zip SFX Maker\7-ZIP SFX Maker.exe = ..\7-Zip SFX Maker\7-ZIP SFX Maker.exe
+		..\7-Zip SFX Maker\Dialogs.def = ..\7-Zip SFX Maker\Dialogs.def
+		..\7-Zip SFX Maker\Framework.Controls.ProgressBar.dll = ..\7-Zip SFX Maker\Framework.Controls.ProgressBar.dll
+		..\7-Zip SFX Maker\ReadMe.txt = ..\7-Zip SFX Maker\ReadMe.txt
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Config", "Config", "{D98A7BB0-CA45-49A1-9F25-9E69204339CA}"
+	ProjectSection(SolutionItems) = preProject
+		..\7-Zip SFX Maker\Config\Liquesce.xml = ..\7-Zip SFX Maker\Config\Liquesce.xml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Language", "Language", "{7667ABFF-97F6-4101-AD2A-5EB6C93F9C0B}"
+	ProjectSection(SolutionItems) = preProject
+		..\7-Zip SFX Maker\Language\English.txt = ..\7-Zip SFX Maker\Language\English.txt
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Resources", "Resources", "{81E594E9-4D4A-489F-BCC8-8C7A5CD8EC8E}"
+	ProjectSection(SolutionItems) = preProject
+		..\7-Zip SFX Maker\Resources\01.ico = ..\7-Zip SFX Maker\Resources\01.ico
+		..\7-Zip SFX Maker\Resources\02.ico = ..\7-Zip SFX Maker\Resources\02.ico
+		..\7-Zip SFX Maker\Resources\03.ico = ..\7-Zip SFX Maker\Resources\03.ico
+		..\7-Zip SFX Maker\Resources\04.ico = ..\7-Zip SFX Maker\Resources\04.ico
+		..\7-Zip SFX Maker\Resources\05.ico = ..\7-Zip SFX Maker\Resources\05.ico
+		..\7-Zip SFX Maker\Resources\7zsd.sfx = ..\7-Zip SFX Maker\Resources\7zsd.sfx
+		..\7-Zip SFX Maker\Resources\Dialogs.def = ..\7-Zip SFX Maker\Resources\Dialogs.def
+		..\7-Zip SFX Maker\Resources\GoRC.exe = ..\7-Zip SFX Maker\Resources\GoRC.exe
+		..\7-Zip SFX Maker\Resources\icon.rc = ..\7-Zip SFX Maker\Resources\icon.rc
+		..\7-Zip SFX Maker\Resources\join.exe = ..\7-Zip SFX Maker\Resources\join.exe
+		..\7-Zip SFX Maker\Resources\unins000.dat = ..\7-Zip SFX Maker\Resources\unins000.dat
+		..\7-Zip SFX Maker\Resources\unins000.exe = ..\7-Zip SFX Maker\Resources\unins000.exe
+		..\7-Zip SFX Maker\Resources\upx.exe = ..\7-Zip SFX Maker\Resources\upx.exe
+		..\7-Zip SFX Maker\Resources\Version_History.txt = ..\7-Zip SFX Maker\Resources\Version_History.txt
+		..\7-Zip SFX Maker\Resources\versionInfoTemplate.rc = ..\7-Zip SFX Maker\Resources\versionInfoTemplate.rc
+		..\7-Zip SFX Maker\Resources\windres.exe = ..\7-Zip SFX Maker\Resources\windres.exe
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
 		SccNumberOfProjects = 9
@@ -206,12 +244,16 @@ Global
 		{12942D9B-059F-4AC4-B11E-5FCA4C4BD35B} = {C1ADA293-B55A-4B33-AE5A-6FC40323FC39}
 		{2BF998A5-8BED-4975-91C5-7893DD138320} = {C1ADA293-B55A-4B33-AE5A-6FC40323FC39}
 		{3737E08F-FF33-4483-93EB-B71200AF17FA} = {C1ADA293-B55A-4B33-AE5A-6FC40323FC39}
+		{5818EFA1-F320-47BD-9075-19145F46E40A} = {C1ADA293-B55A-4B33-AE5A-6FC40323FC39}
 		{CB88D297-F43F-4036-AFF9-1A47B9F9B103} = {12942D9B-059F-4AC4-B11E-5FCA4C4BD35B}
 		{0C0D70B9-1D85-4ECB-8051-E23E583BF83A} = {12942D9B-059F-4AC4-B11E-5FCA4C4BD35B}
+		{D98A7BB0-CA45-49A1-9F25-9E69204339CA} = {5818EFA1-F320-47BD-9075-19145F46E40A}
+		{7667ABFF-97F6-4101-AD2A-5EB6C93F9C0B} = {5818EFA1-F320-47BD-9075-19145F46E40A}
+		{81E594E9-4D4A-489F-BCC8-8C7A5CD8EC8E} = {5818EFA1-F320-47BD-9075-19145F46E40A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		BuildVersion_UseGlobalSettings = True
-		BuildVersion_AssemblyInfoFilename = LiquesceSvc\Properties\AssemblyInfo.cs
 		BuildVersion_BuildVersioningStyle = YearStamp.MonthStamp.DayStamp.Increment
+		BuildVersion_AssemblyInfoFilename = LiquesceSvc\Properties\AssemblyInfo.cs
+		BuildVersion_UseGlobalSettings = True
 	EndGlobalSection
 EndGlobal
