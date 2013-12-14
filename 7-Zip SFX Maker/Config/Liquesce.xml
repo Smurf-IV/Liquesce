@@ -21,24 +21,26 @@
     <ExtractShowIcon>True</ExtractShowIcon>
     <ProgressPercent>-1</ProgressPercent>
     <ProgressShowIcon>True</ProgressShowIcon>
-    <Icon>Z:\7-Zip SFX Maker\Resources\Liquesce.ico</Icon>
+    <Icon>Z:\Liquesce\7-Zip SFX Maker\Resources\Liquesce.ico</Icon>
   </General>
   <Tasks>
-    <Item Enabled="True">RunProgram="nowait:\"%%T\\Liquesce_Setup.msi\""</Item>
+    <Item Enabled="True">RunProgram="hidcon:\"cmd\" /C md \"%ProgramData%\\Liquesce\""</Item>
+    <Item Enabled="True">RunProgram="hidcon:\"cmd\" /C md \"%ProgramData%\\Liquesce\\Logs\""</Item>
+    <Item Enabled="True">RunProgram="nowait:\"msiexec\" /i \"%%T\\Liquesce_Setup.msi\" /l*v \"%ProgramData%\\Liquesce\\Logs\\Install.log\""</Item>
   </Tasks>
   <VersionString>
     <Item Name="Comments" Value="This is a self extracting and then msi launcher for Liquesce" Enabled="True" />
     <Item Name="CompanyName" Value="Simon Coghlan (Aka Smurf-IV)" Enabled="True" />
     <Item Name="FileDescription" Value="Liquesce SFX" Enabled="True" />
-    <Item Name="FileVersion" Value="13.11.1000.30" Enabled="True" />
-    <Item Name="FILEVERSION" Value="13, 11, 1000, 30" Enabled="True" />
+    <Item Name="FileVersion" Value="13.12.1000.15" Enabled="True" />
+    <Item Name="FILEVERSION" Value="13, 12, 1000, 15" Enabled="True" />
     <Item Name="InternalName" Value="Liquesce SFX" Enabled="True" />
     <Item Name="LegalCopyright" Value="Copyright © 2010-2013 Simon Coghlan (Aka Smurf-IV)" Enabled="True" />
     <Item Name="LegalTrademarks" Value="" Enabled="False" />
     <Item Name="OriginalFilename" Value="Liquesce_Setup.exe" Enabled="True" />
-    <Item Name="PrivateBuild" Value="2013-11-30" Enabled="True" />
+    <Item Name="PrivateBuild" Value="2013-12-15" Enabled="True" />
     <Item Name="ProductName" Value="Liquesce" Enabled="True" />
-    <Item Name="ProductVersion" Value="13.11.1000.30" Enabled="True" />
+    <Item Name="ProductVersion" Value="13.12.1000.15" Enabled="True" />
     <Item Name="SpecialBuild" Value="" Enabled="False" />
   </VersionString>
 </Settings>
