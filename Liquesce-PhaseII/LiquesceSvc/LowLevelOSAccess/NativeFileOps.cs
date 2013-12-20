@@ -114,13 +114,18 @@ namespace LiquesceSvc
 
       static public void CreateDirectory(string pathName)
       {
-         Directory.CreateDirectory(pathName);
-         DirectorySecurity sec = Directory.GetAccessControl(pathName);
-         // Using this instead of the "Everyone" string means we work on non-English systems.
-         SecurityIdentifier everyone = new SecurityIdentifier(WellKnownSidType.WorldSid, null);
-         // Aim for: Everyone | Modify, Synchronize | ContainerInherit, ObjectInherit | None | Allow
-         sec.AddAccessRule(new FileSystemAccessRule(everyone, FileSystemRights.Modify | FileSystemRights.Synchronize, InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit, PropagationFlags.None, AccessControlType.Allow));
-         Directory.SetAccessControl(pathName, sec);
+         DirectoryInfo dirInfo = new DirectoryInfo(pathName);
+         if (!dirInfo.Exists)
+         {
+            dirInfo.Create();
+            DirectorySecurity sec = dirInfo.GetAccessControl();
+            // Using this instead of the "Everyone" string means we work on non-English systems.
+            SecurityIdentifier everyone = new SecurityIdentifier(WellKnownSidType.WorldSid, null);
+            // Aim for: Everyone | Modify, Synchronize | ContainerInherit, ObjectInherit | None | Allow
+            sec.AddAccessRule(new FileSystemAccessRule(everyone, FileSystemRights.Modify | FileSystemRights.Synchronize,
+               InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit, PropagationFlags.None, AccessControlType.Allow));
+            dirInfo.SetAccessControl(sec);
+         }
       }
 
       public void CreateDirectory()
@@ -131,7 +136,9 @@ namespace LiquesceSvc
       static public void DeleteDirectory(string path)
       {
          if (!RemoveDirectory(path))
+         {
             throw new Win32Exception();
+         }
       }
 
       public void DeleteDirectory()
@@ -192,23 +199,31 @@ namespace LiquesceSvc
          finally
          {
             if (numBytesWritten != 0)
+            {
                RemoveCachedFileInformation();
+            }
          }
       }
 
       public void FlushFileBuffers()
       {
          if (!FlushFileBuffers(handle))
+         {
             throw new Win32Exception();
+         }
       }
 
       public void GetFileInformationByHandle(ref BY_HANDLE_FILE_INFORMATION lpFileInformation)
       {
          BY_HANDLE_FILE_INFORMATION? local = cachedFileInformation;
          if (local.HasValue)
+         {
             lpFileInformation = local.Value;
+         }
          else if (!GetFileInformationByHandle(handle, ref lpFileInformation))
+         {
             throw new Win32Exception();
+         }
          else
          {
             // Ensure that the attributes stored are the Extended variety
@@ -229,11 +244,15 @@ namespace LiquesceSvc
                const int MaxVolumeNameLength = 100;
                StringBuilder sb = new StringBuilder(MaxVolumeNameLength);
                if (GetVolumeNameForVolumeMountPointW(path, sb, MaxVolumeNameLength))
+               {
                   return sb.ToString();
+               }
             }
             DirectoryInfo tmp = Directory.GetParent(path);
             if (tmp == null)
+            {
                return AddTrailingSeperator(path);
+            }
             path = tmp.FullName;
          } while (!string.IsNullOrEmpty(path));
          return path;
@@ -245,7 +264,9 @@ namespace LiquesceSvc
          if ((ch != Path.DirectorySeparatorChar)
             && (ch != Path.AltDirectorySeparatorChar)
             )
+         {
             path += Path.DirectorySeparatorChar;
+         }
          return path;
       }
 
@@ -272,7 +293,9 @@ namespace LiquesceSvc
          long lpLastAccessTime = ConvertDateTimeToFiletime(lastAccessTime);
          long lpLastWriteTime = ConvertDateTimeToFiletime(lastWriteTime);
          if (!SetFileTime(handle, ref lpCreationTime, ref lpLastAccessTime, ref lpLastWriteTime))
+         {
             throw new Win32Exception();
+         }
          RemoveCachedFileInformation();
       }
 
@@ -284,7 +307,9 @@ namespace LiquesceSvc
       {
          SetFilePointer(length, SeekOrigin.Begin);
          if (!SetEndOfFile(handle))
+         {
             throw new Win32Exception();
+         }
          RemoveCachedFileInformation();
       }
 
@@ -295,7 +320,9 @@ namespace LiquesceSvc
          {
             WIN32_FILE_ATTRIBUTE_DATA newData;
             if (GetFileAttributesEx(FullName, GET_FILEEX_INFO_LEVELS.GetFileExInfoStandard, out newData))
+            {
                cachedAttributeData = newData;
+            }
          }
       }
 
@@ -399,7 +426,9 @@ namespace LiquesceSvc
       public void SetFileAttributes(uint attr)
       {
          if (!SetFileAttributesW(FullName, (FileAttributes)attr))
+         {
             throw new Win32Exception();
+         }
          RemoveCachedFileInformation();
       }
 
@@ -435,13 +464,21 @@ namespace LiquesceSvc
          SECURITY_INFORMATION reqInfo = rawRequestedInformation;
          AccessControlSections includeSections = AccessControlSections.None;
          if ((reqInfo & SECURITY_INFORMATION.OWNER_SECURITY_INFORMATION) == SECURITY_INFORMATION.OWNER_SECURITY_INFORMATION)
+         {
             includeSections |= AccessControlSections.Owner;
+         }
          if ((reqInfo & SECURITY_INFORMATION.GROUP_SECURITY_INFORMATION) == SECURITY_INFORMATION.GROUP_SECURITY_INFORMATION)
+         {
             includeSections |= AccessControlSections.Group;
+         }
          if ((reqInfo & SECURITY_INFORMATION.DACL_SECURITY_INFORMATION) == SECURITY_INFORMATION.DACL_SECURITY_INFORMATION)
+         {
             includeSections |= AccessControlSections.Access;
+         }
          if ((reqInfo & SECURITY_INFORMATION.SACL_SECURITY_INFORMATION) == SECURITY_INFORMATION.SACL_SECURITY_INFORMATION)
+         {
             includeSections |= AccessControlSections.Audit;
+         }
          FileSystemSecurity pSD = (!IsDirectory)
                                      ? (FileSystemSecurity)File.GetAccessControl(FullName, includeSections)
                                      : Directory.GetAccessControl(FullName, includeSections);
@@ -471,13 +508,21 @@ namespace LiquesceSvc
          SECURITY_INFORMATION reqInfo = rawSecurityInformation;
          AccessControlSections includeSections = AccessControlSections.None;
          if ((reqInfo & SECURITY_INFORMATION.OWNER_SECURITY_INFORMATION) == SECURITY_INFORMATION.OWNER_SECURITY_INFORMATION)
+         {
             includeSections |= AccessControlSections.Owner;
+         }
          if ((reqInfo & SECURITY_INFORMATION.GROUP_SECURITY_INFORMATION) == SECURITY_INFORMATION.GROUP_SECURITY_INFORMATION)
+         {
             includeSections |= AccessControlSections.Group;
+         }
          if ((reqInfo & SECURITY_INFORMATION.DACL_SECURITY_INFORMATION) == SECURITY_INFORMATION.DACL_SECURITY_INFORMATION)
+         {
             includeSections |= AccessControlSections.Access;
+         }
          if ((reqInfo & SECURITY_INFORMATION.SACL_SECURITY_INFORMATION) == SECURITY_INFORMATION.SACL_SECURITY_INFORMATION)
+         {
             includeSections |= AccessControlSections.Audit;
+         }
          FileSystemSecurity pSD = (!IsDirectory)
                                      ? (FileSystemSecurity)File.GetAccessControl(FullName, includeSections)
                                      : Directory.GetAccessControl(FullName, includeSections);
@@ -496,7 +541,9 @@ namespace LiquesceSvc
          pSD.SetSecurityDescriptorBinaryForm(binaryForm, includeSections);
          // Apply these changes.
          if (IsDirectory)
+         {
             Directory.SetAccessControl(FullName, (DirectorySecurity)pSD);
+         }
          else
          {
             File.SetAccessControl(FullName, (FileSecurity)pSD);
