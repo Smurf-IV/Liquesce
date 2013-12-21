@@ -1,8 +1,8 @@
 ﻿#region Copyright (C)
 // ---------------------------------------------------------------------------------------------------------------
-//  <copyright file="ExpectedDetailResult.cs" company="Smurf-IV">
+//  <copyright file="ITab.cs" company="Smurf-IV">
 // 
-//  Copyright (C) 2010-2013 Simon Coghlan (Aka Smurf-IV)
+//  Copyright (C) 2013 Simon Coghlan (Aka Smurf-IV)
 // 
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -23,18 +23,13 @@
 //  </summary>
 // --------------------------------------------------------------------------------------------------------------------
 #endregion
-using System;
 
-namespace Liquesce
+using LiquesceFacade;
+
+namespace Liquesce.Tabs
 {
-   class ExpectedDetailResult : IComparable
+   internal interface ITab
    {
-      public string DisplayName { get; set; }
-      public string ActualFileLocation { get; set; }
-      public int CompareTo(object obj)
-      {
-         ExpectedDetailResult other = obj as ExpectedDetailResult;
-         return (other!= null)?DisplayName.CompareTo(other.DisplayName):0;
-      }
+      ConfigDetails cd { set; }
    }
 }

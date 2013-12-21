@@ -108,35 +108,62 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\LiquesceTray\WindowLocation.cs">
-      <Link>WindowLocation.cs</Link>
+      <Link>Shared\WindowLocation.cs</Link>
     </Compile>
     <Compile Include="AdvancedPropertiesDisplay.cs" />
-    <Compile Include="GridAdvancedSettings.cs">
+    <Compile Include="LandingZone.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="GridAdvancedSettings.Designer.cs">
-      <DependentUpon>GridAdvancedSettings.cs</DependentUpon>
+    <Compile Include="LandingZone.Designer.cs">
+      <DependentUpon>LandingZone.cs</DependentUpon>
     </Compile>
     <Compile Include="LogDisplay.cs" />
     <Compile Include="DragDropItem.cs" />
     <Compile Include="ExpectedDetailResult.cs" />
     <Compile Include="ExtractIcon.cs" />
-    <Compile Include="MainForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="MainForm.Designer.cs">
-      <DependentUpon>MainForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="NumericUpDownTypeEditor.cs" />
+    <Compile Include="Shared\NumericUpDownTypeEditor.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
-    <Compile Include="SplitContainerEx.cs">
+    <Compile Include="Shared\CommandLinkButton.cs">
       <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Shared\SplitContainerEx.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Tabs\ITab.cs" />
+    <Compile Include="Tabs\Logging.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Tabs\Logging.Designer.cs">
+      <DependentUpon>Logging.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Tabs\MountingPoints.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Tabs\MountingPoints.Designer.cs">
+      <DependentUpon>MountingPoints.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Tabs\Service.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Tabs\Service.Designer.cs">
+      <DependentUpon>Service.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Tabs\Welcome.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Tabs\Welcome.Designer.cs">
+      <DependentUpon>Welcome.cs</DependentUpon>
     </Compile>
     <Compile Include="TailForm.cs">
       <SubType>Form</SubType>
@@ -153,14 +180,27 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+    <None Include="Tabs\Welcome.rtf" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="GridAdvancedSettings.resx">
-      <DependentUpon>GridAdvancedSettings.cs</DependentUpon>
+    <EmbeddedResource Include="LandingZone.resx">
+      <DependentUpon>LandingZone.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="MainForm.resx">
-      <DependentUpon>MainForm.cs</DependentUpon>
-      <SubType>Designer</SubType>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tabs\Logging.resx">
+      <DependentUpon>Logging.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tabs\MountingPoints.resx">
+      <DependentUpon>MountingPoints.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tabs\Service.resx">
+      <DependentUpon>Service.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tabs\Welcome.resx">
+      <DependentUpon>Welcome.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="TailForm.resx">
       <DependentUpon>TailForm.cs</DependentUpon>
@@ -194,10 +234,17 @@
       <Name>LiquesceFacade</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Mounting\" />
+  </ItemGroup>
   <ItemGroup>
     <Content Include="Liquesce.ico" />
     <Content Include="Resources\Liquesce.ico" />
+    <None Include="Resources\Umut-Pulat-Tulliana-2-K-cm-system.ico" />
+    <None Include="Resources\Umut-Pulat-Tulliana-2-3floppy-mount.ico" />
+    <None Include="Resources\Umut-Pulat-Tulliana-2-Log.ico" />
+    <None Include="Resources\Mart-Glaze-Log.ico" />
+    <None Include="Resources\Umut-Pulat-Tulliana-2-K-color-edit.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

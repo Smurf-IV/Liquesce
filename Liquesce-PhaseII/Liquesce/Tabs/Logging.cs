@@ -1,8 +1,8 @@
 ﻿#region Copyright (C)
 // ---------------------------------------------------------------------------------------------------------------
-//  <copyright file="GridAdvancedSettings.cs" company="Smurf-IV">
+//  <copyright file="Logging.cs" company="Smurf-IV">
 // 
-//  Copyright (C) 2010-2011 fpDragon
+//  Copyright (C) 2013 Simon Coghlan (Aka Smurf-IV)
 // 
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -26,48 +26,48 @@
 
 using System;
 using System.Windows.Forms;
-using LiquesceFacade;
+using NLog;
 
-namespace Liquesce
+namespace Liquesce.Tabs
 {
-   public partial class GridAdvancedSettings : Form
+   public partial class Logging : UserControl
    {
-      private AdvancedPropertiesDisplay apd;
+      static private readonly Logger Log = LogManager.GetCurrentClassLogger();
 
-      public GridAdvancedSettings()
+      public Logging()
       {
          InitializeComponent();
       }
 
-      private void GridAdvancedSettings_Load(object sender, EventArgs e)
+      private void btnServiceTail_Click(object sender, EventArgs e)
       {
-         Utils.ResizeDescriptionArea(ref propertyGrid1, 6); // okay for most
-      }
-
-
-      private ConfigDetails cd;
-      public ConfigDetails AdvancedConfigDetails
-      {
-         get { return cd; }
-         set
+         try
          {
-            cd = value;
-            apd = new AdvancedPropertiesDisplay(cd);
-            propertyGrid1.SelectedObject = apd;
+            string logLocation = DisplayLog.FindLogLocation(@"LiquesceSvc\Logs");
+            if (!string.IsNullOrEmpty(logLocation))
+            {
+               new TailForm(logLocation).Show(this);
+            }
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException("OpenFile has an exception: ", ex);
          }
       }
 
-      private void button1_Click(object sender, EventArgs e)
+      private void commandLinkButton1_Click(object sender, EventArgs e)
       {
-         if (cd != null)
-         {
-            cd.ThreadCount = apd.ThreadCount;
-            Enum.TryParse(apd.AllocationMode, out cd.AllocationMode);
-            cd.HoldOffBufferBytes = (apd.HoldOffMBytes * (1024 * 1024));
-            cd.ServiceLogLevel = apd.ServiceLogLevel;
-            cd.CacheLifetimeSeconds = apd.CacheLifetimeSeconds;
-         }
+         DisplayLog.LogDisplay(@"LiquesceSvc\Logs");
       }
 
+      private void commandLinkButton2_Click(object sender, EventArgs e)
+      {
+         DisplayLog.LogDisplay(@"Liquesce\Logs");
+      }
+
+      private void Logging_Load(object sender, EventArgs e)
+      {
+         btnServiceTail.Focus();
+      }
    }
 }
