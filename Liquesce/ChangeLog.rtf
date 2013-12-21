@@ -1,5 +1,5 @@
 {\rtf1\ansi\ansicpg1252\deff0{\fonttbl{\f0\fswiss\fprq2\fcharset0 Tahoma;}{\f1\fnil\fcharset0 Courier New;}{\f2\fnil Consolas;}{\f3\fmodern\fprq1\fcharset0 Courier New;}{\f4\fnil Courier New;}{\f5\fnil\fcharset0 Consolas;}{\f6\fnil\fcharset0 Tahoma;}}
-{\colortbl ;\red0\green0\blue0;\red0\green0\blue255;\red0\green77\blue187;\red192\green80\blue77;\red0\green128\blue0;\red255\green0\blue0;\red0\green0\blue139;}
+{\colortbl ;\red0\green0\blue0;\red0\green0\blue255;\red0\green77\blue187;\red192\green80\blue77;\red255\green0\blue0;\red0\green0\blue139;\red0\green128\blue0;}
 {\*\generator Msftedit 5.41.21.2510;}\viewkind4\uc1\pard\cf1\lang2057\ul\b\f0\fs20 Welcome to the \i Liquesce \i0 Changelog\cf0\ulnone\b0\f1\par
 \cf1\f0\par
 Currently this is just a place holder for all the cool stuff that has happened to this project :-)\par
@@ -19,7 +19,7 @@ Keep an open eye on the \cf0\b{\field{\*\fldinst{HYPERLINK "http://liquesce.code
 \f0\fs20\par
 \ul\b TODO \par
 \cf4\ulnone\b0 - Mgt application\par
-- - \cf0\f2\fs19 IsCBFSVolume\f5  (Currently covered by the use of CBFS as the drive format type)\par
+- - \cf0\f2\fs19 IsCBFSVolume\f5  \par
 - - Folder on existing NTFS drive instead of drive letter as a parameter to AddMountingPoint() method\par
 - - Make the tail form have colours.\f2\par
 \cf4\f0\fs20 - Usage stats to be reported in Tray\ul\b\par
@@ -29,21 +29,19 @@ Keep an open eye on the \cf0\b{\field{\*\fldinst{HYPERLINK "http://liquesce.code
 - Explorer plugin\par
 - Find an FTP service that works well with this and Amalgam to allow sharing.\par
 - Fix Issues\par
-\cf0\f6 - - \cf5 If a recycler is required then request usage of an existing one from a root drive.\par
-\cf4\f0 - Performance\par
-\cf6\f6 - - FindFiles - Need a way to make this IEnumerable (Maybe)\par
+- Performance\par
+\cf5\f6 - - FindFiles - Need a way to make this IEnumerable (Maybe)\par
 - - Move to Buffered IO classes used by .Net (NativeFileOps, to use FileStream base class)\par
-\cf4\f0 - - Test Suite (\cf6\f6 WINAFred ) \cf4\f0 of operations\par
-\cf6\f6 - Install advances\par
-- - InstallIcon() and SetIcon() methods to set custom disk icons for Explorer\par
+\cf4\f0 - - Test Suite (\cf5\f6 WINAFred ) \cf4\f0 of operations\par
+\cf5\f6 - Install advances\par
 - - Use Wix 3.7/8 to add bootstrapper functionality for .Net\par
-- \cf0\f2\fs19 CheckDrop\f5  - \cf7\b\f2 On Add check to make sure that the root (Or this) node have not already been covered.\par
-\cf0\b0\f5 - \f2 ReadConfigDetails\f5  - \cf7\b\f2 Read the values from the config file\par
-\cf0\b0\f5 - \f2 SetAllocationSize\f5  - \cf7\b\f2 Move the file, or return not enough space ??\par
+- \cf0\f2\fs19 CheckDrop\f5  - \cf6\b\f2 On Add check to make sure that the root (Or this) node have not already been covered.\par
+\cf0\b0\f5 - \f2 ReadConfigDetails\f5  - \cf6\b\f2 Read the values from the config file\par
+\cf0\b0\f5 - \f2 SetAllocationSize\f5  - \cf6\b\f2 Move the file, or return not enough space ??\par
 \cf0\b0\f5 - \f2 CanFileBeDeleted\par
-\cf7\b\f5 - - \f2 Need to find out if this ever get called before IsDirectoryEmtpy\cf0\b0\par
-\f5 - - \cf7\b\f2 Need to check if any of the files are open within a directory.\par
-\cf0\b0\f5 - \f2 Start\f5  - \cf7\b\f2 Search all usages of the DriveLetter and make sure they become MountPoint compatible\par
+\cf6\b\f5 - - \f2 Need to find out if this ever get called before IsDirectoryEmtpy\cf0\b0\par
+\f5 - - \cf6\b\f2 Need to check if any of the files are open within a directory.\par
+\cf0\b0\f5 - \f2 Start\f5  - \cf6\b\f2 Search all usages of the DriveLetter and make sure they become MountPoint compatible\par
 \cf4\b0\f0\fs20 - UNC path instead of drive letter as a parameter to AddMountingPoint() method\par
 \par
 \cf1\par
@@ -55,6 +53,11 @@ Keep an open eye on the \cf0\b{\field{\*\fldinst{HYPERLINK "http://liquesce.code
 - Fix TeraCopy problem (Due to NoBuffering request from that app !)\par
 - Add the lower (Reduced) logging levels for the default install to enable a speed improvement\par
 - When creating a new folder in the root, It would throw an exception due to security\par
+- Use of the recycle bin\par
+- Install Icon, as the recycler fix means the lack of OS's ram icon\par
+- Some teaking to the level of log output on start-up\par
+- Coding standard improvement (e.g. Use brackets after all if's)\par
+\par
 \ul\b\par
 2013-11-30\par
 \ulnone\b0 - Building VM's for Test (2k12 doesn't want to play !)\par
@@ -121,8 +124,8 @@ Keep an open eye on the \cf0\b{\field{\*\fldinst{HYPERLINK "http://liquesce.code
 - GetSecurity\par
 - Directory Delete\par
 - Directory Open\par
-- Directory Create -  \cf6 Problem\cf0\par
-- File read - \cf6 not firing\cf0\par
+- Directory Create -  \cf5 Problem\cf0\par
+- File read - \cf5 not firing\cf0\par
 \par
 \ul\b\par
 2013-09-##\par
@@ -137,7 +140,7 @@ Keep an open eye on the \cf0\b{\field{\*\fldinst{HYPERLINK "http://liquesce.code
 2013-07-##\par
 \ulnone\b0 - Over the year I have been slowly learning how to use the CBFS and implementing test applications\par
 - Move back to using IDE 2010 (Do not like 2012!)\par
-- Use new transaction DLL \cf6\f2\fs19 ChinhDo\f5  1.3\f2\par
+- Use new transaction DLL \cf5\f2\fs19 ChinhDo\f5  1.3\f2\par
 \cf0\f0\fs20 - Branch code to start Phase][\par
 - Move over to using newer CBFS V4\par
 - Remove DokanNet\par
@@ -184,7 +187,7 @@ Keep an open eye on the \cf0\b{\field{\*\fldinst{HYPERLINK "http://liquesce.code
 - Fix \cf4 Deleting directories\par
 \cf0 - Solved \cf4 Problems sharing a drive (Hosted on XP)\cf0  (See workaround in Item)\par
 - Solved \cf4 0.6.0 Sharing on Win 7 x64 & x32 Host Locks up XP Client\cf0  (See workaround in Item) \par
-\cf4\f6 - NTFS is case-preserving but case-insensitive in the Win32 namespace\cf5\f2\fs19\par
+\cf4\f6 - NTFS is case-preserving but case-insensitive in the Win32 namespace\cf7\f2\fs19\par
 \cf0\ul\b\f0\fs20\par
 \par
 2012-01-28 (Release Candidate)\par
@@ -235,7 +238,7 @@ Keep an open eye on the \cf0\b{\field{\*\fldinst{HYPERLINK "http://liquesce.code
 - Fix the "Left over" text for the backup in the space display.\par
 - Re-focused the need for security on the GetFileInformation and SetFile operations.\par
 - Add code to inform explorer (And other Apps via OS) that things have changed in the mounted drive [\f2\fs19 SHChangeNotify\f5  API]\f0\fs20 .\par
-- Sort out the code for the file renames in Win 7 and \cf5\f2\fs19 "\cf0{\field{\*\fldinst{HYPERLINK "http://code.google.com/p/dokan/issues/detail?id=238"}}{\fldrslt{\ul\cf2 http://code.google.com/p/dokan/issues/detail?id=238}}}\cf5\f2\fs19 " \par
+- Sort out the code for the file renames in Win 7 and \cf7\f2\fs19 "\cf0{\field{\*\fldinst{HYPERLINK "http://code.google.com/p/dokan/issues/detail?id=238"}}{\fldrslt{\ul\cf2 http://code.google.com/p/dokan/issues/detail?id=238}}}\cf7\f2\fs19 " \par
 \cf0\par
 \ul\b\f0\fs20\par
 2011-10-30\par

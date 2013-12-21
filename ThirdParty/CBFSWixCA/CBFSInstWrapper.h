@@ -9,18 +9,18 @@
 
 STDDLLAPIPTR_( BOOL, InstallAFN)( IN LPCSTR CabPathName, IN LPCSTR ProductName, IN LPCWSTR PathToInstall, IN BOOL SupportPnP, IN DWORD ModulesToInstall, OUT LPDWORD RebootNeeded );
 STDDLLAPIPTR_( BOOL, InstallWFN)( IN LPCWSTR CabPathName, IN LPCWSTR ProductName, IN LPCWSTR PathToInstall, IN BOOL SupportPnP, IN DWORD ModulesToInstall, OUT LPDWORD RebootNeeded );
-
+ 
 STDDLLAPIPTR_( BOOL, UninstallAFN)( IN LPCSTR CabPathName, IN LPCSTR ProductName, IN LPCWSTR InstalledPath, OUT LPDWORD RebootNeeded );
 STDDLLAPIPTR_( BOOL, UninstallWFN)( IN LPCWSTR CabPathName, IN LPCWSTR ProductName, IN LPCWSTR InstalledPath, OUT LPDWORD RebootNeeded );
 
 STDDLLAPIPTR_( BOOL, GetModuleStatusAFN)( IN LPCSTR ProductName, IN DWORD Module, OUT LPBOOL Installed, OUT LPDWORD FileVersionHigh OPTIONAL, OUT LPDWORD FileVersionLow OPTIONAL );
 STDDLLAPIPTR_( BOOL, GetModuleStatusWFN)( IN LPCWSTR ProductName, IN DWORD Module, OUT LPBOOL Installed, OUT LPDWORD FileVersionHigh OPTIONAL, OUT LPDWORD FileVersionLow OPTIONAL );
 
-STDDLLAPIPTR_( BOOL, InstallIconAFN)( IN LPCSTR IconPath, IN LPCSTR IconId, OUT LPBOOL RebootNeeded );
-STDDLLAPIPTR_( BOOL, InstallIconWFN)( IN LPCWSTR IconPath, IN LPCWSTR IconId, OUT LPBOOL RebootNeeded );
+STDDLLAPIPTR_( BOOL, InstallIconAFN)( IN LPCSTR ProductName, IN LPCSTR IconPath, IN LPCSTR IconId, OUT LPBOOL RebootNeeded );
+STDDLLAPIPTR_( BOOL, InstallIconWFN)( IN LPCWSTR ProductName, IN LPCWSTR IconPath, IN LPCWSTR IconId, OUT LPBOOL RebootNeeded );
 
-STDDLLAPIPTR_( BOOL, UninstallIconAFN)( IN LPCSTR IconId, OUT LPBOOL RebootNeeded );
-STDDLLAPIPTR_( BOOL, UninstallIconWFN)( IN LPCWSTR IconId, OUT LPBOOL RebootNeeded );
+STDDLLAPIPTR_( BOOL, UninstallIconAFN)( IN LPCSTR ProductName, IN LPCSTR IconId, OUT LPBOOL RebootNeeded );
+STDDLLAPIPTR_( BOOL, UninstallIconWFN)( IN LPCWSTR ProductName, IN LPCWSTR IconId, OUT LPBOOL RebootNeeded );
 
 #ifdef _UNICODE
 #define Install         InstallW
@@ -130,8 +130,8 @@ public:
    BOOL Install( IN LPCTSTR CabPathName, IN LPCTSTR ProductName, IN LPCTSTR PathToInstall, IN BOOL SupportPnP, IN DWORD ModulesToInstall, OUT LPDWORD RebootNeeded );
    BOOL Uninstall( IN LPCTSTR CabPathName, IN LPCTSTR ProductName, IN LPCTSTR InstalledPath, OUT LPDWORD RebootNeeded );
    BOOL GetModuleStatus( IN LPCTSTR ProductName, IN DWORD Module, OUT LPBOOL Installed, OUT LPDWORD FileVersionHigh OPTIONAL, OUT LPDWORD FileVersionLow OPTIONAL );
-   BOOL InstallIcon( IN LPCTSTR IconPath, IN LPCTSTR IconId, OUT LPBOOL RebootNeeded );
-   BOOL UninstallIcon( IN LPCTSTR IconId, OUT LPBOOL RebootNeeded );
+   BOOL InstallIcon( IN LPCTSTR ProductName, IN LPCTSTR IconPath, IN LPCTSTR IconId, OUT LPBOOL RebootNeeded );
+   BOOL UninstallIcon( IN LPCTSTR ProductName, IN LPCTSTR IconId, OUT LPBOOL RebootNeeded );
 
 private:
    public:
