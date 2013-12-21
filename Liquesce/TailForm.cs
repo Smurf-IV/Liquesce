@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="TailForm.cs" company="Smurf-IV">
 // 
-//  Copyright (C) 2012 Smurf-IV
+//  Copyright (C) 2012-2013 Smurf-IV
 // 
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -48,7 +48,9 @@ namespace Liquesce
          if (!Visible
             || String.IsNullOrEmpty(logLocation)
             )
+         {
             return;
+         }
          try
          {
             lock (this)
@@ -100,7 +102,9 @@ namespace Liquesce
       private void toolStripMenuItem1_Click(object sender, EventArgs e)
       {
          lock (this)
+         {
             textBox1.Clear();
+         }
       }
 
       private void toolStripMenuItem2_Click(object sender, EventArgs e)
