@@ -22,7 +22,7 @@ CBFSInstWrapper::~CBFSInstWrapper()
 //virtual 
 const bool CBFSInstWrapper::IsValid(void)
 {
-   return( GetFunctionPointer( m_lpfnInstall, STR(Install) )
+   return( GetFunctionPointer( m_lpfnInstall, STR( Install) )
       && GetFunctionPointer( m_lpfnUninstall, STR( Uninstall ) )
       && GetFunctionPointer( m_lpfnGetModuleStatus, STR( GetModuleStatus ) )
       && GetFunctionPointer( m_lpfnInstallIcon, STR( InstallIcon ) )
@@ -55,18 +55,18 @@ BOOL CBFSInstWrapper::GetModuleStatus( IN LPCTSTR ProductName, IN DWORD Module, 
       return( m_lpfnGetModuleStatus( ProductName, Module, Installed, FileVersionHigh, FileVersionLow ) );
 }
 
-BOOL CBFSInstWrapper::InstallIcon( IN LPCTSTR IconPath, IN LPCTSTR IconId, OUT LPBOOL RebootNeeded )
+BOOL CBFSInstWrapper::InstallIcon( IN LPCTSTR ProductName, IN LPCTSTR IconPath, IN LPCTSTR IconId, OUT LPBOOL RebootNeeded )
 {
    if ( NULL == m_lpfnInstallIcon ) 
       return( FALSE );
    else 
-      return( m_lpfnInstallIcon( IconPath, IconId, RebootNeeded ) );
+      return( m_lpfnInstallIcon( ProductName, IconPath, IconId, RebootNeeded ) );
 }
 
-BOOL CBFSInstWrapper::UninstallIcon( IN LPCTSTR IconId, OUT LPBOOL RebootNeeded )
+BOOL CBFSInstWrapper::UninstallIcon( IN LPCTSTR ProductName, IN LPCTSTR IconId, OUT LPBOOL RebootNeeded )
 {
    if ( NULL == m_lpfnUninstallIcon ) 
       return( FALSE );
    else 
-      return( m_lpfnUninstallIcon( IconId, RebootNeeded ) );
+      return( m_lpfnUninstallIcon( ProductName, IconId, RebootNeeded ) );
 }

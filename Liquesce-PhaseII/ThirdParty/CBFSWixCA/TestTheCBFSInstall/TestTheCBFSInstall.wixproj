@@ -70,6 +70,9 @@
     <Content Include="..\..\..\..\..\Amalgam\Phase III\ThirdParty\CBFS\x64\msvcr100.dll">
       <Link>x64\msvcr100.dll</Link>
     </Content>
+    <Content Include="..\..\..\Liquesce\Resources\Liquesce.ico">
+      <Link>Liquesce.ico</Link>
+    </Content>
     <Content Include="AnyCPU\LiquesceSvc.exe" />
   </ItemGroup>
   <Import Project="$(WixTargetsPath)" />

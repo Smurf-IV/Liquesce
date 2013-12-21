@@ -44,8 +44,8 @@ namespace LiquesceSvc
       /// </remarks>
       static void Main(string[] args)
       {
-         Log.Error("=====================================================================");
-         Log.Error("File Re-opened: Ver :" + Assembly.GetExecutingAssembly().GetName().Version);
+         Log.Fatal("=====================================================================");
+         Log.Fatal("File Re-opened: Ver :" + Assembly.GetExecutingAssembly().GetName().Version);
          var runner = new LiquesceService();
          if ((args.Length > 0) && ("/debug" == args[0].ToLower()))
          {
@@ -63,7 +63,7 @@ namespace LiquesceSvc
             LiquesceService.RunningAsService = true;
             ServiceBase.Run(new ServiceBase[] { runner });
          }
-         Log.Error("========================Clean=Exit===================================");
+         Log.Fatal("========================Clean=Exit===================================");
       }
    }
 }

@@ -136,8 +136,10 @@ namespace LiquesceSvc
             if (!IsRunning)
             {
                if (currentConfigDetails == null)
+               {
                   ConfigDetails.ReadConfigDetails(ref currentConfigDetails);
-               FireStateChange(LiquesceSvcState.InError, "Starting up");
+               }
+               FireStateChange(LiquesceSvcState.Unknown, "Starting up");
                if (currentConfigDetails == null)
                {
                   Log.Fatal("Unable to read the config details to allow this service to run. Will now exit");
@@ -170,7 +172,7 @@ namespace LiquesceSvc
                   liquesceOperations.AddMountingPoint(currentConfigDetails.DriveLetter, CallbackFileSystem.CBFS_SYMLINK_MOUNT_MANAGER, 0);
                   liquesceOperations.DeleteMountingPoint();
                   liquesceOperations.DeleteStorage(true);
-                  liquesceOperations.CreateStorage(CbFsStorageType.stVirtualDisk, currentConfigDetails.ThreadCount);
+                  liquesceOperations.CreateStorage(CbFsStorageType.stDisk, currentConfigDetails.ThreadCount, "Liquesce.ico");
                }
                catch (Exception ex)
                {
@@ -178,7 +180,7 @@ namespace LiquesceSvc
                }
 
                // Now get the drive letter ready
-               liquesceOperations.AddMountingPoint(currentConfigDetails.DriveLetter, CallbackFileSystem.CBFS_SYMLINK_SIMPLE, CbFsNetworkSymLinkFlags.nsmAllowMapAsDrive);
+               liquesceOperations.AddMountingPoint(currentConfigDetails.DriveLetter, CallbackFileSystem.CBFS_SYMLINK_MOUNT_MANAGER, 0);
                ulong freeBytesAvailable = 0;
                ulong totalBytes = 0;
                ulong totalFreeBytes = 0;

@@ -29,13 +29,18 @@
       <?define MgtSource=$(sys.SOURCEFILEDIR).\AnyCPU ?>
       <?define x64=$(sys.SOURCEFILEDIR)..\..\..\..\..\Amalgam\Phase III\ThirdParty\CBFS\x64 ?>
       <?define x86=$(sys.SOURCEFILEDIR)..\..\..\..\..\Amalgam\Phase III\ThirdParty\CBFS\32bit ?>
+      <?define IcoSource=$(sys.SOURCEFILEDIR)..\..\..\\Liquesce\Resources ?>
 
 
       <ComponentGroup Id="Client" >
          <Component Directory="INSTALLLOCATION">
             <File Id="LiquesceSvc.exe" Source="$(var.MgtSource)\LiquesceSvc.exe" KeyPath="yes" />
          </Component>
+         <Component Id="Liquesce.ico" Directory="INSTALLLOCATION">
+            <File Id="Liquesce.ico" Source="$(var.IcoSource)\Liquesce.ico" KeyPath="yes" />
+         </Component>
 
+         
          <Component Directory="INSTALLLOCATION">
             <Condition><![CDATA[VersionNT64]]></Condition>
             <File Id="CBFS4Net.dll_x64" Source="$(var.x64)\CBFS4Net.dll" KeyPath="yes" />
@@ -83,7 +88,7 @@
       <!--Values of ModulesToInstall
       [Pascal] [C++ (VCL)] [C++ (Lib)] [C++ (.NET)] [C#] [VB.NET] [Java] Value Meaning
       CBFS_MODULE_DRIVER 1 The driver (.sys file)
-      CBFS_MODULE_NET_REDIRECTOR_DLL 65536 (0x00010000) Network redirector DLL (CbFsNetRdr3.dll)
+      CBFS_MODULE_NET_REDIRECTOR_DLL  65536 (0x00010000) Network redirector DLL (CbFsNetRdr3.dll)
       CBFS_MODULE_MOUNT_NOTIFIER_DLL 131072 (0x00020000) Mount Notifier DLL (CbFsMntNtf3.dll)
       http://www.eldos.com/documentation/cbfs/ref_gen_helper_dlls.html
       //CBFSModule( 1UL + 0x00010000 + 0x00020000);
@@ -91,9 +96,9 @@
       <Property Id="CBFSMODULESTOINSTALL" Value="196609" />
 
       <Binary Id="CBFSWixCA.dll" SourceFile="$(var.CBFSWixCA.TargetDir)$(var.CBFSWixCA.TargetName).dll" />
-      <CustomAction Id="SetCBFS_CA_Values" Return="check" Property="InstallCBFS_CA" Value="[PRODUCTNAME];[CBFSMODULESTOINSTALL]" />
+      <CustomAction Id="SetCBFS_CA_Values" Return="check" Property="InstallCBFS_CA" Value="[PRODUCTNAME];[CBFSMODULESTOINSTALL];[#Liquesce.ico];Liquesce.ico" />
       <CustomAction Id="InstallCBFS_CA" BinaryKey="CBFSWixCA.dll" DllEntry="InstallCBFS_CA" Execute="deferred" Impersonate="no" Return="check" />
-      <CustomAction Id="SetUnCBFS_CA_Value" Return="check" Property="UninstallCBFS_CA" Value="[PRODUCTNAME]" />
+      <CustomAction Id="SetUnCBFS_CA_Value" Return="check" Property="UninstallCBFS_CA" Value="[PRODUCTNAME];Liquesce.ico" />
       <CustomAction Id="UninstallCBFS_CA" BinaryKey="CBFSWixCA.dll" DllEntry="UninstallCBFS_CA" Execute="deferred" Impersonate="no" Return="check" />
 
       <UI>
