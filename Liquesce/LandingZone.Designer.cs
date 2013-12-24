@@ -55,11 +55,11 @@
          this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
          this.tabControl1.DrawMode = System.Windows.Forms.TabDrawMode.OwnerDrawFixed;
          this.tabControl1.ItemSize = new System.Drawing.Size(25, 150);
-         this.tabControl1.Location = new System.Drawing.Point(0, 0);
+         this.tabControl1.Location = new System.Drawing.Point(3, 3);
          this.tabControl1.Multiline = true;
          this.tabControl1.Name = "tabControl1";
          this.tabControl1.SelectedIndex = 0;
-         this.tabControl1.Size = new System.Drawing.Size(770, 489);
+         this.tabControl1.Size = new System.Drawing.Size(764, 483);
          this.tabControl1.SizeMode = System.Windows.Forms.TabSizeMode.Fixed;
          this.tabControl1.TabIndex = 0;
          this.tabControl1.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.tabControl1_DrawItem);
@@ -71,7 +71,7 @@
          this.tabWelcome.Location = new System.Drawing.Point(154, 4);
          this.tabWelcome.Name = "tabWelcome";
          this.tabWelcome.Padding = new System.Windows.Forms.Padding(3);
-         this.tabWelcome.Size = new System.Drawing.Size(612, 481);
+         this.tabWelcome.Size = new System.Drawing.Size(606, 475);
          this.tabWelcome.TabIndex = 0;
          this.tabWelcome.Text = "Welcome";
          // 
@@ -82,7 +82,7 @@
          this.welcome1.Location = new System.Drawing.Point(3, 3);
          this.welcome1.Name = "welcome1";
          this.welcome1.Padding = new System.Windows.Forms.Padding(3);
-         this.welcome1.Size = new System.Drawing.Size(606, 475);
+         this.welcome1.Size = new System.Drawing.Size(600, 469);
          this.welcome1.TabIndex = 0;
          // 
          // tabLogging
@@ -158,6 +158,7 @@
          this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
          this.MinimumSize = new System.Drawing.Size(778, 516);
          this.Name = "LandingZone";
+         this.Padding = new System.Windows.Forms.Padding(3);
          this.Text = "Liquesce ][ Mount Manager";
          this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.LandingZone_FormClosing);
          this.tabControl1.ResumeLayout(false);

@@ -171,7 +171,7 @@ namespace CBFS
       [DebuggerHidden]
       public static void ThrowNotFound(uint attributes)
       {
-         var isDirectoy = IsDirectoy(attributes);
+         bool isDirectoy = IsDirectoy(attributes);
          throw new ECBFSError((uint)(isDirectoy ? ERROR_PATH_NOT_FOUND : ERROR_FILE_NOT_FOUND));
       }
 

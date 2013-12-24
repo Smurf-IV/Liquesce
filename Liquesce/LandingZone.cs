@@ -50,7 +50,7 @@ namespace Liquesce
             Properties.Settings.Default.Save();
          }
          WindowLocation.GeometryFromString(Properties.Settings.Default.WindowLocation, this);
-         ConfigDetails.ReadConfigDetails(ref cd);
+         new DealWithTheCfgChanging().ReadConfigDetails(ref cd);
          foreach (TabPage control in tabControl1.TabPages)
          {
             foreach (ITab tab in control.Controls.OfType<ITab>())

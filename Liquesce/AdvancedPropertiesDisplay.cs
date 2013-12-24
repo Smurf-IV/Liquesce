@@ -33,6 +33,7 @@ using NLog;
 namespace Liquesce
 {
    // ReSharper disable MemberCanBePrivate.Global
+   // ReSharper disable UnusedMember.Global
    // Needs to be global to allow the propertgrid reflector to the accessors
    public class AdvancedPropertiesDisplay
    {
@@ -124,6 +125,7 @@ namespace Liquesce
          set { cd.CacheLifetimeSeconds = value; }
       }
    }
+   // ReSharper restore UnusedMember.Global
    // ReSharper restore MemberCanBePrivate.Global
 
 

@@ -45,7 +45,7 @@ namespace LiquesceFacade
    {
       static private readonly Logger Log = LogManager.GetCurrentClassLogger();
       public const string ProductNameCBFS = "LiquesceSvc";
-      static private readonly string configFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), ProductNameCBFS, "Properties.config.xml");
+      static public readonly string configFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), ProductNameCBFS, "Properties.config.xml");
 
       public void InitConfigDetails()
       {
@@ -55,8 +55,8 @@ namespace LiquesceFacade
          // Reverse find the 1st letter not used 
          for (int i = 0; i < 26; i++)
          {
-            char letter = (char) ('Z' - i);
-            if ( !driveLetters.Contains(letter) )
+            char letter = (char)('Z' - i);
+            if (!driveLetters.Contains(letter))
             {
                DriveLetter = letter.ToString(CultureInfo.InvariantCulture);
                break;
@@ -69,120 +69,6 @@ namespace LiquesceFacade
          }
       }
 
-      public static void ReadConfigDetails(ref ConfigDetails currentConfigDetails)
-      {
-         try
-         {
-            InitialiseToDefault(ref currentConfigDetails);
-            XmlSerializer x = new XmlSerializer(currentConfigDetails.GetType());
-            Log.Info("Attempting to read Drive details from: [{0}]", configFile);
-            using (TextReader textReader = new StreamReader(configFile))
-            {
-               currentConfigDetails = x.Deserialize(textReader) as ConfigDetails;
-            }
-            Log.Info("Now normalise the paths to allow the file finders to work correctly");
-            if (currentConfigDetails != null)
-            {
-               List<string> fileSourceLocations = new List<string>(currentConfigDetails.SourceLocations);
-               currentConfigDetails.SourceLocations.Clear();
-
-               foreach (
-                  string location in
-                     fileSourceLocations.Select(
-                        fileSourceLocation => Path.GetFullPath(fileSourceLocation).TrimEnd(Path.DirectorySeparatorChar))
-                                        .Where(location => OkToAddThisDriveType(location))
-                  )
-               {
-                  currentConfigDetails.SourceLocations.Add(location);
-               }
-
-            }
-         }
-         catch (Exception ex)
-         {
-            Log.ErrorException("Cannot read the configDetails: ", ex);
-            currentConfigDetails = null;
-         }
-         finally
-         {
-            if (currentConfigDetails == null)
-            {
-               InitialiseToDefault(ref currentConfigDetails);
-               if (!File.Exists(configFile))
-                  WriteOutConfigDetails(currentConfigDetails);
-            }
-         }
-      }
-
-      private static bool OkToAddThisDriveType(string dr)
-      {
-         bool seemsOK = false;
-         try
-         {
-            Log.Debug(dr);
-            DriveInfo di = new DriveInfo(dr);
-            DriveType driveType = di.DriveType;
-            switch (driveType)
-            {
-               case DriveType.Removable:
-               case DriveType.Fixed:
-                  {
-                     string di_DriveFormat = di.DriveFormat;
-                     switch (di_DriveFormat.ToUpper())
-                     {
-                        case "CBFS":
-                           Log.Warn("Removing the existing CBFS drive as this would cause confusion ! [{0}]",
-                                    di.Name);
-                           seemsOK = false;
-                           break;
-                        case "FAT":
-                           Log.Warn("Removing FAT formated drive type, as this causes ACL Failures [{0}]", di.Name);
-                           seemsOK = false;
-                           break;
-                        default:
-                           seemsOK = true;
-                           break;
-                     }
-                  }
-                  break;
-               case DriveType.Unknown:
-               case DriveType.NoRootDirectory:
-               case DriveType.Network:
-               case DriveType.CDRom:
-               case DriveType.Ram:
-                  seemsOK = true;
-                  break;
-               default:
-                  throw new ArgumentOutOfRangeException("driveType", "Unknown type detected");
-            }
-         }
-         catch (Exception ex)
-         {
-            Log.ErrorException("Check Drive Format Type threw:", ex);
-            seemsOK = false;
-
-         }
-         return seemsOK;
-
-      }
-
-      public static void InitialiseToDefault(ref ConfigDetails currentConfigDetails)
-      {
-         try
-         {
-            if (currentConfigDetails == null)
-            {
-               currentConfigDetails = new ConfigDetails();
-               currentConfigDetails.InitConfigDetails();
-               currentConfigDetails.SourceLocations.Add(@"C:\");
-            }
-         }
-         catch (Exception ex)
-         {
-            Log.ErrorException("Cannot create the default configDetails: ", ex);
-            currentConfigDetails = null;
-         }
-      }
 
       public void WriteOutConfigDetails()
       {
@@ -232,7 +118,7 @@ namespace LiquesceFacade
       public UInt64 HoldOffBufferBytes = 1L << 10 << 10 << 10; // ==1GB;
 
       [DataMember(IsRequired = true)]
-      public List<string> SourceLocations = new List<string>();
+      public List<SourceLocation> SourceLocations = new List<SourceLocation>();
 
       [DataMember]
       public string ServiceLogLevel = LogLevel.Fatal.Name; 
@@ -250,9 +136,41 @@ namespace LiquesceFacade
          sb = sb.AppendFormat("AllocationMode=[{0}]",AllocationMode).AppendLine();
          sb = sb.AppendFormat("HoldOffBufferBytes=[{0}]", HoldOffBufferBytes).AppendLine();
          sb = sb.AppendLine("SourceLocations:");
-         sb = SourceLocations.Aggregate(sb, (current, location) => current.AppendLine(location));
+         sb = SourceLocations.Aggregate(sb, (current, location) => current.AppendLine(location.ToString()));
          sb = sb.AppendFormat("ServiceLogLevel[{0}]",ServiceLogLevel).AppendLine();
          sb = sb.AppendFormat("CacheLifetimeSeconds=[{0}]", CacheLifetimeSeconds).AppendLine();
+         return sb.ToString();
+      }
+
+   }
+
+   [DataContract]
+   public class SourceLocation
+   {
+      [DataMember] public string SourcePath = string.Empty;
+
+      [DataMember] public bool UseAsNameRoot = false;
+
+      [DataMember] public bool UseIsReadOnly = false;
+
+      // paramterless contrsuctor to allow serialisation
+      public SourceLocation()
+      {
+      }
+
+      public SourceLocation(string path, bool useAsRoot=false, bool isReadOnly=false)
+      {
+         SourcePath = path;
+         UseAsNameRoot = useAsRoot;
+         UseIsReadOnly = isReadOnly;
+      }
+
+      public new string ToString()
+      {
+         StringBuilder sb = new StringBuilder();
+         sb = sb.AppendFormat("SourceLocation=[{0}]", SourcePath).AppendLine();
+         sb = sb.AppendFormat("UseAsNameRoot=[{0}]", UseAsNameRoot).AppendLine();
+         sb = sb.AppendFormat("UseIsReadOnly=[{0}]", UseIsReadOnly).AppendLine();
          return sb.ToString();
       }
    }

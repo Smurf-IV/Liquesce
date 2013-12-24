@@ -40,10 +40,10 @@ namespace Liquesce
 
             //paint the three dots'
             Point[] points = new Point[4];
-            var w = Width;
-            var h = Height;
-            var d = SplitterDistance;
-            var sW = SplitterWidth;
+            int w = Width;
+            int h = Height;
+            int d = SplitterDistance;
+            int sW = SplitterWidth;
             int sWC = (sW / 2);
 
             if (Orientation == Orientation.Horizontal)

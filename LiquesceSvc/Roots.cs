@@ -100,7 +100,7 @@ namespace LiquesceSvc
 
             if (!CheckAndGetType(Path.Combine(foundPath, searchFilename), out fsi))
             {
-               if (configDetails.SourceLocations.Select(sourceLocation => Path.Combine(sourceLocation, searchFilename)).Any(newTarget => CheckAndGetType(newTarget, out fsi)))
+               if (configDetails.SourceLocations.Select(sourceLocation => Path.Combine(sourceLocation.SourcePath, searchFilename)).Any(newTarget => CheckAndGetType(newTarget, out fsi)))
                {
                   Log.Trace("Found in source list");
                   return fsi;
@@ -161,25 +161,26 @@ namespace LiquesceSvc
 
       public string[] GetAllPaths(string relativefolder)
       {
-         return configDetails.SourceLocations.Select(t => t + relativefolder).Where(Directory.Exists).ToArray();
+         return configDetails.SourceLocations.Select(t => t.SourcePath + relativefolder).Where(Directory.Exists).ToArray();
       }
 
       // *** NTh Change ***
       // Get the paths of all the copies of the file
       public string[] GetAllFilePaths(string file_name)
       {
-         return configDetails.SourceLocations.Select(t => t + file_name).Where(File.Exists).ToArray();
+         return configDetails.SourceLocations.Select(t => t.SourcePath + file_name).Where(File.Exists).ToArray();
       }
 
 
       public string GetRoot(string path)
       {
          if (!string.IsNullOrEmpty(path))
-            foreach (string t in configDetails.SourceLocations.Where(path.Contains))
+         {
+            foreach (SourceLocation location in configDetails.SourceLocations.Where(location => path.Contains(location.SourcePath)))
             {
-               return t;
+               return location.SourcePath;
             }
-
+         }
          return string.Empty;
       }
 
@@ -231,7 +232,7 @@ namespace LiquesceSvc
          relativeFolder = relativeFolder.TrimEnd(new char[] { Path.DirectorySeparatorChar });
 
          // for every source location
-         foreach (string t in configDetails.SourceLocations)
+         foreach (string t in configDetails.SourceLocations.Select(s => s.SourcePath))
          {
             // first get free space
             ulong lpFreeBytesAvailable, num2, num3;
@@ -258,8 +259,8 @@ namespace LiquesceSvc
       {
          Log.Trace("Trying GetHighestPrioritySourceWithSpace([{0}])", spaceRequired);
          ulong lpFreeBytesAvailable = 0, num2, num3;
-         return configDetails.SourceLocations.FirstOrDefault(w => GetDiskFreeSpaceExW(w, out lpFreeBytesAvailable, out num2, out num3) 
-            && lpFreeBytesAvailable > spaceRequired);
+         return configDetails.SourceLocations.FirstOrDefault(w => GetDiskFreeSpaceExW(w.SourcePath, out lpFreeBytesAvailable, out num2, out num3) 
+            && lpFreeBytesAvailable > spaceRequired).SourcePath;
       }
 
 
@@ -273,12 +274,12 @@ namespace LiquesceSvc
          configDetails.SourceLocations.ForEach(str =>
          {
             ulong num, num2, num3;
-            if (GetDiskFreeSpaceExW(str, out num, out num2, out num3))
+            if (GetDiskFreeSpaceExW(str.SourcePath, out num, out num2, out num3))
             {
                if (highestFreeSpace < num)
                {
                   highestFreeSpace = num;
-                  sourceWithMostFreeSpace = str;
+                  sourceWithMostFreeSpace = str.SourcePath;
                }
             }
          });
@@ -289,7 +290,7 @@ namespace LiquesceSvc
 
       public bool RelativeFileExists(string relative)
       {
-         return configDetails.SourceLocations.Any(t => new NativeFileOps(t + relative).Exists);
+         return configDetails.SourceLocations.Any(t => new NativeFileOps(t.SourcePath + relative).Exists);
       }
 
       // adds the root path to cachedRootPathsSystemInfo dicionary for a specific file
@@ -308,8 +309,11 @@ namespace LiquesceSvc
 
       private string findOffsetPath(string fullFilePath)
       {
-         int index = configDetails.SourceLocations.FindIndex(fullFilePath.StartsWith);
-         return index >= 0 ? fullFilePath.Remove(0, configDetails.SourceLocations[index].Length) : string.Empty;
+         foreach (SourceLocation location in configDetails.SourceLocations.Where(location => fullFilePath.StartsWith(location.SourcePath)))
+         {
+            return fullFilePath.Remove(0, location.SourcePath.Length);
+         }
+         return string.Empty;
       }
 
       public string ReturnMountFileName(string actualFilename)

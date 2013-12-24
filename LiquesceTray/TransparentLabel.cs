@@ -23,7 +23,7 @@
 //  </summary>
 // --------------------------------------------------------------------------------------------------------------------
 #endregion
-using System;
+
 using System.Windows.Forms;
 
 
@@ -33,8 +33,8 @@ namespace LiquesceTray
     {
         public TransparentLabel()
         {
-            this.SetStyle(ControlStyles.Opaque, true);
-            this.SetStyle(ControlStyles.OptimizedDoubleBuffer, false);
+            SetStyle(ControlStyles.Opaque, true);
+            SetStyle(ControlStyles.OptimizedDoubleBuffer, false);
         }
         protected override CreateParams CreateParams
         {
