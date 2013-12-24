@@ -103,9 +103,39 @@ namespace Liquesce.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap Umut_Pulat_Tulliana_2_K_ppp {
+            get {
+                object obj = ResourceManager.GetObject("Umut-Pulat-Tulliana-2-K-ppp", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap Umut_Pulat_Tulliana_2_Log {
             get {
                 object obj = ResourceManager.GetObject("Umut-Pulat-Tulliana-2-Log", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap Umut_Pulat_Tulliana_2_Nfs_mount {
+            get {
+                object obj = ResourceManager.GetObject("Umut-Pulat-Tulliana-2-Nfs-mount", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap Umut_Pulat_Tulliana_2_Nfs_unmount {
+            get {
+                object obj = ResourceManager.GetObject("Umut-Pulat-Tulliana-2-Nfs-unmount", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

@@ -94,7 +94,7 @@ namespace LiquesceSvc
          {
             using (subscribersLock.UpgradableReadLock())
             {
-               var query = from c in subscribers.Keys
+               IEnumerable<Client> query = from c in subscribers.Keys
                            where c.id == id.id
                            select c;
                using (subscribersLock.WriteLock())
@@ -137,7 +137,7 @@ namespace LiquesceSvc
             {
                if (currentConfigDetails == null)
                {
-                  ConfigDetails.ReadConfigDetails(ref currentConfigDetails);
+                  new DealWithTheCfgChanging().ReadConfigDetails(ref currentConfigDetails);
                }
                FireStateChange(LiquesceSvcState.Unknown, "Starting up");
                if (currentConfigDetails == null)
@@ -323,7 +323,7 @@ namespace LiquesceSvc
             using (subscribersLock.ReadLock())
             {
                // Get all the clients in dictionary
-               var query = (from c in subscribers
+               IStateChange[] query = (from c in subscribers
                             select c.Value).ToArray();
                // Create the callback action
                Type type = typeof(IStateChange);

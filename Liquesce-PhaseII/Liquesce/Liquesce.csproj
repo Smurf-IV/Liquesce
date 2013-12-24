@@ -11,7 +11,8 @@
     <RootNamespace>Liquesce</RootNamespace>
     <AssemblyName>Liquesce</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
     <SccProjectName>SAK</SccProjectName>
     <SccLocalPath>SAK</SccLocalPath>
@@ -121,6 +122,12 @@
     <Compile Include="DragDropItem.cs" />
     <Compile Include="ExpectedDetailResult.cs" />
     <Compile Include="ExtractIcon.cs" />
+    <Compile Include="Mounting\Edit.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Mounting\Edit.Designer.cs">
+      <DependentUpon>Edit.cs</DependentUpon>
+    </Compile>
     <Compile Include="Shared\NumericUpDownTypeEditor.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -186,6 +193,9 @@
     <EmbeddedResource Include="LandingZone.resx">
       <DependentUpon>LandingZone.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Mounting\Edit.resx">
+      <DependentUpon>Edit.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -234,12 +244,13 @@
       <Name>LiquesceFacade</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Mounting\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <Content Include="Liquesce.ico" />
     <Content Include="Resources\Liquesce.ico" />
+    <None Include="Resources\Umut-Pulat-Tulliana-2-K-ppp.ico" />
+    <None Include="Resources\Umut-Pulat-Tulliana-2-Nfs-unmount.ico" />
+    <None Include="Resources\Umut-Pulat-Tulliana-2-Nfs-mount.ico" />
     <None Include="Resources\Umut-Pulat-Tulliana-2-K-cm-system.ico" />
     <None Include="Resources\Umut-Pulat-Tulliana-2-3floppy-mount.ico" />
     <None Include="Resources\Umut-Pulat-Tulliana-2-Log.ico" />
@@ -249,7 +260,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_UseGlobalSettings="True" BuildVersion_BuildVersioningStyle="YearStamp.MonthStamp.DayStamp.Increment" />
+      <UserProperties BuildVersion_BuildVersioningStyle="YearStamp.MonthStamp.DayStamp.Increment" BuildVersion_UseGlobalSettings="True" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

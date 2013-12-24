@@ -436,7 +436,7 @@ namespace LiquesceTray
                                  ReadOnly = true,
                                  Size = new System.Drawing.Size(120, 20),
                                  TabIndex = 0,
-                                 Text = config.SourceLocations[i]
+                                 Text = config.SourceLocations[i].SourcePath
                               };
             tableLayouts[i].Controls.Add(diskNames[i], COLUMN_NAME_INDEX, 0);
 
@@ -446,7 +446,7 @@ namespace LiquesceTray
             ulong availabel;
             ulong total;
             ulong freebytes;
-            if (GetDiskFreeSpaceEx(config.SourceLocations[i], out availabel, out total, out freebytes))
+            if (GetDiskFreeSpaceEx(config.SourceLocations[i].SourcePath, out availabel, out total, out freebytes))
             {
                if (total > maxDiskSize)
                   maxDiskSize = total;
@@ -539,7 +539,7 @@ namespace LiquesceTray
             ulong total;
             ulong freebytes;
 
-            if (GetDiskFreeSpaceEx(config.SourceLocations[i], out availabel, out total, out freebytes))
+            if (GetDiskFreeSpaceEx(config.SourceLocations[i].SourcePath, out availabel, out total, out freebytes))
             {
                allAvailabel += availabel;
                allTotal += total;

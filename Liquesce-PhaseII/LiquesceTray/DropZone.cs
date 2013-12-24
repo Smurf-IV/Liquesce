@@ -25,6 +25,7 @@
 #endregion
 
 using System;
+using System.Linq;
 using System.Windows.Forms;
 using System.ServiceModel;
 using LiquesceFacade;
@@ -89,10 +90,8 @@ namespace LiquesceTray
             // cut drive letter and :
             string relative = liquescePath.Substring(2);
 
-            for (int i = 0; i < config.SourceLocations.Count; i++)
+            foreach (string root in config.SourceLocations.Select(t => t.SourcePath))
             {
-               string root = config.SourceLocations[i];
-
                if (File.Exists(root + relative))
                {
                   listBox1.Items.Add(root + relative);

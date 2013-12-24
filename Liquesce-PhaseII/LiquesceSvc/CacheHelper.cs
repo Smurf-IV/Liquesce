@@ -143,7 +143,7 @@ namespace LiquesceSvc
          {
             try
             {
-               foreach (var i in Cache.Where(kvp => ((kvp.Value == null) || !kvp.Value.IsValid)).ToList())
+               foreach (KeyValuePair<TKey, ValueObject<TValue>> i in Cache.Where(kvp => ((kvp.Value == null) || !kvp.Value.IsValid)).ToList())
                {
                   Cache.Remove(i.Key);
                }

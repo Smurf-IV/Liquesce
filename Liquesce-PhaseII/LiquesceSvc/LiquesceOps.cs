@@ -26,13 +26,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Runtime.InteropServices;
-using System.Security.AccessControl;
 using System.Text;
 using System.Threading;
-using CallbackFS;
-using CBFS;
 using LiquesceFacade;
 using NLog;
 using PID = LiquesceSvc.ProcessIdentity;
@@ -117,7 +113,7 @@ namespace LiquesceSvc
             freeBytesAvailable = totalBytes = totalFreeBytes = 0;
 
             HashSet<string> uniqueSources = new HashSet<string>();
-            configDetails.SourceLocations.ForEach(str => uniqueSources.Add(NativeFileOps.GetRootOrMountFor(str)));
+            configDetails.SourceLocations.ForEach(str => uniqueSources.Add(NativeFileOps.GetRootOrMountFor(str.SourcePath)));
 
             foreach (string source in uniqueSources)
             {

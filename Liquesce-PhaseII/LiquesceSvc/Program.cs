@@ -46,7 +46,7 @@ namespace LiquesceSvc
       {
          Log.Fatal("=====================================================================");
          Log.Fatal("File Re-opened: Ver :" + Assembly.GetExecutingAssembly().GetName().Version);
-         var runner = new LiquesceService();
+         LiquesceService runner = new LiquesceService();
          if ((args.Length > 0) && ("/debug" == args[0].ToLower()))
          {
             // main service object
