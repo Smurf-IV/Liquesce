@@ -74,23 +74,26 @@ namespace Liquesce.Mounting
 
       private void InitialiseWith()
       {
-         if (!String.IsNullOrWhiteSpace(cd.DriveLetter))
+         MountDetail mt = cd.MountDetails[currentIndex];
+         if (!String.IsNullOrWhiteSpace(mt.DriveLetter))
          {
             // Add the drive letter back in as this would already have been removed
-            MountPoint.Items.Add(cd.DriveLetter);
-            MountPoint.Text = cd.DriveLetter;
-            if (cd.DriveLetter.Length > 1)
+            MountPoint.Items.Add(mt.DriveLetter);
+            MountPoint.Text = mt.DriveLetter;
+            if (mt.DriveLetter.Length > 1)
             {
-               txtFolder.Text = cd.DriveLetter;
+               txtFolder.Text = mt.DriveLetter;
             }
-            if (cd.SourceLocations != null)
+            if (mt.SourceLocations != null)
             {
-               foreach (SourceLocation tn in cd.SourceLocations)
+               foreach (SourceLocation tn in mt.SourceLocations)
                {
                   mergeList.Rows.Add(new object[] { tn.SourcePath, tn.UseAsNameRoot, tn.UseIsReadOnly});
                }
             }
-            VolumeLabel.Text = cd.VolumeLabel;
+            VolumeLabel.Text = mt.VolumeLabel;
+            AllocationMode = mt.AllocationMode;
+            HoldOffMBytes = mt.HoldOffBufferBytes;
             RestartExpectedOutput();
          }
       }
@@ -374,15 +377,15 @@ namespace Liquesce.Mounting
             Thread.Sleep(500);
             Application.DoEvents();
          }
-         ConfigDetails configDetails = new ConfigDetails
+         MountDetail mt = new MountDetail
          {
-            DelayStartMilliSec = 50,
             DriveLetter = string.IsNullOrWhiteSpace(txtFolder.Text) ? MountPoint.Text : txtFolder.Text,
             VolumeLabel = VolumeLabel.Text,
-            SourceLocations = new List<SourceLocation>(mergeList.RowCount)
+            SourceLocations = (from DataGridViewRow tn in mergeList.Rows
+                               select new SourceLocation(tn.Cells[0].Value.ToString(), (bool) tn.Cells[1].Value, (bool) tn.Cells[2].Value))
+               .ToList(),
          };
-         configDetails.SourceLocations.AddRange(from DataGridViewRow tn in mergeList.Rows select new SourceLocation(tn.Cells[0].Value.ToString(), (bool)tn.Cells[1].Value, (bool)tn.Cells[2].Value));
-         FillExpectedLayoutWorker.RunWorkerAsync(configDetails);
+         FillExpectedLayoutWorker.RunWorkerAsync(mt);
       }
 
 
@@ -395,23 +398,23 @@ namespace Liquesce.Mounting
       {
          SetProgressBarStyle(ProgressBarStyle.Marquee);
          ClearExpectedList();
-         ConfigDetails configDetails = e.Argument as ConfigDetails;
+         MountDetail mt = e.Argument as MountDetail;
          BackgroundWorker worker = sender as BackgroundWorker;
-         if ((configDetails == null)
+         if ((mt == null)
             || (worker == null)
             )
          {
             Log.Error("Worker, or auguments are null, exiting.");
             return;
          }
-         TreeNode root = new TreeNode(string.Format("{0} ({1})", configDetails.VolumeLabel, configDetails.DriveLetter));
+         TreeNode root = new TreeNode(string.Format("{0} ({1})", mt.VolumeLabel, mt.DriveLetter));
          AddExpectedNode(null, root);
          if (worker.CancellationPending
             || IsClosing)
          {
             return;
          }
-         WalkExpectedNextTreeLevel(root, configDetails.SourceLocations);
+         WalkExpectedNextTreeLevel(root, mt.SourceLocations);
       }
 
 
@@ -700,11 +703,17 @@ namespace Liquesce.Mounting
       {
          isClosing = true;
          FillExpectedLayoutWorker.CancelAsync();
-         cd.DriveLetter = string.IsNullOrWhiteSpace(txtFolder.Text) ? MountPoint.Text : txtFolder.Text;
-         cd.VolumeLabel = VolumeLabel.Text;
-         // if (mergeList.Nodes != null) // Apperently always true
-         cd.SourceLocations = new List<SourceLocation>(mergeList.RowCount);
-         cd.SourceLocations.AddRange(from DataGridViewRow tn in mergeList.Rows select new SourceLocation(tn.Cells[0].Value.ToString(), (bool)tn.Cells[1].Value, (bool)tn.Cells[2].Value));
+         MountDetail mt = new MountDetail
+         {
+            DriveLetter = string.IsNullOrWhiteSpace(txtFolder.Text) ? MountPoint.Text : txtFolder.Text,
+            VolumeLabel = VolumeLabel.Text,
+            SourceLocations = (from DataGridViewRow tn in mergeList.Rows
+                               select new SourceLocation(tn.Cells[0].Value.ToString(), (bool)tn.Cells[1].Value, (bool)tn.Cells[2].Value))
+               .ToList(),
+            HoldOffBufferBytes = HoldOffMBytes,
+            AllocationMode = AllocationMode
+         };
+         cd.MountDetails[currentIndex] = mt;
       }
 
       private void dataGridView1_DragDrop(object sender, DragEventArgs e)
@@ -791,9 +800,42 @@ namespace Liquesce.Mounting
          RestartExpectedOutput();
       }
 
+      private int currentIndex = 0;
       public void SelectedIndex(int selectedIndex)
       {
-         // TODO: When more than 1 drive, use this as the offset
+         currentIndex = selectedIndex;
       }
+
+      public MountDetail.AllocationModes AllocationMode
+      {
+         get
+         {
+            Enum.TryParse(cmbAllocationMode.Text, out cd.MountDetails[currentIndex].AllocationMode);
+            return cd.MountDetails[currentIndex].AllocationMode;
+         }
+         set 
+         { 
+            cmbAllocationMode.Text = cd.MountDetails[currentIndex].AllocationMode.ToString(); 
+         }
+      }
+
+      public ulong HoldOffMBytes
+      {
+         get 
+         {
+            cd.MountDetails[currentIndex].HoldOffBufferBytes = (ulong) (numHoldOffBytes.Value * (1024 * 1024));
+            return cd.MountDetails[currentIndex].HoldOffBufferBytes; 
+         }
+         set 
+         {
+            numHoldOffBytes.Value = cd.MountDetails[currentIndex].HoldOffBufferBytes / (decimal)(1024 * 1024);
+         }
+      }
+
+      private void cmbAllocationMode_SelectedValueChanged(object sender, EventArgs e)
+      {
+         numHoldOffBytes.Enabled = (cmbAllocationMode.Text != "Balanced");
+      }
+
    }
 }

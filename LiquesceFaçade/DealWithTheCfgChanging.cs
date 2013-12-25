@@ -1,6 +1,32 @@
-﻿using System;
-using System.Collections.Generic;
+﻿#region Copyright (C)
+// ---------------------------------------------------------------------------------------------------------------
+//  <copyright file="DealWithTheCfgChanging.cs" company="Smurf-IV">
+// 
+//  Copyright (C) 2013 Simon Coghlan (Aka Smurf-IV)
+// 
+//  This program is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation, either version 2 of the License, or
+//   any later version.
+// 
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+//  GNU General Public License for more details.
+// 
+//  You should have received a copy of the GNU General Public License
+//  along with this program. If not, see http://www.gnu.org/licenses/.
+//  </copyright>
+//  <summary>
+//  Url: http://Liquesce.codeplex.com/
+//  Email: http://www.codeplex.com/site/users/view/smurfiv
+//  </summary>
+// --------------------------------------------------------------------------------------------------------------------
+#endregion
+
+using System;
 using System.IO;
+using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 using NLog;
@@ -19,7 +45,6 @@ namespace LiquesceFacade
             {
                currentConfigDetails = new ConfigDetails();
                currentConfigDetails.InitConfigDetails();
-               currentConfigDetails.SourceLocations.Add( new SourceLocation( @"C:\") );
             }
          }
          catch (Exception ex)
@@ -42,8 +67,11 @@ namespace LiquesceFacade
             using (XmlTextReader textReader = new XmlTextReader(ConfigDetails.configFile))
             {
                currentConfigDetails = (ConfigDetails)x.Deserialize(textReader);
+               if (mtDetail != null)
+               {
+                  currentConfigDetails.MountDetails.Add(mtDetail);
+               }
             }
-            RequiresSourceLocationsFixup(currentConfigDetails);
          }
          catch (Exception ex)
          {
@@ -69,28 +97,50 @@ namespace LiquesceFacade
       {
       }
 
-      List<string> OldSourceLocation = new List<string>();
+      private MountDetail mtDetail;
 
-      private void RequiresSourceLocationsFixup(ConfigDetails newCfg)
-      {
-         foreach (string s in OldSourceLocation)
-         {
-            newCfg.SourceLocations.Add(new SourceLocation(s));
-         }
-      }
 
       private void XOnUnknownElement(object sender, XmlElementEventArgs xeeArgs)
       {
-         if (xeeArgs.ExpectedElements == ":SourceLocation")
+         string innerText = xeeArgs.Element.InnerText;
+         switch (xeeArgs.Element.Name)
          {
-            ConfigDetails target = xeeArgs.ObjectBeingDeserialized as ConfigDetails;
-            if (target == null)
-            {
-               // for some reason the target is not always set !
-               OldSourceLocation.Add(xeeArgs.Element.InnerText);
-            }
-            else
-               target.SourceLocations.Add( new SourceLocation(xeeArgs.Element.InnerText) );
+            case "DriveLetter":
+               FillInMtDetail(xeeArgs);
+               mtDetail.DriveLetter = innerText;
+               break;
+            case "VolumeLabel":
+               FillInMtDetail(xeeArgs);
+               mtDetail.VolumeLabel = innerText;
+               break;
+            case "AllocationMode":
+               FillInMtDetail(xeeArgs);
+               Enum.TryParse(char.ToUpper(innerText[0]) + innerText.Substring(1), out mtDetail.AllocationMode);
+               break;
+            case "HoldOffBufferBytes":
+               FillInMtDetail(xeeArgs);
+               UInt64.TryParse(innerText, out mtDetail.HoldOffBufferBytes);
+               break;
+
+            case "SourceLocations":
+               FillInMtDetail(xeeArgs);
+               string[] split = innerText.Split(new string[]{"\r\n"}, StringSplitOptions.RemoveEmptyEntries);
+               foreach (string s1 in split.Select(s => s.Trim()).Where(s1 => !string.IsNullOrEmpty(s1)))
+               {
+                  mtDetail.SourceLocations.Add(new SourceLocation(s1));
+               }
+               break;
+            default:
+            Log.Fatal("Unable to find convertor for {0} for {1}", xeeArgs.Element.Name, innerText);
+               break;
+         }
+      }
+
+      private void FillInMtDetail(XmlElementEventArgs xeeArgs)
+      {
+         if (mtDetail == null)
+         {
+            mtDetail = new MountDetail();
          }
       }
 

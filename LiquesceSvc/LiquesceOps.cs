@@ -48,12 +48,12 @@ namespace LiquesceSvc
       private readonly Dictionary<Int64, NativeFileOps> openFiles = new Dictionary<Int64, NativeFileOps>();
 
       private readonly Roots roots;
-      private readonly ConfigDetails configDetails;
+      private readonly MountDetail mountDetail;
 
-      public LiquesceOps(ConfigDetails configDetails)
+      public LiquesceOps(MountDetail mountDetail, uint cacheLifetimeSeconds)
       {
-         this.configDetails = configDetails;
-         roots = new Roots(configDetails); // Already been trimmed in ReadConfigDetails()
+         this.mountDetail = mountDetail;
+         roots = new Roots(mountDetail, cacheLifetimeSeconds); // Already been trimmed in ReadConfigDetails()
       }
 
       #region FindFiles etc. Implementation
@@ -74,9 +74,9 @@ namespace LiquesceSvc
             PID.Invoke(processId, delegate
             {
                // Do this in reverse, so that the preferred references overwrite the older files
-               for (int i = configDetails.SourceLocations.Count - 1; i >= 0; i--)
+               for (int i = mountDetail.SourceLocations.Count - 1; i >= 0; i--)
                {
-                  NativeFileFind.AddFiles(configDetails.SourceLocations[i] + startPath, uniqueFiles, pattern);
+                  NativeFileFind.AddFiles(mountDetail.SourceLocations[i] + startPath, uniqueFiles, pattern);
                }
             });
             // If these are not found then the loop speed of a "failed remove" and "not finding" is the same !
@@ -113,7 +113,7 @@ namespace LiquesceSvc
             freeBytesAvailable = totalBytes = totalFreeBytes = 0;
 
             HashSet<string> uniqueSources = new HashSet<string>();
-            configDetails.SourceLocations.ForEach(str => uniqueSources.Add(NativeFileOps.GetRootOrMountFor(str.SourcePath)));
+            mountDetail.SourceLocations.ForEach(str => uniqueSources.Add(NativeFileOps.GetRootOrMountFor(str.SourcePath)));
 
             foreach (string source in uniqueSources)
             {

@@ -25,11 +25,11 @@
 #endregion
 
 using System;
-using System.Linq;
-using System.Windows.Forms;
-using System.ServiceModel;
-using LiquesceFacade;
 using System.IO;
+using System.Linq;
+using System.ServiceModel;
+using System.Windows.Forms;
+using LiquesceFacade;
 
 namespace LiquesceTray
 {
@@ -85,12 +85,12 @@ namespace LiquesceTray
          listBox1.Items.Clear();
 
          // check if path is on liquesce drive
-         if (liquescePath[0].ToString() == config.DriveLetter)
+         if (config.MountDetails.Select(mt => mt.DriveLetter).Any(dv => dv[0] == liquescePath[0]))
          {
             // cut drive letter and :
             string relative = liquescePath.Substring(2);
 
-            foreach (string root in config.SourceLocations.Select(t => t.SourcePath))
+            foreach (string root in config.MountDetails.Select(mt => mt.SourceLocations).SelectMany(scs => scs.Select(sc => sc.SourcePath)))
             {
                if (File.Exists(root + relative))
                {

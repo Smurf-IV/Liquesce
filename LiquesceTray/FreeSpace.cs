@@ -69,7 +69,7 @@ namespace LiquesceTray
 
       private const int BAR_SCALE = 1000;
 
-      private ConfigDetails config;
+      private MountDetail mountDetail;
 
       // bar variables + constants
       private const int BAR_SIZE = 300;
@@ -122,7 +122,7 @@ namespace LiquesceTray
             EndpointAddress endpointAddress = new EndpointAddress("net.pipe://localhost/LiquesceFacade");
             NetNamedPipeBinding namedPipeBindingpublish = new NetNamedPipeBinding();
             LiquesceProxy proxy = new LiquesceProxy(namedPipeBindingpublish, endpointAddress);
-            config = proxy.ConfigDetails;
+            mountDetail = proxy.ConfigDetails.MountDetails[0];
          }
          catch
          {
@@ -134,15 +134,15 @@ namespace LiquesceTray
 
       private void InitializeControls()
       {
-         tableLayouts = new TableLayoutPanel[config.SourceLocations.Count()];
-         diskNames = new TextBox[config.SourceLocations.Count()];
-         totalSpace = new TextBox[config.SourceLocations.Count()];
-         freeSpace = new TextBox[config.SourceLocations.Count()];
-         data = new TextBox[config.SourceLocations.Count()];
-         bars = new DoubleProgressBar[config.SourceLocations.Count()];
+         tableLayouts = new TableLayoutPanel[mountDetail.SourceLocations.Count()];
+         diskNames = new TextBox[mountDetail.SourceLocations.Count()];
+         totalSpace = new TextBox[mountDetail.SourceLocations.Count()];
+         freeSpace = new TextBox[mountDetail.SourceLocations.Count()];
+         data = new TextBox[mountDetail.SourceLocations.Count()];
+         bars = new DoubleProgressBar[mountDetail.SourceLocations.Count()];
 
-         oldFree = new ulong[config.SourceLocations.Count()];
-         averageRate = new List<long>[config.SourceLocations.Count()];
+         oldFree = new ulong[mountDetail.SourceLocations.Count()];
+         averageRate = new List<long>[mountDetail.SourceLocations.Count()];
          for (int i = 0; i < oldFree.Count(); i++)
          {
             oldFree[i] = 0;
@@ -305,7 +305,7 @@ namespace LiquesceTray
                                                            ReadOnly = true,
                                                            Size = new System.Drawing.Size(120, 20),
                                                            TabIndex = 0,
-                                                           Text = config.DriveLetter + ": (Virtual Drive)"
+                                                           Text = mountDetail.DriveLetter + ": (Virtual Drive)"
                                                         };
          tableLayout.Controls.Add(diskLiquesce, COLUMN_NAME_INDEX, 0);
 
@@ -398,7 +398,7 @@ namespace LiquesceTray
 
 
 
-         for (int i = 0; i < config.SourceLocations.Count(); i++)
+         for (int i = 0; i < mountDetail.SourceLocations.Count(); i++)
          {
             int ii = i + 1;
             leftSpace = 0;
@@ -436,7 +436,7 @@ namespace LiquesceTray
                                  ReadOnly = true,
                                  Size = new System.Drawing.Size(120, 20),
                                  TabIndex = 0,
-                                 Text = config.SourceLocations[i].SourcePath
+                                 Text = mountDetail.SourceLocations[i].SourcePath
                               };
             tableLayouts[i].Controls.Add(diskNames[i], COLUMN_NAME_INDEX, 0);
 
@@ -446,7 +446,7 @@ namespace LiquesceTray
             ulong availabel;
             ulong total;
             ulong freebytes;
-            if (GetDiskFreeSpaceEx(config.SourceLocations[i].SourcePath, out availabel, out total, out freebytes))
+            if (GetDiskFreeSpaceEx(mountDetail.SourceLocations[i].SourcePath, out availabel, out total, out freebytes))
             {
                if (total > maxDiskSize)
                   maxDiskSize = total;
@@ -533,34 +533,34 @@ namespace LiquesceTray
          int writePriority2Disk = -1;
          ulong mostFreeSpace1 = 0;
 
-         for (int i = 0; i < config.SourceLocations.Count(); i++)
+         for (int i = 0; i < mountDetail.SourceLocations.Count(); i++)
          {
             ulong availabel;
             ulong total;
             ulong freebytes;
 
-            if (GetDiskFreeSpaceEx(config.SourceLocations[i].SourcePath, out availabel, out total, out freebytes))
+            if (GetDiskFreeSpaceEx(mountDetail.SourceLocations[i].SourcePath, out availabel, out total, out freebytes))
             {
                allAvailabel += availabel;
                allTotal += total;
 
-               switch (config.AllocationMode)
+               switch (mountDetail.AllocationMode)
                {
-                  case ConfigDetails.AllocationModes.folder:
-                     if (writePriority2Disk == -1 && availabel > config.HoldOffBufferBytes)
+                  case MountDetail.AllocationModes.Folder:
+                     if (writePriority2Disk == -1 && availabel > mountDetail.HoldOffBufferBytes)
                      {
                         // current disk is now first write disk
                         writePriority2Disk = i;
                      }
                      break;
-                  case ConfigDetails.AllocationModes.priority:
-                     if (writePriority1Disk == -1 && availabel > config.HoldOffBufferBytes)
+                  case MountDetail.AllocationModes.Priority:
+                     if (writePriority1Disk == -1 && availabel > mountDetail.HoldOffBufferBytes)
                      {
                         // current disk is now first write disk
                         writePriority1Disk = i;
                      }
                      break;
-                  case ConfigDetails.AllocationModes.balanced:
+                  case MountDetail.AllocationModes.Balanced:
                      if (availabel > mostFreeSpace1)
                      {
                         // current disk is now first write disk
@@ -630,11 +630,11 @@ namespace LiquesceTray
                bars[i].Value1 = (int)(((total - availabel) * BAR_SCALE) / total);
                bars[i].Value2 = (int)(((total - availabel) * BAR_SCALE) / total);
 
-               if (availabel < config.HoldOffBufferBytes)
+               if (availabel < mountDetail.HoldOffBufferBytes)
                {
                   bars[i].ErrorStatus = DoubleProgressBar.ErrorStatusType.Error;
                }
-               else if (availabel < config.HoldOffBufferBytes * 2)
+               else if (availabel < mountDetail.HoldOffBufferBytes * 2)
                {
                   bars[i].ErrorStatus = DoubleProgressBar.ErrorStatusType.Warn;
                }
@@ -679,7 +679,7 @@ namespace LiquesceTray
          }
 
          // color the wirte priority
-         for (int i = 0; i < config.SourceLocations.Count(); i++)
+         for (int i = 0; i < mountDetail.SourceLocations.Count(); i++)
          {
             if (writePriority1Disk == i)
                bars[i].WriteMark = DoubleProgressBar.WriteMarkType.Priority1;

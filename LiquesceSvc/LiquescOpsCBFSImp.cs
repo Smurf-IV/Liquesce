@@ -104,7 +104,7 @@ namespace LiquesceSvc
       {
          int processId = GetProcessId();
 
-         NativeFileOps foundFileInfo = roots.GetPath(filename, configDetails.HoldOffBufferBytes);
+         NativeFileOps foundFileInfo = roots.GetPath(filename, mountDetail.HoldOffBufferBytes);
          string fullName = foundFileInfo.FullName;
 
          NativeFileOps.EFileAttributes attributes = (NativeFileOps.EFileAttributes)fileAttributes;
