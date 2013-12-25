@@ -51,7 +51,10 @@ namespace Liquesce.Tabs
 
       private void PopulateMountList()
       {
-         listExistingMounts.Items.Add(string.Format("{0} ({1})", cd1.VolumeLabel, cd1.DriveLetter));
+         foreach (MountDetail mt in cd1.MountDetails)
+         {
+            listExistingMounts.Items.Add(string.Format("{0} ({1})", mt.VolumeLabel, mt.DriveLetter));
+         }
          listExistingMounts.SelectedIndex = 0;
       }
 

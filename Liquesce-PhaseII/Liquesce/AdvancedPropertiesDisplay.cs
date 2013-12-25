@@ -58,20 +58,6 @@ namespace Liquesce
       }
 
 
-      [DescriptionAttribute("Number of free MegaBytes to leave, before attempting to use another drive to write to.\r" +
-                            "Used in Priority and Folder modes.\r" +
-                            "Range 1 <-> 1024000"),
-       DisplayName("Hold Off Buffer")
-      , CategoryAttribute("File")
-      ]
-      [TypeConverter(typeof (NumericUpDownTypeConverter))]
-      [Editor(typeof (NumericUpDownTypeEditor), typeof (UITypeEditor)), MinMaxAttribute(1, 1024000, 1024)]
-      public ulong HoldOffMBytes
-      {
-         get { return cd.HoldOffBufferBytes/(1024*1024); }
-         set { cd.HoldOffBufferBytes = value*(1024*1024); }
-      }
-
       [DescriptionAttribute("0 is automatic (Number of processing units * 2), use 1 for problem finding scenario's.\rRange 0 <-> 31"),
        DisplayName("Thread Count")
       , CategoryAttribute("CBFS")
@@ -95,21 +81,6 @@ namespace Liquesce
       {
          get { return cd.ServiceLogLevel; }
          set { cd.ServiceLogLevel = value; }
-      }
-
-
-      [DescriptionAttribute("The allocation strategy applied to new files or folders on how they are placed on the storage disks:\r" +
-                            "Folder = try to keep files together on one disk (classic behavior)\r" +
-                            "Priority = strict one disk after the other method\r" +
-                            "Balanced = balance the available space on all storage disks; Whichever disc has the most space will be used\n" +
-                            "See http://liquesce.codeplex.com/wikipage?title=How%20are%20the%20files%20spread%20across%20the%20drives%20%3f"
-         ),
-       DisplayName("Disk Allocation Mode")]
-      [TypeConverter(typeof (AllocationModeValues)), CategoryAttribute("File")]
-      public String AllocationMode
-      {
-         get { return cd.AllocationMode.ToString(); }
-         set { Enum.TryParse(value, out cd.AllocationMode); }
       }
 
       [DescriptionAttribute("Cache the file details. This will improve the speed of file discovery and opening.\r" +
@@ -147,29 +118,5 @@ namespace Liquesce
          return new StandardValuesCollection(new[] { LogLevel.Fatal.Name, LogLevel.Error.Name, LogLevel.Warn.Name, LogLevel.Info.Name, LogLevel.Debug.Name, LogLevel.Trace.Name });
       }
    }
-
-   public class AllocationModeValues : StringConverter
-   {
-      public override bool GetStandardValuesSupported(ITypeDescriptorContext context)
-      {
-         //true means show a combobox
-         return true;
-      }
-      public override bool GetStandardValuesExclusive(ITypeDescriptorContext context)
-      {
-         //true will limit to list. false will show the list, but allow free-form entry
-         return true;
-      }
-
-      public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
-      {
-         return new StandardValuesCollection(new[] { ConfigDetails.AllocationModes.folder.ToString(),
-               ConfigDetails.AllocationModes.priority.ToString(), 
-               ConfigDetails.AllocationModes.balanced.ToString()
-            });
-      }
-   }
-
-
 
 }

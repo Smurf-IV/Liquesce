@@ -29,6 +29,7 @@
       private void InitializeComponent()
       {
          this.components = new System.ComponentModel.Container();
+         System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Edit));
          this.imageListUnits = new System.Windows.Forms.ImageList(this.components);
          this.mergeListContext = new System.Windows.Forms.ContextMenuStrip(this.components);
          this.deleteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -36,32 +37,34 @@
          this.refreshExpectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.mergeListContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+         this.FillExpectedLayoutWorker = new System.ComponentModel.BackgroundWorker();
+         this.errorProvider1 = new System.Windows.Forms.ErrorProvider(this.components);
+         this.splitContainer1 = new Liquesce.SplitContainerEx();
          this.driveAndDirTreeView = new System.Windows.Forms.TreeView();
+         this.label1 = new System.Windows.Forms.Label();
+         this.splitContainer2 = new Liquesce.SplitContainerEx();
+         this.splitContainer3 = new Liquesce.SplitContainerEx();
          this.mergeList = new System.Windows.Forms.DataGridView();
          this.Source = new System.Windows.Forms.DataGridViewTextBoxColumn();
          this.IncludeName = new System.Windows.Forms.DataGridViewCheckBoxColumn();
          this.AsReadOnly = new System.Windows.Forms.DataGridViewCheckBoxColumn();
+         this.groupBox3 = new System.Windows.Forms.GroupBox();
+         this.numHoldOffBytes = new System.Windows.Forms.NumericUpDown();
+         this.groupBox4 = new System.Windows.Forms.GroupBox();
+         this.cmbAllocationMode = new System.Windows.Forms.ComboBox();
+         this.groupBox1 = new System.Windows.Forms.GroupBox();
          this.VolumeLabel = new System.Windows.Forms.TextBox();
          this.groupBox2 = new System.Windows.Forms.GroupBox();
          this.txtFolder = new System.Windows.Forms.TextBox();
          this.lblFolder = new System.Windows.Forms.Label();
          this.label5 = new System.Windows.Forms.Label();
          this.MountPoint = new System.Windows.Forms.ComboBox();
+         this.label2 = new System.Windows.Forms.Label();
          this.expectedTreeView = new System.Windows.Forms.TreeView();
          this.label3 = new System.Windows.Forms.Label();
-         this.FillExpectedLayoutWorker = new System.ComponentModel.BackgroundWorker();
-         this.errorProvider1 = new System.Windows.Forms.ErrorProvider(this.components);
-         this.splitContainer1 = new Liquesce.SplitContainerEx();
-         this.label1 = new System.Windows.Forms.Label();
-         this.splitContainer2 = new Liquesce.SplitContainerEx();
-         this.splitContainer3 = new Liquesce.SplitContainerEx();
-         this.groupBox1 = new System.Windows.Forms.GroupBox();
-         this.label2 = new System.Windows.Forms.Label();
          this.progressBar1 = new System.Windows.Forms.ProgressBar();
          this.mergeListContext.SuspendLayout();
          this.refreshExpected.SuspendLayout();
-         ((System.ComponentModel.ISupportInitialize)(this.mergeList)).BeginInit();
-         this.groupBox2.SuspendLayout();
          ((System.ComponentModel.ISupportInitialize)(this.errorProvider1)).BeginInit();
          ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
          this.splitContainer1.Panel1.SuspendLayout();
@@ -75,7 +78,12 @@
          this.splitContainer3.Panel1.SuspendLayout();
          this.splitContainer3.Panel2.SuspendLayout();
          this.splitContainer3.SuspendLayout();
+         ((System.ComponentModel.ISupportInitialize)(this.mergeList)).BeginInit();
+         this.groupBox3.SuspendLayout();
+         ((System.ComponentModel.ISupportInitialize)(this.numHoldOffBytes)).BeginInit();
+         this.groupBox4.SuspendLayout();
          this.groupBox1.SuspendLayout();
+         this.groupBox2.SuspendLayout();
          this.SuspendLayout();
          // 
          // imageListUnits
@@ -122,6 +130,37 @@
          this.mergeListContextMenuItem.Name = "mergeListContextMenuItem";
          this.mergeListContextMenuItem.Size = new System.Drawing.Size(32, 19);
          // 
+         // FillExpectedLayoutWorker
+         // 
+         this.FillExpectedLayoutWorker.WorkerReportsProgress = true;
+         this.FillExpectedLayoutWorker.WorkerSupportsCancellation = true;
+         this.FillExpectedLayoutWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.FillExpectedLayoutWorker_DoWork);
+         this.FillExpectedLayoutWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.FillExpectedLayoutWorker_RunWorkerCompleted);
+         // 
+         // errorProvider1
+         // 
+         this.errorProvider1.BlinkStyle = System.Windows.Forms.ErrorBlinkStyle.AlwaysBlink;
+         this.errorProvider1.ContainerControl = this;
+         // 
+         // splitContainer1
+         // 
+         this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.splitContainer1.Location = new System.Drawing.Point(0, 0);
+         this.splitContainer1.Name = "splitContainer1";
+         // 
+         // splitContainer1.Panel1
+         // 
+         this.splitContainer1.Panel1.Controls.Add(this.driveAndDirTreeView);
+         this.splitContainer1.Panel1.Controls.Add(this.label1);
+         // 
+         // splitContainer1.Panel2
+         // 
+         this.splitContainer1.Panel2.Controls.Add(this.splitContainer2);
+         this.splitContainer1.Size = new System.Drawing.Size(600, 475);
+         this.splitContainer1.SplitterDistance = 198;
+         this.splitContainer1.SplitterWidth = 4;
+         this.splitContainer1.TabIndex = 0;
+         // 
          // driveAndDirTreeView
          // 
          this.driveAndDirTreeView.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -136,6 +175,61 @@
          this.toolTip1.SetToolTip(this.driveAndDirTreeView, "Drag from here and drop in the middle");
          this.driveAndDirTreeView.BeforeExpand += new System.Windows.Forms.TreeViewCancelEventHandler(this.driveAndDirTreeView_BeforeExpand);
          this.driveAndDirTreeView.MouseDown += new System.Windows.Forms.MouseEventHandler(this.driveAndDirTreeView_MouseDown);
+         // 
+         // label1
+         // 
+         this.label1.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+         this.label1.Dock = System.Windows.Forms.DockStyle.Top;
+         this.label1.Location = new System.Drawing.Point(0, 0);
+         this.label1.Name = "label1";
+         this.label1.Size = new System.Drawing.Size(198, 17);
+         this.label1.TabIndex = 0;
+         this.label1.Text = "&Host file system:-";
+         // 
+         // splitContainer2
+         // 
+         this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.splitContainer2.Location = new System.Drawing.Point(0, 0);
+         this.splitContainer2.Name = "splitContainer2";
+         // 
+         // splitContainer2.Panel1
+         // 
+         this.splitContainer2.Panel1.Controls.Add(this.splitContainer3);
+         this.splitContainer2.Panel1.Controls.Add(this.label2);
+         // 
+         // splitContainer2.Panel2
+         // 
+         this.splitContainer2.Panel2.Controls.Add(this.expectedTreeView);
+         this.splitContainer2.Panel2.Controls.Add(this.label3);
+         this.splitContainer2.Panel2.Controls.Add(this.progressBar1);
+         this.splitContainer2.Size = new System.Drawing.Size(398, 475);
+         this.splitContainer2.SplitterDistance = 184;
+         this.splitContainer2.SplitterWidth = 4;
+         this.splitContainer2.TabIndex = 0;
+         // 
+         // splitContainer3
+         // 
+         this.splitContainer3.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.splitContainer3.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
+         this.splitContainer3.Location = new System.Drawing.Point(0, 17);
+         this.splitContainer3.Name = "splitContainer3";
+         this.splitContainer3.Orientation = System.Windows.Forms.Orientation.Horizontal;
+         // 
+         // splitContainer3.Panel1
+         // 
+         this.splitContainer3.Panel1.Controls.Add(this.mergeList);
+         // 
+         // splitContainer3.Panel2
+         // 
+         this.splitContainer3.Panel2.Controls.Add(this.groupBox4);
+         this.splitContainer3.Panel2.Controls.Add(this.groupBox3);
+         this.splitContainer3.Panel2.Controls.Add(this.groupBox1);
+         this.splitContainer3.Panel2.Controls.Add(this.groupBox2);
+         this.splitContainer3.Panel2.Padding = new System.Windows.Forms.Padding(0, 0, 0, 2);
+         this.splitContainer3.Size = new System.Drawing.Size(184, 458);
+         this.splitContainer3.SplitterDistance = 249;
+         this.splitContainer3.SplitterWidth = 4;
+         this.splitContainer3.TabIndex = 7;
          // 
          // mergeList
          // 
@@ -157,7 +251,7 @@
          this.mergeList.Name = "mergeList";
          this.mergeList.RowHeadersVisible = false;
          this.mergeList.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-         this.mergeList.Size = new System.Drawing.Size(186, 325);
+         this.mergeList.Size = new System.Drawing.Size(184, 249);
          this.mergeList.TabIndex = 1;
          this.toolTip1.SetToolTip(this.mergeList, "Use mouse to change order and drop new items.");
          this.mergeList.DragDrop += new System.Windows.Forms.DragEventHandler(this.dataGridView1_DragDrop);
@@ -188,6 +282,96 @@
          this.AsReadOnly.Name = "AsReadOnly";
          this.AsReadOnly.ToolTipText = "The files will return the read-only attribute and will not be allowed to change.";
          // 
+         // groupBox3
+         // 
+         this.groupBox3.Controls.Add(this.numHoldOffBytes);
+         this.groupBox3.Dock = System.Windows.Forms.DockStyle.Bottom;
+         this.groupBox3.Location = new System.Drawing.Point(0, 165);
+         this.groupBox3.Margin = new System.Windows.Forms.Padding(0);
+         this.groupBox3.Name = "groupBox3";
+         this.groupBox3.Padding = new System.Windows.Forms.Padding(0, 2, 0, 0);
+         this.groupBox3.Size = new System.Drawing.Size(184, 38);
+         this.groupBox3.TabIndex = 2;
+         this.groupBox3.TabStop = false;
+         this.groupBox3.Text = "Hold &Off Size (MBytes):";
+         this.toolTip1.SetToolTip(this.groupBox3, "Number of free MegaBytes to leave, before attempting to use another drive to writ" +
+        "e to.\r\nUsed in Priority and Folder modes.\r\n\r\n");
+         // 
+         // numHoldOffBytes
+         // 
+         this.numHoldOffBytes.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+         this.numHoldOffBytes.Increment = new decimal(new int[] {
+            1024,
+            0,
+            0,
+            0});
+         this.numHoldOffBytes.Location = new System.Drawing.Point(7, 14);
+         this.numHoldOffBytes.Maximum = new decimal(new int[] {
+            1024000,
+            0,
+            0,
+            0});
+         this.numHoldOffBytes.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+         this.numHoldOffBytes.Name = "numHoldOffBytes";
+         this.numHoldOffBytes.Size = new System.Drawing.Size(170, 22);
+         this.numHoldOffBytes.TabIndex = 0;
+         this.numHoldOffBytes.ThousandsSeparator = true;
+         this.toolTip1.SetToolTip(this.numHoldOffBytes, "Number of free MegaBytes to leave, before attempting to use another drive to writ" +
+        "e to.\r\nUsed in Priority and Folder modes.");
+         this.numHoldOffBytes.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+         // 
+         // groupBox4
+         // 
+         this.groupBox4.Controls.Add(this.cmbAllocationMode);
+         this.groupBox4.Dock = System.Windows.Forms.DockStyle.Bottom;
+         this.groupBox4.Location = new System.Drawing.Point(0, 125);
+         this.groupBox4.Margin = new System.Windows.Forms.Padding(0);
+         this.groupBox4.Name = "groupBox4";
+         this.groupBox4.Padding = new System.Windows.Forms.Padding(0, 2, 0, 0);
+         this.groupBox4.Size = new System.Drawing.Size(184, 40);
+         this.groupBox4.TabIndex = 3;
+         this.groupBox4.TabStop = false;
+         this.groupBox4.Text = "File &Allocation Mode:";
+         this.toolTip1.SetToolTip(this.groupBox4, resources.GetString("groupBox4.ToolTip"));
+         // 
+         // cmbAllocationMode
+         // 
+         this.cmbAllocationMode.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+         this.cmbAllocationMode.FormattingEnabled = true;
+         this.cmbAllocationMode.Items.AddRange(new object[] {
+            "Folder",
+            "Priority",
+            "Balanced"});
+         this.cmbAllocationMode.Location = new System.Drawing.Point(7, 14);
+         this.cmbAllocationMode.Name = "cmbAllocationMode";
+         this.cmbAllocationMode.Size = new System.Drawing.Size(171, 22);
+         this.cmbAllocationMode.TabIndex = 0;
+         this.toolTip1.SetToolTip(this.cmbAllocationMode, resources.GetString("cmbAllocationMode.ToolTip"));
+         this.cmbAllocationMode.SelectedValueChanged += new System.EventHandler(this.cmbAllocationMode_SelectedValueChanged);
+         // 
+         // groupBox1
+         // 
+         this.groupBox1.Controls.Add(this.VolumeLabel);
+         this.groupBox1.Dock = System.Windows.Forms.DockStyle.Top;
+         this.groupBox1.Location = new System.Drawing.Point(0, 79);
+         this.groupBox1.Margin = new System.Windows.Forms.Padding(0);
+         this.groupBox1.Name = "groupBox1";
+         this.groupBox1.Size = new System.Drawing.Size(184, 44);
+         this.groupBox1.TabIndex = 1;
+         this.groupBox1.TabStop = false;
+         this.groupBox1.Text = "&Volume Label :";
+         this.toolTip1.SetToolTip(this.groupBox1, "Label that will be visible in Windows explorer");
+         // 
          // VolumeLabel
          // 
          this.VolumeLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
@@ -195,7 +379,7 @@
          this.VolumeLabel.Location = new System.Drawing.Point(7, 18);
          this.VolumeLabel.MaxLength = 32;
          this.VolumeLabel.Name = "VolumeLabel";
-         this.VolumeLabel.Size = new System.Drawing.Size(173, 22);
+         this.VolumeLabel.Size = new System.Drawing.Size(171, 22);
          this.VolumeLabel.TabIndex = 0;
          this.toolTip1.SetToolTip(this.VolumeLabel, "Label that will be visible in Windows explorer");
          this.VolumeLabel.Validated += new System.EventHandler(this.VolumeLabel_Validated);
@@ -209,7 +393,7 @@
          this.groupBox2.Dock = System.Windows.Forms.DockStyle.Top;
          this.groupBox2.Location = new System.Drawing.Point(0, 0);
          this.groupBox2.Name = "groupBox2";
-         this.groupBox2.Size = new System.Drawing.Size(186, 79);
+         this.groupBox2.Size = new System.Drawing.Size(184, 79);
          this.groupBox2.TabIndex = 0;
          this.groupBox2.TabStop = false;
          this.groupBox2.Text = "Drive Mounting:";
@@ -222,7 +406,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
          this.txtFolder.Location = new System.Drawing.Point(56, 49);
          this.txtFolder.Name = "txtFolder";
-         this.txtFolder.Size = new System.Drawing.Size(123, 22);
+         this.txtFolder.Size = new System.Drawing.Size(121, 22);
          this.txtFolder.TabIndex = 3;
          this.toolTip1.SetToolTip(this.txtFolder, "NTFS folder mount point.\r\nWill override the above \"Drive Letter\".");
          this.txtFolder.TextChanged += new System.EventHandler(this.txtFolder_TextChanged);
@@ -284,11 +468,21 @@
             "Z"});
          this.MountPoint.Location = new System.Drawing.Point(57, 21);
          this.MountPoint.Name = "MountPoint";
-         this.MountPoint.Size = new System.Drawing.Size(123, 22);
+         this.MountPoint.Size = new System.Drawing.Size(121, 22);
          this.MountPoint.Sorted = true;
          this.MountPoint.TabIndex = 1;
          this.toolTip1.SetToolTip(this.MountPoint, "Drive letter to be used for the new volume");
          this.MountPoint.TextChanged += new System.EventHandler(this.MountPoint_TextChanged);
+         // 
+         // label2
+         // 
+         this.label2.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+         this.label2.Dock = System.Windows.Forms.DockStyle.Top;
+         this.label2.Location = new System.Drawing.Point(0, 0);
+         this.label2.Name = "label2";
+         this.label2.Size = new System.Drawing.Size(184, 17);
+         this.label2.TabIndex = 0;
+         this.label2.Text = "&Source folders:-";
          // 
          // expectedTreeView
          // 
@@ -301,7 +495,7 @@
          this.expectedTreeView.Name = "expectedTreeView";
          this.expectedTreeView.SelectedImageIndex = 0;
          this.expectedTreeView.ShowNodeToolTips = true;
-         this.expectedTreeView.Size = new System.Drawing.Size(208, 435);
+         this.expectedTreeView.Size = new System.Drawing.Size(210, 435);
          this.expectedTreeView.TabIndex = 1;
          this.toolTip1.SetToolTip(this.expectedTreeView, "Expand to see if any duplicates have been found");
          this.expectedTreeView.BeforeExpand += new System.Windows.Forms.TreeViewCancelEventHandler(this.expectedTreeView_BeforeExpand);
@@ -312,115 +506,10 @@
          this.label3.Dock = System.Windows.Forms.DockStyle.Top;
          this.label3.Location = new System.Drawing.Point(0, 0);
          this.label3.Name = "label3";
-         this.label3.Size = new System.Drawing.Size(208, 17);
+         this.label3.Size = new System.Drawing.Size(210, 17);
          this.label3.TabIndex = 0;
          this.label3.Text = "&Merged layout :-";
          this.toolTip1.SetToolTip(this.label3, "Look for duplicates to avoid collisions later on");
-         // 
-         // FillExpectedLayoutWorker
-         // 
-         this.FillExpectedLayoutWorker.WorkerReportsProgress = true;
-         this.FillExpectedLayoutWorker.WorkerSupportsCancellation = true;
-         this.FillExpectedLayoutWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.FillExpectedLayoutWorker_DoWork);
-         this.FillExpectedLayoutWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.FillExpectedLayoutWorker_RunWorkerCompleted);
-         // 
-         // errorProvider1
-         // 
-         this.errorProvider1.BlinkStyle = System.Windows.Forms.ErrorBlinkStyle.AlwaysBlink;
-         this.errorProvider1.ContainerControl = this;
-         // 
-         // splitContainer1
-         // 
-         this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
-         this.splitContainer1.Location = new System.Drawing.Point(0, 0);
-         this.splitContainer1.Name = "splitContainer1";
-         // 
-         // splitContainer1.Panel1
-         // 
-         this.splitContainer1.Panel1.Controls.Add(this.driveAndDirTreeView);
-         this.splitContainer1.Panel1.Controls.Add(this.label1);
-         // 
-         // splitContainer1.Panel2
-         // 
-         this.splitContainer1.Panel2.Controls.Add(this.splitContainer2);
-         this.splitContainer1.Size = new System.Drawing.Size(600, 475);
-         this.splitContainer1.SplitterDistance = 198;
-         this.splitContainer1.SplitterWidth = 4;
-         this.splitContainer1.TabIndex = 0;
-         // 
-         // label1
-         // 
-         this.label1.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-         this.label1.Dock = System.Windows.Forms.DockStyle.Top;
-         this.label1.Location = new System.Drawing.Point(0, 0);
-         this.label1.Name = "label1";
-         this.label1.Size = new System.Drawing.Size(198, 17);
-         this.label1.TabIndex = 0;
-         this.label1.Text = "&Host file system:-";
-         // 
-         // splitContainer2
-         // 
-         this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
-         this.splitContainer2.Location = new System.Drawing.Point(0, 0);
-         this.splitContainer2.Name = "splitContainer2";
-         // 
-         // splitContainer2.Panel1
-         // 
-         this.splitContainer2.Panel1.Controls.Add(this.splitContainer3);
-         this.splitContainer2.Panel1.Controls.Add(this.label2);
-         // 
-         // splitContainer2.Panel2
-         // 
-         this.splitContainer2.Panel2.Controls.Add(this.expectedTreeView);
-         this.splitContainer2.Panel2.Controls.Add(this.label3);
-         this.splitContainer2.Panel2.Controls.Add(this.progressBar1);
-         this.splitContainer2.Size = new System.Drawing.Size(398, 475);
-         this.splitContainer2.SplitterDistance = 186;
-         this.splitContainer2.SplitterWidth = 4;
-         this.splitContainer2.TabIndex = 0;
-         // 
-         // splitContainer3
-         // 
-         this.splitContainer3.Dock = System.Windows.Forms.DockStyle.Fill;
-         this.splitContainer3.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
-         this.splitContainer3.Location = new System.Drawing.Point(0, 17);
-         this.splitContainer3.Name = "splitContainer3";
-         this.splitContainer3.Orientation = System.Windows.Forms.Orientation.Horizontal;
-         // 
-         // splitContainer3.Panel1
-         // 
-         this.splitContainer3.Panel1.Controls.Add(this.mergeList);
-         // 
-         // splitContainer3.Panel2
-         // 
-         this.splitContainer3.Panel2.Controls.Add(this.groupBox1);
-         this.splitContainer3.Panel2.Controls.Add(this.groupBox2);
-         this.splitContainer3.Size = new System.Drawing.Size(186, 458);
-         this.splitContainer3.SplitterDistance = 325;
-         this.splitContainer3.SplitterWidth = 4;
-         this.splitContainer3.TabIndex = 7;
-         // 
-         // groupBox1
-         // 
-         this.groupBox1.Controls.Add(this.VolumeLabel);
-         this.groupBox1.Dock = System.Windows.Forms.DockStyle.Top;
-         this.groupBox1.Location = new System.Drawing.Point(0, 79);
-         this.groupBox1.Margin = new System.Windows.Forms.Padding(0);
-         this.groupBox1.Name = "groupBox1";
-         this.groupBox1.Size = new System.Drawing.Size(186, 44);
-         this.groupBox1.TabIndex = 1;
-         this.groupBox1.TabStop = false;
-         this.groupBox1.Text = "&Volume Label :";
-         // 
-         // label2
-         // 
-         this.label2.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-         this.label2.Dock = System.Windows.Forms.DockStyle.Top;
-         this.label2.Location = new System.Drawing.Point(0, 0);
-         this.label2.Name = "label2";
-         this.label2.Size = new System.Drawing.Size(186, 17);
-         this.label2.TabIndex = 0;
-         this.label2.Text = "&Source folders:-";
          // 
          // progressBar1
          // 
@@ -428,7 +517,7 @@
          this.progressBar1.ForeColor = System.Drawing.Color.LawnGreen;
          this.progressBar1.Location = new System.Drawing.Point(0, 452);
          this.progressBar1.Name = "progressBar1";
-         this.progressBar1.Size = new System.Drawing.Size(208, 23);
+         this.progressBar1.Size = new System.Drawing.Size(210, 23);
          this.progressBar1.Step = 5;
          this.progressBar1.TabIndex = 4;
          // 
@@ -445,9 +534,6 @@
          this.Leave += new System.EventHandler(this.MountingPoints_Leave);
          this.mergeListContext.ResumeLayout(false);
          this.refreshExpected.ResumeLayout(false);
-         ((System.ComponentModel.ISupportInitialize)(this.mergeList)).EndInit();
-         this.groupBox2.ResumeLayout(false);
-         this.groupBox2.PerformLayout();
          ((System.ComponentModel.ISupportInitialize)(this.errorProvider1)).EndInit();
          this.splitContainer1.Panel1.ResumeLayout(false);
          this.splitContainer1.Panel2.ResumeLayout(false);
@@ -461,8 +547,14 @@
          this.splitContainer3.Panel2.ResumeLayout(false);
          ((System.ComponentModel.ISupportInitialize)(this.splitContainer3)).EndInit();
          this.splitContainer3.ResumeLayout(false);
+         ((System.ComponentModel.ISupportInitialize)(this.mergeList)).EndInit();
+         this.groupBox3.ResumeLayout(false);
+         ((System.ComponentModel.ISupportInitialize)(this.numHoldOffBytes)).EndInit();
+         this.groupBox4.ResumeLayout(false);
          this.groupBox1.ResumeLayout(false);
          this.groupBox1.PerformLayout();
+         this.groupBox2.ResumeLayout(false);
+         this.groupBox2.PerformLayout();
          this.ResumeLayout(false);
 
       }
@@ -498,5 +590,9 @@
       private System.Windows.Forms.DataGridViewTextBoxColumn Source;
       private System.Windows.Forms.DataGridViewCheckBoxColumn IncludeName;
       private System.Windows.Forms.DataGridViewCheckBoxColumn AsReadOnly;
+      private System.Windows.Forms.GroupBox groupBox3;
+      private System.Windows.Forms.NumericUpDown numHoldOffBytes;
+      private System.Windows.Forms.GroupBox groupBox4;
+      private System.Windows.Forms.ComboBox cmbAllocationMode;
    }
 }

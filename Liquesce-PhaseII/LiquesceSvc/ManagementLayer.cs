@@ -107,14 +107,8 @@ namespace LiquesceSvc
          }
       }
 
-      // ReSharper disable MemberCanBeMadeStatic.Local
-      // This will need to be changed to be a map of drive to ops
-      public LiquesceOps liquesceOperations
-      // ReSharper restore MemberCanBeMadeStatic.Local
-      {
-         get;
-         private set;
-      }
+      private readonly List<LiquesceOps> liquesceOperations = new List<LiquesceOps>();
+
 
       /// <summary>
       /// Mount a drive. 
@@ -149,7 +143,15 @@ namespace LiquesceSvc
                SetNLogLevel(currentConfigDetails.ServiceLogLevel);
                Log.Info(currentConfigDetails.ToString());
 
-               liquesceOperations = new LiquesceOps(currentConfigDetails);
+               // Sometimes the math gets all confused due to the casting !!
+               int delayStartMilliseconds = (int)(currentConfigDetails.DelayStartMilliSec - delayStart.Milliseconds);
+               if ((delayStartMilliseconds > 0)
+                   && (delayStartMilliseconds < UInt16.MaxValue)
+                  )
+               {
+                  Log.Info("Delay Start needs to be obeyed");
+                  Thread.Sleep(delayStartMilliseconds);
+               }
 
                if (!CBFSHandlers.CheckStatus(ConfigDetails.ProductNameCBFS))
                {
@@ -163,16 +165,23 @@ namespace LiquesceSvc
                   Environment.Exit(-4); // Driver something wrong
                   // return;
                }
-               liquesceOperations.RegisterAndInit(Properties.Settings.Default.Salt, ConfigDetails.ProductNameCBFS, currentConfigDetails.ThreadCount, CbFsStorageType.stDisk);
+
+               foreach (MountDetail mountDetail in currentConfigDetails.MountDetails)
+               {
+                  LiquesceOps liquesceOps = new LiquesceOps(mountDetail, currentConfigDetails.CacheLifetimeSeconds);
+                  liquesceOperations.Add(liquesceOps);
+
+               liquesceOps.RegisterAndInit(Properties.Settings.Default.Salt, ConfigDetails.ProductNameCBFS, currentConfigDetails.ThreadCount,
+                  CbFsStorageType.stDisk);
                try
                {
                   // Attempt to remove a drive that may have been zombied by a crash etc.
                   // https://www.eldos.com/forum/read.php?FID=8&TID=747
                   // If the following blows, it means that you might be using the vshost to debug
-                  liquesceOperations.AddMountingPoint(currentConfigDetails.DriveLetter, CallbackFileSystem.CBFS_SYMLINK_MOUNT_MANAGER, 0);
-                  liquesceOperations.DeleteMountingPoint();
-                  liquesceOperations.DeleteStorage(true);
-                  liquesceOperations.CreateStorage(CbFsStorageType.stDisk, currentConfigDetails.ThreadCount, "Liquesce.ico");
+                  liquesceOps.AddMountingPoint(mountDetail.DriveLetter, CallbackFileSystem.CBFS_SYMLINK_MOUNT_MANAGER, 0);
+                  liquesceOps.DeleteMountingPoint();
+                  liquesceOps.DeleteStorage(true);
+                  liquesceOps.CreateStorage(CbFsStorageType.stDisk, currentConfigDetails.ThreadCount, "Liquesce.ico");
                }
                catch (Exception ex)
                {
@@ -180,15 +189,15 @@ namespace LiquesceSvc
                }
 
                // Now get the drive letter ready
-               liquesceOperations.AddMountingPoint(currentConfigDetails.DriveLetter, CallbackFileSystem.CBFS_SYMLINK_MOUNT_MANAGER, 0);
+               liquesceOps.AddMountingPoint(mountDetail.DriveLetter, CallbackFileSystem.CBFS_SYMLINK_MOUNT_MANAGER, 0);
                ulong freeBytesAvailable = 0;
                ulong totalBytes = 0;
                ulong totalFreeBytes = 0;
-               liquesceOperations.GetDiskFreeSpace(ref freeBytesAvailable, ref totalBytes, ref totalFreeBytes);
+               liquesceOps.GetDiskFreeSpace(ref freeBytesAvailable, ref totalBytes, ref totalFreeBytes);
 
-               DirectoryInfo dir = new DirectoryInfo(currentConfigDetails.DriveLetter);
+               DirectoryInfo dir = new DirectoryInfo(mountDetail.DriveLetter);
                // TODO: Search all usages of the DriveLetter and make sure they become MountPoint compatible
-               if (currentConfigDetails.DriveLetter.Length > 1)
+               if (mountDetail.DriveLetter.Length > 1)
                {
                   if (dir.Exists)
                   {
@@ -203,24 +212,15 @@ namespace LiquesceSvc
                FireStateChange(LiquesceSvcState.Unknown, "Liquesce initialised");
                IsRunning = true;
 
-               // Sometimes the math gets all confused due to the casting !!
-               int delayStartMilliseconds = (int)(currentConfigDetails.DelayStartMilliSec - delayStart.Milliseconds);
-               if ((delayStartMilliseconds > 0)
-                  && (delayStartMilliseconds < UInt16.MaxValue)
-                  )
-               {
-                  Log.Info("Delay Start needs to be obeyed");
-                  Thread.Sleep(delayStartMilliseconds);
-               }
-
                // now mount and this will launch the callbacks
 #if DEBUG
                const int ApiTimeout = 0; // This means no timeout, usefull for debugging
 #else
                const int ApiTimeout = 32000; // Default to TCP timout of 32 seconds
 #endif
-               liquesceOperations.MountMedia(ApiTimeout);
+               liquesceOps.MountMedia(ApiTimeout);
             }
+         }
             else
             {
                FireStateChange(LiquesceSvcState.InError, "Seems like the last exit request did not exit in time");
@@ -355,21 +355,22 @@ namespace LiquesceSvc
 
       public void Stop()
       {
-         try
+         foreach (LiquesceOps liquesceOps in liquesceOperations)
          {
-            FireStateChange(LiquesceSvcState.Unknown, "Stop has been requested");
-            liquesceOperations.DeleteMountingPoint();
-            liquesceOperations.UnmountMedia();
-         }
-         finally
-         {
-            liquesceOperations.DeleteStorage(true);
-         }
 
-         if (currentConfigDetails.DriveLetter.Length == 1)
-         {
-            char mountedDriveLetter = currentConfigDetails.DriveLetter[0];
+            try
+            {
+               FireStateChange(LiquesceSvcState.Unknown, "Stop has been requested");
+               liquesceOps.DeleteMountingPoint();
+               liquesceOps.UnmountMedia();
+            }
+            finally
+            {
+               liquesceOps.DeleteStorage(true);
+            }
          }
+         FireStateChange(LiquesceSvcState.Stopped, "Stop has exited");
+
          Log.Info("Stopped OUT");
       }
 

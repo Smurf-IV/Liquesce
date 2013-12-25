@@ -49,24 +49,9 @@ namespace LiquesceFacade
 
       public void InitConfigDetails()
       {
-         string[] drives = Environment.GetLogicalDrives();
-         List<char> driveLetters = new List<char>(26);
-         driveLetters.AddRange(drives.Select(dr => dr.ToUpper()[0]));
-         // Reverse find the 1st letter not used 
-         for (int i = 0; i < 26; i++)
-         {
-            char letter = (char)('Z' - i);
-            if (!driveLetters.Contains(letter))
-            {
-               DriveLetter = letter.ToString(CultureInfo.InvariantCulture);
-               break;
-            }
-         }
-         if (String.IsNullOrEmpty(DriveLetter))
-         {
-            DriveLetter = "C:\\" + new Guid();
-            Directory.CreateDirectory(DriveLetter);
-         }
+         MountDetail mt = new MountDetail();
+         mt.InitConfigDetails();
+         MountDetails.Add( mt );
       }
 
 
@@ -91,34 +76,12 @@ namespace LiquesceFacade
                Log.ErrorException("Cannot save configDetails: ", ex);
             }
       }
-      public enum AllocationModes
-      {
-         folder
-        ,priority
-        ,balanced
-      };
 
       [DataMember(IsRequired = true)]
       public uint DelayStartMilliSec = 250;
 
-      // Make this is a string so that the XML looks better (Rather than exporting 72 for 'N')
-      [DataMember(IsRequired = true)]
-      public string DriveLetter;
-
       [DataMember]
       public ushort ThreadCount = 0;
-
-      [DataMember(IsRequired = true)]
-      public string VolumeLabel = "Mirror of C";
-
-      [DataMember]
-      public AllocationModes AllocationMode = AllocationModes.folder;
-
-      [DataMember]
-      public UInt64 HoldOffBufferBytes = 1L << 10 << 10 << 10; // ==1GB;
-
-      [DataMember(IsRequired = true)]
-      public List<SourceLocation> SourceLocations = new List<SourceLocation>();
 
       [DataMember]
       public string ServiceLogLevel = LogLevel.Fatal.Name; 
@@ -126,22 +89,82 @@ namespace LiquesceFacade
       [DataMember]
       public UInt16 CacheLifetimeSeconds = 32; // Set to zero to disable
 
+      [DataMember] public List<MountDetail> MountDetails = new List<MountDetail>(); 
+
       public new string ToString()
       {
          StringBuilder sb = new StringBuilder();
          sb = sb.AppendFormat("DelayStartMilliSec=[{0}]",DelayStartMilliSec).AppendLine();
-         sb = sb.AppendFormat("DriveLetter=[{0}]", DriveLetter).AppendLine();
          sb = sb.AppendFormat("ThreadCount=[{0}]",ThreadCount).AppendLine();
-         sb = sb.AppendFormat("VolumeLabel=[{0}]",VolumeLabel).AppendLine();
-         sb = sb.AppendFormat("AllocationMode=[{0}]",AllocationMode).AppendLine();
-         sb = sb.AppendFormat("HoldOffBufferBytes=[{0}]", HoldOffBufferBytes).AppendLine();
-         sb = sb.AppendLine("SourceLocations:");
-         sb = SourceLocations.Aggregate(sb, (current, location) => current.AppendLine(location.ToString()));
          sb = sb.AppendFormat("ServiceLogLevel[{0}]",ServiceLogLevel).AppendLine();
          sb = sb.AppendFormat("CacheLifetimeSeconds=[{0}]", CacheLifetimeSeconds).AppendLine();
+         sb = sb.AppendLine("MountDetails:");
+         sb = MountDetails.Aggregate(sb, (current, mountDetail) => current.AppendLine(mountDetail.ToString()));
          return sb.ToString();
       }
 
+   }
+
+   [DataContract]
+   public class MountDetail
+   {
+      public enum AllocationModes
+      {
+         Folder,
+         Priority,
+         Balanced
+      };
+
+      // Make this is a string so that the XML looks better (Rather than exporting 72 for 'N')
+      [DataMember(IsRequired = true)]
+      public string DriveLetter;
+
+      [DataMember(IsRequired = true)]
+      public string VolumeLabel = "Mirror of C";
+
+      [DataMember]
+      public AllocationModes AllocationMode = AllocationModes.Folder;
+
+      [DataMember]
+      public UInt64 HoldOffBufferBytes = 1L << 10 << 10 << 10; // ==1GB;
+
+      [DataMember(IsRequired = true)]
+      public List<SourceLocation> SourceLocations = new List<SourceLocation>();
+
+      public new string ToString()
+      {
+         StringBuilder sb = new StringBuilder();
+         sb = sb.AppendFormat("DriveLetter=[{0}]", DriveLetter).AppendLine();
+         sb = sb.AppendFormat("VolumeLabel=[{0}]", VolumeLabel).AppendLine();
+         sb = sb.AppendFormat("AllocationMode=[{0}]", AllocationMode).AppendLine();
+         sb = sb.AppendFormat("HoldOffBufferBytes=[{0}]", HoldOffBufferBytes).AppendLine();
+         sb = sb.AppendLine("SourceLocations:");
+         sb = SourceLocations.Aggregate(sb, (current, location) => current.AppendLine(location.ToString()));
+         return sb.ToString();
+      }
+
+      public void InitConfigDetails()
+      {
+         string[] drives = Environment.GetLogicalDrives();
+         List<char> driveLetters = new List<char>(26);
+         driveLetters.AddRange(drives.Select(dr => dr.ToUpper()[0]));
+         // Reverse find the 1st letter not used 
+         for (int i = 0; i < 26; i++)
+         {
+            char letter = (char)('Z' - i);
+            if (!driveLetters.Contains(letter))
+            {
+               DriveLetter = letter.ToString(CultureInfo.InvariantCulture);
+               break;
+            }
+         }
+         if (String.IsNullOrEmpty(DriveLetter))
+         {
+            DriveLetter = "C:\\" + new Guid();
+            Directory.CreateDirectory(DriveLetter);
+         }
+         SourceLocations.Add(new SourceLocation(@"C:\"));
+      }
    }
 
    [DataContract]

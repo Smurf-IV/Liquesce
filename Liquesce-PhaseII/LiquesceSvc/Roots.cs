@@ -45,14 +45,14 @@ namespace LiquesceSvc
 
       private readonly CacheHelper<string, NativeFileOps> cachedRootPathsSystemInfo;
 
-      private readonly ConfigDetails configDetails;
+      private readonly MountDetail mountDetail;
 
       // constructor
-      public Roots(ConfigDetails configDetailsTemp)
+      public Roots(MountDetail mountDetail, uint cacheLifetimeSeconds)
       {
-         configDetails = configDetailsTemp;
+         this.mountDetail = mountDetail;
          // NTFS is case-preserving but case-insensitive in the Win32 namespace
-         cachedRootPathsSystemInfo = new CacheHelper<string, NativeFileOps>(configDetails.CacheLifetimeSeconds, true, StringComparer.OrdinalIgnoreCase);
+         cachedRootPathsSystemInfo = new CacheHelper<string, NativeFileOps>(cacheLifetimeSeconds, true, StringComparer.OrdinalIgnoreCase);
       }
 
 
@@ -100,7 +100,7 @@ namespace LiquesceSvc
 
             if (!CheckAndGetType(Path.Combine(foundPath, searchFilename), out fsi))
             {
-               if (configDetails.SourceLocations.Select(sourceLocation => Path.Combine(sourceLocation.SourcePath, searchFilename)).Any(newTarget => CheckAndGetType(newTarget, out fsi)))
+               if (mountDetail.SourceLocations.Select(sourceLocation => Path.Combine(sourceLocation.SourcePath, searchFilename)).Any(newTarget => CheckAndGetType(newTarget, out fsi)))
                {
                   Log.Trace("Found in source list");
                   return fsi;
@@ -161,14 +161,14 @@ namespace LiquesceSvc
 
       public string[] GetAllPaths(string relativefolder)
       {
-         return configDetails.SourceLocations.Select(t => t.SourcePath + relativefolder).Where(Directory.Exists).ToArray();
+         return mountDetail.SourceLocations.Select(t => t.SourcePath + relativefolder).Where(Directory.Exists).ToArray();
       }
 
       // *** NTh Change ***
       // Get the paths of all the copies of the file
       public string[] GetAllFilePaths(string file_name)
       {
-         return configDetails.SourceLocations.Select(t => t.SourcePath + file_name).Where(File.Exists).ToArray();
+         return mountDetail.SourceLocations.Select(t => t.SourcePath + file_name).Where(File.Exists).ToArray();
       }
 
 
@@ -176,7 +176,7 @@ namespace LiquesceSvc
       {
          if (!string.IsNullOrEmpty(path))
          {
-            foreach (SourceLocation location in configDetails.SourceLocations.Where(location => path.Contains(location.SourcePath)))
+            foreach (SourceLocation location in mountDetail.SourceLocations.Where(location => path.Contains(location.SourcePath)))
             {
                return location.SourcePath;
             }
@@ -197,21 +197,21 @@ namespace LiquesceSvc
       private string FindAllocationRootPath(string relativeFolder, ulong spaceRequired)
       {
          string foundRoot;
-         switch (configDetails.AllocationMode)
+         switch (mountDetail.AllocationMode)
          {
-            case ConfigDetails.AllocationModes.folder:
+            case MountDetail.AllocationModes.Folder:
                foundRoot = GetSourceThatMatchesThisFolderWithSpace(relativeFolder, spaceRequired);
                if (string.IsNullOrEmpty(foundRoot))
-                  goto case ConfigDetails.AllocationModes.priority;
+                  goto case MountDetail.AllocationModes.Priority;
                break;
 
-            case ConfigDetails.AllocationModes.priority:
+            case MountDetail.AllocationModes.Priority:
                foundRoot = GetHighestPrioritySourceWithSpace(spaceRequired);
                if (string.IsNullOrEmpty(foundRoot))
-                  goto case ConfigDetails.AllocationModes.balanced;
+                  goto case MountDetail.AllocationModes.Balanced;
                break;
 
-            case ConfigDetails.AllocationModes.balanced:
+            case MountDetail.AllocationModes.Balanced:
                foundRoot = GetSourceWithMostFreeSpace(spaceRequired);
                break;
 
@@ -232,7 +232,7 @@ namespace LiquesceSvc
          relativeFolder = relativeFolder.TrimEnd(new char[] { Path.DirectorySeparatorChar });
 
          // for every source location
-         foreach (string t in configDetails.SourceLocations.Select(s => s.SourcePath))
+         foreach (string t in mountDetail.SourceLocations.Select(s => s.SourcePath))
          {
             // first get free space
             ulong lpFreeBytesAvailable, num2, num3;
@@ -259,7 +259,7 @@ namespace LiquesceSvc
       {
          Log.Trace("Trying GetHighestPrioritySourceWithSpace([{0}])", spaceRequired);
          ulong lpFreeBytesAvailable = 0, num2, num3;
-         return configDetails.SourceLocations.FirstOrDefault(w => GetDiskFreeSpaceExW(w.SourcePath, out lpFreeBytesAvailable, out num2, out num3) 
+         return mountDetail.SourceLocations.FirstOrDefault(w => GetDiskFreeSpaceExW(w.SourcePath, out lpFreeBytesAvailable, out num2, out num3) 
             && lpFreeBytesAvailable > spaceRequired).SourcePath;
       }
 
@@ -271,7 +271,7 @@ namespace LiquesceSvc
          ulong highestFreeSpace = 0;
          string sourceWithMostFreeSpace = string.Empty;
 
-         configDetails.SourceLocations.ForEach(str =>
+         mountDetail.SourceLocations.ForEach(str =>
          {
             ulong num, num2, num3;
             if (GetDiskFreeSpaceExW(str.SourcePath, out num, out num2, out num3))
@@ -290,7 +290,7 @@ namespace LiquesceSvc
 
       public bool RelativeFileExists(string relative)
       {
-         return configDetails.SourceLocations.Any(t => new NativeFileOps(t.SourcePath + relative).Exists);
+         return mountDetail.SourceLocations.Any(t => new NativeFileOps(t.SourcePath + relative).Exists);
       }
 
       // adds the root path to cachedRootPathsSystemInfo dicionary for a specific file
@@ -309,7 +309,7 @@ namespace LiquesceSvc
 
       private string findOffsetPath(string fullFilePath)
       {
-         foreach (SourceLocation location in configDetails.SourceLocations.Where(location => fullFilePath.StartsWith(location.SourcePath)))
+         foreach (SourceLocation location in mountDetail.SourceLocations.Where(location => fullFilePath.StartsWith(location.SourcePath)))
          {
             return fullFilePath.Remove(0, location.SourcePath.Length);
          }
@@ -318,7 +318,7 @@ namespace LiquesceSvc
 
       public string ReturnMountFileName(string actualFilename)
       {
-         return string.Concat(configDetails.DriveLetter, ":", findOffsetPath(actualFilename));
+         return string.Concat(mountDetail.DriveLetter, ":", findOffsetPath(actualFilename));
       }
 
       // removes a root from root lookup
