@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="XMoveFile.cs" company="Smurf-IV">
 // 
-//  Copyright (C) 2010-2012 Simon Coghlan (Aka Smurf-IV) & fpDragon
+//  Copyright (C) 2010-2014 Simon Coghlan (Aka Smurf-IV) & fpDragon
 // 
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using CallbackFS;
 using CBFS;
@@ -108,7 +109,7 @@ namespace LiquesceSvc
             // So call a function to move each file, and subdir recusively via XMoveDirectory
             // Repeat the file tests above, but use directories instead.
             Log.Trace("GetAllPaths [{0}]", oldName);
-            string[] allPossibleTargets = roots.GetAllPaths(oldName);
+            string[] allPossibleTargets = roots.GetAllPaths(oldName).ToArray();
             Log.Trace("Now do them backwards so that overwrites are done correctly");
             Array.Reverse(allPossibleTargets);
             XMoveDirectory dirMover = new XMoveDirectory();

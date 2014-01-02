@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="Edit.cs" company="Smurf-IV">
 // 
-//  Copyright (C) 2013 Simon Coghlan (Aka Smurf-IV)
+//  Copyright (C) 2013-2014 Simon Coghlan (Aka Smurf-IV)
 // 
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -350,7 +350,9 @@ namespace Liquesce.Mounting
                if (target == -1)
                {
                   index = 0;
-                  if (mouseOffset > mergeList.Rows[0].Height)
+                  if ( (mergeList.RowCount > 0)
+                     &&(mouseOffset > mergeList.Rows[0].Height)
+                     )
                   {
                      index = mergeList.RowCount;
                   }
@@ -704,7 +706,6 @@ namespace Liquesce.Mounting
          StartTree();
          // TODO: Once the code is complete remove the following
          DisableColumn(1);
-         DisableColumn(2);
       }
 
       private void DisableColumn( int column)

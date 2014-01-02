@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="LiquesceOps.cs" company="Smurf-IV">
 // 
-//  Copyright (C) 2010-2012 Simon Coghlan (Aka Smurf-IV)
+//  Copyright (C) 2010-2014 Simon Coghlan (Aka Smurf-IV)
 // 
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -35,7 +36,7 @@ using PID = LiquesceSvc.ProcessIdentity;
 
 namespace LiquesceSvc
 {
-   internal partial class LiquesceOps 
+   internal partial class LiquesceOps
    {
       static private readonly Logger Log = LogManager.GetCurrentClassLogger();
 
@@ -53,7 +54,7 @@ namespace LiquesceSvc
       public LiquesceOps(MountDetail mountDetail, uint cacheLifetimeSeconds)
       {
          this.mountDetail = mountDetail;
-         roots = new Roots(mountDetail, cacheLifetimeSeconds); // Already been trimmed in ReadConfigDetails()
+         roots = new Roots(mountDetail, cacheLifetimeSeconds);
       }
 
       #region FindFiles etc. Implementation
@@ -76,15 +77,23 @@ namespace LiquesceSvc
                // Do this in reverse, so that the preferred references overwrite the older files
                for (int i = mountDetail.SourceLocations.Count - 1; i >= 0; i--)
                {
-                  NativeFileFind.AddFiles(mountDetail.SourceLocations[i] + startPath, uniqueFiles, pattern);
+                  Dictionary<string, WIN32_FIND_DATA> localUniqueFiles = new Dictionary<string, WIN32_FIND_DATA>(StringComparer.OrdinalIgnoreCase);
+
+                  NativeFileFind.AddFiles(mountDetail.SourceLocations[i].SourcePath + startPath, localUniqueFiles, pattern);
+                  bool useIsReadOnly = mountDetail.SourceLocations[i].UseIsReadOnly;
+                  foreach (KeyValuePair<string, WIN32_FIND_DATA> uniqueFile in localUniqueFiles)
+                  {
+                     WIN32_FIND_DATA findData = uniqueFile.Value;
+                     if (useIsReadOnly)
+                     {
+                        findData.dwFileAttributes |= (uint) NativeFileOps.EFileAttributes.Readonly;
+                     }
+                     uniqueFiles[uniqueFile.Key] = findData;
+                  }
                }
             });
             // If these are not found then the loop speed of a "failed remove" and "not finding" is the same !
             uniqueFiles.Remove(@"System Volume Information"); // NTFS
-            //uniqueFiles.Remove(@"$RECYCLE.BIN");
-            //uniqueFiles.Remove(@"Recycle Bin");
-            //uniqueFiles.Remove(@"RECYCLER"); // XP
-            //uniqueFiles.Remove(@"Recycled"); // XP
             files = new WIN32_FIND_DATA[uniqueFiles.Values.Count];
             uniqueFiles.Values.CopyTo(files, 0);
          }
@@ -107,32 +116,35 @@ namespace LiquesceSvc
          }
       }
 
-      public void GetDiskFreeSpace(ref ulong freeBytesAvailable, ref ulong totalBytes, ref ulong totalFreeBytes)
+      public void GetDiskFreeSpace(out ulong freeBytesAvailable, out ulong totalBytes, out ulong totalFreeBytes)
       {
-            Log.Trace("GetDiskFreeSpace IN ");
-            freeBytesAvailable = totalBytes = totalFreeBytes = 0;
+         Log.Trace("GetDiskFreeSpace IN ");
+         freeBytesAvailable = totalBytes = totalFreeBytes = 0;
 
-            HashSet<string> uniqueSources = new HashSet<string>();
-            mountDetail.SourceLocations.ForEach(str => uniqueSources.Add(NativeFileOps.GetRootOrMountFor(str.SourcePath)));
+         HashSet<string> uniqueSources = new HashSet<string>();
+         foreach (SourceLocation location in mountDetail.SourceLocations.Where(location => !location.UseIsReadOnly))
+         {
+            uniqueSources.Add(NativeFileOps.GetRootOrMountFor(location.SourcePath));
+         }
 
-            foreach (string source in uniqueSources)
+         foreach (string source in uniqueSources)
+         {
+            ulong num;
+            ulong num2;
+            ulong num3;
+            if (GetDiskFreeSpaceExW(source, out num, out num2, out num3))
             {
-               ulong num;
-               ulong num2;
-               ulong num3;
-               if (GetDiskFreeSpaceExW(source, out num, out num2, out num3))
-               {
-                  freeBytesAvailable += num;
-                  totalBytes += num2;
-                  totalFreeBytes += num3;
-               }
-               Log.Debug("DirectoryName=[{0}], FreeBytesAvailable=[{1}], TotalNumberOfBytes=[{2}], TotalNumberOfFreeBytes=[{3}]",
-                     source, num, num2, num3);
+               freeBytesAvailable += num;
+               totalBytes += num2;
+               totalFreeBytes += num3;
             }
+            Log.Debug("DirectoryName=[{0}], FreeBytesAvailable=[{1}], TotalNumberOfBytes=[{2}], TotalNumberOfFreeBytes=[{3}]",
+                  source, num, num2, num3);
+         }
          Log.Trace("GetDiskFreeSpace OUT");
       }
 
-     #endregion
+      #endregion
 
 
       #region DLL Imports
