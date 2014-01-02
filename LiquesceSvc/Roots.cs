@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="Roots.cs" company="Smurf-IV">
 // 
-//  Copyright (C) 2010-2012 Simon Coghlan (Aka Smurf-IV)
+//  Copyright (C) 2010-2014 Simon Coghlan (Aka Smurf-IV)
 // 
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -25,6 +25,8 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -40,17 +42,24 @@ namespace LiquesceSvc
    /// </summary>
    internal class Roots
    {
-      public static readonly string PathDirectorySeparatorChar = Path.DirectorySeparatorChar.ToString();
+      public static readonly string PathDirectorySeparatorChar = Path.DirectorySeparatorChar.ToString(CultureInfo.InvariantCulture);
       private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
       private readonly CacheHelper<string, NativeFileOps> cachedRootPathsSystemInfo;
 
       private readonly MountDetail mountDetail;
 
+      private readonly bool AreAllReadOnly;
+      private readonly bool AreAnyAllReadOnly;
       // constructor
       public Roots(MountDetail mountDetail, uint cacheLifetimeSeconds)
       {
          this.mountDetail = mountDetail;
+         AreAnyAllReadOnly = mountDetail.SourceLocations.Any(sl => sl.UseIsReadOnly);
+         if (AreAnyAllReadOnly)
+         {
+            AreAllReadOnly = mountDetail.SourceLocations.TrueForAll(sl => sl.UseIsReadOnly);
+         }
          // NTFS is case-preserving but case-insensitive in the Win32 namespace
          cachedRootPathsSystemInfo = new CacheHelper<string, NativeFileOps>(cacheLifetimeSeconds, true, StringComparer.OrdinalIgnoreCase);
       }
@@ -85,12 +94,15 @@ namespace LiquesceSvc
             string foundPath = FindAllocationRootPath(filename, spaceRequired);
             if (string.IsNullOrEmpty(foundPath))
             {
+               // TODO: Should something have gone boom before this ?
+// ReSharper disable UnusedVariable.Compiler
                int ti = 4;
+// ReSharper restore UnusedVariable.Compiler
             }
             if (filename == PathDirectorySeparatorChar)
             {
                Log.Trace("Assuming Home directory so add new to cache and return");
-               fsi = new NativeFileOps(foundPath);
+               fsi = new NativeFileOps(foundPath, AreAllReadOnly);
                return fsi;
             }
 
@@ -115,7 +127,7 @@ namespace LiquesceSvc
             //-------------------------------------
             Log.Trace("file/folder not found");
             // So create a holder for the return and do not store
-            fsi = new NativeFileOps(Path.Combine(foundPath, searchFilename));
+            fsi = new NativeFileOps(Path.Combine(foundPath, searchFilename), AreAllReadOnly);
          }
          catch (Exception ex)
          {
@@ -152,25 +164,30 @@ namespace LiquesceSvc
             return true;
          }
          Log.Trace("Try and GetPath from [{0}]", newTarget);
-         //Now here's a kicker.. The User might have copied a file directly onto one of the drives while
+         // Now here's a kicker.. The User might have copied a file directly onto one of the drives while
          // this has been running, So this ought to try and find if it exists that way.
-         fsi = new NativeFileOps(newTarget);
+         fsi = new NativeFileOps(newTarget, IsRootReadOnly(newTarget));
          return fsi.Exists;
       }
 
-
-      public string[] GetAllPaths(string relativefolder)
+      private bool IsRootReadOnly(string newTarget)
       {
-         return mountDetail.SourceLocations.Select(t => t.SourcePath + relativefolder).Where(Directory.Exists).ToArray();
+         if (AreAllReadOnly)
+         {
+            return true;
+         }
+         if (!AreAnyAllReadOnly)
+         {
+            return false;
+         }
+         string root = GetRoot(newTarget);
+         return mountDetail.SourceLocations.Any(location => (location.SourcePath == root) && (location.UseIsReadOnly));
       }
 
-      // *** NTh Change ***
-      // Get the paths of all the copies of the file
-      public string[] GetAllFilePaths(string file_name)
+      public IEnumerable<string> GetAllPaths(string relativefolder)
       {
-         return mountDetail.SourceLocations.Select(t => t.SourcePath + file_name).Where(File.Exists).ToArray();
+         return mountDetail.SourceLocations.Select(t => t.SourcePath + relativefolder).Where(Directory.Exists);
       }
-
 
       public string GetRoot(string path)
       {
@@ -184,14 +201,11 @@ namespace LiquesceSvc
          return string.Empty;
       }
 
-
       // return the path from a inputpath seen relative from the root
       public string GetRelative(string path)
       {
          return path.Replace(GetRoot(path), string.Empty);
       }
-
-
 
       // this method returns a path (real physical path) of a place where the next folder/file root can be.
       private string FindAllocationRootPath(string relativeFolder, ulong spaceRequired)
@@ -245,7 +259,7 @@ namespace LiquesceSvc
                   string testpath = t + relativeFolder;
 
                   // check if relativeFolder is on this disk
-                  if (new NativeFileOps(testpath).Exists)
+                  if (new NativeFileOps(testpath, AreAllReadOnly).Exists)
                      return t;
                }
             }
@@ -258,7 +272,7 @@ namespace LiquesceSvc
       private string GetHighestPrioritySourceWithSpace(ulong spaceRequired)
       {
          Log.Trace("Trying GetHighestPrioritySourceWithSpace([{0}])", spaceRequired);
-         ulong lpFreeBytesAvailable = 0, num2, num3;
+         ulong lpFreeBytesAvailable, num2, num3;
          return mountDetail.SourceLocations.FirstOrDefault(w => GetDiskFreeSpaceExW(w.SourcePath, out lpFreeBytesAvailable, out num2, out num3) 
             && lpFreeBytesAvailable > spaceRequired).SourcePath;
       }
@@ -288,25 +302,6 @@ namespace LiquesceSvc
          return sourceWithMostFreeSpace;
       }
 
-      public bool RelativeFileExists(string relative)
-      {
-         return mountDetail.SourceLocations.Any(t => new NativeFileOps(t.SourcePath + relative).Exists);
-      }
-
-      // adds the root path to cachedRootPathsSystemInfo dicionary for a specific file
-      public string TrimAndAddUnique(NativeFileOps fsi)
-      {
-         string fullFilePath = fsi.FullName;
-         string key = findOffsetPath(fullFilePath);
-         if (!string.IsNullOrEmpty(key))
-         {
-            Log.Trace("Adding [{0}] to [{1}]", key, fullFilePath);
-            cachedRootPathsSystemInfo[key] = fsi;
-            return key;
-         }
-         throw new ArgumentException("Unable to find BelongTo Path: " + fullFilePath, fullFilePath);
-      }
-
       private string findOffsetPath(string fullFilePath)
       {
          foreach (SourceLocation location in mountDetail.SourceLocations.Where(location => fullFilePath.StartsWith(location.SourcePath)))
@@ -314,11 +309,6 @@ namespace LiquesceSvc
             return fullFilePath.Remove(0, location.SourcePath.Length);
          }
          return string.Empty;
-      }
-
-      public string ReturnMountFileName(string actualFilename)
-      {
-         return string.Concat(mountDetail.DriveLetter, ":", findOffsetPath(actualFilename));
       }
 
       // removes a root from root lookup
@@ -338,34 +328,12 @@ namespace LiquesceSvc
       }
 
 
-
       #region DLL Imports
 
       [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
       private static extern bool GetDiskFreeSpaceExW(string lpDirectoryName, out ulong lpFreeBytesAvailable, out ulong lpTotalNumberOfBytes, out ulong lpTotalNumberOfFreeBytes);
 
       #endregion
-
-      public void DeleteDirectory(string dirName)
-      {
-         foreach (string path in GetAllPaths(dirName))
-         {
-            Log.Trace("Deleting matched dir [{0}]", path);
-            NativeFileOps.DeleteDirectory(path);
-         }
-         RemoveFromLookup(dirName);
-      }
-
-      public void DeleteFile(string filename)
-      {
-         Log.Trace("DeleteFile - Get all copies of the same file in other sources and delete them");
-         foreach (string path in GetAllFilePaths(filename))
-         {
-            Log.Trace("Deleting file [{0}]", path);
-            NativeFileOps.DeleteFile(path);
-         }
-         RemoveFromLookup(filename);
-      }
 
    }
 }

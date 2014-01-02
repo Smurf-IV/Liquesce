@@ -134,11 +134,11 @@ namespace LiquesceFacade
       public new string ToString()
       {
          StringBuilder sb = new StringBuilder();
-         sb = sb.AppendFormat("DriveLetter=[{0}]", DriveLetter).AppendLine();
-         sb = sb.AppendFormat("VolumeLabel=[{0}]", VolumeLabel).AppendLine();
-         sb = sb.AppendFormat("AllocationMode=[{0}]", AllocationMode).AppendLine();
-         sb = sb.AppendFormat("HoldOffBufferBytes=[{0}]", HoldOffBufferBytes).AppendLine();
-         sb = sb.AppendLine("SourceLocations:");
+         sb = sb.AppendFormat("\tDriveLetter=[{0}]", DriveLetter).AppendLine();
+         sb = sb.AppendFormat("\tVolumeLabel=[{0}]", VolumeLabel).AppendLine();
+         sb = sb.AppendFormat("\tAllocationMode=[{0}]", AllocationMode).AppendLine();
+         sb = sb.AppendFormat("\tHoldOffBufferBytes=[{0}]", HoldOffBufferBytes).AppendLine();
+         sb = sb.AppendLine("\tSourceLocations:");
          sb = SourceLocations.Aggregate(sb, (current, location) => current.AppendLine(location.ToString()));
          return sb.ToString();
       }
@@ -191,9 +191,9 @@ namespace LiquesceFacade
       public new string ToString()
       {
          StringBuilder sb = new StringBuilder();
-         sb = sb.AppendFormat("SourceLocation=[{0}]", SourcePath).AppendLine();
-         sb = sb.AppendFormat("UseAsNameRoot=[{0}]", UseAsNameRoot).AppendLine();
-         sb = sb.AppendFormat("UseIsReadOnly=[{0}]", UseIsReadOnly).AppendLine();
+         sb = sb.AppendFormat("\t\tSourceLocation=[{0}]", SourcePath).AppendLine();
+         sb = sb.AppendFormat("\t\tUseAsNameRoot=[{0}]", UseAsNameRoot).AppendLine();
+         sb = sb.AppendFormat("\t\tUseIsReadOnly=[{0}]", UseIsReadOnly);
          return sb.ToString();
       }
    }

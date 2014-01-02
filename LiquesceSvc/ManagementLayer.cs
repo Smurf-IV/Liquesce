@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="ManagementLayer.cs" company="Smurf-IV">
 // 
-//  Copyright (C) 2010-2012 Simon Coghlan (Aka Smurf-IV)
+//  Copyright (C) 2010-2014 Simon Coghlan (Aka Smurf-IV)
 // 
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -95,8 +95,8 @@ namespace LiquesceSvc
             using (subscribersLock.UpgradableReadLock())
             {
                IEnumerable<Client> query = from c in subscribers.Keys
-                           where c.id == id.id
-                           select c;
+                                           where c.id == id.id
+                                           select c;
                using (subscribersLock.WriteLock())
                   subscribers.Remove(query.First());
             }
@@ -140,8 +140,8 @@ namespace LiquesceSvc
                   Environment.Exit(-1);
                   // return;
                }
+               Log.Fatal(currentConfigDetails.ToString());
                SetNLogLevel(currentConfigDetails.ServiceLogLevel);
-               Log.Info(currentConfigDetails.ToString());
 
                // Sometimes the math gets all confused due to the casting !!
                int delayStartMilliseconds = (int)(currentConfigDetails.DelayStartMilliSec - delayStart.Milliseconds);
@@ -171,56 +171,56 @@ namespace LiquesceSvc
                   LiquesceOps liquesceOps = new LiquesceOps(mountDetail, currentConfigDetails.CacheLifetimeSeconds);
                   liquesceOperations.Add(liquesceOps);
 
-               liquesceOps.RegisterAndInit(Properties.Settings.Default.Salt, ConfigDetails.ProductNameCBFS, currentConfigDetails.ThreadCount,
-                  CbFsStorageType.stDisk);
-               try
-               {
-                  // Attempt to remove a drive that may have been zombied by a crash etc.
-                  // https://www.eldos.com/forum/read.php?FID=8&TID=747
-                  // If the following blows, it means that you might be using the vshost to debug
-                  liquesceOps.AddMountingPoint(mountDetail.DriveLetter, CallbackFileSystem.CBFS_SYMLINK_MOUNT_MANAGER, 0);
-                  liquesceOps.DeleteMountingPoint();
-                  liquesceOps.DeleteStorage(true);
-                  liquesceOps.CreateStorage(CbFsStorageType.stDisk, currentConfigDetails.ThreadCount, "Liquesce.ico");
-               }
-               catch (Exception ex)
-               {
-                  Log.FatalException("Attempt to remove a drive that may have been zombied by a crash etc.", ex);
-               }
-
-               // Now get the drive letter ready
-               liquesceOps.AddMountingPoint(mountDetail.DriveLetter, CallbackFileSystem.CBFS_SYMLINK_MOUNT_MANAGER, 0);
-               ulong freeBytesAvailable = 0;
-               ulong totalBytes = 0;
-               ulong totalFreeBytes = 0;
-               liquesceOps.GetDiskFreeSpace(ref freeBytesAvailable, ref totalBytes, ref totalFreeBytes);
-
-               DirectoryInfo dir = new DirectoryInfo(mountDetail.DriveLetter);
-               // TODO: Search all usages of the DriveLetter and make sure they become MountPoint compatible
-               if (mountDetail.DriveLetter.Length > 1)
-               {
-                  if (dir.Exists)
+                  liquesceOps.RegisterAndInit(Properties.Settings.Default.Salt, ConfigDetails.ProductNameCBFS, currentConfigDetails.ThreadCount,
+                     CbFsStorageType.stDisk);
+                  try
                   {
-                     Log.Warn("Removing directory [{0}]", dir.FullName);
-                     dir.Delete(true);
+                     // Attempt to remove a drive that may have been zombied by a crash etc.
+                     // https://www.eldos.com/forum/read.php?FID=8&TID=747
+                     // If the following blows, it means that you might be using the vshost to debug
+                     liquesceOps.AddMountingPoint(mountDetail.DriveLetter, CallbackFileSystem.CBFS_SYMLINK_MOUNT_MANAGER, 0);
+                     liquesceOps.DeleteMountingPoint();
+                     liquesceOps.DeleteStorage(true);
+                     liquesceOps.CreateStorage(CbFsStorageType.stDisk, currentConfigDetails.ThreadCount, "Liquesce.ico");
                   }
-                  Log.Warn("Recreate the directory [{0}]", dir.FullName);
-                  dir.Create();
-               }
+                  catch (Exception ex)
+                  {
+                     Log.FatalException("Attempt to remove a drive that may have been zombied by a crash etc.", ex);
+                  }
+
+                  // Now get the drive letter ready
+                  liquesceOps.AddMountingPoint(mountDetail.DriveLetter, CallbackFileSystem.CBFS_SYMLINK_MOUNT_MANAGER, 0);
+                  ulong freeBytesAvailable;
+                  ulong totalBytes;
+                  ulong totalFreeBytes;
+                  liquesceOps.GetDiskFreeSpace(out freeBytesAvailable, out totalBytes, out totalFreeBytes);
+
+                  DirectoryInfo dir = new DirectoryInfo(mountDetail.DriveLetter);
+                  // TODO: Search all usages of the DriveLetter and make sure they become MountPoint compatible
+                  if (mountDetail.DriveLetter.Length > 1)
+                  {
+                     if (dir.Exists)
+                     {
+                        Log.Warn("Removing directory [{0}]", dir.FullName);
+                        dir.Delete(true);
+                     }
+                     Log.Warn("Recreate the directory [{0}]", dir.FullName);
+                     dir.Create();
+                  }
 
 
-               FireStateChange(LiquesceSvcState.Unknown, "Liquesce initialised");
-               IsRunning = true;
+                  FireStateChange(LiquesceSvcState.Running, "Liquesce initialised");
+                  IsRunning = true;
 
-               // now mount and this will launch the callbacks
+                  // now mount and this will launch the callbacks
 #if DEBUG
-               const int ApiTimeout = 0; // This means no timeout, usefull for debugging
+                  const int ApiTimeout = 0; // This means no timeout, usefull for debugging
 #else
                const int ApiTimeout = 32000; // Default to TCP timout of 32 seconds
 #endif
-               liquesceOps.MountMedia(ApiTimeout);
+                  liquesceOps.MountMedia(ApiTimeout);
+               }
             }
-         }
             else
             {
                FireStateChange(LiquesceSvcState.InError, "Seems like the last exit request did not exit in time");
@@ -268,7 +268,7 @@ namespace LiquesceSvc
             // Turn off the rest
             switch (serviceLogLevel)
             {
-                // rule.DisableLoggingForLevel(LogLevel.Off);
+               // rule.DisableLoggingForLevel(LogLevel.Off);
                case "Off":
                   rule.DisableLoggingForLevel(LogLevel.Fatal);
                   goto case "Fatal";
@@ -324,7 +324,7 @@ namespace LiquesceSvc
             {
                // Get all the clients in dictionary
                IStateChange[] query = (from c in subscribers
-                            select c.Value).ToArray();
+                                       select c.Value).ToArray();
                // Create the callback action
                Type type = typeof(IStateChange);
                MethodInfo methodInfo = type.GetMethod("Update");

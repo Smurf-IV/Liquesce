@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="LiquesceOps.cs" company="Smurf-IV">
 // 
-//  Copyright (C) 2013 Simon Coghlan (Aka Smurf-IV)
+//  Copyright (C) 2013-2014 Simon Coghlan (Aka Smurf-IV)
 // 
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -72,21 +72,20 @@ namespace LiquesceSvc
 
       public override void GetVolumeSize(out long TotalNumberOfSectors, out long NumberOfFreeSectors)
       {
-         ulong freeBytesAvailable = 0;
-         ulong totalBytes = 0;
-         ulong totalFreeBytes = 0;
-         GetDiskFreeSpace(ref freeBytesAvailable, ref totalBytes, ref totalFreeBytes);
+         ulong freeBytesAvailable;
+         ulong totalBytes;
+         ulong totalFreeBytes;
+         GetDiskFreeSpace(out freeBytesAvailable, out totalBytes, out totalFreeBytes);
 
          TotalNumberOfSectors = (long)(totalBytes / CbFs.SectorSize);
-         NumberOfFreeSectors = (long)(totalFreeBytes / CbFs.SectorSize);
+         NumberOfFreeSectors = (long)(freeBytesAvailable / CbFs.SectorSize);
       }
 
-      private string volumeLabel = "Liquesce";
 
       public override string VolumeLabel
       {
-         get { return volumeLabel; }
-         set { volumeLabel = value; }
+         get { return mountDetail.VolumeLabel; }
+         set { mountDetail.VolumeLabel = value; }
       }
 
       private static uint volumeSerialNumber = 0x20101112;
@@ -105,6 +104,11 @@ namespace LiquesceSvc
          int processId = GetProcessId();
 
          NativeFileOps foundFileInfo = roots.GetPath(filename, mountDetail.HoldOffBufferBytes);
+         if (foundFileInfo.ForceUseAsReadOnly)
+         {
+            throw new Win32Exception(CBFSWinUtil.ERROR_WRITE_PROTECT);
+         }
+
          string fullName = foundFileInfo.FullName;
 
          NativeFileOps.EFileAttributes attributes = (NativeFileOps.EFileAttributes)fileAttributes;
@@ -247,6 +251,24 @@ namespace LiquesceSvc
          {
             throw new Win32Exception(CBFSWinUtil.ERROR_FILE_NOT_FOUND);
          }
+         if (foundFileInfo.ForceUseAsReadOnly )
+         {
+            const NativeFileOps.EFileAccess writeOptions = NativeFileOps.EFileAccess.FILE_WRITE_DATA |
+                                             NativeFileOps.EFileAccess.FILE_APPEND_DATA |
+                                             NativeFileOps.EFileAccess.FILE_WRITE_ATTRIBUTES |
+                                             NativeFileOps.EFileAccess.FILE_WRITE_EA |
+                                             NativeFileOps.EFileAccess.FILE_DELETE_CHILD |
+                                             NativeFileOps.EFileAccess.WriteDAC |
+                                             NativeFileOps.EFileAccess.WriteOwner |
+                                             NativeFileOps.EFileAccess.GenericWrite |
+                                             NativeFileOps.EFileAccess.GenericAll;
+
+            if ((((NativeFileOps.EFileAccess)DesiredAccess) & writeOptions) != 0)
+            {
+               throw new Win32Exception(CBFSWinUtil.ERROR_WRITE_PROTECT);
+            }
+         }
+
          NativeFileOps.EFileAttributes attributes = (NativeFileOps.EFileAttributes)fileInfo.Attributes;
          CallOpenCreateFile(DesiredAccess, attributes, ShareMode, fileInfo, CBFSWinUtil.OPEN_EXISTING, GetProcessId(), fullName, userContextInfo);
       }
@@ -509,7 +531,9 @@ namespace LiquesceSvc
          }
          // TODO: Need to find out if this ever get called before IsDirectoryEmtpy
          // TODO: Need to check if any of the files are open within a directory.
-         return (stream != null);
+         return( (stream != null)
+            && !stream.ForceUseAsReadOnly
+            );
       }
 
       public override void SetFileAttributes(CbFsFileInfo fileInfo, CbFsHandleInfo userContextInfo,

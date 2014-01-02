@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="NativeFileOps.cs" company="Smurf-IV">
 // 
-//  Copyright (C) 2011-2012 Simon Coghlan (Aka Smurf-IV)
+//  Copyright (C) 2011-2014 Simon Coghlan (Aka Smurf-IV)
 // 
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -49,6 +49,7 @@ namespace LiquesceSvc
    {
       public string FullName { get; private set; }
       private readonly SafeFileHandle handle;
+      public bool ForceUseAsReadOnly { get; private set; }
 
       /// <summary>
       /// Not all file systems can record creation and last access times, and not all file systems record them in the same manner. 
@@ -64,15 +65,16 @@ namespace LiquesceSvc
          get { return handle.IsInvalid; }
       }
 
-      public NativeFileOps(string fullName)
-         : this(fullName, new SafeFileHandle(IntPtr.Zero, false))
+      public NativeFileOps(string fullName, bool forceUseAsReadOnly)
+         : this(fullName, new SafeFileHandle(IntPtr.Zero, false), forceUseAsReadOnly)
       {
       }
 
-      private NativeFileOps(string fullName, SafeFileHandle handle)
+      private NativeFileOps(string fullName, SafeFileHandle handle, bool forceUseAsReadOnly)
       {
          this.handle = handle;
          FullName = GetFullPathName(fullName);
+         ForceUseAsReadOnly = forceUseAsReadOnly;
       }
 
       /// <summary>
@@ -109,7 +111,7 @@ namespace LiquesceSvc
          {
             throw new Win32Exception();
          }
-         return new NativeFileOps(lpFileName, handle);
+         return new NativeFileOps(lpFileName, handle, false);
       }
 
       static public void CreateDirectory(string pathName)
@@ -130,6 +132,10 @@ namespace LiquesceSvc
 
       public void CreateDirectory()
       {
+         if (ForceUseAsReadOnly)
+         {
+            throw new Win32Exception(CBFSWinUtil.ERROR_WRITE_PROTECT);
+         }
          CreateDirectory(FullName);
       }
 
@@ -143,6 +149,10 @@ namespace LiquesceSvc
 
       public void DeleteDirectory()
       {
+         if (ForceUseAsReadOnly)
+         {
+            throw new Win32Exception(CBFSWinUtil.ERROR_WRITE_PROTECT);
+         }
          if (Exists)
          {
             DeleteDirectory(FullName);
@@ -153,10 +163,16 @@ namespace LiquesceSvc
       static public void DeleteFile(string path)
       {
          if (!DeleteFileW(path))
+         {
             throw new Win32Exception();
+         }
       }
       public void DeleteFile()
       {
+         if (ForceUseAsReadOnly)
+         {
+            throw new Win32Exception(CBFSWinUtil.ERROR_WRITE_PROTECT);
+         }
          if (Exists)
          {
             DeleteFile(FullName);
@@ -191,6 +207,10 @@ namespace LiquesceSvc
       public bool WriteFile(byte[] buffer, UInt32 numBytesToWrite, out UInt32 numBytesWritten)
       {
          numBytesWritten = 0;
+         if (ForceUseAsReadOnly)
+         {
+            throw new Win32Exception(CBFSWinUtil.ERROR_WRITE_PROTECT);
+         }
          try
          {
             //NativeOverlapped overlapped = new NativeOverlapped();
@@ -228,6 +248,10 @@ namespace LiquesceSvc
          {
             // Ensure that the attributes stored are the Extended variety
             lpFileInformation.dwFileAttributes = Attributes;
+            if (ForceUseAsReadOnly)
+            {
+               lpFileInformation.dwFileAttributes |= (uint) EFileAttributes.Readonly;
+            }
             cachedFileInformation = lpFileInformation;
          }
       }
@@ -236,7 +260,7 @@ namespace LiquesceSvc
       {
          do
          {
-            NativeFileOps dirInfo = new NativeFileOps(path);
+            NativeFileOps dirInfo = new NativeFileOps(path, false);
             EFileAttributes attr = (EFileAttributes)dirInfo.Attributes;
             if ((attr & EFileAttributes.ReparsePoint) == EFileAttributes.ReparsePoint)
             {
@@ -289,6 +313,10 @@ namespace LiquesceSvc
 
       public void SetFileTime(DateTime creationTime, DateTime lastAccessTime, DateTime lastWriteTime)
       {
+         if (ForceUseAsReadOnly)
+         {
+            throw new Win32Exception(CBFSWinUtil.ERROR_WRITE_PROTECT);
+         }
          long lpCreationTime = ConvertDateTimeToFiletime(creationTime);
          long lpLastAccessTime = ConvertDateTimeToFiletime(lastAccessTime);
          long lpLastWriteTime = ConvertDateTimeToFiletime(lastWriteTime);
@@ -305,6 +333,10 @@ namespace LiquesceSvc
       /// <param name="length"></param>
       public void SetLength(long length)
       {
+         if (ForceUseAsReadOnly)
+         {
+            throw new Win32Exception(CBFSWinUtil.ERROR_WRITE_PROTECT);
+         }
          SetFilePointer(length, SeekOrigin.Begin);
          if (!SetEndOfFile(handle))
          {
@@ -321,6 +353,10 @@ namespace LiquesceSvc
             WIN32_FILE_ATTRIBUTE_DATA newData;
             if (GetFileAttributesEx(FullName, GET_FILEEX_INFO_LEVELS.GetFileExInfoStandard, out newData))
             {
+               if (ForceUseAsReadOnly)
+               {
+                  newData.dwFileAttributes |= (uint) EFileAttributes.Readonly;
+               }
                cachedAttributeData = newData;
             }
          }
@@ -420,11 +456,20 @@ namespace LiquesceSvc
       public WIN32_FIND_DATA GetFindData()
       {
          WIN32_FIND_DATA findData = new WIN32_FIND_DATA();
-         return (NativeFileFind.FindFirstOnly(FullName, ref findData) ? findData : new WIN32_FIND_DATA());
+         WIN32_FIND_DATA win32FindData = (NativeFileFind.FindFirstOnly(FullName, ref findData) ? findData : new WIN32_FIND_DATA());
+         if (ForceUseAsReadOnly)
+         {
+            win32FindData.dwFileAttributes |= (uint) EFileAttributes.Readonly;
+         }
+         return win32FindData;
       }
 
       public void SetFileAttributes(uint attr)
       {
+         if (ForceUseAsReadOnly)
+         {
+            throw new Win32Exception(CBFSWinUtil.ERROR_WRITE_PROTECT);
+         }
          if (!SetFileAttributesW(FullName, (FileAttributes)attr))
          {
             throw new Win32Exception();
@@ -504,6 +549,10 @@ namespace LiquesceSvc
 
       public void SetFileSecurity(uint /*SECURITY_INFORMATION*/ securityInformation, IntPtr /*ref SECURITY_DESCRIPTOR*/ securityDescriptor, uint Length)
       {
+         if (ForceUseAsReadOnly)
+         {
+            throw new Win32Exception(CBFSWinUtil.ERROR_WRITE_PROTECT);
+         }
          SECURITY_INFORMATION rawSecurityInformation = (SECURITY_INFORMATION)securityInformation;
          SECURITY_INFORMATION reqInfo = rawSecurityInformation;
          AccessControlSections includeSections = AccessControlSections.None;
@@ -908,7 +957,7 @@ namespace LiquesceSvc
          {
             throw new Win32Exception();
          }
-         return new NativeFileOps(sourceHandle.FullName, lpTargetHandle);
+         return new NativeFileOps(sourceHandle.FullName, lpTargetHandle, sourceHandle.ForceUseAsReadOnly);
       }
    }
 
