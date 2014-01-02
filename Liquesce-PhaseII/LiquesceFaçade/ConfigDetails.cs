@@ -117,7 +117,7 @@ namespace LiquesceFacade
 
       // Make this is a string so that the XML looks better (Rather than exporting 72 for 'N')
       [DataMember(IsRequired = true)]
-      public string DriveLetter;
+      public string DriveLetter; // InitConfig populates this to the last unused.
 
       [DataMember(IsRequired = true)]
       public string VolumeLabel = "Mirror of C";
@@ -172,8 +172,6 @@ namespace LiquesceFacade
    {
       [DataMember] public string SourcePath = string.Empty;
 
-      [DataMember] public bool UseAsNameRoot = false;
-
       [DataMember] public bool UseIsReadOnly = false;
 
       // paramterless contrsuctor to allow serialisation
@@ -181,10 +179,9 @@ namespace LiquesceFacade
       {
       }
 
-      public SourceLocation(string path, bool useAsRoot=false, bool isReadOnly=false)
+      public SourceLocation(string path, bool isReadOnly=false)
       {
          SourcePath = path;
-         UseAsNameRoot = useAsRoot;
          UseIsReadOnly = isReadOnly;
       }
 
@@ -192,7 +189,6 @@ namespace LiquesceFacade
       {
          StringBuilder sb = new StringBuilder();
          sb = sb.AppendFormat("\t\tSourceLocation=[{0}]", SourcePath).AppendLine();
-         sb = sb.AppendFormat("\t\tUseAsNameRoot=[{0}]", UseAsNameRoot).AppendLine();
          sb = sb.AppendFormat("\t\tUseIsReadOnly=[{0}]", UseIsReadOnly);
          return sb.ToString();
       }

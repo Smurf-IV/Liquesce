@@ -140,6 +140,7 @@ namespace LiquesceSvc
                   Environment.Exit(-1);
                   // return;
                }
+               Log.Fatal("OSVersion [{0}], ProcessorCount [{1}] Is64BitProcess [{2}] CLR version [{3}]", Environment.OSVersion, Environment.ProcessorCount, Environment.Is64BitProcess, Environment.Version);
                Log.Fatal(currentConfigDetails.ToString());
                SetNLogLevel(currentConfigDetails.ServiceLogLevel);
 

@@ -32,7 +32,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
-
+using IMAPI2;
 using Liquesce.Tabs;
 using LiquesceFacade;
 using NLog;
@@ -80,36 +80,38 @@ namespace Liquesce.Mounting
          MountDetail mt = cd.MountDetails[currentIndex];
          if (!String.IsNullOrWhiteSpace(mt.DriveLetter))
          {
-            // Add the drive letter back in as this would already have been removed
-            MountPoint.Items.Add(mt.DriveLetter);
+            // Add the drive letter back in as this may already have been removed
+            if (!MountPoint.Items.Contains(mt.DriveLetter))
+            {
+               MountPoint.Items.Add(mt.DriveLetter);
+            }
             MountPoint.Text = mt.DriveLetter;
             if (mt.DriveLetter.Length > 1)
             {
                txtFolder.Text = mt.DriveLetter;
             }
          }
-            mergeList.Rows.Clear();
-            if (mt.SourceLocations != null)
+         mergeList.Rows.Clear();
+         if (mt.SourceLocations != null)
+         {
+            foreach (SourceLocation tn in mt.SourceLocations)
             {
-               foreach (SourceLocation tn in mt.SourceLocations)
-               {
-                  mergeList.Rows.Add(new object[] { tn.SourcePath, tn.UseAsNameRoot, tn.UseIsReadOnly});
-               }
+               mergeList.Rows.Add(new object[] { tn.SourcePath, tn.UseIsReadOnly });
             }
-            VolumeLabel.Text = mt.VolumeLabel;
-            AllocationMode = mt.AllocationMode;
-            HoldOffMBytes = mt.HoldOffBufferBytes;
-            RestartExpectedOutput();
+         }
+         VolumeLabel.Text = mt.VolumeLabel;
+         AllocationMode = mt.AllocationMode;
+         HoldOffMBytes = mt.HoldOffBufferBytes;
+         RestartExpectedOutput();
       }
 
       private void PopulatePoolSettings()
       {
-         string[] drives = Environment.GetLogicalDrives();
-         foreach (string dr in drives)
+         DriveInfo[] drives = DriveInfo.GetDrives();
+         foreach (DriveInfo dr in drives)
          {
-            MountPoint.Items.Remove(dr.Remove(1));
+            MountPoint.Items.Remove(dr.RootDirectory.Name.Remove(1));
          }
-         MountPoint.Text = "N";
       }
 
       #region Methods to populate and drill down in the tree
@@ -134,12 +136,11 @@ namespace Liquesce.Mounting
             Log.Debug("Now we need to add any children to the root node.");
 
             Log.Debug("Start with drives if you have to search the entire computer.");
-            string[] drives = Environment.GetLogicalDrives();
-            foreach (string dr in drives)
+            DriveInfo[] drives = DriveInfo.GetDrives();
+            foreach (DriveInfo dr in drives)
             {
                Log.Debug(dr);
-               DriveInfo di = new DriveInfo(dr);
-               FillInDirectoryType(tvwRoot, di);
+               FillInDirectoryType(tvwRoot, dr);
             }
 
             tvwRoot.Expand();
@@ -175,14 +176,39 @@ namespace Liquesce.Mounting
                      di.Name);
                   return;
                }
-               SafelyAddIcon(di.Name);
                label = (di.IsReady && !String.IsNullOrWhiteSpace(di.VolumeLabel)) ? di.VolumeLabel : di_DriveFormat;
+            }
+            catch (IOException ioex)
+            {
+               label = di.DriveType.ToString();
+               if (di.DriveType == DriveType.CDRom)
+               {
+                  // Handle situation when there is no disc in "CDRom", which could be any "##-Rom type"
+                  try
+                  {
+                     MsftDiscMaster2 discMaster = new MsftDiscMaster2();
+                     if (discMaster.IsSupportedEnvironment)
+                     {
+                        MsftDiscRecorder2 discRecorder2 = new MsftDiscRecorder2();
+                        foreach (string id in discMaster)
+                        {
+                           discRecorder2.InitializeDiscRecorder(id);
+                           if (discRecorder2.VolumePathNames.Cast<string>().Any(volumePathName => di.Name == volumePathName))
+                           {
+                              label = discRecorder2.ProductId.Trim();
+                           }
+                        }
+                     }
+                  }
+                  catch { }
+               }
             }
             catch
             {
                // The above throws a wobble e.g. if the CD_Rom does not have a disk in it
                label = di_DriveFormat;
             }
+            SafelyAddIcon(di.Name);
             label += " (" + di.Name + ")";
             TreeNode thisNode = new TreeNode
             {
@@ -285,7 +311,7 @@ namespace Liquesce.Mounting
             // Start the drag-and-drop operation with a cloned copy of the node.
             if (selected != null)
             {
-               DragDropItem ud = new DragDropItem(GetSelectedNodesPath(selected), DragDropItem.SourceType.Drive);
+               DragDropItem ud = new DragDropItem(GetSelectedNodesPath(selected), DragDropItem.SourceType.Drive, false, false);
                if (!String.IsNullOrEmpty(ud.Name))
                   driveAndDirTreeView.DoDragDrop(ud, DragDropEffects.All);
             }
@@ -305,7 +331,7 @@ namespace Liquesce.Mounting
          // TODO: On Add check to make sure that the root (Or this) node have not already been covered.
          if (!String.IsNullOrEmpty(newPath.Name))
          {
-            Object[] tn = {newPath.Name, false, false};
+            Object[] tn = { newPath.Name, newPath.IncludeName, newPath.AsReadOnly };
 
             //we only ever want an entry in 1x in the list.  Remove any duplicates, so you can reorder from the filesystem treeview
             int internalMoveIndex = -1;
@@ -350,8 +376,8 @@ namespace Liquesce.Mounting
                if (target == -1)
                {
                   index = 0;
-                  if ( (mergeList.RowCount > 0)
-                     &&(mouseOffset > mergeList.Rows[0].Height)
+                  if ((mergeList.RowCount > 0)
+                     && (mouseOffset > mergeList.Rows[0].Height)
                      )
                   {
                      index = mergeList.RowCount;
@@ -391,7 +417,7 @@ namespace Liquesce.Mounting
             DriveLetter = string.IsNullOrWhiteSpace(txtFolder.Text) ? MountPoint.Text : txtFolder.Text,
             VolumeLabel = VolumeLabel.Text,
             SourceLocations = (from DataGridViewRow tn in mergeList.Rows
-                               select new SourceLocation(tn.Cells[0].Value.ToString(), (bool) tn.Cells[1].Value, (bool) tn.Cells[2].Value))
+                               select new SourceLocation(tn.Cells[0].Value.ToString(), (bool)tn.Cells[1].Value))
                               .ToList(),
          };
          FillExpectedLayoutWorker.RunWorkerAsync(mt);
@@ -425,7 +451,7 @@ namespace Liquesce.Mounting
          WalkExpectedNextTreeLevel(root, mt.SourceLocations);
       }
 
-      private void AddFiles(List<SourceLocation> sourceLocations, string directoryPath, List<ExpectedDetailResult> allFiles)
+      private void AddFiles(IEnumerable<SourceLocation> sourceLocations, string directoryPath, List<ExpectedDetailResult> allFiles)
       {
          try
          {
@@ -446,11 +472,11 @@ namespace Liquesce.Mounting
          }
       }
 
-      private string TrimAndAdd(List<SourceLocation> sourceLocations, string fullFilePath)
+      private string TrimAndAdd(IEnumerable<SourceLocation> sourceLocations, string fullFilePath)
       {
-         foreach (string key in from location 
-                                   in sourceLocations 
-                                where fullFilePath.StartsWith(location.SourcePath) 
+         foreach (string key in from location
+                                   in sourceLocations
+                                where fullFilePath.StartsWith(location.SourcePath)
                                 select fullFilePath.Remove(0, location.SourcePath.Length)
                    )
          {
@@ -524,7 +550,7 @@ namespace Liquesce.Mounting
             {
                e.Node.Nodes.Clear();
                List<SourceLocation> sourceLocations = new List<SourceLocation>(mergeList.RowCount);
-               sourceLocations.AddRange(from DataGridViewRow tn in mergeList.Rows select new SourceLocation(tn.Cells[0].Value.ToString(), (bool) tn.Cells[1].Value, (bool) tn.Cells[2].Value));
+               sourceLocations.AddRange(from DataGridViewRow tn in mergeList.Rows select new SourceLocation(tn.Cells[0].Value.ToString(), (bool)tn.Cells[1].Value));
                WalkExpectedNextTreeLevel(e.Node, sourceLocations, root);
             }
             e.Cancel = false;
@@ -556,7 +582,7 @@ namespace Liquesce.Mounting
          AddNextExpectedLevel(allFiles, parent);
       }
 
-      private void AddNextExpectedLevel(List<ExpectedDetailResult> allFiles, TreeNode parent)
+      private void AddNextExpectedLevel(IEnumerable<ExpectedDetailResult> allFiles, TreeNode parent)
       {
          if (allFiles != null)
          {
@@ -618,6 +644,19 @@ namespace Liquesce.Mounting
             if (!imageListUnits.Images.ContainsKey(fullFileName))
             {
                imageListUnits.Images.Add(fullFileName, ExtractIcon.GetIconForFilename(fullFileName, true).ToBitmap());
+            }
+         }
+         catch { }
+      }
+
+      private void SafelyAddIcon(string fullFileName, int iconIndex)
+      {
+         try
+         {
+            if (!imageListUnits.Images.ContainsKey(fullFileName))
+            {
+               imageListUnits.Images.Add(fullFileName, ExtractIcon.GetIconForFilename(fullFileName, true).ToBitmap());
+               //imageListUnits.Images.Add(fullFileName, ExtractIcon.GetIcon(iconIndex).ToBitmap());
             }
          }
          catch { }
@@ -704,18 +743,6 @@ namespace Liquesce.Mounting
       {
          HasLoaded = true;
          StartTree();
-         // TODO: Once the code is complete remove the following
-         DisableColumn(1);
-      }
-
-      private void DisableColumn( int column)
-      {
-         DataGridViewColumn col = mergeList.Columns[column];
-         col.ReadOnly = true;
-         col.DefaultCellStyle.BackColor = SystemColors.ControlLight;
-         col.DefaultCellStyle.ForeColor = SystemColors.GrayText;
-         col.DefaultCellStyle.SelectionBackColor = SystemColors.ControlLight;
-         col.DefaultCellStyle.SelectionForeColor = SystemColors.GrayText;
       }
 
       private void Edit_Leave(object sender, EventArgs e)
@@ -727,7 +754,7 @@ namespace Liquesce.Mounting
             DriveLetter = string.IsNullOrWhiteSpace(txtFolder.Text) ? MountPoint.Text : txtFolder.Text,
             VolumeLabel = VolumeLabel.Text,
             SourceLocations = (from DataGridViewRow tn in mergeList.Rows
-                               select new SourceLocation(tn.Cells[0].Value.ToString(), (bool)tn.Cells[1].Value, (bool)tn.Cells[2].Value))
+                               select new SourceLocation(tn.Cells[0].Value.ToString(), (bool)tn.Cells[1].Value))
                               .ToList(),
             HoldOffBufferBytes = HoldOffMBytes,
             AllocationMode = AllocationMode
@@ -781,6 +808,17 @@ namespace Liquesce.Mounting
          RestartExpectedOutput();
       }
 
+      private void mergeList_MouseCellDown(object sender, DataGridViewCellMouseEventArgs e)
+      {
+         DataGridViewCheckBoxCell cell = mergeList.Rows[e.RowIndex].Cells[e.ColumnIndex] as DataGridViewCheckBoxCell;
+         if (cell != null)
+         {
+            bool b = (bool)cell.Value;
+            cell.Value = !b;
+         }
+      }
+
+
       private void dataGridView1_MouseDown(object sender, MouseEventArgs e)
       {
          DataGridView.HitTestInfo hti = mergeList.HitTest(e.X, e.Y);
@@ -789,7 +827,8 @@ namespace Liquesce.Mounting
          {
             return;
          }
-         mergeList.Rows[hti.RowIndex].Selected = true;
+         DataGridViewRow row = mergeList.Rows[hti.RowIndex];
+         row.Selected = true;
 
          //right click menu for deleting items from mergelist
          if (e.Button == MouseButtons.Right)
@@ -801,7 +840,7 @@ namespace Liquesce.Mounting
          {
             // Get the node underneath the mouse.
             // Start the drag-and-drop operation with a cloned copy of the node.
-            DragDropItem ud = new DragDropItem(mergeList.Rows[hti.RowIndex].Cells[0].Value.ToString(), DragDropItem.SourceType.Merge);
+            DragDropItem ud = new DragDropItem(row.Cells[0].Value.ToString(), DragDropItem.SourceType.Merge, (bool)row.Cells[1].Value, (bool)row.Cells[2].Value);
             mergeList.DoDragDrop(ud, DragDropEffects.All);
          }
       }
@@ -819,7 +858,7 @@ namespace Liquesce.Mounting
          RestartExpectedOutput();
       }
 
-      private int currentIndex = 0;
+      private int currentIndex;
       private bool HasLoaded;
 
       public void SelectedIndex(int selectedIndex)
@@ -828,27 +867,27 @@ namespace Liquesce.Mounting
          Restart();
       }
 
-      public MountDetail.AllocationModes AllocationMode
+      private MountDetail.AllocationModes AllocationMode
       {
          get
          {
             Enum.TryParse(cmbAllocationMode.Text, out cd.MountDetails[currentIndex].AllocationMode);
             return cd.MountDetails[currentIndex].AllocationMode;
          }
-         set 
-         { 
-            cmbAllocationMode.Text = cd.MountDetails[currentIndex].AllocationMode.ToString(); 
+         set
+         {
+            cmbAllocationMode.Text = cd.MountDetails[currentIndex].AllocationMode.ToString();
          }
       }
 
-      public ulong HoldOffMBytes
+      private ulong HoldOffMBytes
       {
-         get 
+         get
          {
-            cd.MountDetails[currentIndex].HoldOffBufferBytes = (ulong) (numHoldOffBytes.Value * (1024 * 1024));
-            return cd.MountDetails[currentIndex].HoldOffBufferBytes; 
+            cd.MountDetails[currentIndex].HoldOffBufferBytes = (ulong)(numHoldOffBytes.Value * (1024 * 1024));
+            return cd.MountDetails[currentIndex].HoldOffBufferBytes;
          }
-         set 
+         set
          {
             numHoldOffBytes.Value = cd.MountDetails[currentIndex].HoldOffBufferBytes / (decimal)(1024 * 1024);
          }

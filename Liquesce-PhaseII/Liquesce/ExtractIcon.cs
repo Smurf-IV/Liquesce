@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="ExtractIcon.cs" company="Smurf-IV">
 // 
-//  Copyright (C) 2010-2012 Simon Coghlan (Aka Smurf-IV)
+//  Copyright (C) 2010-2014 Simon Coghlan (Aka Smurf-IV)
 // 
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@
 //  </summary>
 // --------------------------------------------------------------------------------------------------------------------
 #endregion
+
 using System;
 using System.Drawing;
 using System.IO;
@@ -30,7 +31,7 @@ using System.Runtime.InteropServices;
 
 namespace Liquesce
 {
-   internal class ExtractIcon
+   internal static class ExtractIcon
    {
       /// <summary>
       /// Get the icon used for folders.
@@ -97,7 +98,27 @@ namespace Liquesce
          if (shinfo.hIcon == IntPtr.Zero)
             return null;
 
-         return Icon.FromHandle(shinfo.hIcon);
+         Icon icon = Icon.FromHandle(shinfo.hIcon).Clone() as Icon;
+         // You MUST use DestroyIcon function after extracting the icon, as per http://msdn.microsoft.com/library/default.asp?url=/library/en-us/shellcc/platform/shell/reference/functions/shgetfileinfo.asp
+         // Otherwise, you will encounter "OutOfMemory" exception if you add a large number of icons to the  ImageList, like 3000+
+
+         DestroyIcon(shinfo.hIcon);
+         return icon;
+      }
+
+      const string ShellIconsLib = @"C:\WINDOWS\System32\shell32.dll";
+      private const int Floppy = 6;
+      private const int Hard = 8;
+      private const int Net = 9;
+      public const int CD = 11;
+      private const int RAM = 12;
+      private const int Unknown = 53;
+      static public Icon GetIcon(int index)
+      {
+         IntPtr Hicon = ExtractShellIcon(IntPtr.Zero, ShellIconsLib, index);
+         Icon icon = Icon.FromHandle(Hicon).Clone() as Icon;
+         DestroyIcon(Hicon);
+         return icon;
       }
 
  
@@ -116,6 +137,9 @@ namespace Liquesce
       uint cbSizeFileInfo,
       uint uFlags );
 
+      [DllImport("user32")]
+      public static extern int DestroyIcon(IntPtr hIcon);
+
       [StructLayout(LayoutKind.Sequential, Pack = 4)]
       private struct SHFILEINFO
       {
@@ -127,6 +151,10 @@ namespace Liquesce
          [MarshalAs( UnmanagedType.ByValTStr, SizeConst = 80 )]
          public string szTypeName;
       };
+
+      [DllImport("shell32.dll", EntryPoint = "ExtractIcon")]
+      extern static IntPtr ExtractShellIcon( IntPtr hInst, string lpszExeFileName, int nIconIndex);
+
       // ReSharper restore InconsistentNaming
       // ReSharper restore InconsistentNaming
       #endregion

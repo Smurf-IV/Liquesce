@@ -15,14 +15,14 @@
             <File Id="LiquesceSvc.File" Name="LiquesceSvc.exe" Source="$(var.SvcSource)\LiquesceSvc.exe" KeyPath="yes">
                <fire:FirewallException Id="LiquesceFWX2" Name="LiquesceSvc" Scope="localSubnet" IgnoreFailure="yes" />
                <!-- Why Use NGen ? http://msdn.microsoft.com/en-gb/magazine/cc163610.aspx -->
-               <netfx:NativeImage Id="ngen_LiquesceSvc.exe" Platform="32bit" Priority="1" AppBaseDirectory="ServiceDIR"/>
+               <netfx:NativeImage Id="ngen_LiquesceSvc.exe" Platform="all" Priority="1" AppBaseDirectory="ServiceDIR"/>
             </File>
             <File Id="LiquesceSvc.exe.config.File" Name="LiquesceSvc.exe.config" Source="$(var.SvcSource)\LiquesceSvc.exe.config"/>
-            <ServiceControl Id='LiquesceSvcControl' Name='LiquesceSvc' Start='install' Stop='both' Remove='uninstall' Wait='yes' />
+            <ServiceControl Id='LiquesceSvcControl' Name='LiquesceSvc' Stop='both' Remove='uninstall' Wait='yes' />
          </Component>
          <Component Id="LiquesceFacade.dll" Directory="ServiceDIR">
             <File Source="$(var.SvcSource)\LiquesceFacade.dll" KeyPath="yes">
-               <netfx:NativeImage Id="ngen_LiquesceFacade.dll" Platform="32bit" Priority="1" AppBaseDirectory="ServiceDIR"/>
+               <netfx:NativeImage Id="ngen_LiquesceFacade.dll" Platform="all" Priority="1" AppBaseDirectory="ServiceDIR"/>
             </File>
          </Component>
          <Component Id="ChinhDo.Transactions.dll" Directory="ServiceDIR">
