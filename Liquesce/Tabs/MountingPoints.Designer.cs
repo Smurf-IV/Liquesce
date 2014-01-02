@@ -30,6 +30,7 @@
       {
          this.listExistingMounts = new System.Windows.Forms.ListBox();
          this.pnlStart = new System.Windows.Forms.Panel();
+         this.label1 = new System.Windows.Forms.Label();
          this.btnNew = new Shared.CommandLinkButton();
          this.btnEdit = new Shared.CommandLinkButton();
          this.btnDelete = new Shared.CommandLinkButton();
@@ -45,12 +46,13 @@
          this.listExistingMounts.Location = new System.Drawing.Point(402, 91);
          this.listExistingMounts.Name = "listExistingMounts";
          this.listExistingMounts.ScrollAlwaysVisible = true;
-         this.listExistingMounts.Size = new System.Drawing.Size(154, 152);
+         this.listExistingMounts.Size = new System.Drawing.Size(195, 152);
          this.listExistingMounts.TabIndex = 3;
          this.listExistingMounts.SelectedIndexChanged += new System.EventHandler(this.listExistingMounts_SelectedIndexChanged);
          // 
          // pnlStart
          // 
+         this.pnlStart.Controls.Add(this.label1);
          this.pnlStart.Controls.Add(this.btnNew);
          this.pnlStart.Controls.Add(this.btnEdit);
          this.pnlStart.Controls.Add(this.btnDelete);
@@ -61,10 +63,21 @@
          this.pnlStart.Size = new System.Drawing.Size(600, 475);
          this.pnlStart.TabIndex = 4;
          // 
+         // label1
+         // 
+         this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+         this.label1.Font = new System.Drawing.Font("Tahoma", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+         this.label1.Location = new System.Drawing.Point(4, 261);
+         this.label1.Name = "label1";
+         this.label1.Size = new System.Drawing.Size(593, 38);
+         this.label1.TabIndex = 4;
+         this.label1.Text = "Once you are happy with the changes, then do not forget to press \"Save\" in the \"S" +
+    "ervice Settings\" tab.";
+         // 
          // btnNew
          // 
          this.btnNew.ButtonDepress = ((sbyte)(2));
-         this.btnNew.Enabled = false;
          this.btnNew.HighlightFillAlpha = ((byte)(250));
          this.btnNew.HighlightFillAlphaMouse = ((byte)(125));
          this.btnNew.HighlightFillAlphaNormal = ((byte)(75));
@@ -105,7 +118,6 @@
          // btnDelete
          // 
          this.btnDelete.ButtonDepress = ((sbyte)(2));
-         this.btnDelete.Enabled = false;
          this.btnDelete.HighlightFillAlpha = ((byte)(250));
          this.btnDelete.HighlightFillAlphaMouse = ((byte)(125));
          this.btnDelete.HighlightFillAlphaNormal = ((byte)(75));
@@ -143,6 +155,7 @@
          this.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.Name = "MountingPoints";
          this.Size = new System.Drawing.Size(600, 475);
+         this.Leave += new System.EventHandler(this.MountingPoints_Leave);
          this.pnlStart.ResumeLayout(false);
          this.ResumeLayout(false);
 
@@ -156,6 +169,7 @@
       private System.Windows.Forms.ListBox listExistingMounts;
       private System.Windows.Forms.Panel pnlStart;
       private Mounting.Edit edit1;
+      private System.Windows.Forms.Label label1;
 
    }
 }

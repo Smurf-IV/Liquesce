@@ -52,24 +52,27 @@ namespace Liquesce.Mounting
          imageListUnits.Images.Add("MyComputer", icon.ToBitmap());
       }
 
-
       public ConfigDetails cd
       {
          set
          {
             cd1 = value;
-            UseWaitCursor = true;
             PopulatePoolSettings();
-            InitialiseWith();
-            UseWaitCursor = false;
+            Restart();
          }
          private get { return cd1; }
+      }
+
+      private void Restart()
+      {
+         UseWaitCursor = true;
+         InitialiseWith();
+         UseWaitCursor = false;
       }
 
       private bool IsClosing
       {
          get { return isClosing; }
-
       }
 
       private void InitialiseWith()
@@ -84,6 +87,8 @@ namespace Liquesce.Mounting
             {
                txtFolder.Text = mt.DriveLetter;
             }
+         }
+            mergeList.Rows.Clear();
             if (mt.SourceLocations != null)
             {
                foreach (SourceLocation tn in mt.SourceLocations)
@@ -95,7 +100,6 @@ namespace Liquesce.Mounting
             AllocationMode = mt.AllocationMode;
             HoldOffMBytes = mt.HoldOffBufferBytes;
             RestartExpectedOutput();
-         }
       }
 
       private void PopulatePoolSettings()
@@ -362,11 +366,14 @@ namespace Liquesce.Mounting
          }
       }
 
-
       #endregion
 
       private void RestartExpectedOutput()
       {
+         if (!HasLoaded)
+         {
+            return;
+         }
          if (IsClosing)
          {
             return;
@@ -383,11 +390,10 @@ namespace Liquesce.Mounting
             VolumeLabel = VolumeLabel.Text,
             SourceLocations = (from DataGridViewRow tn in mergeList.Rows
                                select new SourceLocation(tn.Cells[0].Value.ToString(), (bool) tn.Cells[1].Value, (bool) tn.Cells[2].Value))
-               .ToList(),
+                              .ToList(),
          };
          FillExpectedLayoutWorker.RunWorkerAsync(mt);
       }
-
 
       private void FillExpectedLayoutWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
       {
@@ -416,7 +422,6 @@ namespace Liquesce.Mounting
          }
          WalkExpectedNextTreeLevel(root, mt.SourceLocations);
       }
-
 
       private void AddFiles(List<SourceLocation> sourceLocations, string directoryPath, List<ExpectedDetailResult> allFiles)
       {
@@ -451,7 +456,6 @@ namespace Liquesce.Mounting
          }
          throw new ArgumentException("Unable to find BelongTo Path: " + fullFilePath, fullFilePath);
       }
-
 
       private delegate void AddExpecteddNodeCallBack(TreeNode parent, TreeNode child);
       private void AddExpectedNode(TreeNode parent, TreeNode child)
@@ -694,12 +698,26 @@ namespace Liquesce.Mounting
          errorProvider1.SetError(lblFolder, error);
       }
 
-      private void MountingPoints_Load(object sender, EventArgs e)
+      private void Edit_Load(object sender, EventArgs e)
       {
+         HasLoaded = true;
          StartTree();
+         // TODO: Once the code is complete remove the following
+         DisableColumn(1);
+         DisableColumn(2);
       }
 
-      private void MountingPoints_Leave(object sender, EventArgs e)
+      private void DisableColumn( int column)
+      {
+         DataGridViewColumn col = mergeList.Columns[column];
+         col.ReadOnly = true;
+         col.DefaultCellStyle.BackColor = SystemColors.ControlLight;
+         col.DefaultCellStyle.ForeColor = SystemColors.GrayText;
+         col.DefaultCellStyle.SelectionBackColor = SystemColors.ControlLight;
+         col.DefaultCellStyle.SelectionForeColor = SystemColors.GrayText;
+      }
+
+      private void Edit_Leave(object sender, EventArgs e)
       {
          isClosing = true;
          FillExpectedLayoutWorker.CancelAsync();
@@ -709,7 +727,7 @@ namespace Liquesce.Mounting
             VolumeLabel = VolumeLabel.Text,
             SourceLocations = (from DataGridViewRow tn in mergeList.Rows
                                select new SourceLocation(tn.Cells[0].Value.ToString(), (bool)tn.Cells[1].Value, (bool)tn.Cells[2].Value))
-               .ToList(),
+                              .ToList(),
             HoldOffBufferBytes = HoldOffMBytes,
             AllocationMode = AllocationMode
          };
@@ -801,9 +819,12 @@ namespace Liquesce.Mounting
       }
 
       private int currentIndex = 0;
+      private bool HasLoaded;
+
       public void SelectedIndex(int selectedIndex)
       {
          currentIndex = selectedIndex;
+         Restart();
       }
 
       public MountDetail.AllocationModes AllocationMode

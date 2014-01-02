@@ -25,6 +25,7 @@
 #endregion
 
 using System;
+using System.Linq;
 using System.Windows.Forms;
 using LiquesceFacade;
 
@@ -51,6 +52,7 @@ namespace Liquesce.Tabs
 
       private void PopulateMountList()
       {
+         listExistingMounts.Items.Clear();
          foreach (MountDetail mt in cd1.MountDetails)
          {
             listExistingMounts.Items.Add(string.Format("{0} ({1})", mt.VolumeLabel, mt.DriveLetter));
@@ -65,6 +67,10 @@ namespace Liquesce.Tabs
 
       private void btnNew_Click(object sender, EventArgs e)
       {
+         int index = cd1.MountDetails.Count;
+         cd1.MountDetails.Add(new MountDetail());
+         PopulateMountList();
+         listExistingMounts.SelectedIndex = index;
          edit1.Visible = true;
          pnlStart.Visible = false;
       }
@@ -77,11 +83,21 @@ namespace Liquesce.Tabs
 
       private void btnDelete_Click(object sender, EventArgs e)
       {
-         edit1.Visible = true;
-         pnlStart.Visible = false;
+         if (DialogResult.Yes ==
+             MessageBox.Show(this,
+                "Performing this action will remove the selected Mounted drive from this machine.\n Do you wish to continue ?", "Caution..",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question))
+         {
+            cd1.MountDetails.RemoveAt(listExistingMounts.SelectedIndex);
+            if (!cd1.MountDetails.Any())
+            {
+               cd1.MountDetails.Add(new MountDetail());
+            }
+         }
+         PopulateMountList();
       }
 
-      private void pnlBase_Leave(object sender, EventArgs e)
+      private void MountingPoints_Leave(object sender, EventArgs e)
       {
          // restore the "Landing visibility"
          pnlStart.Visible = true;
