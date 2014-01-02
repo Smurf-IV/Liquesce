@@ -280,7 +280,7 @@
          this.AsReadOnly.FillWeight = 20F;
          this.AsReadOnly.HeaderText = "Read Only";
          this.AsReadOnly.Name = "AsReadOnly";
-         this.AsReadOnly.ToolTipText = "The files will return the read-only attribute and will not be allowed to change.";
+         this.AsReadOnly.ToolTipText = "The files will return the read-only attribute and will not be allowed to change.\nThe free space will not be included.";
          // 
          // groupBox3
          // 
@@ -530,8 +530,8 @@
          this.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.Name = "Edit";
          this.Size = new System.Drawing.Size(600, 475);
-         this.Load += new System.EventHandler(this.MountingPoints_Load);
-         this.Leave += new System.EventHandler(this.MountingPoints_Leave);
+         this.Load += new System.EventHandler(this.Edit_Load);
+         this.Leave += new System.EventHandler(this.Edit_Leave);
          this.mergeListContext.ResumeLayout(false);
          this.refreshExpected.ResumeLayout(false);
          ((System.ComponentModel.ISupportInitialize)(this.errorProvider1)).EndInit();
