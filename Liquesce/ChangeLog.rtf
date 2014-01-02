@@ -1,5 +1,5 @@
 {\rtf1\ansi\ansicpg1252\deff0{\fonttbl{\f0\fswiss\fprq2\fcharset0 Tahoma;}{\f1\fnil\fcharset0 Courier New;}{\f2\fnil Consolas;}{\f3\fmodern\fprq1\fcharset0 Courier New;}{\f4\fnil Courier New;}{\f5\fnil\fcharset0 Consolas;}{\f6\fnil\fcharset0 Tahoma;}}
-{\colortbl ;\red0\green0\blue0;\red0\green0\blue255;\red0\green77\blue187;\red192\green80\blue77;\red255\green0\blue0;\red0\green0\blue139;\red0\green128\blue0;}
+{\colortbl ;\red0\green0\blue0;\red0\green0\blue255;\red0\green77\blue187;\red192\green80\blue77;\red255\green0\blue0;\red0\green0\blue139;\red163\green21\blue21;\red0\green128\blue0;}
 {\*\generator Msftedit 5.41.21.2510;}\viewkind4\uc1\pard\cf1\lang2057\ul\b\f0\fs20 Welcome to the \i Liquesce \i0 Changelog\cf0\ulnone\b0\f1\par
 \cf1\f0\par
 Currently this is just a place holder for all the cool stuff that has happened to this project :-)\par
@@ -47,11 +47,15 @@ Keep an open eye on the \cf0\b{\field{\*\fldinst{HYPERLINK "http://liquesce.code
 \cf1\par
 \cf0\ul\b Done\par
 2014-01-##\par
-\ulnone\b0 - Start to work on the "Adding Folder Inclusive" feature\par
-- Make the above column Read-only for now\par
-- Work on the Multi-Mount UX\par
+\ulnone\b0 - Work on the Multi-Mount UX\par
 - Complete work on the "Read-Only Source" feature\par
-- - Now to start testing it.\par
+- - Fix the check box usage.\par
+- Remove work on the "Using Inclusive" feature\par
+- - It was affecting \i too \i0 much code.\par
+- \cf7\f2\fs19 netfx:NativeImage\f5  \cf0\f0\fs20 should now work for "all" platforms not limited to 32bit\par
+- Do not auto start the service, as CBFS always seems to request a restart.\par
+- Add some logging to determine the OS version and CLR version.\par
+- Fix the appearance (And name) of empty ROM drives.\par
 \ul\b\par
 2013-12-21\par
 \ulnone\b0 - Make service delay start and rely on PlugnPlay to allow CBFS drivers to start\par
@@ -195,7 +199,7 @@ Keep an open eye on the \cf0\b{\field{\*\fldinst{HYPERLINK "http://liquesce.code
 - Fix \cf4 Deleting directories\par
 \cf0 - Solved \cf4 Problems sharing a drive (Hosted on XP)\cf0  (See workaround in Item)\par
 - Solved \cf4 0.6.0 Sharing on Win 7 x64 & x32 Host Locks up XP Client\cf0  (See workaround in Item) \par
-\cf4\f6 - NTFS is case-preserving but case-insensitive in the Win32 namespace\cf7\f2\fs19\par
+\cf4\f6 - NTFS is case-preserving but case-insensitive in the Win32 namespace\cf8\f2\fs19\par
 \cf0\ul\b\f0\fs20\par
 \par
 2012-01-28 (Release Candidate)\par
@@ -246,7 +250,7 @@ Keep an open eye on the \cf0\b{\field{\*\fldinst{HYPERLINK "http://liquesce.code
 - Fix the "Left over" text for the backup in the space display.\par
 - Re-focused the need for security on the GetFileInformation and SetFile operations.\par
 - Add code to inform explorer (And other Apps via OS) that things have changed in the mounted drive [\f2\fs19 SHChangeNotify\f5  API]\f0\fs20 .\par
-- Sort out the code for the file renames in Win 7 and \cf7\f2\fs19 "\cf0{\field{\*\fldinst{HYPERLINK "http://code.google.com/p/dokan/issues/detail?id=238"}}{\fldrslt{\ul\cf2 http://code.google.com/p/dokan/issues/detail?id=238}}}\cf7\f2\fs19 " \par
+- Sort out the code for the file renames in Win 7 and \cf8\f2\fs19 "\cf0{\field{\*\fldinst{HYPERLINK "http://code.google.com/p/dokan/issues/detail?id=238"}}{\fldrslt{\ul\cf2 http://code.google.com/p/dokan/issues/detail?id=238}}}\cf8\f2\fs19 " \par
 \cf0\par
 \ul\b\f0\fs20\par
 2011-10-30\par

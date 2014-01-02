@@ -246,21 +246,21 @@ namespace LiquesceSvc
          relativeFolder = relativeFolder.TrimEnd(new char[] { Path.DirectorySeparatorChar });
 
          // for every source location
-         foreach (string t in mountDetail.SourceLocations.Select(s => s.SourcePath))
+         foreach (string sourcePath in mountDetail.SourceLocations.Select(s => s.SourcePath))
          {
             // first get free space
             ulong lpFreeBytesAvailable, num2, num3;
-            if (GetDiskFreeSpaceExW(t, out lpFreeBytesAvailable, out num2, out num3))
+            if (GetDiskFreeSpaceExW(sourcePath, out lpFreeBytesAvailable, out num2, out num3))
             {
-               Log.Trace("See if enough space on [{0}] lpFreeBytesAvailable[{1}] > spaceRequired[{2}]", t,
+               Log.Trace("See if enough space on [{0}] lpFreeBytesAvailable[{1}] > spaceRequired[{2}]", sourcePath,
                          lpFreeBytesAvailable, spaceRequired);
                if (lpFreeBytesAvailable > spaceRequired)
                {
-                  string testpath = t + relativeFolder;
+                  string testpath = sourcePath + relativeFolder;
 
                   // check if relativeFolder is on this disk
                   if (new NativeFileOps(testpath, AreAllReadOnly).Exists)
-                     return t;
+                     return sourcePath;
                }
             }
          }
