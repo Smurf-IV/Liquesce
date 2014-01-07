@@ -1,19 +1,20 @@
 ﻿#region Copyright (C)
+
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="TailForm.cs" company="Smurf-IV">
-// 
-//  Copyright (C) 2012-2013 Smurf-IV
-// 
+//
+//  Copyright (C) 2012-2014 Smurf-IV
+//
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation, either version 2 of the License, or
 //   any later version.
-// 
+//
 //  This program is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 //  GNU General Public License for more details.
-// 
+//
 //  You should have received a copy of the GNU General Public License
 //  along with this program. If not, see http://www.gnu.org/licenses/.
 //  </copyright>
@@ -22,11 +23,14 @@
 //  Email: http://www.codeplex.com/site/users/view/smurfiv
 //  </summary>
 // --------------------------------------------------------------------------------------------------------------------
-#endregion
+
+#endregion Copyright (C)
 
 using System;
+using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
+using Liquesce.Properties;
 using LiquesceTray;
 
 namespace Liquesce
@@ -40,7 +44,7 @@ namespace Liquesce
       {
          this.logLocation = logLocation;
          InitializeComponent();
-         WindowLocation.GeometryFromString(Properties.Settings.Default.TailWindowLocation, this);
+         WindowLocation.GeometryFromString(Settings.Default.TailWindowLocation, this);
       }
 
       private void timer1_Tick(object sender, EventArgs e)
@@ -61,11 +65,12 @@ namespace Liquesce
                   //if the file size has not changed, idle
 
                   long b = reader.BaseStream.Length;
-                  if (b != previousSeekPosition )
+                  if (b != previousSeekPosition)
                   {
                      if (b > previousSeekPosition) //seek to the last max offset
+                     {
                         reader.BaseStream.Seek(previousSeekPosition, SeekOrigin.Begin);
-
+                     }
                      //read out of the file until the EOF
                      textBox1.Text += reader.ReadToEnd();
 
@@ -78,15 +83,13 @@ namespace Liquesce
                   }
                }
             }
-
          }
          catch { }
       }
 
-
       private void TailForm_Shown(object sender, EventArgs e)
       {
-         this.Text += " " + logLocation;
+         Text += " " + logLocation;
          timer1.Enabled = true;
       }
 
@@ -95,8 +98,8 @@ namespace Liquesce
          Hide();
          timer1.Enabled = false;
          // persist our geometry string.
-         Properties.Settings.Default.TailWindowLocation = WindowLocation.GeometryToString(this);
-         Properties.Settings.Default.Save();
+         Settings.Default.TailWindowLocation = WindowLocation.GeometryToString(this);
+         Settings.Default.Save();
       }
 
       private void toolStripMenuItem1_Click(object sender, EventArgs e)
@@ -110,13 +113,13 @@ namespace Liquesce
       private void toolStripMenuItem2_Click(object sender, EventArgs e)
       {
          timer1.Enabled = false;
-         this.textBox1.BackColor = System.Drawing.SystemColors.ControlLight;
+         textBox1.BackColor = SystemColors.ControlLight;
       }
 
       private void toolStripMenuItem3_Click(object sender, EventArgs e)
       {
          timer1.Enabled = true;
-         this.textBox1.BackColor = System.Drawing.SystemColors.Window;
+         textBox1.BackColor = SystemColors.Window;
       }
    }
 }

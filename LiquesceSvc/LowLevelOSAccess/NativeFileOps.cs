@@ -1,19 +1,20 @@
 ﻿#region Copyright (C)
+
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="NativeFileOps.cs" company="Smurf-IV">
-// 
+//
 //  Copyright (C) 2011-2014 Simon Coghlan (Aka Smurf-IV)
-// 
+//
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation, either version 2 of the License, or
 //   any later version.
-// 
+//
 //  This program is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 //  GNU General Public License for more details.
-// 
+//
 //  You should have received a copy of the GNU General Public License
 //  along with this program. If not, see http://www.gnu.org/licenses/.
 //  </copyright>
@@ -22,7 +23,8 @@
 //  Email: http://www.codeplex.com/site/users/view/smurfiv
 //  </summary>
 // --------------------------------------------------------------------------------------------------------------------
-#endregion
+
+#endregion Copyright (C)
 
 using System;
 using System.Collections.ObjectModel;
@@ -48,16 +50,19 @@ namespace LiquesceSvc
    internal class NativeFileOps
    {
       public string FullName { get; private set; }
+
       private readonly SafeFileHandle handle;
+
       public bool ForceUseAsReadOnly { get; private set; }
 
       /// <summary>
-      /// Not all file systems can record creation and last access times, and not all file systems record them in the same manner. 
+      /// Not all file systems can record creation and last access times, and not all file systems record them in the same manner.
       /// For example, on the FAT file system, create time has a resolution of 10 milliseconds, write time has a resolution of 2 seconds,
-      /// and access time has a resolution of 1 day. The NTFS file system delays updates to the last access time for a file by up to 
+      /// and access time has a resolution of 1 day. The NTFS file system delays updates to the last access time for a file by up to
       /// 1 hour after the last access. For more information. See http://msdn.microsoft.com/en-us/library/windows/desktop/aa365740%28v=VS.85%29.aspx
       /// </summary>
       private BY_HANDLE_FILE_INFORMATION? cachedFileInformation;
+
       private WIN32_FILE_ATTRIBUTE_DATA? cachedAttributeData;
 
       public bool IsInvalid
@@ -87,9 +92,13 @@ namespace LiquesceSvc
       public static string CombineNoChecks(string path1, string path2)
       {
          if (path2.Length == 0)
+         {
             return path1;
+         }
          if (path1.Length == 0 || Path.IsPathRooted(path2))
+         {
             return path2;
+         }
          return AddTrailingSeperator(path1) + path2;
       }
 
@@ -167,6 +176,7 @@ namespace LiquesceSvc
             throw new Win32Exception();
          }
       }
+
       public void DeleteFile()
       {
          if (ForceUseAsReadOnly)
@@ -183,7 +193,9 @@ namespace LiquesceSvc
       public void SetFilePointer(long offset, SeekOrigin origin)
       {
          if (!SetFilePointerEx(handle, offset, IntPtr.Zero, (int)origin))
+         {
             throw new Win32Exception();
+         }
          RemoveCachedFileInformation();
       }
 
@@ -250,7 +262,7 @@ namespace LiquesceSvc
             lpFileInformation.dwFileAttributes = Attributes;
             if (ForceUseAsReadOnly)
             {
-               lpFileInformation.dwFileAttributes |= (uint) EFileAttributes.Readonly;
+               lpFileInformation.dwFileAttributes |= (uint)EFileAttributes.Readonly;
             }
             cachedFileInformation = lpFileInformation;
          }
@@ -355,7 +367,7 @@ namespace LiquesceSvc
             {
                if (ForceUseAsReadOnly)
                {
-                  newData.dwFileAttributes |= (uint) EFileAttributes.Readonly;
+                  newData.dwFileAttributes |= (uint)EFileAttributes.Readonly;
                }
                cachedAttributeData = newData;
             }
@@ -459,7 +471,7 @@ namespace LiquesceSvc
          WIN32_FIND_DATA win32FindData = (NativeFileFind.FindFirstOnly(FullName, ref findData) ? findData : new WIN32_FIND_DATA());
          if (ForceUseAsReadOnly)
          {
-            win32FindData.dwFileAttributes |= (uint) EFileAttributes.Readonly;
+            win32FindData.dwFileAttributes |= (uint)EFileAttributes.Readonly;
          }
          return win32FindData;
       }
@@ -602,6 +614,7 @@ namespace LiquesceSvc
       #region DLL Imports
 
       #region #etFileSecurity
+
       /// <summary>
       /// Check http://msdn.microsoft.com/en-us/library/cc230369%28v=prot.13%29.aspx
       /// and usage http://msdn.microsoft.com/en-us/library/ff556635%28v=vs.85%29.aspx
@@ -613,6 +626,7 @@ namespace LiquesceSvc
          /// Enums found @ http://msdn.microsoft.com/en-us/library/windows/desktop/aa379579(v=vs.85).aspx
          /// </summary>
          OWNER_SECURITY_INFORMATION = 0x00000001,
+
          GROUP_SECURITY_INFORMATION = 0x00000002,
          DACL_SECURITY_INFORMATION = 0x00000004,
          SACL_SECURITY_INFORMATION = 0x00000008,
@@ -655,21 +669,24 @@ namespace LiquesceSvc
       ///// See http://www.pinvoke.net/search.aspx?search=SECURITY_DESCRIPTOR&namespace=[All]
       ///// </summary>
       // ReSharper disable FieldCanBeMadeReadOnly.Global
-      [StructLayoutAttribute(LayoutKind.Sequential, Pack = 4)]
+      [StructLayout(LayoutKind.Sequential, Pack = 4)]
       public struct SECURITY_DESCRIPTOR
       {
          /// <summary>
          /// Structure taken from http://msdn.microsoft.com/en-us/library/ff556610%28v=vs.85%29.aspx
          /// </summary>
          public byte revision;
+
          public byte size;
          public short control;   // == SECURITY_DESCRIPTOR_CONTROL
-         public IntPtr owner;    // == PSID  
-         public IntPtr group;    // == PSID  
-         public IntPtr sacl;     // == PACL  
-         public IntPtr dacl;     // == PACL  
+         public IntPtr owner;    // == PSID
+         public IntPtr group;    // == PSID
+         public IntPtr sacl;     // == PACL
+         public IntPtr dacl;     // == PACL
       }
-      #endregion
+
+      #endregion #etFileSecurity
+
       #region Create File
 
       /// <summary>
@@ -808,9 +825,10 @@ namespace LiquesceSvc
             FILE_EXECUTE |
             Synchronize
       }
+
       // ReSharper restore UnusedMember.Global
 
-      #endregion
+      #endregion Create File
 
       [DllImport("kernel32.dll", SetLastError = true)]
       [return: MarshalAs(UnmanagedType.Bool)]
@@ -829,7 +847,7 @@ namespace LiquesceSvc
 
       [DllImport("Kernel32.dll", SetLastError = true)]
       [return: MarshalAs(UnmanagedType.Bool)]
-      static extern bool SetFilePointerEx(SafeFileHandle Handle, Int64 i64DistanceToMove, IntPtr ptrNewFilePointer, int origin);
+      private static extern bool SetFilePointerEx(SafeFileHandle Handle, Int64 i64DistanceToMove, IntPtr ptrNewFilePointer, int origin);
 
       [DllImport("kernel32.dll", SetLastError = true)]
       [return: MarshalAs(UnmanagedType.Bool)]
@@ -848,7 +866,7 @@ namespace LiquesceSvc
       // http://msdn.microsoft.com/en-us/library/windows/desktop/aa364946%28v=vs.85%29.aspx
       [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
       [return: MarshalAs(UnmanagedType.Bool)]
-      static extern bool GetFileAttributesEx(string lpFileName, GET_FILEEX_INFO_LEVELS fInfoLevelId, out WIN32_FILE_ATTRIBUTE_DATA lpFileInformation);
+      private static extern bool GetFileAttributesEx(string lpFileName, GET_FILEEX_INFO_LEVELS fInfoLevelId, out WIN32_FILE_ATTRIBUTE_DATA lpFileInformation);
 
       [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
       [return: MarshalAs(UnmanagedType.Bool)]
@@ -859,7 +877,7 @@ namespace LiquesceSvc
       [return: MarshalAs(UnmanagedType.Bool)]
       private static extern bool SetFileAttributesW(string name, FileAttributes attr);
 
-      // Stolen from 
+      // Stolen from
       // ReSharper disable MemberCanBePrivate.Local
       [StructLayout(LayoutKind.Sequential, Pack = 4)]
       private struct WIN32_FILE_ATTRIBUTE_DATA
@@ -874,14 +892,15 @@ namespace LiquesceSvc
          [SecurityCritical]
          internal void PopulateFrom(BY_HANDLE_FILE_INFORMATION findData)
          {
-            this.dwFileAttributes = findData.dwFileAttributes;
-            this.ftCreationTime = findData.ftCreationTime;
-            this.ftLastAccessTime = findData.ftLastAccessTime;
-            this.ftLastWriteTime = findData.ftLastWriteTime;
-            this.nFileSizeHigh = findData.nFileSizeHigh;
-            this.nFileSizeLow = findData.nFileSizeLow;
+            dwFileAttributes = findData.dwFileAttributes;
+            ftCreationTime = findData.ftCreationTime;
+            ftLastAccessTime = findData.ftLastAccessTime;
+            ftLastWriteTime = findData.ftLastWriteTime;
+            nFileSizeHigh = findData.nFileSizeHigh;
+            nFileSizeLow = findData.nFileSizeLow;
          }
       }
+
       // ReSharper restore MemberCanBePrivate.Local
 
       private enum GET_FILEEX_INFO_LEVELS
@@ -895,11 +914,12 @@ namespace LiquesceSvc
       private static extern bool PathIsDirectoryEmptyW([MarshalAs(UnmanagedType.LPWStr), In] string pszPath);
 
       private const int MAX_PATH = 260;
+
       // ReSharper disable UnusedMember.Local
       private static readonly int MaxLongPath = 32000;
+
       private static readonly string Prefix = "\\\\?\\";
       // ReSharper restore UnusedMember.Local
-
 
       [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true, BestFitMapping = false)]
       [return: MarshalAs(UnmanagedType.Bool)]
@@ -909,8 +929,7 @@ namespace LiquesceSvc
       [return: MarshalAs(UnmanagedType.Bool)]
       private static extern bool DeleteFileW([MarshalAs(UnmanagedType.LPWStr), In] string path);
 
-      #endregion
-
+      #endregion DLL Imports
 
       /// <summary>
       /// Stores the user side process ID
@@ -918,6 +937,7 @@ namespace LiquesceSvc
       public int ProcessID { get; set; }
 
       private int openCount;
+
       /// <summary>
       /// Increment the open counter (for internal usage)
       /// </summary>
@@ -942,9 +962,10 @@ namespace LiquesceSvc
          DUPLICATE_CLOSE_SOURCE = (0x00000001),// Closes the source handle. This occurs regardless of any error status returned.
          DUPLICATE_SAME_ACCESS = (0x00000002), //Ignores the dwDesiredAccess parameter. The duplicate handle has the same access as the source handle.
       }
+
       [DllImport("kernel32.dll", SetLastError = true)]
       [return: MarshalAs(UnmanagedType.Bool)]
-      static extern bool DuplicateHandle([In] IntPtr hSourceProcessHandle, [In] SafeFileHandle hSourceHandle,
+      private static extern bool DuplicateHandle([In] IntPtr hSourceProcessHandle, [In] SafeFileHandle hSourceHandle,
         [In] IntPtr hTargetProcessHandle, out SafeFileHandle lpTargetHandle,
         [In] uint dwDesiredAccess, [In]  [MarshalAs(UnmanagedType.Bool)] bool bInheritHandle, [In] DuplicateOptions dwOptions);
 
@@ -960,6 +981,4 @@ namespace LiquesceSvc
          return new NativeFileOps(sourceHandle.FullName, lpTargetHandle, sourceHandle.ForceUseAsReadOnly);
       }
    }
-
-
 }
