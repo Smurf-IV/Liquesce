@@ -1,19 +1,20 @@
 ﻿#region Copyright (C)
+
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="ManagementLayer.cs" company="Smurf-IV">
-// 
+//
 //  Copyright (C) 2010-2014 Simon Coghlan (Aka Smurf-IV)
-// 
+//
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation, either version 2 of the License, or
 //   any later version.
-// 
+//
 //  This program is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 //  GNU General Public License for more details.
-// 
+//
 //  You should have received a copy of the GNU General Public License
 //  along with this program. If not, see http://www.gnu.org/licenses/.
 //  </copyright>
@@ -22,7 +23,8 @@
 //  Email: http://www.codeplex.com/site/users/view/smurfiv
 //  </summary>
 // --------------------------------------------------------------------------------------------------------------------
-#endregion
+
+#endregion Copyright (C)
 
 using System;
 using System.Collections.Generic;
@@ -35,12 +37,13 @@ using System.Threading;
 using CallbackFS;
 using CBFS;
 using LiquesceFacade;
+using Microsoft.Win32;
 using NLog;
 using NLog.Config;
 
 namespace LiquesceSvc
 {
-   class ManagementLayer
+   internal class ManagementLayer
    {
       static private readonly Logger Log = LogManager.GetCurrentClassLogger();
       private static ManagementLayer instance;
@@ -109,9 +112,8 @@ namespace LiquesceSvc
 
       private readonly List<LiquesceOps> liquesceOperations = new List<LiquesceOps>();
 
-
       /// <summary>
-      /// Mount a drive. 
+      /// Mount a drive.
       /// </summary>
       /// <returns></returns>
       public void Start(object obj)
@@ -140,7 +142,20 @@ namespace LiquesceSvc
                   Environment.Exit(-1);
                   // return;
                }
-               Log.Fatal("OSVersion [{0}], ProcessorCount [{1}] Is64BitProcess [{2}] CLR version [{3}]", Environment.OSVersion, Environment.ProcessorCount, Environment.Is64BitProcess, Environment.Version);
+               string friendlyName = string.Empty;
+               try
+               {
+                  RegistryKey rk = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion");
+                  if (rk != null)
+                  {
+                     friendlyName = rk.GetValue("ProductName").ToString();
+                  }
+               }
+               catch { }
+               Log.Info("OSVersion [{0}], OSFriendlyName [{1}] Is64BitOperatingSystem [{2}]", 
+                  Environment.OSVersion.VersionString, friendlyName, Environment.Is64BitOperatingSystem);
+               Log.Info("ProcessorCount [{0}] Is64BitProcess [{1}] CLR version [{2}]",
+                  Environment.ProcessorCount, Environment.Is64BitProcess, Environment.Version);
                Log.Fatal(currentConfigDetails.ToString());
                SetNLogLevel(currentConfigDetails.ServiceLogLevel);
 
@@ -208,7 +223,6 @@ namespace LiquesceSvc
                      Log.Warn("Recreate the directory [{0}]", dir.FullName);
                      dir.Create();
                   }
-
 
                   FireStateChange(LiquesceSvcState.Running, "Liquesce initialised");
                   IsRunning = true;
@@ -288,6 +302,7 @@ namespace LiquesceSvc
                case "Debug":
                   rule.DisableLoggingForLevel(LogLevel.Trace);
                   break;
+
                case "Trace":
                   // Prevent turning off again !
                   break;
@@ -358,7 +373,6 @@ namespace LiquesceSvc
       {
          foreach (LiquesceOps liquesceOps in liquesceOperations)
          {
-
             try
             {
                FireStateChange(LiquesceSvcState.Unknown, "Stop has been requested");
@@ -374,6 +388,5 @@ namespace LiquesceSvc
 
          Log.Info("Stopped OUT");
       }
-
    }
 }

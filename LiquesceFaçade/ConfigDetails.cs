@@ -1,19 +1,20 @@
 ﻿#region Copyright (C)
+
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="ConfigDetails.cs" company="Smurf-IV">
-// 
+//
 //  Copyright (C) 2010-2012 Simon Coghlan (Aka Smurf-IV)
-// 
+//
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation, either version 2 of the License, or
 //   any later version.
-// 
+//
 //  This program is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 //  GNU General Public License for more details.
-// 
+//
 //  You should have received a copy of the GNU General Public License
 //  along with this program. If not, see http://www.gnu.org/licenses/.
 //  </copyright>
@@ -22,7 +23,8 @@
 //  Email: http://www.codeplex.com/site/users/view/smurfiv
 //  </summary>
 // --------------------------------------------------------------------------------------------------------------------
-#endregion
+
+#endregion Copyright (C)
 
 using System;
 using System.Collections.Generic;
@@ -36,7 +38,6 @@ using NLog;
 
 namespace LiquesceFacade
 {
-
    /// <summary>
    /// This is the class that will dump out the details to the XML File.
    /// </summary>
@@ -51,9 +52,8 @@ namespace LiquesceFacade
       {
          MountDetail mt = new MountDetail();
          mt.InitConfigDetails();
-         MountDetails.Add( mt );
+         MountDetails.Add(mt);
       }
-
 
       public void WriteOutConfigDetails()
       {
@@ -81,28 +81,28 @@ namespace LiquesceFacade
       public uint DelayStartMilliSec = 250;
 
       [DataMember]
-      public ushort ThreadCount = 0;
+      public ushort ThreadCount;
 
       [DataMember]
-      public string ServiceLogLevel = LogLevel.Fatal.Name; 
+      public string ServiceLogLevel = LogLevel.Fatal.Name;
 
       [DataMember]
       public UInt16 CacheLifetimeSeconds = 32; // Set to zero to disable
 
-      [DataMember] public List<MountDetail> MountDetails = new List<MountDetail>(); 
+      [DataMember]
+      public List<MountDetail> MountDetails = new List<MountDetail>();
 
       public new string ToString()
       {
          StringBuilder sb = new StringBuilder();
-         sb = sb.AppendFormat("DelayStartMilliSec=[{0}]",DelayStartMilliSec).AppendLine();
-         sb = sb.AppendFormat("ThreadCount=[{0}]",ThreadCount).AppendLine();
-         sb = sb.AppendFormat("ServiceLogLevel[{0}]",ServiceLogLevel).AppendLine();
+         sb = sb.AppendFormat("DelayStartMilliSec=[{0}]", DelayStartMilliSec).AppendLine();
+         sb = sb.AppendFormat("ThreadCount=[{0}]", ThreadCount).AppendLine();
+         sb = sb.AppendFormat("ServiceLogLevel[{0}]", ServiceLogLevel).AppendLine();
          sb = sb.AppendFormat("CacheLifetimeSeconds=[{0}]", CacheLifetimeSeconds).AppendLine();
          sb = sb.AppendLine("MountDetails:");
          sb = MountDetails.Aggregate(sb, (current, mountDetail) => current.AppendLine(mountDetail.ToString()));
          return sb.ToString();
       }
-
    }
 
    [DataContract]
@@ -137,7 +137,7 @@ namespace LiquesceFacade
          sb = sb.AppendFormat("\tDriveLetter=[{0}]", DriveLetter).AppendLine();
          sb = sb.AppendFormat("\tVolumeLabel=[{0}]", VolumeLabel).AppendLine();
          sb = sb.AppendFormat("\tAllocationMode=[{0}]", AllocationMode).AppendLine();
-         sb = sb.AppendFormat("\tHoldOffBufferBytes=[{0}]", HoldOffBufferBytes).AppendLine();
+         sb = sb.AppendFormat("\tHoldOffBufferBytes=[{0:N0}]", HoldOffBufferBytes).AppendLine();
          sb = sb.AppendLine("\tSourceLocations:");
          sb = SourceLocations.Aggregate(sb, (current, location) => current.AppendLine(location.ToString()));
          return sb.ToString();
@@ -148,7 +148,7 @@ namespace LiquesceFacade
          string[] drives = Environment.GetLogicalDrives();
          List<char> driveLetters = new List<char>(26);
          driveLetters.AddRange(drives.Select(dr => dr.ToUpper()[0]));
-         // Reverse find the 1st letter not used 
+         // Reverse find the 1st letter not used
          for (int i = 0; i < 26; i++)
          {
             char letter = (char)('Z' - i);
@@ -170,16 +170,18 @@ namespace LiquesceFacade
    [DataContract]
    public class SourceLocation
    {
-      [DataMember] public string SourcePath = string.Empty;
+      [DataMember]
+      public string SourcePath = string.Empty;
 
-      [DataMember] public bool UseIsReadOnly = false;
+      [DataMember]
+      public bool UseIsReadOnly;
 
       // paramterless contrsuctor to allow serialisation
       public SourceLocation()
       {
       }
 
-      public SourceLocation(string path, bool isReadOnly=false)
+      public SourceLocation(string path, bool isReadOnly = false)
       {
          SourcePath = path;
          UseIsReadOnly = isReadOnly;
@@ -189,7 +191,7 @@ namespace LiquesceFacade
       {
          StringBuilder sb = new StringBuilder();
          sb = sb.AppendFormat("\t\tSourceLocation=[{0}]", SourcePath).AppendLine();
-         sb = sb.AppendFormat("\t\tUseIsReadOnly=[{0}]", UseIsReadOnly);
+         sb = sb.AppendFormat("\t\t\tUseIsReadOnly=[{0}]", UseIsReadOnly);
          return sb.ToString();
       }
    }
