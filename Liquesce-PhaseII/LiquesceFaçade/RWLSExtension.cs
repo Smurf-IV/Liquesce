@@ -1,18 +1,20 @@
 ﻿#region Copyright (C)
+
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="RWLSExtension.cs" company="Smurf-IV">
-// 
+//
 //  This program is free software: you can redistribute it and/or modify
-// 
+//
 //  This program is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //  </copyright>
 //  <summary>
 //  Url: http://stackoverflow.com/questions/407238/readerwriterlockslim-vs-monitor
 //  </summary>
 // --------------------------------------------------------------------------------------------------------------------
-#endregion
+
+#endregion Copyright (C)
 
 using System;
 using System.Threading;
@@ -50,7 +52,7 @@ namespace LiquesceFacade
 
          public void Dispose()
          {
-            this.readerWriterLock.ExitReadLock();
+            readerWriterLock.ExitReadLock();
          }
       }
 
@@ -66,7 +68,7 @@ namespace LiquesceFacade
 
          public void Dispose()
          {
-            this.readerWriterLock.ExitUpgradeableReadLock();
+            readerWriterLock.ExitUpgradeableReadLock();
          }
       }
 
@@ -82,7 +84,7 @@ namespace LiquesceFacade
 
          public void Dispose()
          {
-            this.readerWriterLock.ExitWriteLock();
+            readerWriterLock.ExitWriteLock();
          }
       }
    }
@@ -91,7 +93,6 @@ namespace LiquesceFacade
 
    //class ReaderWriterLockedList<T> : SlowList<T>
    //{
-
    //   ReaderWriterLockSlim slimLock = new ReaderWriterLockSlim();
 
    //   public override T this[int index]
@@ -112,5 +113,4 @@ namespace LiquesceFacade
    //      }
    //   }
    //}
-
 }
