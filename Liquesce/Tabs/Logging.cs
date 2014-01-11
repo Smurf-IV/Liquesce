@@ -25,6 +25,7 @@
 #endregion
 
 using System;
+using System.IO;
 using System.Windows.Forms;
 using NLog;
 
@@ -39,14 +40,29 @@ namespace Liquesce.Tabs
          InitializeComponent();
       }
 
+      private TailForm tailForm;
+
       private void btnServiceTail_Click(object sender, EventArgs e)
       {
          try
          {
-            string logLocation = DisplayLog.FindLogLocation(@"LiquesceSvc\Logs");
-            if (!string.IsNullOrEmpty(logLocation))
+            if (tailForm == null)
             {
-               new TailForm(logLocation).Show(this);
+               string logLocation = Path.Combine(DisplayLog.FindLogLocation(@"LiquesceSvc\Logs"), "LiquesceSvc.log");
+               if (!string.IsNullOrEmpty(logLocation))
+               {
+                  tailForm = new TailForm(logLocation);
+                  tailForm.Show(this);
+                  tailForm.FormClosing += delegate 
+                  { 
+                     tailForm = null;
+                     BringToFront();
+                  };
+               }
+            }
+            else
+            {
+               tailForm.BringToFront();
             }
          }
          catch (Exception ex)
