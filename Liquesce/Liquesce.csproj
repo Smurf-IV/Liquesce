@@ -106,6 +106,7 @@
     <Reference Include="System.ServiceProcess" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\LiquesceTray\WindowLocation.cs">
@@ -261,6 +262,7 @@
   <ItemGroup>
     <Content Include="Liquesce.ico" />
     <Content Include="Resources\Liquesce.ico" />
+    <None Include="Resources\Umut-Pulat-Tulliana-2-Kontact.ico" />
     <None Include="Resources\Umut-Pulat-Tulliana-2-K-ppp.ico" />
     <None Include="Resources\Umut-Pulat-Tulliana-2-Nfs-unmount.ico" />
     <None Include="Resources\Umut-Pulat-Tulliana-2-Nfs-mount.ico" />

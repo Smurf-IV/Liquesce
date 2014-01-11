@@ -28,10 +28,31 @@
       /// </summary>
       private void InitializeComponent()
       {
+         this.btnZipAndEmail = new Shared.CommandLinkButton();
          this.commandLinkButton2 = new Shared.CommandLinkButton();
          this.commandLinkButton1 = new Shared.CommandLinkButton();
          this.btnServiceTail = new Shared.CommandLinkButton();
          this.SuspendLayout();
+         // 
+         // btnZipAndEmail
+         // 
+         this.btnZipAndEmail.ButtonDepress = ((sbyte)(2));
+         this.btnZipAndEmail.HighlightFillAlpha = ((byte)(250));
+         this.btnZipAndEmail.HighlightFillAlphaMouse = ((byte)(125));
+         this.btnZipAndEmail.HighlightFillAlphaNormal = ((byte)(75));
+         this.btnZipAndEmail.HighlightWidth = 2F;
+         this.btnZipAndEmail.Image = global::Liquesce.Properties.Resources.Umut_Pulat_Tulliana_2_Kontact;
+         this.btnZipAndEmail.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+         this.btnZipAndEmail.Location = new System.Drawing.Point(12, 299);
+         this.btnZipAndEmail.Name = "btnZipAndEmail";
+         this.btnZipAndEmail.Rounding = 10F;
+         this.btnZipAndEmail.Size = new System.Drawing.Size(375, 65);
+         this.btnZipAndEmail.Subscript = "   Collects created logs and puts the location in the clipboard.";
+         this.btnZipAndEmail.TabIndex = 3;
+         this.btnZipAndEmail.Text = "Zip Logs ready for sending etc.";
+         this.btnZipAndEmail.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+         this.btnZipAndEmail.UseVisualStyleBackColor = true;
+         this.btnZipAndEmail.Click += new System.EventHandler(this.btnZipAndEmail_Click);
          // 
          // commandLinkButton2
          // 
@@ -42,7 +63,7 @@
          this.commandLinkButton2.HighlightWidth = 2F;
          this.commandLinkButton2.Image = global::Liquesce.Properties.Resources.Umut_Pulat_Tulliana_2_Log;
          this.commandLinkButton2.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-         this.commandLinkButton2.Location = new System.Drawing.Point(12, 208);
+         this.commandLinkButton2.Location = new System.Drawing.Point(12, 204);
          this.commandLinkButton2.Name = "commandLinkButton2";
          this.commandLinkButton2.Rounding = 10F;
          this.commandLinkButton2.Size = new System.Drawing.Size(375, 65);
@@ -62,7 +83,7 @@
          this.commandLinkButton1.HighlightWidth = 2F;
          this.commandLinkButton1.Image = global::Liquesce.Properties.Resources.Mart_Glaze_Log;
          this.commandLinkButton1.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-         this.commandLinkButton1.Location = new System.Drawing.Point(12, 111);
+         this.commandLinkButton1.Location = new System.Drawing.Point(12, 109);
          this.commandLinkButton1.Name = "commandLinkButton1";
          this.commandLinkButton1.Rounding = 10F;
          this.commandLinkButton1.Size = new System.Drawing.Size(375, 65);
@@ -98,6 +119,7 @@
          this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 14F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.BackColor = System.Drawing.SystemColors.Control;
+         this.Controls.Add(this.btnZipAndEmail);
          this.Controls.Add(this.commandLinkButton2);
          this.Controls.Add(this.commandLinkButton1);
          this.Controls.Add(this.btnServiceTail);
@@ -114,5 +136,6 @@
       private Shared.CommandLinkButton btnServiceTail;
       private Shared.CommandLinkButton commandLinkButton1;
       private Shared.CommandLinkButton commandLinkButton2;
+      private Shared.CommandLinkButton btnZipAndEmail;
    }
 }
