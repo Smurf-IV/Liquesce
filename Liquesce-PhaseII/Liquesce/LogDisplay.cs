@@ -38,21 +38,25 @@ namespace Liquesce
    {
       static private readonly Logger Log = LogManager.GetCurrentClassLogger();
 
-      static public string FindLogLocation(string logLocation)
+      public static string FindLogLocation(string logLocation)
+      {
+         return Path.Combine(
+            Environment.GetFolderPath(
+               Environment.SpecialFolder.CommonApplicationData), logLocation);
+      }
+
+      static public string FindLogLocationViaOpen(string logLocation)
       {
             OpenFileDialog openFileDialog = new OpenFileDialog
-                                               {
-                                                  InitialDirectory =
-                                                     Path.Combine(
-                                                        Environment.GetFolderPath(
-                                                           Environment.SpecialFolder.CommonApplicationData), logLocation),
-                                                  Filter = "Log files (*.log)|*.log|Archive logs (*.*)|*.*",
-                                                  FileName = "*.log",
-                                                  FilterIndex = 2,
-                                                  Title = "Select name to view contents"
-                                               };
+            {
+               Filter = "Log files (*.log)|*.log|Archive logs (*.*)|*.*",
+               FileName = "*.log",
+               FilterIndex = 2,
+               Title = "Select name to view contents",
+               InitialDirectory = FindLogLocation(logLocation)
+            };
 
-            return (openFileDialog.ShowDialog() == DialogResult.OK) ? openFileDialog.FileName : string.Empty;
+         return (openFileDialog.ShowDialog() == DialogResult.OK) ? openFileDialog.FileName : string.Empty;
       }
       /// <summary>
       /// 
@@ -61,7 +65,7 @@ namespace Liquesce
       {
          try
          {
-            logLocation = FindLogLocation(logLocation);
+            logLocation = FindLogLocationViaOpen(logLocation);
             if (!string.IsNullOrEmpty(logLocation))
             {
                Process word = Process.Start("Wordpad.exe", '"' + logLocation + '"');

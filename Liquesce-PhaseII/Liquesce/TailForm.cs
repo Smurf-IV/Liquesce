@@ -27,6 +27,7 @@
 #endregion Copyright (C)
 
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
@@ -39,6 +40,7 @@ namespace Liquesce
    {
       private readonly string logLocation;
       private long previousSeekPosition;
+      private Color lastColor;
 
       public TailForm(string logLocation)
       {
@@ -59,32 +61,90 @@ namespace Liquesce
          {
             lock (this)
             {
+               List<string> linesToProcess = new List<string>();
+               long currentLength = 0;
                using (StreamReader reader =
-                  new StreamReader(new FileStream(logLocation, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)))
+                  new StreamReader(new FileStream(logLocation, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 1024,
+                     FileOptions.SequentialScan)))
                {
                   //if the file size has not changed, idle
 
-                  long b = reader.BaseStream.Length;
-                  if (b != previousSeekPosition)
+                  currentLength = reader.BaseStream.Length;
+                  if (currentLength == previousSeekPosition)
                   {
-                     if (b > previousSeekPosition) //seek to the last max offset
-                     {
-                        reader.BaseStream.Seek(previousSeekPosition, SeekOrigin.Begin);
-                     }
-                     //read out of the file until the EOF
-                     textBox1.Text += reader.ReadToEnd();
-
-                     //update the last max offset
-                     previousSeekPosition = reader.BaseStream.Position;
-
-                     //  Make sure new text is visible
-                     textBox1.SelectionStart = textBox1.Text.Length;
-                     textBox1.ScrollToCaret();
+                     return;
                   }
+                  textBox1._Paint = false; // turn off flag to ignore WM_PAINT messages
+                  if (currentLength < previousSeekPosition)
+                  {
+                     textBox1.Clear();
+                     previousSeekPosition = 0;
+                  }
+                  else //seek to the last max offset
+                  {
+                     reader.BaseStream.Seek(previousSeekPosition, SeekOrigin.Begin);
+                  }
+                  // Read out of the file until the EOF
+                  int linesToBeDone = 0;
+                  while (!reader.EndOfStream
+                     && (++linesToBeDone < 100) // Give the display a chance to display something rather than looking like it has hung !
+                     )
+                  {
+                     linesToProcess.Add(reader.ReadLine());
+                  }
+                  previousSeekPosition = reader.BaseStream.Position;
+               }
+               foreach (string line in linesToProcess)
+               {
+                  int textLength = textBox1.TextLength;
+                  textBox1.Select(textLength, 0);
+                  if (line.Length > 29)
+                  {
+                     string trim = line.Substring(28, 2).Trim();
+                     switch (trim[0])
+                     {
+                        case 'F':
+                           textBox1.SelectionColor = Color.DarkViolet;
+                           break;
+
+                        case 'E':
+                           textBox1.SelectionColor = Color.Red;
+                           break;
+
+                        case 'W':
+                           textBox1.SelectionColor = Color.RoyalBlue;
+                           break;
+
+                        case 'I':
+                           textBox1.SelectionColor = Color.Black;
+                           break;
+
+                        case 'D':
+                           textBox1.SelectionColor = Color.DarkGray;
+                           break;
+
+                        case 'T':
+                           textBox1.SelectionColor = Color.DimGray;
+                           break;
+
+                        default:
+                           // Leave it as is
+                           textBox1.SelectionColor = lastColor;
+                           break;
+                     }
+                  }
+                  lastColor = textBox1.SelectionColor;
+                  textBox1.AppendText(line + Environment.NewLine);
                }
             }
          }
-         catch { }
+         catch
+         {
+         }
+         finally
+         {
+            textBox1._Paint = true;// restore flag so we can paint the control
+         }
       }
 
       private void TailForm_Shown(object sender, EventArgs e)
