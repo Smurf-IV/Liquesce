@@ -132,7 +132,7 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="CBFS4Net, Version=4.0.139.0, Culture=neutral, PublicKeyToken=0f194b348c109bec, processorArchitecture=x86">
+    <Reference Include="CBFS4Net, Version=4.0.140.0, Culture=neutral, PublicKeyToken=0f194b348c109bec, processorArchitecture=x86">
       <HintPath>..\..\..\Amalgam\Phase III\ThirdParty\CBFS\32bit\CBFS4Net.dll</HintPath>
     </Reference>
     <Reference Include="ChinhDo.Transactions">
@@ -247,7 +247,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="YearStamp.MonthStamp.DayStamp.Increment" />
+      <UserProperties BuildVersion_BuildVersioningStyle="YearStamp.MonthStamp.DayStamp.Increment" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UseGlobalSettings="True" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

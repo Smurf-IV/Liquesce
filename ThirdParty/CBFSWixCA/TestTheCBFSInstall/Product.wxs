@@ -51,15 +51,6 @@
          </Component>
 
          <Component Directory="INSTALLLOCATION">
-            <File Id="CBFSNet.dll_x64" Source="$(var.x64)\CBFSNet.dll" KeyPath="yes" />
-            <Condition><![CDATA[VersionNT64]]></Condition>
-         </Component>
-         <Component  Directory="INSTALLLOCATION">
-            <File Id="CBFSNet.dll_x86" Source="$(var.x86)\CBFSNet.dll" KeyPath="yes" />
-            <Condition><![CDATA[Not VersionNT64]]></Condition>
-         </Component>
-
-         <Component Directory="INSTALLLOCATION">
             <File Id="msvcp100.dll_x64" Source="$(var.x64)\msvcp100.dll" KeyPath="yes" />
             <Condition><![CDATA[VersionNT64]]></Condition>
          </Component>
