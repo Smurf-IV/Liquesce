@@ -173,7 +173,7 @@ namespace LiquesceSvc
                {
                   FireStateChange(LiquesceSvcState.InError, "Driver is not mounted - Driver Something is wrong");
 #if DEBUG
-                  Log.Fatal("Build the mounter application and change it's Guid to be LiquesceSvc");
+                  Log.Fatal("Build the mounter application and change it's private string mGuid = Guid to be LiquesceSvc");
                   Log.Fatal("Run it as \"Administrator\" and install the driver");
                   Log.Fatal("Press \"Install\" -> find the cab file -> answer the trust question");
                   Log.Fatal("Wait about 30 seconds and it will then confirm the version number of the cab file selected");
@@ -223,6 +223,8 @@ namespace LiquesceSvc
                      Log.Warn("Recreate the directory [{0}]", dir.FullName);
                      dir.Create();
                   }
+
+                  ThreadPool.QueueUserWorkItem(liquesceOps.InitialiseShares);
 
                   FireStateChange(LiquesceSvcState.Running, "Liquesce initialised");
                   IsRunning = true;

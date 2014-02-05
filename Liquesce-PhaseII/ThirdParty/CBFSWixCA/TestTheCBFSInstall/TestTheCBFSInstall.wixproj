@@ -46,17 +46,11 @@
     <Folder Include="x86" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="..\..\..\..\..\Amalgam\Phase III\ThirdParty\CBFS\32bit\CBFS4Net.dll">
-      <Link>x86\CBFS4Net.dll</Link>
-    </Content>
     <Content Include="..\..\..\..\..\Amalgam\Phase III\ThirdParty\CBFS\32bit\msvcp100.dll">
       <Link>x86\msvcp100.dll</Link>
     </Content>
     <Content Include="..\..\..\..\..\Amalgam\Phase III\ThirdParty\CBFS\32bit\msvcr100.dll">
       <Link>x86\msvcr100.dll</Link>
-    </Content>
-    <Content Include="..\..\..\..\..\Amalgam\Phase III\ThirdParty\CBFS\x64\CBFS4Net.dll">
-      <Link>x64\CBFS4Net.dll</Link>
     </Content>
     <Content Include="..\..\..\..\..\Amalgam\Phase III\ThirdParty\CBFS\x64\msvcp100.dll">
       <Link>x64\msvcp100.dll</Link>

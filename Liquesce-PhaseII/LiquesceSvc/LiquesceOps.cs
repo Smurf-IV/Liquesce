@@ -26,6 +26,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -146,7 +147,53 @@ namespace LiquesceSvc
 
       #endregion
 
+      public void InitialiseShares(object state)
+      {
+         Log.Debug("InitialiseShares IN");
+         try
+         {
+            Thread.Sleep(250); // Give the driver some time to mount
+            // Now check (in 2 phases) the existence of the drive
+            string path = mountDetail.DriveLetter + ":" + Roots.PathDirectorySeparatorChar;
+            while (!Directory.Exists(path))
+            {
+               Log.Info("Waiting for Dokan to create the drive letter before reapplying the shares");
+               Thread.Sleep(1000);
+            }
+            // 2nd phase as the above is supposed to be cheap but can return false +ves
+            do
+            {
+               string[] drives = Environment.GetLogicalDrives();
+               if (Array.Exists(drives, dr => dr.Remove(1) == mountDetail.DriveLetter))
+                  break;
+               Log.Info("Waiting for Dokan to create the drive letter before reapplying the shares (Phase 2)");
+               Thread.Sleep(100);
+            } while (ManagementLayer.Instance.State == LiquesceSvcState.Running);
 
+            foreach (LanManShareDetails shareDetails in mountDetail.SharesToRestore)
+            {
+               try
+               {
+                  Log.Info("Restore share for : [{0}] [{1} : {2}]", shareDetails.Path, shareDetails.Name, shareDetails.Description);
+                  LanManShareHandler.SetLanManShare(shareDetails);
+               }
+               catch (Exception ex)
+               {
+                  Log.ErrorException("Unable to restore share for : " + shareDetails.Path, ex);
+               }
+            }
+            ManagementLayer.Instance.FireStateChange(LiquesceSvcState.Running, "Shares restored - good to go");
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException("Init shares threw: ", ex);
+            ManagementLayer.Instance.FireStateChange(LiquesceSvcState.InError, "Init shares reports: " + ex.Message);
+         }
+         finally
+         {
+            Log.Debug("InitialiseShares OUT");
+         }
+      }
       #region DLL Imports
 
       [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true, CallingConvention = CallingConvention.Winapi)]

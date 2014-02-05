@@ -102,6 +102,7 @@
     <Reference Include="System.Data" />
     <Reference Include="System.DirectoryServices" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Management" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.ServiceProcess" />
     <Reference Include="System.Windows.Forms" />
@@ -176,6 +177,12 @@
     <Compile Include="Tabs\Welcome.Designer.cs">
       <DependentUpon>Welcome.cs</DependentUpon>
     </Compile>
+    <Compile Include="Tabs\CurrentShares.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Tabs\CurrentShares.Designer.cs">
+      <DependentUpon>CurrentShares.cs</DependentUpon>
+    </Compile>
     <Compile Include="TailForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -191,6 +198,7 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+    <None Include="Tabs\CurrentShares.rtf" />
     <None Include="Tabs\Welcome.rtf" />
   </ItemGroup>
   <ItemGroup>
@@ -215,6 +223,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Tabs\Welcome.resx">
       <DependentUpon>Welcome.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tabs\CurrentShares.resx">
+      <DependentUpon>CurrentShares.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="TailForm.resx">
       <DependentUpon>TailForm.cs</DependentUpon>
