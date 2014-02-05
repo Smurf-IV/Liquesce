@@ -31,6 +31,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using LiquesceFacade;
+using LiquesceSvc.LowLevelOSAccess;
 using NLog;
 
 namespace LiquesceSvc
@@ -207,6 +208,18 @@ namespace LiquesceSvc
          return path.Replace(GetRoot(path), string.Empty);
       }
 
+      public string FindByFileId(long fileId)
+      {
+         foreach (string found in GetAllPaths(PathDirectorySeparatorChar)
+                           .Select(rootToCheck => NfsSupport.GetByFileId(rootToCheck, fileId))
+                           .Where(found => !string.IsNullOrEmpty(found))
+                  )
+         {
+            return GetRelative(found);
+         }
+         return string.Empty;
+      }
+
       // this method returns a path (real physical path) of a place where the next folder/file root can be.
       private string FindAllocationRootPath(string relativeFolder, ulong spaceRequired)
       {
@@ -272,9 +285,17 @@ namespace LiquesceSvc
       private string GetHighestPrioritySourceWithSpace(ulong spaceRequired)
       {
          Log.Trace("Trying GetHighestPrioritySourceWithSpace([{0}])", spaceRequired);
-         ulong lpFreeBytesAvailable, num2, num3;
-         return mountDetail.SourceLocations.FirstOrDefault(w => GetDiskFreeSpaceExW(w.SourcePath, out lpFreeBytesAvailable, out num2, out num3) 
-            && lpFreeBytesAvailable > spaceRequired).SourcePath;
+         foreach (SourceLocation w in mountDetail.SourceLocations)
+         {
+            ulong lpFreeBytesAvailable, num2, num3;
+            if (GetDiskFreeSpaceExW(w.SourcePath, out lpFreeBytesAvailable, out num2, out num3) 
+               && (lpFreeBytesAvailable > spaceRequired)
+               )
+            {
+               return w.SourcePath;
+            }
+         }
+         return string.Empty;
       }
 
 
@@ -334,6 +355,5 @@ namespace LiquesceSvc
       private static extern bool GetDiskFreeSpaceExW(string lpDirectoryName, out ulong lpFreeBytesAvailable, out ulong lpTotalNumberOfBytes, out ulong lpTotalNumberOfFreeBytes);
 
       #endregion
-
    }
 }

@@ -1,19 +1,20 @@
 ﻿#region Copyright (C)
+
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="LiquesceOps.cs" company="Smurf-IV">
-// 
+//
 //  Copyright (C) 2013-2014 Simon Coghlan (Aka Smurf-IV)
-// 
+//
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation, either version 2 of the License, or
 //   any later version.
-// 
+//
 //  This program is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 //  GNU General Public License for more details.
-// 
+//
 //  You should have received a copy of the GNU General Public License
 //  along with this program. If not, see http://www.gnu.org/licenses/.
 //  </copyright>
@@ -22,7 +23,8 @@
 //  Email: http://www.codeplex.com/site/users/view/smurfiv
 //  </summary>
 // --------------------------------------------------------------------------------------------------------------------
-#endregion
+
+#endregion Copyright (C)
 
 using System;
 using System.Collections.Generic;
@@ -41,7 +43,6 @@ namespace LiquesceSvc
 {
    internal partial class LiquesceOps : CBFSHandlersAdvanced
    {
-
       #region CBFS Implementation
 
       public override void Mount()
@@ -81,7 +82,6 @@ namespace LiquesceSvc
          NumberOfFreeSectors = (long)(freeBytesAvailable / CbFs.SectorSize);
       }
 
-
       public override string VolumeLabel
       {
          get { return mountDetail.VolumeLabel; }
@@ -89,6 +89,7 @@ namespace LiquesceSvc
       }
 
       private static uint volumeSerialNumber = 0x20101112;
+
       public override uint VolumeId
       {
          get { return volumeSerialNumber; }
@@ -117,7 +118,9 @@ namespace LiquesceSvc
          {
             // If a recycler is required then request usage of an existing one from a root drive.
             if (RestrictedDirectoryNames.Contains(foundFileInfo.FileName))
+            {
                throw new Win32Exception(CBFSWinUtil.ERROR_ACCESS_DENIED);
+            }
             PID.Invoke(processId, foundFileInfo.CreateDirectory);
             CallOpenCreateFile(DesiredAccess, attributes, ShareMode, fileInfo, CBFSWinUtil.OPEN_EXISTING, processId, fullName, userContextInfo);
             return;
@@ -151,7 +154,7 @@ namespace LiquesceSvc
             {
                // Turn off NoBuffering request because http://msdn.microsoft.com/en-us/library/windows/desktop/cc644950%28v=vs.85%29.aspx
                userFileStream = NativeFileOps.CreateFile(fullName, DesiredAccess, ShareMode, creation, (uint)(fileAttributes & ~NativeFileOps.EFileAttributes.NoBuffering));
-               // If a specified file exists before the function call and dwCreationDisposition is CREATE_ALWAYS 
+               // If a specified file exists before the function call and dwCreationDisposition is CREATE_ALWAYS
                // or OPEN_ALWAYS, a call to GetLastError returns ERROR_ALREADY_EXISTS, even when the function succeeds.
                lastError = Marshal.GetLastWin32Error();
             });
@@ -165,7 +168,9 @@ namespace LiquesceSvc
                // For some reason when the dllhost (Photo viewer) attempts to open, it throws an "In-Use" error
                // Probably caused by the explorer already opening when performing the double click launch
                if (PID.GetProcessName(processId) != "dllhost")
+               {
                   throw;
+               }
             }
          }
          using (openFilesSync.UpgradableReadLock())
@@ -214,7 +219,7 @@ namespace LiquesceSvc
          if (CBFSWinUtil.IsDirectoy(fileAttributes))
          {
             Log.Trace("Detected as a Directory");
-            flagsAndAttributes = NativeFileOps.EFileAttributes.BackupSemantics ;
+            flagsAndAttributes = NativeFileOps.EFileAttributes.BackupSemantics;
          }
          else
          {
@@ -229,20 +234,19 @@ namespace LiquesceSvc
          }
          catch (Win32Exception w32e)
          {
-            if ( (w32e.NativeErrorCode == CBFSWinUtil.ERROR_SHARING_VIOLATION)
+            if ((w32e.NativeErrorCode == CBFSWinUtil.ERROR_SHARING_VIOLATION)
                || (w32e.NativeErrorCode == CBFSWinUtil.ERROR_ACCESS_DENIED)
                )
             {
                Log.Warn("ERROR_SHARING_VIOLATION: Open with [FILE_GENERIC_READ]");
                return NativeFileOps.CreateFile(fileName, (uint)NativeFileOps.EFileAccess.FILE_GENERIC_READ, share,
-                  creationDisposition, (uint) flagsAndAttributes);
+                  creationDisposition, (uint)flagsAndAttributes);
             }
             throw;
          }
       }
 
-      public override void OpenFile(string filename, uint DesiredAccess, uint ShareMode, CbFsFileInfo fileInfo,
-                                    CbFsHandleInfo userContextInfo)
+      public override void OpenFile(string filename, uint DesiredAccess, uint fileAttributes, uint ShareMode, CbFsFileInfo fileInfo, CbFsHandleInfo userContextInfo)
       {
          NativeFileOps foundFileInfo = roots.GetPath(filename, 0);
          string fullName = foundFileInfo.FullName;
@@ -251,7 +255,7 @@ namespace LiquesceSvc
          {
             throw new Win32Exception(CBFSWinUtil.ERROR_FILE_NOT_FOUND);
          }
-         if (foundFileInfo.ForceUseAsReadOnly )
+         if (foundFileInfo.ForceUseAsReadOnly)
          {
             const NativeFileOps.EFileAccess writeOptions = NativeFileOps.EFileAccess.FILE_WRITE_DATA |
                                              NativeFileOps.EFileAccess.FILE_APPEND_DATA |
@@ -269,7 +273,7 @@ namespace LiquesceSvc
             }
          }
 
-         NativeFileOps.EFileAttributes attributes = (NativeFileOps.EFileAttributes)fileInfo.Attributes;
+         NativeFileOps.EFileAttributes attributes = (NativeFileOps.EFileAttributes)fileAttributes;
          CallOpenCreateFile(DesiredAccess, attributes, ShareMode, fileInfo, CBFSWinUtil.OPEN_EXISTING, GetProcessId(), fullName, userContextInfo);
       }
 
@@ -280,11 +284,11 @@ namespace LiquesceSvc
             fileInfo.FileName, openFileKey, userContextInfo.UserContext.ToInt64());
          CloseFile(fileInfo);
       }
+
       private void CloseFile(CbFsFileInfo fileInfo)
       {
          long openFileKey = fileInfo.UserContext.ToInt64();
-         Log.Debug("CloseFile IN filename [{0}], fileInfo[{1}]",
-            fileInfo.FileName, openFileKey);
+         Log.Debug("CloseFile IN filename [{0}], fileInfo[{1}]", fileInfo.FileName, openFileKey);
 
          if (openFileKey != 0)
          {
@@ -349,7 +353,6 @@ namespace LiquesceSvc
          userContextInfo.UserContext = IntPtr.Zero;
       }
 
-
       public override void GetFileInfo(string FileName, ref bool FileExists, ref DateTime CreationTime,
                                        ref DateTime LastAccessTime,
                                        ref DateTime LastWriteTime, ref long lengthOfFile, ref long AllocationSize,
@@ -365,13 +368,14 @@ namespace LiquesceSvc
             if (!string.IsNullOrEmpty(fileData.cFileName))
             {
                ConvertFoundToReturnParams(out CreationTime, out LastAccessTime, out LastWriteTime, out lengthOfFile, out AllocationSize,
-                  ref FileId, out FileAttributes, out ShortFileName, out RealFileName, fileData);
+                     out FileAttributes, out ShortFileName, out RealFileName, fileData);
+               FileId.QuadPart = nfo.IsInvalid ? 0 : nfo.FileId;
                FileExists = true;
             }
          }
       }
 
-      private void ConvertFoundToReturnParams(out DateTime CreationTime, out DateTime LastAccessTime, out DateTime LastWriteTime, out long lengthOfFile, out long allocationSize, ref CBFS_LARGE_INTEGER FileId, out uint attributes, out string ShortFileName, out string RealFileName, WIN32_FIND_DATA file)
+      private void ConvertFoundToReturnParams(out DateTime CreationTime, out DateTime LastAccessTime, out DateTime LastWriteTime, out long lengthOfFile, out long allocationSize, out uint attributes, out string ShortFileName, out string RealFileName, WIN32_FIND_DATA file)
       {
          attributes = file.dwFileAttributes;
          CreationTime = NativeFileOps.ConvertFileTimeToDateTime(file.ftCreationTime);
@@ -381,17 +385,16 @@ namespace LiquesceSvc
          lengthOfFile = (long)((ulong)file.nFileSizeHigh << 32);
          lengthOfFile += file.nFileSizeLow;
          {
-            // The allocation size is in most cases a multiple of the allocation unit (cluster) size. 
+            // The allocation size is in most cases a multiple of the allocation unit (cluster) size.
             long remainder;
             long div = Math.DivRem(lengthOfFile, CbFs.SectorSize, out remainder);
             if (remainder > 0)
+            {
                div++;
+            }
             allocationSize = div * CbFs.SectorSize;
          }
          // public uint dwNumberOfLinks;
-         //FileId.HighPart = (int)file.nFileIndexHigh;
-         //FileId.LowPart = file.nFileIndexLow;
-         FileId.QuadPart = 0;
          ShortFileName = string.IsNullOrWhiteSpace(file.cAlternateFileName) ? file.cFileName : file.cAlternateFileName;
          RealFileName = file.cFileName;
       }
@@ -435,11 +438,17 @@ namespace LiquesceSvc
          }
          else
          {
-            ConvertFoundToReturnParams(out CreationTime, out LastAccessTime, out LastWriteTime, out lengthOfFile, out AllocationSize, ref FileId, out attributes, out ShortFileName, out FileName, files[nextOffset++]);
+            ConvertFoundToReturnParams(out CreationTime, out LastAccessTime, out LastWriteTime, out lengthOfFile, out AllocationSize, out attributes, out ShortFileName, out FileName, files[nextOffset++]);
+            // If FileId is supported then set FileId for the file.
+            FileId.QuadPart = 0;
+            if (CbFs.OnGetFileNameByFileId != null)
+            {
+               NativeFileOps fileOps = roots.GetPath(Path.Combine(directoryInfo.FileName, FileName), 0);
+               FileId.QuadPart = fileOps.IsInvalid ? 0 : fileOps.FileId;
+            }
             DirectoryEnumerationInfo.UserContext = new IntPtr(nextOffset);
             FileFound = true;
          }
-
       }
 
       public override void CloseDirectoryEnumeration(CbFsFileInfo directoryInfo,
@@ -453,16 +462,17 @@ namespace LiquesceSvc
       This property specifies the number of bytes that the file consumes on disk. Its value may be less than the Size if the file is 'sparse'.
        * The following paragraph is taken from SSH File Transfer Protocol draft-ietf-secsh-filexfer-10, part 7.4:
 
-       * When present during file creation, the file SHOULD be created and the specified number of bytes preallocated. 
+       * When present during file creation, the file SHOULD be created and the specified number of bytes preallocated.
        * If the preallocation fails, the file should be removed (if it was created) and an error returned.
-       * If this field is present during a setstat operation, the file SHOULD be extended or truncated to the specified size. 
-       * The 'size' of the file may be affected by this operation. If the operation succeeds, the 'size' should be the minimum 
+       * If this field is present during a setstat operation, the file SHOULD be extended or truncated to the specified size.
+       * The 'size' of the file may be affected by this operation. If the operation succeeds, the 'size' should be the minimum
        * of the 'size' before the operation and the new 'allocation-size'.
-       * Querying the 'allocation-size' after setting it MUST return a value that is greater-than or equal to the value set, 
+       * Querying the 'allocation-size' after setting it MUST return a value that is greater-than or equal to the value set,
        * but it MAY not return the precise value set.
-       * If both 'size' and 'allocation-size' are set during a setstat operation, and 'allocation-size' is less than 'size', 
+       * If both 'size' and 'allocation-size' are set during a setstat operation, and 'allocation-size' is less than 'size',
        * the server MUST return SSH_FX_INVALID_PARAMETER.
       */
+
       public override void SetAllocationSize(CbFsFileInfo fileInfo, long AllocationSize)
       {
          long refFileHandleContext = fileInfo.UserContext.ToInt64();
@@ -473,8 +483,7 @@ namespace LiquesceSvc
             NativeFileOps stream;
             if (openFiles.TryGetValue(refFileHandleContext, out stream))
             {
-               BY_HANDLE_FILE_INFORMATION lpFileInformation = new BY_HANDLE_FILE_INFORMATION();
-               stream.GetFileInformationByHandle(ref lpFileInformation);
+               BY_HANDLE_FILE_INFORMATION lpFileInformation = stream.GetFileInformationByHandle();
                long thisFileSize = (lpFileInformation.nFileSizeHigh << 32) + lpFileInformation.nFileSizeLow;
                if (thisFileSize < AllocationSize)
                {
@@ -486,13 +495,14 @@ namespace LiquesceSvc
                         "There is a problem, in the amount of space required to fullfill this request with respect to the amount of space originally allocated");
                      // TODO: Move the file, or return not enough space ??
                      throw new ECBFSError(CBFSWinUtil.ERROR_NO_SYSTEM_RESOURCES);
-
                   }
                }
                stream.SetLength(AllocationSize);
             }
             else
-               CBFSWinUtil.ThrowNotFound(fileInfo.Attributes);
+            {
+               CBFSWinUtil.ThrowNotFound(0 /*NativeFileOps.EFileAttributes.Normal*/);
+            }
          }
       }
 
@@ -510,7 +520,9 @@ namespace LiquesceSvc
                stream.SetLength(EndOfFile);
             }
             else
-               CBFSWinUtil.ThrowNotFound(fileInfo.Attributes);
+            {
+               CBFSWinUtil.ThrowNotFound(0 /*NativeFileOps.EFileAttributes.Normal*/);
+            }
          }
       }
 
@@ -531,7 +543,7 @@ namespace LiquesceSvc
          }
          // TODO: Need to find out if this ever get called before IsDirectoryEmtpy
          // TODO: Need to check if any of the files are open within a directory.
-         return( (stream != null)
+         return ((stream != null)
             && !stream.ForceUseAsReadOnly
             );
       }
@@ -552,7 +564,7 @@ namespace LiquesceSvc
                 || stream.IsInvalid
                )
             {
-               CBFSWinUtil.ThrowNotFound(fileInfo.Attributes);
+               CBFSWinUtil.ThrowNotFound(fileAttributes);
             }
             else
             {
@@ -579,7 +591,9 @@ namespace LiquesceSvc
       {
          NativeFileOps nfo = roots.GetPath(fileInfo.FileName);
          if (nfo.IsDirectory)
+         {
             PID.Invoke(GetProcessId(), nfo.DeleteDirectory);
+         }
          else
          {
             PID.Invoke(GetProcessId(), nfo.DeleteFile);
@@ -596,7 +610,7 @@ namespace LiquesceSvc
          }
          // Cbfs has handled the closing and replaceIfExists checks, so it needs to be set always here.
          // https://www.eldos.com/forum/read.php?FID=13&TID=2015
-         PID.Invoke(GetProcessId(), () => XMoveFile.Move(roots, fileInfo.FileName, NewFileName, true, CBFSWinUtil.IsDirectoy(fileInfo.Attributes)));
+         PID.Invoke(GetProcessId(), () => XMoveFile.Move(roots, fileInfo.FileName, NewFileName, true));
       }
 
       public override void ReadFile(CbFsFileInfo fileInfo, long Position, byte[] Buffer, UInt32 BytesToRead, out UInt32 bytesRead)
@@ -604,29 +618,25 @@ namespace LiquesceSvc
          long refFileHandleContext = fileInfo.UserContext.ToInt64();
          Log.Debug("ReadFile [{0}] IN Position=[{1}] BytesToRead=[{2}] refFileHandleContext[{3}]", fileInfo.FileName, Position, BytesToRead, refFileHandleContext);
 
+         bytesRead = 0;
          using (openFilesSync.ReadLock())
          {
             NativeFileOps fileStream;
             openFiles.TryGetValue(refFileHandleContext, out fileStream);
-            if ((fileStream == null)
-                || fileStream.IsInvalid
-               )
+            if ((fileStream != null)
+               && !fileStream.IsInvalid)
             {
-               CBFSWinUtil.ThrowNotFound(fileInfo.Attributes);
+               // Use the current offset as a check first to speed up access in large sequential file reads
+
+               fileStream.SetFilePointer(Position, SeekOrigin.Begin);
+               if (!fileStream.ReadFile(Buffer, BytesToRead, out bytesRead))
+               {
+                  throw new Win32Exception();
+               }
             }
-
-            // Some programs the file offset to extend the file length to write past the end of the file
-            // Commented the check of rawOffset being off the size of the file.
-            //if (Position >= fileStream.Length) 
-            //   throw(ECBFSError(ERROR_HANDLE_EOF));
-            //else
-            //{
-            // Use the current offset as a check first to speed up access in large sequential file reads
-
-            fileStream.SetFilePointer(Position, SeekOrigin.Begin);
-            if (! fileStream.ReadFile(Buffer, BytesToRead, out bytesRead))
+            else
             {
-               throw new Win32Exception();
+               CBFSWinUtil.ThrowNotFound(0 /*NativeFileOps.EFileAttributes.Normal*/);
             }
          }
          Log.Debug("ReadFile bytesRead [{0}]", bytesRead);
@@ -637,24 +647,28 @@ namespace LiquesceSvc
          long refFileHandleContext = fileInfo.UserContext.ToInt64();
          Log.Debug("ReadFile [{0}] IN Position=[{1}] BytesToWrite=[{2}] refFileHandleContext [{3}]", fileInfo.FileName, Position, BytesToWrite, refFileHandleContext);
 
+         bytesWritten = 0;
          using (openFilesSync.ReadLock())
          {
             NativeFileOps fileStream;
             openFiles.TryGetValue(refFileHandleContext, out fileStream);
-            if ((fileStream == null)
-                || fileStream.IsInvalid
+            if ((fileStream != null)
+               && !fileStream.IsInvalid
                )
             {
-               CBFSWinUtil.ThrowNotFound(fileInfo.Attributes);
-            }
-            // Use the current offset as a check first to speed up access in large sequential file reads
-            fileStream.SetFilePointer(Position, SeekOrigin.Begin);
+               // Use the current offset as a check first to speed up access in large sequential file reads
+               fileStream.SetFilePointer(Position, SeekOrigin.Begin);
 
-            if (!fileStream.WriteFile(Buffer, BytesToWrite, out bytesWritten))
-            {
-               throw new Win32Exception();
+               if (!fileStream.WriteFile(Buffer, BytesToWrite, out bytesWritten))
+               {
+                  throw new Win32Exception();
+               }
+               //fileStream.FlushFileBuffers();
             }
-            //fileStream.FlushFileBuffers();
+            else
+            {
+               CBFSWinUtil.ThrowNotFound(0 /*NativeFileOps.EFileAttributes.Normal*/);
+            }
          }
          Log.Trace("WriteFile [{0}]", bytesWritten);
       }
@@ -663,19 +677,20 @@ namespace LiquesceSvc
       {
          NativeFileOps nfo = roots.GetPath(DirectoryName);
          if (!nfo.Exists)
+         {
             CBFSWinUtil.ThrowNotFound((uint)NativeFileOps.EFileAttributes.Directory);
+         }
          return nfo.IsEmptyDirectory;
       }
 
-      #endregion
+      #endregion CBFS Implementation
 
       #region CBFSHandlersAdvanced
 
-
       public override void SetFileSecurity(CbFsFileInfo fileInfo, CbFsHandleInfo userContextInfo, uint securityInformation, IntPtr SecurityDescriptor, uint length)
       {
-         long userFileKey = userContextInfo.UserContext.ToInt64();
          long refFileHandleContext = fileInfo.UserContext.ToInt64();
+         long userFileKey = userContextInfo.UserContext.ToInt64();
          Log.Debug("SetFileSecurityNative[{0}][{1}] with Length[{2}], refFileHandleContext[{3}], userFileKey[{4}]",
             fileInfo.FileName, (NativeFileOps.SECURITY_INFORMATION)securityInformation, length, refFileHandleContext, userFileKey);
 
@@ -685,12 +700,13 @@ namespace LiquesceSvc
             openFiles.TryGetValue(userFileKey, out stream);
             if (stream != null)
             {
-               PID.Invoke(stream.ProcessID, () => stream.SetFileSecurity(securityInformation, SecurityDescriptor, length));
+               // Assume that the Open has already been allowe therefore Write_DACL allowed !
+               stream.SetFileSecurity(securityInformation, SecurityDescriptor, length);
             }
          }
          if (stream == null)
          {
-            CBFSWinUtil.ThrowNotFound(fileInfo.Attributes);
+            CBFSWinUtil.ThrowNotFound(0 /*NativeFileOps.EFileAttributes.Normal*/);
          }
       }
 
@@ -709,18 +725,15 @@ namespace LiquesceSvc
             openFiles.TryGetValue(userFileKey, out stream);
             if (stream != null)
             {
-               using (PID.InvokeHelper(stream.ProcessID))
-               {
-                  stream.GetFileSecurity(RequestedInformation, SecurityDescriptor, Length, ref lengthNeeded);
-               }
+               // Assume that READ_DACL has already been allowed.
+               stream.GetFileSecurity(RequestedInformation, SecurityDescriptor, Length, ref lengthNeeded);
             }
          }
          if (stream == null)
          {
-            CBFSWinUtil.ThrowNotFound(fileInfo.Attributes);
+            CBFSWinUtil.ThrowNotFound(0 /*NativeFileOps.EFileAttributes.Normal*/);
          }
       }
-
 
       #region Stream Enumeration
 
@@ -736,15 +749,15 @@ namespace LiquesceSvc
 
          ReadOnlyCollection<AlternateNativeInfo> alternates = null;
          int nextOffset = namedStreamsEnumerationInfo.UserContext.ToInt32();
-         NativeFileOps fileStream;
          using (openFilesSync.ReadLock())
          {
+            NativeFileOps fileStream;
             openFiles.TryGetValue(userOpenKey, out fileStream);
             if ((fileStream == null)
                 || fileStream.IsInvalid
                )
             {
-               CBFSWinUtil.ThrowNotFound(fileInfo.Attributes);
+               CBFSWinUtil.ThrowNotFound(0 /*NativeFileOps.EFileAttributes.Normal*/);
             }
 
             if (nextOffset > 0)
@@ -772,7 +785,7 @@ namespace LiquesceSvc
             streamName = info.StreamName;
             streamSize = info.StreamSize;
             {
-               // The allocation size is in most cases a multiple of the allocation unit (cluster) size. 
+               // The allocation size is in most cases a multiple of the allocation unit (cluster) size.
                long remainder;
                long div = Math.DivRem(streamSize, CbFs.SectorSize, out remainder);
                if (remainder > 0)
@@ -784,21 +797,25 @@ namespace LiquesceSvc
          }
       }
 
-
       public override void CloseNamedStreamsEnumeration(CbFsFileInfo fileInfo, CbFsNamedStreamsEnumerationInfo namedStreamsEnumerationInfo)
       {
          long refFileHandleContext = namedStreamsEnumerationInfo.UserContext.ToInt64();
          EnumeratedStream.Remove(refFileHandleContext);
       }
 
-      #endregion
+      #endregion Stream Enumeration
+
+      public override string GetFileNameByFileId(long fileId)
+      {
+         return roots.FindByFileId(fileId);
+      }
 
       /// <summary>
-      /// 
+      ///
       /// </summary>
       /// <param name="fileInfo">
       /// Contains information about the file. Can be null.
-      /// If FileInfo is empty, your code should attempt to flush everything, related to the disk. 
+      /// If FileInfo is empty, your code should attempt to flush everything, related to the disk.
       /// </param>
       public override void FlushFile(CbFsFileInfo fileInfo)
       {
@@ -812,27 +829,31 @@ namespace LiquesceSvc
                if (openFiles.TryGetValue(refFileHandleContext, out fileStream))
                {
                   if (!fileStream.IsDirectory)
+                  {
                      fileStream.FlushFileBuffers();
+                  }
                }
                else
                {
-                  CBFSWinUtil.ThrowNotFound(fileInfo.Attributes);
+                  CBFSWinUtil.ThrowNotFound(0 /*NativeFileOps.EFileAttributes.Normal*/);
                }
             }
          }
          else
          {
             Log.Debug("FlushFileBuffers IN with null");
-            foreach (NativeFileOps fileStream in openFiles.Values)
+            foreach (NativeFileOps fileStream in openFiles.Values.Where(fileStream => !fileStream.IsDirectory))
             {
-               if (!fileStream.IsDirectory)
-                  fileStream.FlushFileBuffers();
+               fileStream.FlushFileBuffers();
             }
          }
       }
 
-      #endregion
+      public override void StorageEjected()
+      {
+         throw new NotImplementedException();
+      }
 
+      #endregion CBFSHandlersAdvanced
    }
-
 }

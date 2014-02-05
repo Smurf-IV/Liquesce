@@ -29,14 +29,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CBFS", "CBFS", "{12942D9B-0
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "x32", "x32", "{CB88D297-F43F-4036-AFF9-1A47B9F9B103}"
 	ProjectSection(SolutionItems) = preProject
-		..\..\Amalgam\Phase III\ThirdParty\CBFS\32bit\CBFS4Net.dll = ..\..\Amalgam\Phase III\ThirdParty\CBFS\32bit\CBFS4Net.dll
+		..\..\Amalgam\Phase III\ThirdParty\CBFS\32bit\CBFS5Net.dll = ..\..\Amalgam\Phase III\ThirdParty\CBFS\32bit\CBFS5Net.dll
 		..\..\Amalgam\Phase III\ThirdParty\CBFS\32bit\msvcp100.dll = ..\..\Amalgam\Phase III\ThirdParty\CBFS\32bit\msvcp100.dll
 		..\..\Amalgam\Phase III\ThirdParty\CBFS\32bit\msvcr100.dll = ..\..\Amalgam\Phase III\ThirdParty\CBFS\32bit\msvcr100.dll
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "x64", "x64", "{0C0D70B9-1D85-4ECB-8051-E23E583BF83A}"
 	ProjectSection(SolutionItems) = preProject
-		..\..\Amalgam\Phase III\ThirdParty\CBFS\x64\CBFS4Net.dll = ..\..\Amalgam\Phase III\ThirdParty\CBFS\x64\CBFS4Net.dll
+		..\..\Amalgam\Phase III\ThirdParty\CBFS\x64\CBFS5Net.dll = ..\..\Amalgam\Phase III\ThirdParty\CBFS\x64\CBFS5Net.dll
 		..\..\Amalgam\Phase III\ThirdParty\CBFS\x64\msvcp100.dll = ..\..\Amalgam\Phase III\ThirdParty\CBFS\x64\msvcp100.dll
 		..\..\Amalgam\Phase III\ThirdParty\CBFS\x64\msvcr100.dll = ..\..\Amalgam\Phase III\ThirdParty\CBFS\x64\msvcr100.dll
 	EndProjectSection

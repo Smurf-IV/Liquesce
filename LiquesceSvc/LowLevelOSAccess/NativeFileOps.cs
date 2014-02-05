@@ -245,8 +245,9 @@ namespace LiquesceSvc
          }
       }
 
-      public void GetFileInformationByHandle(ref BY_HANDLE_FILE_INFORMATION lpFileInformation)
+      public BY_HANDLE_FILE_INFORMATION GetFileInformationByHandle()
       {
+         BY_HANDLE_FILE_INFORMATION lpFileInformation = new BY_HANDLE_FILE_INFORMATION();
          BY_HANDLE_FILE_INFORMATION? local = cachedFileInformation;
          if (local.HasValue)
          {
@@ -266,6 +267,7 @@ namespace LiquesceSvc
             }
             cachedFileInformation = lpFileInformation;
          }
+         return lpFileInformation;
       }
 
       static public string GetRootOrMountFor(string path)
@@ -379,6 +381,28 @@ namespace LiquesceSvc
          get
          {
             return (Exists) ? cachedAttributeData.Value.dwFileAttributes : 0;
+         }
+      }
+
+      /// <summary>
+      /// Returns the FileId
+      /// </summary>
+      /// <remarks>
+      /// May return 0 if not found
+      /// </remarks>
+      public long FileId
+      {
+         get
+         {
+            if (Exists)
+            {
+               if (!cachedFileInformation.HasValue)
+               {
+                  GetFileInformationByHandle();
+               }
+               return (((long) cachedFileInformation.Value.nFileIndexHigh) << 32) + cachedFileInformation.Value.nFileIndexLow;
+            }
+            return 0;
          }
       }
 
@@ -507,7 +531,7 @@ namespace LiquesceSvc
 
       public ReadOnlyCollection<AlternateNativeInfo> ListAlternateDataStreams()
       {
-         return NativeFileFind.ListAlternateDataStreams(handle).AsReadOnly();
+         return AlternativeStreamSupport.ListAlternateDataStreams(handle).AsReadOnly();
       }
 
       [DebuggerHidden] // Stop the "Buffer is too small" from breaking the debugger
@@ -544,7 +568,7 @@ namespace LiquesceSvc
          if (lengthNeeded <= 32)
          {
             // Deal with FAT32 drives not being able to "Hold" ACL on files.
-            // This is turn will prevent explorer from allowing tab to be constructed to attempt to "Set" ACL on FAT32 files.
+            // This in turn will prevent explorer from allowing tab to be constructed to attempt to "Set" ACL on FAT32 files.
             throw new Win32Exception(CBFSWinUtil.ERROR_NO_SECURITY_ON_OBJECT);
          }
          // if the buffer is not enough the we must pass the correct error
@@ -613,7 +637,7 @@ namespace LiquesceSvc
 
       #region DLL Imports
 
-      #region #etFileSecurity
+      #region SetFileSecurity
 
       /// <summary>
       /// Check http://msdn.microsoft.com/en-us/library/cc230369%28v=prot.13%29.aspx
@@ -685,7 +709,7 @@ namespace LiquesceSvc
          public IntPtr dacl;     // == PACL
       }
 
-      #endregion #etFileSecurity
+      #endregion SetFileSecurity
 
       #region Create File
 
@@ -980,5 +1004,6 @@ namespace LiquesceSvc
          }
          return new NativeFileOps(sourceHandle.FullName, lpTargetHandle, sourceHandle.ForceUseAsReadOnly);
       }
+
    }
 }

@@ -38,11 +38,14 @@
          this.mountingPoints1 = new Liquesce.Tabs.MountingPoints();
          this.tabService = new System.Windows.Forms.TabPage();
          this.service1 = new Liquesce.Tabs.Service();
+         this.tabSharing = new System.Windows.Forms.TabPage();
+         this.currentShares1 = new Liquesce.Tabs.CurrentShares();
          this.tabControl1.SuspendLayout();
          this.tabWelcome.SuspendLayout();
          this.tabLogging.SuspendLayout();
          this.tabMounting.SuspendLayout();
          this.tabService.SuspendLayout();
+         this.tabSharing.SuspendLayout();
          this.SuspendLayout();
          // 
          // tabControl1
@@ -51,6 +54,7 @@
          this.tabControl1.Controls.Add(this.tabWelcome);
          this.tabControl1.Controls.Add(this.tabLogging);
          this.tabControl1.Controls.Add(this.tabMounting);
+         this.tabControl1.Controls.Add(this.tabSharing);
          this.tabControl1.Controls.Add(this.tabService);
          this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
          this.tabControl1.DrawMode = System.Windows.Forms.TabDrawMode.OwnerDrawFixed;
@@ -92,7 +96,7 @@
          this.tabLogging.Location = new System.Drawing.Point(154, 4);
          this.tabLogging.Name = "tabLogging";
          this.tabLogging.Padding = new System.Windows.Forms.Padding(3);
-         this.tabLogging.Size = new System.Drawing.Size(612, 481);
+         this.tabLogging.Size = new System.Drawing.Size(606, 475);
          this.tabLogging.TabIndex = 1;
          this.tabLogging.Text = "Logging";
          // 
@@ -104,7 +108,7 @@
          this.logging1.Location = new System.Drawing.Point(3, 3);
          this.logging1.Name = "logging1";
          this.logging1.Padding = new System.Windows.Forms.Padding(3);
-         this.logging1.Size = new System.Drawing.Size(606, 475);
+         this.logging1.Size = new System.Drawing.Size(600, 469);
          this.logging1.TabIndex = 0;
          // 
          // tabMounting
@@ -113,7 +117,7 @@
          this.tabMounting.Controls.Add(this.mountingPoints1);
          this.tabMounting.Location = new System.Drawing.Point(154, 4);
          this.tabMounting.Name = "tabMounting";
-         this.tabMounting.Size = new System.Drawing.Size(612, 481);
+         this.tabMounting.Size = new System.Drawing.Size(606, 475);
          this.tabMounting.TabIndex = 2;
          this.tabMounting.Text = "Mounting Point";
          // 
@@ -124,7 +128,7 @@
          this.mountingPoints1.Location = new System.Drawing.Point(0, 0);
          this.mountingPoints1.Name = "mountingPoints1";
          this.mountingPoints1.Padding = new System.Windows.Forms.Padding(3);
-         this.mountingPoints1.Size = new System.Drawing.Size(612, 481);
+         this.mountingPoints1.Size = new System.Drawing.Size(606, 475);
          this.mountingPoints1.TabIndex = 0;
          // 
          // tabService
@@ -133,7 +137,7 @@
          this.tabService.Controls.Add(this.service1);
          this.tabService.Location = new System.Drawing.Point(154, 4);
          this.tabService.Name = "tabService";
-         this.tabService.Size = new System.Drawing.Size(612, 481);
+         this.tabService.Size = new System.Drawing.Size(606, 475);
          this.tabService.TabIndex = 3;
          this.tabService.Text = "Service Settings";
          // 
@@ -144,8 +148,28 @@
          this.service1.Location = new System.Drawing.Point(0, 0);
          this.service1.Name = "service1";
          this.service1.Padding = new System.Windows.Forms.Padding(3);
-         this.service1.Size = new System.Drawing.Size(612, 481);
+         this.service1.Size = new System.Drawing.Size(606, 475);
          this.service1.TabIndex = 0;
+         // 
+         // tabSharing
+         // 
+         this.tabSharing.BackColor = System.Drawing.SystemColors.Control;
+         this.tabSharing.Controls.Add(this.currentShares1);
+         this.tabSharing.Location = new System.Drawing.Point(154, 4);
+         this.tabSharing.Name = "tabSharing";
+         this.tabSharing.Padding = new System.Windows.Forms.Padding(3);
+         this.tabSharing.Size = new System.Drawing.Size(606, 475);
+         this.tabSharing.TabIndex = 4;
+         this.tabSharing.Text = "Sharing Control";
+         // 
+         // currentShares1
+         // 
+         this.currentShares1.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.currentShares1.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+         this.currentShares1.Location = new System.Drawing.Point(3, 3);
+         this.currentShares1.Name = "currentShares1";
+         this.currentShares1.Size = new System.Drawing.Size(600, 469);
+         this.currentShares1.TabIndex = 0;
          // 
          // LandingZone
          // 
@@ -166,6 +190,7 @@
          this.tabLogging.ResumeLayout(false);
          this.tabMounting.ResumeLayout(false);
          this.tabService.ResumeLayout(false);
+         this.tabSharing.ResumeLayout(false);
          this.ResumeLayout(false);
 
       }
@@ -181,5 +206,7 @@
       private Tabs.MountingPoints mountingPoints1;
       private System.Windows.Forms.TabPage tabService;
       private Tabs.Service service1;
+      private System.Windows.Forms.TabPage tabSharing;
+      private Tabs.CurrentShares currentShares1;
    }
 }

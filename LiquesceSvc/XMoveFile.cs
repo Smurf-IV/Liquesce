@@ -46,10 +46,9 @@ namespace LiquesceSvc
       /// <param name="oldName">FullPath to Old</param>
       /// <param name="newName">FullPath to new</param>
       /// <param name="replaceIfExisting"></param>
-      /// <param name="isDirectory"> </param>
-      public static void Move(Roots roots, string oldName, string newName, bool replaceIfExisting, bool isDirectory)
+      public static void Move(Roots roots, string oldName, string newName, bool replaceIfExisting)
       {
-         Log.Info("MoveFile replaceIfExisting [{0}] filename: [{1}] newname: [{2}] isDirectory:[{3}]", replaceIfExisting, oldName, newName, isDirectory);
+         Log.Info("MoveFile replaceIfExisting [{0}] filename: [{1}] newname: [{2}]", replaceIfExisting, oldName, newName);
 
          NativeFileOps pathSource = roots.GetPath(oldName);
          ulong pathSource_Length = (ulong) (pathSource.Length);
@@ -64,7 +63,7 @@ namespace LiquesceSvc
             throw new ECBFSError(CBFSWinUtil.ERROR_ALREADY_EXISTS);
          }
 
-         if (!isDirectory)
+         if (!pathSource.IsDirectory)
          {
             //1 Same directory Rename Scenario:
             //   MoveFileProxy replaceIfExisting [0] file: [\Test1\ds\New Text Document (2).txt] newfile: [\Test1\ds\test.txt] 
