@@ -744,6 +744,7 @@ namespace Liquesce.Mounting
       {
          HasLoaded = true;
          StartTree();
+         RestartExpectedOutput();
       }
 
       private void Edit_Leave(object sender, EventArgs e)
