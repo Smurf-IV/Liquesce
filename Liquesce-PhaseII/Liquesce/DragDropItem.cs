@@ -36,18 +36,16 @@ namespace Liquesce
          Drive,
          Merge
       }
-      public DragDropItem(string name, SourceType source, bool includeName, bool asReadOnly)
+      public DragDropItem(string name, SourceType source, bool asReadOnly)
       {
          Name = name;
          Source = source;
-         IncludeName = includeName;
          AsReadOnly = asReadOnly;
       }
 
 
       public string Name { get; private set; }
       public SourceType Source { get; private set; }
-      public bool IncludeName { get; private set; }
       public bool AsReadOnly { get; private set; }
 
    }

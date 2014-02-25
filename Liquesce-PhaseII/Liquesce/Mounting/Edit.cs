@@ -180,6 +180,7 @@ namespace Liquesce.Mounting
             }
             catch (IOException ioex)
             {
+               Log.Warn("Handle situation when there is no disc in CDRom", ioex);
                label = di.DriveType.ToString();
                if (di.DriveType == DriveType.CDRom)
                {
@@ -311,7 +312,7 @@ namespace Liquesce.Mounting
             // Start the drag-and-drop operation with a cloned copy of the node.
             if (selected != null)
             {
-               DragDropItem ud = new DragDropItem(GetSelectedNodesPath(selected), DragDropItem.SourceType.Drive, false, false);
+               DragDropItem ud = new DragDropItem(GetSelectedNodesPath(selected), DragDropItem.SourceType.Drive, false);
                if (!String.IsNullOrEmpty(ud.Name))
                   driveAndDirTreeView.DoDragDrop(ud, DragDropEffects.All);
             }
@@ -331,7 +332,7 @@ namespace Liquesce.Mounting
          // TODO: On Add check to make sure that the root (Or this) node have not already been covered.
          if (!String.IsNullOrEmpty(newPath.Name))
          {
-            Object[] tn = { newPath.Name, newPath.IncludeName, newPath.AsReadOnly };
+            Object[] tn = { newPath.Name, newPath.AsReadOnly };
 
             //we only ever want an entry in 1x in the list.  Remove any duplicates, so you can reorder from the filesystem treeview
             int internalMoveIndex = -1;
@@ -831,17 +832,19 @@ namespace Liquesce.Mounting
          row.Selected = true;
 
          //right click menu for deleting items from mergelist
-         if (e.Button == MouseButtons.Right)
+         switch (e.Button)
          {
+         case MouseButtons.Right:
             mergeList.ContextMenuStrip.Show(mergeList, e.Location);
-         }
-         //enable dragging for mergelist
-         else if (e.Button == MouseButtons.Left)
-         {
+            break;
+         case MouseButtons.Left:
+            {
             // Get the node underneath the mouse.
             // Start the drag-and-drop operation with a cloned copy of the node.
-            DragDropItem ud = new DragDropItem(row.Cells[0].Value.ToString(), DragDropItem.SourceType.Merge, (bool)row.Cells[1].Value, (bool)row.Cells[2].Value);
+            DragDropItem ud = new DragDropItem(row.Cells[0].Value.ToString(), DragDropItem.SourceType.Merge, (bool)row.Cells[1].Value);
             mergeList.DoDragDrop(ud, DragDropEffects.All);
+            }
+            break;
          }
       }
 
