@@ -99,7 +99,7 @@ namespace LiquesceSvc
 
       protected override void OnStart(string[] args)
       {
-         Log.Info("OnStart");
+         Log.Error("OnStart");
          try
          {
             if (RunningAsService)
@@ -107,7 +107,7 @@ namespace LiquesceSvc
             // let the SCM know that this part could take a while due to other services starting up
             foreach (string arg in args)
             {
-               Log.Debug(arg);
+               Log.Error(arg);
                switch (arg.ToUpper())
                {
                   case "-DEBUG":
@@ -116,24 +116,13 @@ namespace LiquesceSvc
                      break;
                }
             }
-            _ILiquesceHost = new ServiceHost(typeof(LiquesceFacade));
-            System.ServiceModel.Channels.Binding namedPipeBinding = new NetNamedPipeBinding();
-            _ILiquesceHost.AddServiceEndpoint(typeof(ILiquesce), namedPipeBinding, "net.pipe://localhost/LiquesceFacade");
-
-            _ILiquesceHostCallBack = new ServiceHost(typeof(LiquesceCallBackFacade));
-            System.ServiceModel.Channels.Binding namedPipeBindingpublish = new NetNamedPipeBinding();
-            _ILiquesceHostCallBack.AddServiceEndpoint(typeof(ILiquesceCallBack), namedPipeBindingpublish, "net.pipe://localhost/LiquesceCallBackFacade");
-
-            _ILiquesceHost.Open();
-            _ILiquesceHostCallBack.Open();
-
             if (RunningAsService)
             {
                RequestAdditionalTime(30000);
                // let the SCM know that this part could take a while due to other services starting up
                base.OnStart(args);
 
-               Log.Info("Create Management object to hold the listeners etc.");
+               Log.Error("Create Management object to hold the listeners etc.");
                RequestAdditionalTime(30000);
                // let the SCM know that this part could take a while due to other services starting up
             }
@@ -166,14 +155,27 @@ HTTP could not register URL http://+:8731/Design_Time_Addresses/LiquesceSvc/Liqu
       /// <param name="stateInfo">Object passed into the method for context info.</param>
       static void ThreadProc(Object stateInfo)
       {
-         Log.Info("LiquesceService object starting.");
+         Log.Error("LiquesceService object starting.");
          LiquesceService me = stateInfo as LiquesceService;
          try
          {
-            Log.Info("Running Assembly Information.");
+            Log.Info("Populate the LiquesceFacade");
+            _ILiquesceHost = new ServiceHost(typeof(LiquesceFacade));
+            System.ServiceModel.Channels.Binding namedPipeBinding = new NetNamedPipeBinding();
+            _ILiquesceHost.AddServiceEndpoint(typeof(ILiquesce), namedPipeBinding, "net.pipe://localhost/LiquesceFacade");
 
+            Log.Error("Populate the LiquesceCallBackFacade");
+            _ILiquesceHostCallBack = new ServiceHost(typeof(LiquesceCallBackFacade));
+            System.ServiceModel.Channels.Binding namedPipeBindingpublish = new NetNamedPipeBinding();
+            _ILiquesceHostCallBack.AddServiceEndpoint(typeof(ILiquesceCallBack), namedPipeBindingpublish, "net.pipe://localhost/LiquesceCallBackFacade");
+
+            Log.Error("Open the Facades");
+            _ILiquesceHost.Open();
+            _ILiquesceHostCallBack.Open();
+
+            Log.Error("ManagementLayer.Instance.Start");
             ManagementLayer.Instance.Start(null);
-            Log.Info("Blocking thread ManagementLayer.Instance.Start has exited.");
+            Log.Error("Blocking thread ManagementLayer.Instance.Start has exited.");
          }
          catch (Exception ex)
          {
