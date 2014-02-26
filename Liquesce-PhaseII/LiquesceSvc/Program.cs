@@ -26,6 +26,7 @@
 
 
 using System;
+using System.Diagnostics;
 using System.Reflection;
 using System.ServiceProcess;
 using System.Windows.Forms;
@@ -44,26 +45,80 @@ namespace LiquesceSvc
       /// </remarks>
       static void Main(string[] args)
       {
-         Log.Fatal("=====================================================================");
-         Log.Fatal("File Re-opened: Ver :" + Assembly.GetExecutingAssembly().GetName().Version);
-         LiquesceService runner = new LiquesceService();
-         if ((args.Length > 0) && ("/debug" == args[0].ToLower()))
+         try
          {
-            // main service object
-            LiquesceService.RunningAsService = false;
-            runner.StartService(args);
-            Console.WriteLine("Press Q to quit");
-            Application.Run();
-            runner.StopService();
-            // We called the static run, so call the static exit
-            Application.Exit();
+            AppDomain.CurrentDomain.UnhandledException += logUnhandledException;
          }
-         else
+         catch (Exception ex)
          {
-            LiquesceService.RunningAsService = true;
-            ServiceBase.Run(new ServiceBase[] { runner });
+            try
+            {
+               Log.FatalException("Failed to attach unhandled exception handler...", ex);
+            }
+            catch
+            {
+            }
          }
-         Log.Fatal("========================Clean=Exit===================================");
+         try
+         {
+            Log.Fatal("=====================================================================");
+            Log.Fatal("File Re-opened: Ver :" + Assembly.GetExecutingAssembly().GetName().Version);
+            LiquesceService runner = new LiquesceService();
+            if ((args.Length > 0) && ("/debug" == args[0].ToLower()))
+            {
+               // main service object
+               LiquesceService.RunningAsService = false;
+               runner.StartService(args);
+               Console.WriteLine("Press Q to quit");
+               Application.Run();
+               runner.StopService();
+               // We called the static run, so call the static exit
+               Application.Exit();
+            }
+            else
+            {
+               LiquesceService.RunningAsService = true;
+               ServiceBase.Run(new ServiceBase[] { runner });
+            }
+         }
+         catch (Exception ex)
+         {
+            Log.FatalException("Exception has not been caught by the rest of the application!", ex);
+            throw; // Force the log out to the logUnhandledException handler
+         }
+         finally
+         {
+            Log.Fatal("File Closing");
+            Log.Fatal("=====================================================================");
+         }
       }
+
+      private static void logUnhandledException(object sender, UnhandledExceptionEventArgs e)
+      {
+         try
+         {
+            string cs = Assembly.GetExecutingAssembly().GetName().Name;
+            EventLog eventLog = new EventLog();
+            if (!EventLog.SourceExists(cs))
+               EventLog.CreateEventSource(cs, "Application");
+
+            EventLog.WriteEntry(cs, e.ExceptionObject.ToString(), EventLogEntryType.Error);
+            Log.Fatal("Unhandled exception.\r\n{0}", e.ExceptionObject);
+            Exception ex = e.ExceptionObject as Exception;
+            if (ex != null)
+            {
+               Log.FatalException("Exception details", ex);
+               EventLog.WriteEntry(cs, ex.ToString(), EventLogEntryType.Error);
+            }
+            else
+            {
+               Log.Fatal("Unexpected exception.");
+            }
+         }
+         catch
+         {
+         }
+      }
+
    }
 }
