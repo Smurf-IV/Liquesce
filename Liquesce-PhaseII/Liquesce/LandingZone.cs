@@ -1,19 +1,20 @@
 ﻿#region Copyright (C)
+
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="LandingZone.cs" company="Smurf-IV">
-// 
+//
 //  Copyright (C) 2013 Simon Coghlan (Aka Smurf-IV)
-// 
+//
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation, either version 2 of the License, or
 //   any later version.
-// 
+//
 //  This program is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 //  GNU General Public License for more details.
-// 
+//
 //  You should have received a copy of the GNU General Public License
 //  along with this program. If not, see http://www.gnu.org/licenses/.
 //  </copyright>
@@ -22,7 +23,8 @@
 //  Email: http://www.codeplex.com/site/users/view/smurfiv
 //  </summary>
 // --------------------------------------------------------------------------------------------------------------------
-#endregion
+
+#endregion Copyright (C)
 
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -41,6 +43,8 @@ namespace Liquesce
       public LandingZone()
       {
          InitializeComponent();
+         DoubleBuffered = true;
+         ResizeRedraw = true;
 
          if (Properties.Settings.Default.UpdateRequired)
          {
@@ -61,23 +65,25 @@ namespace Liquesce
          }
       }
 
-      // Stop the Tab control from flickering suring resize !
+      // Stop the Tab control from flickering during resize !
       protected override CreateParams CreateParams
       {
          get
          {
             CreateParams cp = base.CreateParams;
             cp.ExStyle |= 0x02000000;  // Turn on WS_EX_COMPOSITED
-            cp.Style  &= ~0x02000000;  // Turn off WS_CLIPCHILDREN
+            cp.ExStyle |= 0x00080000;  // Turn on WS_EX_LAYERED
+            cp.Style &= ~0x02000000;  // Turn off WS_CLIPCHILDREN
             return cp;
          }
       }
 
-      readonly StringFormat stringFormat = new StringFormat
+      private readonly StringFormat stringFormat = new StringFormat
       {
          Alignment = StringAlignment.Center,
          LineAlignment = StringAlignment.Center
       };
+
       private void tabControl1_DrawItem(object sender, DrawItemEventArgs e)
       {
          string tabName = tabControl1.TabPages[e.Index].Text;
@@ -89,18 +95,21 @@ namespace Liquesce
          e.Graphics.DrawString(tabName, Font, SystemBrushes.ControlText, tabControl1.GetTabRect(e.Index), stringFormat);
          DrawTabPageBorder(tabControl1.SelectedIndex, SystemBrushes.GradientActiveCaption, e.Graphics);
       }
-      int highlightWidth = 2;
+
+      private const int highlightWidth = 2;
+
       private void DrawTabPageBorder(int index, Brush findHighlightColor, Graphics graphics)
       {
          graphics.SmoothingMode = SmoothingMode.HighQuality;
          Rectangle pageBounds = tabControl1.TabPages[index].Bounds;
          if (highlightWidth > 1)
+         {
             pageBounds.Inflate(highlightWidth - 1, highlightWidth - 1);
+         }
          using (Pen borderPen = new Pen(findHighlightColor, highlightWidth))
          {
             graphics.DrawRectangle(borderPen, pageBounds);
          }
-
       }
 
       private void LandingZone_FormClosing(object sender, FormClosingEventArgs e)

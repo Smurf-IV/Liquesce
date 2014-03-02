@@ -38,6 +38,7 @@ namespace Liquesce.Tabs
       public CurrentShares()
       {
          InitializeComponent();
+         DoubleBuffered = true;
          // Converted from the CurrentShares.rtf text via notepad :-)
          richTextBox1.Rtf = @"{\rtf1\ansi\ansicpg1252\deff0{\fonttbl{\f0\fnil\fcharset0 Tahoma;}{\f1\fnil\fcharset2 Symbol;}}
 {\colortbl ;\red255\green0\blue0;}
