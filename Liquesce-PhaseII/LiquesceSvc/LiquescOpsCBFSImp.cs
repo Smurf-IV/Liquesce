@@ -103,6 +103,7 @@ namespace LiquesceSvc
                                       CbFsHandleInfo userContextInfo)
       {
          int processId = GetProcessId();
+         long openFileKey = fileInfo.UserContext.ToInt64();
 
          NativeFileOps foundFileInfo = roots.GetPath(filename, mountDetail.HoldOffBufferBytes);
          if (foundFileInfo.ForceUseAsReadOnly)
@@ -113,6 +114,8 @@ namespace LiquesceSvc
          string fullName = foundFileInfo.FullName;
 
          NativeFileOps.EFileAttributes attributes = (NativeFileOps.EFileAttributes)fileAttributes;
+         Log.Debug("CreateFile IN fullName [{0}], DesiredAccess[{1}], fileAttributes[{2}], ShareMode[{3}], ProcessId[{4}], openFileKey [{5}]",
+                  fullName, (NativeFileOps.EFileAccess)DesiredAccess, fileAttributes, (FileShare)ShareMode, processId, openFileKey);
 
          if (CBFSWinUtil.IsDirectoy(attributes))
          {
@@ -132,7 +135,47 @@ namespace LiquesceSvc
             roots.RemoveFromLookup(filename);
             PID.Invoke(processId, () => NativeFileOps.CreateDirectory(foundFileInfo.DirectoryPathOnly));
          }
-         CallOpenCreateFile(DesiredAccess, attributes, ShareMode, fileInfo, CBFSWinUtil.OPEN_ALWAYS, processId, fullName, userContextInfo);
+         int lastError = 0;
+         if (CBFSWinUtil.IsDirectoy(attributes))
+         {
+            attributes |= NativeFileOps.EFileAttributes.BackupSemantics;
+         }
+         // Turn off NoBuffering request because http://msdn.microsoft.com/en-us/library/windows/desktop/cc644950%28v=vs.85%29.aspx
+         attributes &= ~NativeFileOps.EFileAttributes.NoBuffering;
+         // Turn of DeleteOnClose, as CBFS still calls delete
+         attributes &= ~NativeFileOps.EFileAttributes.DeleteOnClose;
+         using (openFilesSync.WriteLock())
+         {
+            NativeFileOps fileStream = null;
+            PID.Invoke(processId, () =>
+            {
+               fileStream = NativeFileOps.CreateFile(fullName, DesiredAccess, ShareMode, CBFSWinUtil.OPEN_ALWAYS, (uint)(attributes));
+               // If a specified file exists before the function call and dwCreationDisposition is CREATE_ALWAYS
+               // or OPEN_ALWAYS, a call to GetLastError returns ERROR_ALREADY_EXISTS, even when the function succeeds.
+               lastError = Marshal.GetLastWin32Error();
+            });
+            if ((lastError != 0)
+               && (lastError != CBFSWinUtil.ERROR_ALREADY_EXISTS)
+               )
+            {
+               throw new Win32Exception(lastError);
+            }
+            fileInfo.UserContext = new IntPtr(++openFilesLastKey);
+            openFiles.Add(openFilesLastKey, fileStream);
+            Log.Debug("CreateFile fileInfo openFilesLastKey[{0}]", openFilesLastKey);
+            //int currentOpenCount = fileStream.IncrementOpenCount();
+            //Log.Debug("CreateFile fileInfo IncrementOpenCount[{0}]", currentOpenCount);
+            NativeFileOps userFileStream = NativeFileOps.DuplicateHandle(fileStream);
+            userContextInfo.UserContext = new IntPtr(++openFilesLastKey);
+            openFiles.Add(openFilesLastKey, userFileStream);
+            Log.Debug("CallOpenCreateFile userContextInfo openFilesLastKey[{0}]", openFilesLastKey);
+            userFileStream.ProcessID = processId;
+
+            if (lastError != 0)
+            {
+               throw new Win32Exception(lastError);
+            }
+         }
       }
 
       private void CallOpenCreateFile(uint DesiredAccess, NativeFileOps.EFileAttributes fileAttributes, uint ShareMode, CbFsFileInfo fileInfo,
@@ -148,31 +191,31 @@ namespace LiquesceSvc
             fileAttributes |= NativeFileOps.EFileAttributes.BackupSemantics;
          }
          NativeFileOps userFileStream = null;
-         try
-         {
-            PID.Invoke(processId, () =>
-            {
-               // Turn off NoBuffering request because http://msdn.microsoft.com/en-us/library/windows/desktop/cc644950%28v=vs.85%29.aspx
-               userFileStream = NativeFileOps.CreateFile(fullName, DesiredAccess, ShareMode, creation, (uint)(fileAttributes & ~NativeFileOps.EFileAttributes.NoBuffering));
-               // If a specified file exists before the function call and dwCreationDisposition is CREATE_ALWAYS
-               // or OPEN_ALWAYS, a call to GetLastError returns ERROR_ALREADY_EXISTS, even when the function succeeds.
-               lastError = Marshal.GetLastWin32Error();
-            });
-            Log.Trace("It's not gone boom, so it must be okay..");
-            userFileStream.Close();
-         }
-         catch (Win32Exception w32e)
-         {
-            if (w32e.NativeErrorCode == CBFSWinUtil.ERROR_SHARING_VIOLATION)
-            {
-               // For some reason when the dllhost (Photo viewer) attempts to open, it throws an "In-Use" error
-               // Probably caused by the explorer already opening when performing the double click launch
-               if (PID.GetProcessName(processId) != "dllhost")
-               {
-                  throw;
-               }
-            }
-         }
+         //try
+         //{
+         //   PID.Invoke(processId, () =>
+         //   {
+         //      // Turn off NoBuffering request because http://msdn.microsoft.com/en-us/library/windows/desktop/cc644950%28v=vs.85%29.aspx
+         //      userFileStream = NativeFileOps.CreateFile(fullName, DesiredAccess, ShareMode, creation, (uint)(fileAttributes & ~NativeFileOps.EFileAttributes.NoBuffering));
+         //      // If a specified file exists before the function call and dwCreationDisposition is CREATE_ALWAYS
+         //      // or OPEN_ALWAYS, a call to GetLastError returns ERROR_ALREADY_EXISTS, even when the function succeeds.
+         //      lastError = Marshal.GetLastWin32Error();
+         //   });
+         //   Log.Trace("It's not gone boom, so it must be okay..");
+         //   userFileStream.Close();
+         //}
+         //catch (Win32Exception w32e)
+         //{
+         //   if (w32e.NativeErrorCode == CBFSWinUtil.ERROR_SHARING_VIOLATION)
+         //   {
+         //      // For some reason when the dllhost (Photo viewer) attempts to open, it throws an "In-Use" error
+         //      // Probably caused by the explorer already opening when performing the double click launch
+         //      if (PID.GetProcessName(processId) != "dllhost")
+         //      {
+         //         throw;
+         //      }
+         //   }
+         //}
          using (openFilesSync.UpgradableReadLock())
          {
             NativeFileOps fileStream;
@@ -186,7 +229,11 @@ namespace LiquesceSvc
                   Log.Debug("CallOpenCreateFile fileInfo openFilesLastKey[{0}]", openFilesLastKey);
                }
             }
-            int currentOpenCount = fileStream.IncrementOpenCount();
+            else
+            {
+               int currentOpenCount = fileStream.IncrementOpenCount();
+               Log.Debug("CallOpenCreateFile fileInfo IncrementOpenCount[{0}]", currentOpenCount);
+            }
             userFileStream = NativeFileOps.DuplicateHandle(fileStream);
             using (openFilesSync.WriteLock())
             {
@@ -196,7 +243,6 @@ namespace LiquesceSvc
                userFileStream.ProcessID = processId;
             }
 
-            Log.Debug("CallOpenCreateFile fileInfo IncrementOpenCount[{0}]", currentOpenCount);
 
             if ((lastError != 0)
                //&& (lastError != CBFSWinUtil.ERROR_ALREADY_EXISTS)
@@ -224,7 +270,7 @@ namespace LiquesceSvc
          else
          {
             Log.Trace("Detected as a File");
-            flagsAndAttributes = NativeFileOps.EFileAttributes.RandomAccess;
+            flagsAndAttributes = /*NativeFileOps.EFileAttributes.RandomAccess | NativeFileOps.EFileAttributes.Write_Through*/ NativeFileOps.EFileAttributes.Normal;
          }
 
          try
@@ -280,15 +326,19 @@ namespace LiquesceSvc
       public override void CloseFile(CbFsFileInfo fileInfo, CbFsHandleInfo userContextInfo)
       {
          long openFileKey = fileInfo.UserContext.ToInt64();
-         Log.Debug("CloseFile Dummy filename [{0}], fileInfo[{1}], userContextInfo [{2}]",
+         Log.Debug("CloseFile filename [{0}], fileInfo[{1}], userContextInfo [{2}]",
             fileInfo.FileName, openFileKey, userContextInfo.UserContext.ToInt64());
-         CloseFile(fileInfo);
+         //CloseFile(userContextInfo.UserContext);
+         if (CloseFile(fileInfo.UserContext))
+         {
+            fileInfo.UserContext = IntPtr.Zero;
+         }
       }
 
-      private void CloseFile(CbFsFileInfo fileInfo)
+      private bool CloseFile(IntPtr context)
       {
-         long openFileKey = fileInfo.UserContext.ToInt64();
-         Log.Debug("CloseFile IN filename [{0}], fileInfo[{1}]", fileInfo.FileName, openFileKey);
+         long openFileKey = context.ToInt64();
+         Log.Debug("CloseFile IN openFileKey [{0}]", openFileKey);
 
          if (openFileKey != 0)
          {
@@ -308,49 +358,48 @@ namespace LiquesceSvc
                      {
                         openFiles.Remove(openFileKey);
                      }
-                     fileInfo.UserContext = IntPtr.Zero;
                   }
                   else
                   {
                      Log.Debug("Remaining OpenCount [{0}]", decrementOpenCount);
+                     return false;
                   }
                }
                else
                {
-                  Log.Warn("Something has already removed refFileHandleContext [{0}]", openFileKey);
+                  Log.Warn("Something has already removed openFileKey [{0}]", openFileKey);
                }
             }
          }
+         else
+         {
+            Log.Warn("CloseFile with no openFileKey");
+         }
+         return true;
       }
 
+      /// <summary>
+      /// This event is fired when the OS needs to close the previously created or opened handle to the file. 
+      /// This event is different from OnCloseFile in that OnCleanupFile happens immediately when the last handle
+      /// is closed by the application, while OnCloseFile can be called much later when the OS itself decides 
+      /// that the file can be closed. Use FileInfo and HandleInfo to identify the file that needs to be closed. 
+      /// </summary>
+      /// <param name="fileInfo"></param>
+      /// <param name="userContextInfo"></param>
       public override void CleanupFile(CbFsFileInfo fileInfo, CbFsHandleInfo userContextInfo)
       {
          long openFileKey = fileInfo.UserContext.ToInt64();
          long userOpenKey = userContextInfo.UserContext.ToInt64();
          Log.Debug("CleanupFile IN filename [{0}], fileInfo[{1}], userContextInfo [{2}]",
             fileInfo.FileName, openFileKey, userOpenKey);
-
-         if (openFileKey != 0)
+         if (CloseFile(userContextInfo.UserContext))
          {
-            using (openFilesSync.UpgradableReadLock())
-            {
-               NativeFileOps userFileStream;
-               if (openFiles.TryGetValue(userOpenKey, out userFileStream))
-               {
-                  Log.Debug("Close and removing user stream [{0}]", userFileStream.FullName);
-                  userFileStream.Close();
-                  using (openFilesSync.WriteLock())
-                  {
-                     openFiles.Remove(userOpenKey);
-                  }
-               }
-               else
-               {
-                  Log.Warn("Something has already removed userOpenKey [{0}]", userOpenKey);
-               }
-            }
+            userContextInfo.UserContext = IntPtr.Zero;
          }
-         userContextInfo.UserContext = IntPtr.Zero;
+         //if (CloseFile(fileInfo.UserContext))
+         //{
+         //   fileInfo.UserContext = IntPtr.Zero;
+         //}
       }
 
       public override void GetFileInfo(string FileName, ref bool FileExists, ref DateTime CreationTime,
@@ -556,10 +605,10 @@ namespace LiquesceSvc
          long refFileHandleContext = fileInfo.UserContext.ToInt64();
          Log.Debug("SetFileAttributes [{0}] IN userFileKey[{1}], refFileHandleContext[{2}], CreationTime [{3}] LastAccessTime[{4}], LastWriteTime[{5}], FileAttributes[{6}]",
             fileInfo.FileName, userFileKey, refFileHandleContext, creationTime, lastAccessTime, lastWriteTime, (NativeFileOps.EFileAttributes)fileAttributes);
-         NativeFileOps stream = null;
          using (openFilesSync.ReadLock())
          {
-            openFiles.TryGetValue(userFileKey, out stream);
+            NativeFileOps stream;
+            openFiles.TryGetValue(refFileHandleContext, out stream);
             if ((stream == null)
                 || stream.IsInvalid
                )
@@ -568,12 +617,13 @@ namespace LiquesceSvc
             }
             else
             {
+               int processId = GetProcessId();
                if ((fileAttributes != 0) // Requestor is stating no change
                    && (stream.Attributes != fileAttributes)
                   )
                {
-                  Log.Trace("changing from stream.Attributes [{0}] to fileAttributes [{1}]", (NativeFileOps.EFileAttributes)stream.Attributes, (NativeFileOps.EFileAttributes)fileAttributes);
-                  PID.Invoke(stream.ProcessID, () => stream.SetFileAttributes(fileAttributes));
+                  Log.Trace("changing from old Attributes [{0}] to new Attributes [{1}]", (NativeFileOps.EFileAttributes)stream.Attributes, (NativeFileOps.EFileAttributes)fileAttributes);
+                  PID.Invoke(processId, () => stream.SetFileAttributes(fileAttributes));
                }
                if ((creationTime != DateTime.MinValue) // Requestor is stating no change
                    || (lastAccessTime != DateTime.MinValue)
@@ -581,7 +631,7 @@ namespace LiquesceSvc
                   )
                {
                   Log.Trace("changing Times");
-                  PID.Invoke(stream.ProcessID, () => stream.SetFileTime(creationTime, lastAccessTime, lastWriteTime));
+                  PID.Invoke(processId, () => stream.SetFileTime(creationTime, lastAccessTime, lastWriteTime));
                }
             }
          }

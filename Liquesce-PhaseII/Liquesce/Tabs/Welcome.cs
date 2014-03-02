@@ -41,7 +41,6 @@ namespace Liquesce.Tabs
          richTextBox1.Rtf = @"{\rtf1\ansi\ansicpg1252\deff0\deflang2057{\fonttbl{\f0\fnil\fcharset0 Tahoma;}{\f1\fnil\fcharset2 Symbol;}}
 {\colortbl ;\red0\green0\blue255;}
 {\*\generator Msftedit 5.41.21.2510;}\viewkind4\uc1\pard\ul\b\f0\fs24 Welcome.\ulnone\b0\fs18\par
-\par
 \fs20 This is the management application for the \i Liquesce Phase \fs22 ][\fs20  Suite\i0 . It allows you to take your hard disks (internal or external) and make them appear as single large drive.\par
 \par
 \ul\b Performance Tip:\ulnone\b0\par
@@ -64,8 +63,7 @@ This is because 'It' (the AV) will see all file actions (opens, closes, queries,
 \fi-360\li1080\fs20 Use the 'Zip Logs' button in the Logging tab,\fs18\par
 \fs20{\pntext\f0 ii.\tab}Create a new issue here: {\field{\*\fldinst{HYPERLINK 'https://liquesce.codeplex.com/workitem/list/basic'}}{\fldrslt{\ul\cf1 https://liquesce.codeplex.com/workitem/list/basic}}}\f0\fs20 . \lang9\fs22\par
 \lang2057\fs20{\pntext\f0 iii.\tab}With the notes of how and when, fill in the details and attach the log(s)\lang9\fs22\par
-\pard{\pntext\f1\'B7\tab}{\*\pn\pnlvlblt\pnf1\pnindent0{\pntxtb\'B7}}\fi-360\li360\lang2057\fs20 If the actions can be done via clicking things, then use PSR (Problem Steps Recorder) that comes with windows;\par
-{\field{\*\fldinst{HYPERLINK '{\pntext\f1\'B7\tab}http://www.msigeek.com/2410/problem-step-recorder-an-amazing-screen-capture-tool'}}{\fldrslt{\ul\cf1 http://www.msigeek.com/2410/problem-step-recorder-an-amazing-screen-capture-tool}}}\lang9\f0\fs22\par
+\pard{\pntext\f1\'B7\tab}{\*\pn\pnlvlblt\pnf1\pnindent0{\pntxtb\'B7}}\fi-360\li360\lang2057\fs20 If the actions can be done via clicking things, then use PSR (Problem Steps Recorder) {\field{\*\fldinst{HYPERLINK 'http://www.msigeek.com/2410/problem-step-recorder-an-amazing-screen-capture-tool'}}{\fldrslt{\ul\cf1 http://www.msigeek.com/2410/problem-step-recorder-an-amazing-screen-capture-tool}}}\lang9\f0\fs22\par
 }";
       }
 

@@ -39,7 +39,7 @@ namespace LiquesceSvc
    {
       static private readonly Logger Log = LogManager.GetCurrentClassLogger();
       private static readonly CacheHelper<int, WindowsIdentity> cacheProcessIdToWi = new CacheHelper<int, WindowsIdentity>(60);
-      private static readonly int systemProcessId = GetSystemProcessId();
+      private static readonly uint systemProcessId = GetSystemProcessId();
 
       /// <summary>
       /// Find the System.exe ID to prevent impersonation of it.
@@ -47,14 +47,14 @@ namespace LiquesceSvc
       /// </summary>
       /// <exception cref="SystemException">thrown if system.exe is not found</exception>
       /// <returns>systemProcessId</returns>
-      private static int GetSystemProcessId()
+      private static uint GetSystemProcessId()
       {
          Process[] processesByName = Process.GetProcessesByName("System");
          try
          {
             if (processesByName.Any())
             {
-               return processesByName[0].Id;
+               return (uint) processesByName[0].Id;
             }
          }
          finally
@@ -113,6 +113,12 @@ namespace LiquesceSvc
 
       private static WindowsImpersonationContext InvokeHelper(int processId)
       {
+         WindowsIdentity wi = FindWindowsIdentity(processId);
+         return wi.Impersonate();
+      }
+
+      private static WindowsIdentity FindWindowsIdentity(int processId)
+      {
          if (processId == 0)
          {
             throw new Win32Exception(1314); // ERROR_PRIVILEGE_NOT_HELD
@@ -132,7 +138,38 @@ namespace LiquesceSvc
          {
             cacheProcessIdToWi.Touch(processId);
          }
-         return wi.Impersonate();
+         return wi;
+      }
+
+      public static uint CheckForNTAuthority(uint processId)
+      {
+         if (processId == systemProcessId)
+         {
+            return systemProcessId;
+         }
+         WindowsIdentity wi = FindWindowsIdentity((int) processId);
+         return (wi.IsSystem) ? systemProcessId : processId;
+         // Alternate method if the "Cached way above doe snot yield the correct results
+         // This by it's nature is painfully slow !
+         //string query = "Select * From Win32_Process Where ProcessID = " + processId;
+         //ManagementObjectSearcher searcher = new ManagementObjectSearcher(query);
+         //ManagementObjectCollection processList = searcher.Get();
+
+         //foreach (ManagementObject obj in processList.Cast<ManagementObject>())
+         //{
+         //   object[] argList = { string.Empty, string.Empty };
+         //   int returnVal = Convert.ToInt32(obj.InvokeMethod("GetOwner", argList));
+         //   if (returnVal == 0)
+         //   {
+         //      // return DOMAIN\user
+         //      return (argList[1].ToString() == "NT AUTHORITY")
+         //             && (argList[0].ToString() == "SYSTEM")
+         //                ? 4
+         //                : processId;
+         //   }
+         //}
+
+         //return processId;
       }
    }
 }

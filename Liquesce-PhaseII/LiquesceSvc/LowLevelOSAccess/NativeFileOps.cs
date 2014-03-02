@@ -78,6 +78,12 @@ namespace LiquesceSvc
       private NativeFileOps(string fullName, SafeFileHandle handle, bool forceUseAsReadOnly)
       {
          this.handle = handle;
+         if (!handle.IsInvalid
+            && !handle.IsClosed
+            )
+         {
+            IncrementOpenCount();
+         }
          FullName = GetFullPathName(fullName);
          ForceUseAsReadOnly = forceUseAsReadOnly;
       }
