@@ -36,6 +36,7 @@ namespace Liquesce.Tabs
       public MountingPoints()
       {
          InitializeComponent();
+         DoubleBuffered = true;
       }
 
       private ConfigDetails cd1;

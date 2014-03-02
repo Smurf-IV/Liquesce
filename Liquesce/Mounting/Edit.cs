@@ -47,6 +47,7 @@ namespace Liquesce.Mounting
       public Edit()
       {
          InitializeComponent();
+         DoubleBuffered = true;
 
          Icon icon = ExtractIcon.GetIconForFilename(Environment.GetFolderPath(Environment.SpecialFolder.MyComputer), true);
          imageListUnits.Images.Add("MyComputer", icon.ToBitmap());

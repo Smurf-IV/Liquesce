@@ -43,11 +43,13 @@ namespace Liquesce.Tabs
       public Service()
       {
          InitializeComponent();
+         DoubleBuffered = true;
       }
 
       private void Service_Load(object sender, EventArgs e)
       {
          propertyGrid1.SelectedObject = new AdvancedPropertiesDisplay(cd);
+
          Utils.ResizeDescriptionArea(ref propertyGrid1, 5);
       }
 

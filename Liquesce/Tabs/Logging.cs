@@ -42,6 +42,7 @@ namespace Liquesce.Tabs
       public Logging()
       {
          InitializeComponent();
+         DoubleBuffered = true;
       }
 
       private TailForm tailForm;
