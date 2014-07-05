@@ -105,7 +105,7 @@ namespace LiquesceSvc
          int processId = GetProcessId();
          long openFileKey = fileInfo.UserContext.ToInt64();
 
-         NativeFileOps foundFileInfo = roots.GetPath(filename, mountDetail.HoldOffBufferBytes);
+         NativeFileOps foundFileInfo = roots.FindCreateNewAllocationRootPath(filename, mountDetail.HoldOffBufferBytes);
          if (foundFileInfo.ForceUseAsReadOnly)
          {
             throw new Win32Exception(CBFSWinUtil.ERROR_WRITE_PROTECT);
@@ -117,7 +117,7 @@ namespace LiquesceSvc
          Log.Debug("CreateFile IN fullName [{0}], DesiredAccess[{1}], fileAttributes[{2}], ShareMode[{3}], ProcessId[{4}], openFileKey [{5}]",
                   fullName, (NativeFileOps.EFileAccess)DesiredAccess, fileAttributes, (FileShare)ShareMode, processId, openFileKey);
 
-         if (CBFSWinUtil.IsDirectoy(attributes))
+         if (CBFSWinUtil.IsDirectory(attributes))
          {
             // If a recycler is required then request usage of an existing one from a root drive.
             if (RestrictedDirectoryNames.Contains(foundFileInfo.FileName))
@@ -136,7 +136,7 @@ namespace LiquesceSvc
             PID.Invoke(processId, () => NativeFileOps.CreateDirectory(foundFileInfo.DirectoryPathOnly));
          }
          int lastError = 0;
-         if (CBFSWinUtil.IsDirectoy(attributes))
+         if (CBFSWinUtil.IsDirectory(attributes))
          {
             attributes |= NativeFileOps.EFileAttributes.BackupSemantics;
          }
@@ -186,7 +186,7 @@ namespace LiquesceSvc
             "CallOpenCreateFile IN fullName [{0}], DesiredAccess[{1}], fileAttributes[{2}], ShareMode[{3}], creation [{4}], ProcessId[{5}], openFileKey [{6}]",
             fullName, (NativeFileOps.EFileAccess)DesiredAccess, fileAttributes, (FileShare)ShareMode, creation, processId, openFileKey);
          int lastError = 0;
-         if (CBFSWinUtil.IsDirectoy(fileAttributes))
+         if (CBFSWinUtil.IsDirectory(fileAttributes))
          {
             fileAttributes |= NativeFileOps.EFileAttributes.BackupSemantics;
          }
@@ -262,7 +262,7 @@ namespace LiquesceSvc
          const uint share = CBFSWinUtil.FILE_SHARE_READ | CBFSWinUtil.FILE_SHARE_WRITE | CBFSWinUtil.FILE_SHARE_DELETE;
 
          const uint creationDisposition = CBFSWinUtil.OPEN_EXISTING;
-         if (CBFSWinUtil.IsDirectoy(fileAttributes))
+         if (CBFSWinUtil.IsDirectory(fileAttributes))
          {
             Log.Trace("Detected as a Directory");
             flagsAndAttributes = NativeFileOps.EFileAttributes.BackupSemantics;
@@ -294,7 +294,7 @@ namespace LiquesceSvc
 
       public override void OpenFile(string filename, uint DesiredAccess, uint fileAttributes, uint ShareMode, CbFsFileInfo fileInfo, CbFsHandleInfo userContextInfo)
       {
-         NativeFileOps foundFileInfo = roots.GetPath(filename, 0);
+         NativeFileOps foundFileInfo = roots.GetFromPathFileName(filename);
          string fullName = foundFileInfo.FullName;
 
          if (!foundFileInfo.Exists)
@@ -409,7 +409,7 @@ namespace LiquesceSvc
                                        ref uint FileAttributes, ref string ShortFileName, ref string RealFileName)
       {
          FileExists = false;
-         NativeFileOps nfo = roots.GetPath(FileName);
+         NativeFileOps nfo = roots.GetFromPathFileName(FileName);
          if (nfo.Exists)
          {
             WIN32_FIND_DATA fileData = new WIN32_FIND_DATA();
@@ -492,7 +492,7 @@ namespace LiquesceSvc
             FileId.QuadPart = 0;
             if (CbFs.OnGetFileNameByFileId != null)
             {
-               NativeFileOps fileOps = roots.GetPath(Path.Combine(directoryInfo.FileName, FileName), 0);
+               NativeFileOps fileOps = roots.GetFromPathFileName(Path.Combine(directoryInfo.FileName, FileName));
                FileId.QuadPart = fileOps.IsInvalid ? 0 : fileOps.FileId;
             }
             DirectoryEnumerationInfo.UserContext = new IntPtr(nextOffset);
@@ -537,13 +537,17 @@ namespace LiquesceSvc
                if (thisFileSize < AllocationSize)
                {
                   // Need to check that the source FullName drive has enough free space for this "Potential" allocation
-                  NativeFileOps confirmSpace = roots.GetPath(fileInfo.FileName, (ulong)(AllocationSize - thisFileSize));
-                  if (confirmSpace.FullName != stream.FullName)
+                  ulong lpFreeBytesAvailable, num2, num3;
+                  if (GetDiskFreeSpaceExW(roots.GetRoot(stream.FullName), out lpFreeBytesAvailable, out num2, out num3))
                   {
-                     Log.Warn(
-                        "There is a problem, in the amount of space required to fullfill this request with respect to the amount of space originally allocated");
-                     // TODO: Move the file, or return not enough space ??
-                     throw new ECBFSError(CBFSWinUtil.ERROR_NO_SYSTEM_RESOURCES);
+                     if (lpFreeBytesAvailable - (decimal) AllocationSize + thisFileSize < 0)
+                     {
+                        //NativeFileOps confirmSpace = roots.FindCreateNewAllocationRootPath(fileInfo.FileName, (ulong)(AllocationSize));
+                        Log.Warn(
+                           "There is a problem, in the amount of space required to fullfill this request with respect to the amount of space originally allocated");
+                        // TODO: Move the file, or return not enough space ??
+                        throw new ECBFSError(CBFSWinUtil.ERROR_NO_SYSTEM_RESOURCES);
+                     }
                   }
                }
                stream.SetLength(AllocationSize);
@@ -639,7 +643,7 @@ namespace LiquesceSvc
 
       public override void DeleteFile(CbFsFileInfo fileInfo)
       {
-         NativeFileOps nfo = roots.GetPath(fileInfo.FileName);
+         NativeFileOps nfo = roots.GetFromPathFileName(fileInfo.FileName);
          if (nfo.IsDirectory)
          {
             PID.Invoke(GetProcessId(), nfo.DeleteDirectory);
@@ -725,7 +729,7 @@ namespace LiquesceSvc
 
       public override bool IsDirectoryEmpty(CbFsFileInfo directoryInfo, string DirectoryName)
       {
-         NativeFileOps nfo = roots.GetPath(DirectoryName);
+         NativeFileOps nfo = roots.GetFromPathFileName(DirectoryName);
          if (!nfo.Exists)
          {
             CBFSWinUtil.ThrowNotFound((uint)NativeFileOps.EFileAttributes.Directory);

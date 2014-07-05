@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
 
-   <?define x64=$(sys.SOURCEFILEDIR)..\..\..\Amalgam\Phase III\ThirdParty\CBFS\x64 ?>
-   <?define x86=$(sys.SOURCEFILEDIR)..\..\..\Amalgam\Phase III\ThirdParty\CBFS\32bit ?>
+   <?define x64=$(sys.SOURCEFILEDIR)..\ThirdParty\CBFS\x64 ?>
+   <?define x86=$(sys.SOURCEFILEDIR)..\ThirdParty\CBFS\32bit ?>
    <?define IcoSource=$(sys.SOURCEFILEDIR)..\Liquesce\Resources ?>
 
    <Fragment>

@@ -292,12 +292,12 @@ namespace LiquesceSvc
                   return sb.ToString();
                }
             }
-            DirectoryInfo tmp = Directory.GetParent(path);
-            if (tmp == null)
+            string tmp = GetParentPathName(path);
+            if ( string.IsNullOrEmpty(tmp))
             {
                return AddTrailingSeperator(path);
             }
-            path = tmp.FullName;
+            path = tmp;
          } while (!string.IsNullOrEmpty(path));
          return path;
       }
@@ -533,6 +533,25 @@ namespace LiquesceSvc
             throw new Win32Exception();
          }
          return buffer.ToString();
+      }
+
+      public static string GetParentPathName(string startPathFileName)
+      {
+         const int rootLength = 1; // Path.DirectorySeparatorChar;
+         int length = startPathFileName.Length;
+         if (startPathFileName.Length > rootLength)
+         {
+            do
+            {
+               // Spin maddly
+            } while (length > rootLength
+                     && startPathFileName[--length] != Path.DirectorySeparatorChar
+                     && startPathFileName[length] != Path.AltDirectorySeparatorChar);
+
+            return startPathFileName.Substring(0, length);
+         }
+
+         return string.Empty;
       }
 
       public ReadOnlyCollection<AlternateNativeInfo> ListAlternateDataStreams()
