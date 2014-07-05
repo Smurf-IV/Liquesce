@@ -132,13 +132,15 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="CBFS5Net, Version=5.0.145.0, Culture=neutral, PublicKeyToken=0f194b348c109bec, processorArchitecture=x86">
-      <HintPath>..\..\..\Amalgam\Phase III\ThirdParty\CBFS\32bit\CBFS5Net.dll</HintPath>
+    <Reference Include="CBFS5Net, Version=5.1.148.0, Culture=neutral, PublicKeyToken=0f194b348c109bec, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\ThirdParty\CBFS\32bit\CBFS5Net.dll</HintPath>
     </Reference>
     <Reference Include="ChinhDo.Transactions">
       <HintPath>..\ThirdParty\ChinhDo.Transactions.dll</HintPath>
     </Reference>
     <Reference Include="NLog, Version=2.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\ThirdParty\NLog.dll</HintPath>
     </Reference>
     <Reference Include="System" />
@@ -161,7 +163,6 @@
     <Compile Include="CBFS\ICBFSFuncsAdvanced.cs" />
     <Compile Include="LiquescOpsCBFSImp.cs" />
     <Compile Include="LowLevelOSAccess\AlternateNativeInfo.cs" />
-    <Compile Include="LowLevelOSAccess\FileManager.cs" />
     <Compile Include="LowLevelOSAccess\HGlobal.cs" />
     <Compile Include="LowLevelOSAccess\NativeFileFind.cs" />
     <Compile Include="LowLevelOSAccess\NativeFileOps.cs" />

@@ -171,16 +171,16 @@ namespace CBFS
       [DebuggerHidden]
       public static void ThrowNotFound(uint attributes)
       {
-         bool isDirectoy = IsDirectoy(attributes);
+         bool isDirectoy = IsDirectory(attributes);
          throw new ECBFSError((uint)(isDirectoy ? ERROR_PATH_NOT_FOUND : ERROR_FILE_NOT_FOUND));
       }
 
-      public static bool IsDirectoy(uint attributes)
+      public static bool IsDirectory(uint attributes)
       {
-         return IsDirectoy((NativeFileOps.EFileAttributes) attributes);
+         return IsDirectory((NativeFileOps.EFileAttributes) attributes);
       }
 
-      public static bool IsDirectoy(NativeFileOps.EFileAttributes attributes)
+      public static bool IsDirectory(NativeFileOps.EFileAttributes attributes)
       {
          return ( attributes & NativeFileOps.EFileAttributes.Directory) == NativeFileOps.EFileAttributes.Directory;
       }

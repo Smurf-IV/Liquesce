@@ -66,73 +66,57 @@ namespace LiquesceSvc
       }
 
 
-      public NativeFileOps GetPath(string filename, ulong spaceRequired = 0)
+      public NativeFileOps GetFromPathFileName(string pathFileName)
       {
+         Log.Trace("GetFromPathFileName [{0}]", pathFileName);
          NativeFileOps fsi = null;
          bool isNamedStream = false;
          string namedStream = string.Empty;
          try
          {
-            // Even A directory requires 4K to be created !
-            spaceRequired += 16384;
-            Log.Trace("GetPath [{0}] spaceRequired [{1}]", filename, spaceRequired);
-
-            if (cachedRootPathsSystemInfo.TryGetValue(filename, out fsi))
-            {
-               Log.Trace("Found in cache");
-               return fsi;
-            }
-            string[] splits = filename.Split(new[] {':'}, StringSplitOptions.RemoveEmptyEntries);
-            int offset = Path.IsPathRooted( filename )?2:1;
-            if ( (splits != null)
-               && (splits.Length > offset)
-               )
-            {
-               isNamedStream = true;
-               filename = splits[offset-1];
-               namedStream = splits[offset];
-            }
-            string foundPath = FindAllocationRootPath(filename, spaceRequired);
-            if (string.IsNullOrEmpty(foundPath))
-            {
-               // TODO: Should something have gone boom before this ?
-// ReSharper disable UnusedVariable.Compiler
-               int ti = 4;
-// ReSharper restore UnusedVariable.Compiler
-            }
-            if (filename == PathDirectorySeparatorChar)
+            if (pathFileName == PathDirectorySeparatorChar)
             {
                Log.Trace("Assuming Home directory so add new to cache and return");
-               fsi = new NativeFileOps(foundPath, AreAllReadOnly);
+               fsi = new NativeFileOps(pathFileName, AreAllReadOnly);
                return fsi;
             }
-
-            string searchFilename = filename.Trim(Path.DirectorySeparatorChar);
-            if (string.IsNullOrWhiteSpace(filename))
-               throw new ArgumentNullException(filename, "Not allowed to pass this length 2");
-
-            if (!CheckAndGetType(Path.Combine(foundPath, searchFilename), out fsi))
+            if (cachedRootPathsSystemInfo.TryGetValue(pathFileName, out fsi))
             {
-               if (mountDetail.SourceLocations.Select(sourceLocation => Path.Combine(sourceLocation.SourcePath, searchFilename)).Any(newTarget => CheckAndGetType(newTarget, out fsi)))
+               Log.Trace("Found in cache 1");
+               return fsi;
+            }
+            string searchFilename = RemoveStreamPart(pathFileName, out isNamedStream, out namedStream);
+
+            if (cachedRootPathsSystemInfo.TryGetValue(searchFilename, out fsi))
+            {
+               Log.Trace("Found in cache from native not stream");
+               return fsi = new NativeFileOps(string.Format("{0}:{1}", fsi.FullName, namedStream), IsRootReadOnly(fsi.DirectoryPathOnly));
+            }
+            Log.Trace("Not found in cache so search for filename");
+
+            if (string.IsNullOrEmpty(searchFilename))
+            {
+               // TODO: Should something have gone boom before this ?
+               if (System.Diagnostics.Debugger.IsAttached)
+                  System.Diagnostics.Debugger.Break();
+            }
+            foreach (string sourceLocation in GetAllRootPathsWhereExists(NativeFileOps.GetParentPathName(pathFileName)))
+            {
+               fsi = new NativeFileOps(Path.Combine(sourceLocation, searchFilename), IsRootReadOnly(sourceLocation));
+               if (fsi.Exists)
                {
-                  Log.Trace("Found in source list");
                   return fsi;
                }
-            }
-            else
-            {
-               Log.Trace("found in 1st mode source");
-               return fsi;
             }
 
             //-------------------------------------
             Log.Trace("file/folder not found");
             // So create a holder for the return and do not store
-            fsi = new NativeFileOps(Path.Combine(foundPath, searchFilename), AreAllReadOnly);
+            fsi = new NativeFileOps(Path.Combine(mountDetail.SourceLocations[0].SourcePath, searchFilename), AreAllReadOnly);
          }
          catch (Exception ex)
          {
-            Log.ErrorException("GetPath threw: ", ex);
+            Log.ErrorException("GetFromPathFileName threw: ", ex);
          }
          finally
          {
@@ -140,36 +124,47 @@ namespace LiquesceSvc
                && fsi.Exists
                )
             {
-               Log.Debug("GetPath from [{0}] found [{1}]", filename, fsi.FullName);
-               cachedRootPathsSystemInfo[filename] = fsi;
+               Log.Debug("GetFromPathFileName from [{0}] found [{1}]", pathFileName, fsi.FullName);
+               if (string.IsNullOrEmpty(pathFileName))
+               {
+                  // TODO: Should something have gone boom before this ?
+                  if (System.Diagnostics.Debugger.IsAttached)
+                     System.Diagnostics.Debugger.Break();
+               }
+               cachedRootPathsSystemInfo[pathFileName] = fsi;
                if (isNamedStream)
                {
-                  Log.Warn("isNamedStream [{0}] found [{1}]", filename, namedStream);
-                  cachedRootPathsSystemInfo[string.Format("{0}:{1}",filename, namedStream)] = fsi;
+                  Log.Warn("isNamedStream [{0}] found [{1}]", pathFileName, namedStream);
+                  cachedRootPathsSystemInfo[string.Format("{0}:{1}",pathFileName, namedStream)] = fsi;
                }
             }
             else
             {
-               Log.Debug("GetPath found nothing for [{0}].", filename);
+               Log.Debug("GetFromPathFileName found nothing for [{0}].", pathFileName);
             }
          }
          return fsi;
       }
 
-
-      private bool CheckAndGetType(string newTarget, out NativeFileOps fsi)
+      private static string RemoveStreamPart(string pathFileName, out bool isNamedStream, out string namedStream)
       {
-         if (cachedRootPathsSystemInfo.TryGetValue(newTarget, out fsi))
+         string searchFilename = pathFileName.Trim(Path.DirectorySeparatorChar);
+         string[] splits = searchFilename.Split(new[] { ':' }, StringSplitOptions.RemoveEmptyEntries);
+         int offset = Path.IsPathRooted(pathFileName) ? 2 : 1;
+         if (splits.Length > offset)
          {
-            Log.Trace("Found in check cache");
-            return true;
+            isNamedStream = true;
+            searchFilename = splits[offset - 1];
+            namedStream = splits[offset];
          }
-         Log.Trace("Try and GetPath from [{0}]", newTarget);
-         // Now here's a kicker.. The User might have copied a file directly onto one of the drives while
-         // this has been running, So this ought to try and find if it exists that way.
-         fsi = new NativeFileOps(newTarget, IsRootReadOnly(newTarget));
-         return fsi.Exists;
+         else
+         {
+            isNamedStream = false;
+            namedStream = string.Empty;
+         }
+         return searchFilename;
       }
+
 
       private bool IsRootReadOnly(string newTarget)
       {
@@ -188,6 +183,11 @@ namespace LiquesceSvc
       public IEnumerable<string> GetAllPaths(string relativefolder)
       {
          return mountDetail.SourceLocations.Select(t => t.SourcePath + relativefolder).Where(Directory.Exists);
+      }
+
+      private IEnumerable<string> GetAllRootPathsWhereExists(string relativefolder)
+      {
+         return mountDetail.SourceLocations.Where(location => Directory.Exists(location.SourcePath + relativefolder)).Select(location => location.SourcePath);
       }
 
       public string GetRoot(string path)
@@ -220,14 +220,31 @@ namespace LiquesceSvc
          return string.Empty;
       }
 
-      // this method returns a path (real physical path) of a place where the next folder/file root can be.
-      private string FindAllocationRootPath(string relativeFolder, ulong spaceRequired)
+      // this method returns a path (real physical path) of a place where the next folder/file root can be created.
+      public NativeFileOps FindCreateNewAllocationRootPath(string pathFileName, ulong spaceRequired)
       {
+         // Even A directory requires 4KB to be created !
+         spaceRequired += 16384;
+         Log.Trace("FindCreateNewAllocationRootPath [{0}] spaceRequired [{1}]", pathFileName, spaceRequired);
+         bool isNamedStream;
+         string namedStream;
+         string searchFilename = RemoveStreamPart(pathFileName, out isNamedStream, out namedStream);
+
          string foundRoot;
-         switch (mountDetail.AllocationMode)
+         string relativeParent = NativeFileOps.GetParentPathName(pathFileName);
+
+         NativeFileOps fsi;
+         if (cachedRootPathsSystemInfo.TryGetValue(relativeParent, out fsi))
          {
+            Log.Trace("Found in cache");
+            foundRoot = GetRelative(fsi.FullName);
+         }
+         else
+         {
+            switch (mountDetail.AllocationMode)
+            {
             case MountDetail.AllocationModes.Folder:
-               foundRoot = GetSourceThatMatchesThisFolderWithSpace(relativeFolder, spaceRequired);
+               foundRoot = GetSourceThatMatchesThisFolderWithSpace(relativeParent, spaceRequired);
                if (string.IsNullOrEmpty(foundRoot))
                   goto case MountDetail.AllocationModes.Priority;
                break;
@@ -245,8 +262,11 @@ namespace LiquesceSvc
             default:
                foundRoot = GetSourceWithMostFreeSpace(spaceRequired);
                break;
+            }
          }
-         return foundRoot;
+         string newPathName = Path.Combine(foundRoot, searchFilename);
+         return isNamedStream ? new NativeFileOps(string.Format("{0}:{1}", newPathName, namedStream), IsRootReadOnly(foundRoot))
+            : new NativeFileOps(newPathName, IsRootReadOnly(foundRoot));
       }
 
 
@@ -256,7 +276,7 @@ namespace LiquesceSvc
       {
          Log.Trace("Trying GetSourceThatMatchesThisFolderWithSpace([{0}],[{1}])", relativeFolder, spaceRequired);
          // remove the last \ to delete the last directory
-         relativeFolder = relativeFolder.TrimEnd(new char[] { Path.DirectorySeparatorChar });
+         relativeFolder = relativeFolder.TrimEnd(new[] { Path.DirectorySeparatorChar });
 
          // for every source location
          foreach (string sourcePath in mountDetail.SourceLocations.Select(s => s.SourcePath))

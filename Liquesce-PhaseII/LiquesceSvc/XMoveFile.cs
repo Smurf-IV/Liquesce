@@ -25,6 +25,7 @@
 #endregion
 
 using System;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -50,10 +51,10 @@ namespace LiquesceSvc
       {
          Log.Info("MoveFile replaceIfExisting [{0}] filename: [{1}] newname: [{2}]", replaceIfExisting, oldName, newName);
 
-         NativeFileOps pathSource = roots.GetPath(oldName);
+         NativeFileOps pathSource = roots.GetFromPathFileName(oldName);
          ulong pathSource_Length = (ulong) (pathSource.Length);
          // Now check to see if this has enough space to make a "Copy" before the atomic delete of MoveFileEX
-         NativeFileOps pathTarget = roots.GetPath(newName, pathSource_Length);
+         NativeFileOps pathTarget = roots.FindCreateNewAllocationRootPath(newName, pathSource_Length);
          string pathTarget_FullName = pathTarget.FullName;
          // Now check to see if this file exists, or exists in another location (Due to share redirect)
          if (pathTarget.Exists 
@@ -96,7 +97,7 @@ namespace LiquesceSvc
             //
 
             // The new target might be on a different drive, so re-create the folder path to the new location
-            int lastPathIndex = pathTarget_FullName.LastIndexOf(Roots.PathDirectorySeparatorChar);
+            int lastPathIndex = pathTarget_FullName.LastIndexOf(Roots.PathDirectorySeparatorChar, StringComparison.Ordinal);
             string newPath = (lastPathIndex > -1) ? pathTarget_FullName.Remove(lastPathIndex) : pathTarget_FullName;
             if ( !string.IsNullOrEmpty( newPath ) )
                Directory.CreateDirectory(newPath);
@@ -142,14 +143,14 @@ namespace LiquesceSvc
 
          Log.Trace("MoveFileExW(pathSource[{0}], pathTarget[{1}], dwFlags[{2}])", pathSource, pathTarget, dwFlags);
          if (!MoveFileExW(pathSource, pathTarget, dwFlags))
-            throw new System.ComponentModel.Win32Exception();
+            throw new Win32Exception();
       }
 
       /// <summary>
       /// http://pinvoke.net/default.aspx/Enums/MoveFileFlags.html
       /// </summary>
       [Flags]
-      public enum MoveFileFlags
+      private enum MoveFileFlags
       {
          MOVEFILE_REPLACE_EXISTING = 0x00000001,
          MOVEFILE_COPY_ALLOWED = 0x00000002,
