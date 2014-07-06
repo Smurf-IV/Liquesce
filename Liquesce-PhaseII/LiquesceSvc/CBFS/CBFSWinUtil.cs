@@ -77,6 +77,7 @@ namespace CBFS
 #pragma warning disable 169
 
       #region File Operation Errors
+      // ReSharper disable UnusedMember.Global
 
       // Check http://msdn.microsoft.com/en-us/library/ms819772.aspx (WinError.h) for error codes
       // From WinError.h -> http://msdn.microsoft.com/en-us/library/windows/desktop/ms681382%28v=vs.85%29.aspx
@@ -164,6 +165,7 @@ namespace CBFS
       public const uint TRUNCATE_EXISTING = 5;
 
       #endregion
+      // ReSharper restore UnusedMember.Global
 #pragma warning restore 169
       // ReSharper restore MemberCanBePrivate.Global
       // ReSharper restore InconsistentNaming
