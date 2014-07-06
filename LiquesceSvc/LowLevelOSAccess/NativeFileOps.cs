@@ -207,6 +207,7 @@ namespace LiquesceSvc
 
       public bool ReadFile(byte[] bytes, UInt32 numBytesToRead, out UInt32 numBytesRead_mustBeZero)
       {
+// ReSharper disable once RedundantAssignment
          numBytesRead_mustBeZero = 0;
          //NativeOverlapped overlapped = new NativeOverlapped();
          return ReadFile(handle, bytes, numBytesToRead, out numBytesRead_mustBeZero, IntPtr.Zero);
@@ -305,9 +306,7 @@ namespace LiquesceSvc
       private static string AddTrailingSeperator(string path)
       {
          char ch = path[path.Length - 1];
-         if ((ch != Path.DirectorySeparatorChar)
-            && (ch != Path.AltDirectorySeparatorChar)
-            )
+         if (!IsDirectorySeparator(ch))
          {
             path += Path.DirectorySeparatorChar;
          }
@@ -422,9 +421,7 @@ namespace LiquesceSvc
             do
             {
                ch = FullName[--length];
-            } while ((ch != Path.DirectorySeparatorChar)
-               && (ch != Path.AltDirectorySeparatorChar)
-               );
+            } while (!IsDirectorySeparator(ch));
             return FullName.Substring(0, length);
          }
       }
@@ -440,9 +437,7 @@ namespace LiquesceSvc
             do
             {
                ch = FullName[--index];
-            } while ((ch != Path.DirectorySeparatorChar)
-               && (ch != Path.AltDirectorySeparatorChar)
-               );
+            } while (!IsDirectorySeparator(ch));
             return FullName.Substring(index + 1, length - index - 1);
          }
       }
@@ -535,9 +530,49 @@ namespace LiquesceSvc
          return buffer.ToString();
       }
 
+      private static int GetRootLength(string path)
+      {
+         int index = 0;
+         int length = path.Length;
+         if (length >= 1 && IsDirectorySeparator(path[0]))
+         {
+            index = 1;
+            if (length >= 2 && IsDirectorySeparator(path[1]))
+            {
+               index = 2;
+               int num = 2;
+               while (index < length
+                      && (IsDirectorySeparator(path[index])
+                          || --num > 0)
+                     )
+               {
+                  ++index;
+               }
+            }
+         }
+         else if (length >= 2 
+            && path[1] == Path.VolumeSeparatorChar
+            )
+         {
+            index = 2;
+            if (length >= 3 
+               && IsDirectorySeparator(path[2])
+               )
+               ++index;
+         }
+         return index;
+      }
+
+      private static bool IsDirectorySeparator(char c)
+      {
+         if (c != Path.DirectorySeparatorChar)
+            return c == Path.AltDirectorySeparatorChar;
+         return true;
+      }
+
       public static string GetParentPathName(string startPathFileName)
       {
-         const int rootLength = 1; // Path.DirectorySeparatorChar;
+         int rootLength = GetRootLength(startPathFileName);
          int length = startPathFileName.Length;
          if (startPathFileName.Length > rootLength)
          {
@@ -545,8 +580,8 @@ namespace LiquesceSvc
             {
                // Spin maddly
             } while (length > rootLength
-                     && startPathFileName[--length] != Path.DirectorySeparatorChar
-                     && startPathFileName[length] != Path.AltDirectorySeparatorChar);
+                     && !IsDirectorySeparator(startPathFileName[--length])
+                     );
 
             return startPathFileName.Substring(0, length);
          }
@@ -602,13 +637,10 @@ namespace LiquesceSvc
          {
             throw new Win32Exception(CBFSWinUtil.ERROR_INSUFFICIENT_BUFFER);
          }
-         else
-         {
-            Marshal.Copy(managedDescriptor, 0, securityDescriptor, managedDescriptor.Length);
-         }
+         Marshal.Copy(managedDescriptor, 0, securityDescriptor, managedDescriptor.Length);
       }
 
-      public void SetFileSecurity(uint /*SECURITY_INFORMATION*/ securityInformation, IntPtr /*ref SECURITY_DESCRIPTOR*/ securityDescriptor, uint Length)
+      public void SetFileSecurity(uint /*SECURITY_INFORMATION*/ securityInformation, IntPtr /*ref SECURITY_DESCRIPTOR*/ securityDescriptor, uint length)
       {
          if (ForceUseAsReadOnly)
          {
@@ -636,7 +668,7 @@ namespace LiquesceSvc
          FileSystemSecurity pSD = (!IsDirectory)
                                      ? (FileSystemSecurity)File.GetAccessControl(FullName, includeSections)
                                      : Directory.GetAccessControl(FullName, includeSections);
-         byte[] binaryForm = new byte[Length];
+         byte[] binaryForm = new byte[length];
          Marshal.Copy(securityDescriptor, binaryForm, 0, binaryForm.Length);
          pSD.SetAccessRuleProtection(
             (reqInfo & SECURITY_INFORMATION.PROTECTED_DACL_SECURITY_INFORMATION) ==
@@ -669,6 +701,7 @@ namespace LiquesceSvc
       /// and usage http://msdn.microsoft.com/en-us/library/ff556635%28v=vs.85%29.aspx
       /// </summary>
       [Flags]
+      // ReSharper disable UnusedMember.Global
       public enum SECURITY_INFORMATION : uint
       {
          /// <summary>
@@ -713,11 +746,14 @@ namespace LiquesceSvc
    UNPROTECTED_SACL_SECURITY_INFORMATION  The SACL inherits ACEs from the parent object.
           * */
       }
+      // ReSharper restore UnusedMember.Global
 
       ///// <summary>
       ///// See http://www.pinvoke.net/search.aspx?search=SECURITY_DESCRIPTOR&namespace=[All]
       ///// </summary>
       // ReSharper disable FieldCanBeMadeReadOnly.Global
+      // ReSharper disable MemberCanBePrivate.Global
+      // ReSharper disable UnusedMember.Global
       [StructLayout(LayoutKind.Sequential, Pack = 4)]
       public struct SECURITY_DESCRIPTOR
       {
@@ -733,6 +769,8 @@ namespace LiquesceSvc
          public IntPtr sacl;     // == PACL
          public IntPtr dacl;     // == PACL
       }
+      // ReSharper restore UnusedMember.Global
+      // ReSharper restore MemberCanBePrivate.Global
 
       #endregion SetFileSecurity
 
@@ -952,11 +990,13 @@ namespace LiquesceSvc
 
       // ReSharper restore MemberCanBePrivate.Local
 
+      // ReSharper disable UnusedMember.Local
       private enum GET_FILEEX_INFO_LEVELS
       {
          GetFileExInfoStandard,
          GetFileExMaxInfoLevel
       }
+      // ReSharper restore UnusedMember.Local
 
       [DllImport("shlwapi.dll", CharSet = CharSet.Unicode)]
       [return: MarshalAs(UnmanagedType.Bool)]
@@ -965,9 +1005,11 @@ namespace LiquesceSvc
       private const int MAX_PATH = 260;
 
       // ReSharper disable UnusedMember.Local
+#pragma warning disable 169
       private static readonly int MaxLongPath = 32000;
 
       private static readonly string Prefix = "\\\\?\\";
+#pragma warning restore 169
       // ReSharper restore UnusedMember.Local
 
       [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true, BestFitMapping = false)]
@@ -1006,11 +1048,13 @@ namespace LiquesceSvc
       }
 
       [Flags]
+      // ReSharper disable UnusedMember.Local
       private enum DuplicateOptions : uint
       {
          DUPLICATE_CLOSE_SOURCE = (0x00000001),// Closes the source handle. This occurs regardless of any error status returned.
          DUPLICATE_SAME_ACCESS = (0x00000002), //Ignores the dwDesiredAccess parameter. The duplicate handle has the same access as the source handle.
       }
+      // ReSharper restore UnusedMember.Local
 
       [DllImport("kernel32.dll", SetLastError = true)]
       [return: MarshalAs(UnmanagedType.Bool)]

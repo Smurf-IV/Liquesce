@@ -74,18 +74,24 @@ namespace LiquesceSvc
          string namedStream = string.Empty;
          try
          {
+            if (cachedRootPathsSystemInfo.TryGetValue(pathFileName, out fsi))
+            {
+               Log.Trace("Found pathFileName in cache");
+               return fsi;
+            }
             if (pathFileName == PathDirectorySeparatorChar)
             {
                Log.Trace("Assuming Home directory so add new to cache and return");
-               fsi = new NativeFileOps(pathFileName, AreAllReadOnly);
-               return fsi;
+               return (fsi = FindCreateNewAllocationRootPath(pathFileName, 0));
             }
-            if (cachedRootPathsSystemInfo.TryGetValue(pathFileName, out fsi))
-            {
-               Log.Trace("Found in cache 1");
-               return fsi;
-            }
+
             string searchFilename = RemoveStreamPart(pathFileName, out isNamedStream, out namedStream);
+            if (string.IsNullOrEmpty(searchFilename))
+            {
+               // TODO: Should something have gone boom before this ?
+               if (System.Diagnostics.Debugger.IsAttached)
+                  System.Diagnostics.Debugger.Break();
+            }
 
             if (cachedRootPathsSystemInfo.TryGetValue(searchFilename, out fsi))
             {
@@ -94,12 +100,6 @@ namespace LiquesceSvc
             }
             Log.Trace("Not found in cache so search for filename");
 
-            if (string.IsNullOrEmpty(searchFilename))
-            {
-               // TODO: Should something have gone boom before this ?
-               if (System.Diagnostics.Debugger.IsAttached)
-                  System.Diagnostics.Debugger.Break();
-            }
             foreach (string sourceLocation in GetAllRootPathsWhereExists(NativeFileOps.GetParentPathName(pathFileName)))
             {
                fsi = new NativeFileOps(Path.Combine(sourceLocation, searchFilename), IsRootReadOnly(sourceLocation));
@@ -131,6 +131,7 @@ namespace LiquesceSvc
                   if (System.Diagnostics.Debugger.IsAttached)
                      System.Diagnostics.Debugger.Break();
                }
+
                cachedRootPathsSystemInfo[pathFileName] = fsi;
                if (isNamedStream)
                {
@@ -236,8 +237,8 @@ namespace LiquesceSvc
          NativeFileOps fsi;
          if (cachedRootPathsSystemInfo.TryGetValue(relativeParent, out fsi))
          {
-            Log.Trace("Found in cache");
-            foundRoot = GetRelative(fsi.FullName);
+            Log.Trace("Found relativeParent in cache");
+            foundRoot = GetRoot(fsi.FullName);
          }
          else
          {
@@ -265,6 +266,17 @@ namespace LiquesceSvc
             }
          }
          string newPathName = Path.Combine(foundRoot, searchFilename);
+         // TODO: Should something have gone boom before this ?
+         if (System.Diagnostics.Debugger.IsAttached)
+         {
+            if ((newPathName == searchFilename)
+                || (newPathName == pathFileName)
+               )
+            {
+               System.Diagnostics.Debugger.Break();
+            }
+         }
+
          return isNamedStream ? new NativeFileOps(string.Format("{0}:{1}", newPathName, namedStream), IsRootReadOnly(foundRoot))
             : new NativeFileOps(newPathName, IsRootReadOnly(foundRoot));
       }

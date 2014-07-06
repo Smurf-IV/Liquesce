@@ -56,7 +56,7 @@ namespace LiquesceSvc.LowLevelOSAccess
                   Marshal.StructureToPtr(name, nameBuffer, false);
 
                   OBJECT_ATTRIBUTES objAttributes = new OBJECT_ATTRIBUTES();
-                  objAttributes.Length = (uint) Marshal.SizeOf(objAttributes);
+                  objAttributes.Length = (uint)Marshal.SizeOf(objAttributes);
                   objAttributes.ObjectName = nameBuffer;
                   objAttributes.RootDirectory = rootHandle.DangerousGetHandle();
                   objAttributes.Attributes = 0;
@@ -74,7 +74,7 @@ namespace LiquesceSvc.LowLevelOSAccess
                      );
                   if (status != 0)
                   {
-                     int win32Error = (int) LsaNtStatusToWinError(status);
+                     int win32Error = (int)LsaNtStatusToWinError(status);
                      throw new Win32Exception(win32Error);
                   }
                }
@@ -84,7 +84,7 @@ namespace LiquesceSvc.LowLevelOSAccess
 
             using (HGlobal fileNameInfoBuffer = new HGlobal(fileNameInfoBufferSize))
             {
-               if (!GetFileInformationByHandleEx(fileHandle, FILE_INFO_BY_HANDLE_CLASS.FileNameInfo, 
+               if (!GetFileInformationByHandleEx(fileHandle, FILE_INFO_BY_HANDLE_CLASS.FileNameInfo,
                   fileNameInfoBuffer,
                   fileNameInfoBufferSize))
                {
@@ -174,32 +174,45 @@ namespace LiquesceSvc.LowLevelOSAccess
           uint OpenOptions
           );
 
-      enum FILE_ID_TYPE 
+      // ReSharper disable UnusedMember.Local
+      enum FILE_ID_TYPE
       {
-      FileIdType,
-      MaximumFileIdType
-}
-      struct FILE_ID_DESCRIPTOR 
+         FileIdType,
+         MaximumFileIdType
+      }
+      // ReSharper disable NotAccessedField.Local
+      struct FILE_ID_DESCRIPTOR
       {
-    UInt32 dwSize;  // Size of the struct
-      FILE_ID_TYPE Type; // Describes the type of identifier passed in. 0 == Use the FileId member of the union.
-        Int64 FileId;   // A EXT_FILE_ID_128 structure containing the 128-bit file ID of the file. This is used on ReFS file systems. 
-    };
+         UInt32 dwSize;  // Size of the struct
+         FILE_ID_TYPE Type; // Describes the type of identifier passed in. 0 == Use the FileId member of the union.
+         Int64 FileId;   // A EXT_FILE_ID_128 structure containing the 128-bit file ID of the file. This is used on ReFS file systems. 
+
+         public FILE_ID_DESCRIPTOR(uint dwSize, FILE_ID_TYPE type, long fileId) : this()
+         {
+            this.dwSize = dwSize;
+            Type = type;
+            FileId = fileId;
+         }
+      };
+      // ReSharper restore NotAccessedField.Local
+      // ReSharper restore UnusedMember.Local
 
       [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-      private static extern SafeFileHandle OpenFileById (
-    SafeFileHandle hVolumeHint,
-      FILE_ID_DESCRIPTOR lpFileId,
-    UInt32 dwDesiredAccess,
-    UInt32 dwShareMode,
-    IntPtr lpSecurityAttributes, // Reserved.
-    UInt32 dwFlagsAndAttributes        
-    );
+      private static extern SafeFileHandle OpenFileById(
+         SafeFileHandle hVolumeHint,
+         FILE_ID_DESCRIPTOR lpFileId,
+         UInt32 dwDesiredAccess,
+         UInt32 dwShareMode,
+         IntPtr lpSecurityAttributes, // Reserved.
+         UInt32 dwFlagsAndAttributes
+         );
+
       [DllImport("Advapi32.dll", ExactSpelling = true, SetLastError = false)]
       private static extern uint LsaNtStatusToWinError(uint Status);
 
       [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-      private struct FILE_NAME_INFO 
+      // ReSharper disable UnusedMember.Local
+      private struct FILE_NAME_INFO
       {
          internal UInt32 FileNameLength;
          [MarshalAsAttribute(UnmanagedType.ByValTStr, SizeConst = 512)]
@@ -211,6 +224,7 @@ namespace LiquesceSvc.LowLevelOSAccess
          FileNameInfo = 2,
          FileIdBothDirectoryInfo = 10
       }
+      // ReSharper restore UnusedMember.Local
 
       [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
       [return: MarshalAs(UnmanagedType.Bool)]
