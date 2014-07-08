@@ -188,7 +188,7 @@ namespace LiquesceSvc
                   liquesceOperations.Add(liquesceOps);
 
                   liquesceOps.RegisterAndInit(Properties.Settings.Default.Salt, ConfigDetails.ProductNameCBFS, currentConfigDetails.ThreadCount,
-                     CbFsStorageType.stDisk);
+                      CbFsStorageType.stDisk, false);
                   try
                   {
                      // Attempt to remove a drive that may have been zombied by a crash etc.
@@ -197,7 +197,7 @@ namespace LiquesceSvc
                      liquesceOps.AddMountingPoint(mountDetail.DriveLetter, CallbackFileSystem.CBFS_SYMLINK_MOUNT_MANAGER, 0);
                      liquesceOps.DeleteMountingPoint();
                      liquesceOps.DeleteStorage(true);
-                     liquesceOps.CreateStorage(CbFsStorageType.stDisk, currentConfigDetails.ThreadCount, "Liquesce.ico");
+                     liquesceOps.CreateStorage(CbFsStorageType.stDisk, currentConfigDetails.ThreadCount, currentConfigDetails.UseInternalDriverCaches, "Liquesce.ico");
                   }
                   catch (Exception ex)
                   {

@@ -3,7 +3,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="ConfigDetails.cs" company="Smurf-IV">
 //
-//  Copyright (C) 2010-2012 Simon Coghlan (Aka Smurf-IV)
+//  Copyright (C) 2010-2014 Simon Coghlan (Aka Smurf-IV)
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -90,6 +90,10 @@ namespace LiquesceFacade
       public UInt16 CacheLifetimeSeconds = 32; // Set to zero to disable
 
       [DataMember]
+      public bool UseInternalDriverCaches = true;
+
+
+      [DataMember]
       public List<MountDetail> MountDetails = new List<MountDetail>();
 
       public new string ToString()
@@ -99,6 +103,7 @@ namespace LiquesceFacade
          sb = sb.AppendFormat("ThreadCount=[{0}]", ThreadCount).AppendLine();
          sb = sb.AppendFormat("ServiceLogLevel[{0}]", ServiceLogLevel).AppendLine();
          sb = sb.AppendFormat("CacheLifetimeSeconds=[{0}]", CacheLifetimeSeconds).AppendLine();
+         sb = sb.AppendFormat("UseInternalDriverCaches=[{0}]", UseInternalDriverCaches).AppendLine();
          sb = sb.AppendLine("MountDetails:");
          sb = MountDetails.Aggregate(sb, (current, mountDetail) => current.AppendLine(mountDetail.ToString()));
          return sb.ToString();

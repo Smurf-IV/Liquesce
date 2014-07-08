@@ -73,16 +73,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CBFS", "CBFS", "{A45FE901-B
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "32Bit", "32Bit", "{3A83D9C1-FFB5-4422-ADD5-34545E4E88C7}"
 	ProjectSection(SolutionItems) = preProject
-		ThirdParty\CBFS\32bit\CBFS5Net.dll = ThirdParty\CBFS\32bit\CBFS5Net.dll
 		ThirdParty\CBFS\32bit\msvcp100.dll = ThirdParty\CBFS\32bit\msvcp100.dll
-		ThirdParty\CBFS\32bit\msvcr100.dll = ThirdParty\CBFS\32bit\msvcr100.dll
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "x64", "x64", "{D661BAF6-AD37-44B3-AEF5-4ED5737540F5}"
 	ProjectSection(SolutionItems) = preProject
-		ThirdParty\CBFS\x64\CBFS5Net.dll = ThirdParty\CBFS\x64\CBFS5Net.dll
 		ThirdParty\CBFS\x64\msvcp100.dll = ThirdParty\CBFS\x64\msvcp100.dll
-		ThirdParty\CBFS\x64\msvcr100.dll = ThirdParty\CBFS\x64\msvcr100.dll
 	EndProjectSection
 EndProject
 Global
@@ -250,8 +246,8 @@ Global
 		{D661BAF6-AD37-44B3-AEF5-4ED5737540F5} = {A45FE901-B323-48BD-BC0B-69784A7321F2}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		BuildVersion_BuildVersioningStyle = YearStamp.MonthStamp.DayStamp.Increment
-		BuildVersion_AssemblyInfoFilename = LiquesceSvc\Properties\AssemblyInfo.cs
 		BuildVersion_UseGlobalSettings = True
+		BuildVersion_AssemblyInfoFilename = LiquesceSvc\Properties\AssemblyInfo.cs
+		BuildVersion_BuildVersioningStyle = YearStamp.MonthStamp.DayStamp.Increment
 	EndGlobalSection
 EndGlobal
