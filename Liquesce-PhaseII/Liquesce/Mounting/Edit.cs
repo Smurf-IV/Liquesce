@@ -881,7 +881,14 @@ namespace Liquesce.Mounting
          }
          set
          {
-            cmbAllocationMode.Text = cd.MountDetails[currentIndex].AllocationMode.ToString();
+            try
+            {
+               cmbAllocationMode.Text = value.ToString();
+            }
+            catch (Exception ex)
+            {
+               Log.ErrorException("AllocationMode", ex);
+            }
          }
       }
 
@@ -894,7 +901,14 @@ namespace Liquesce.Mounting
          }
          set
          {
-            numHoldOffBytes.Value = cd.MountDetails[currentIndex].HoldOffBufferBytes / (decimal)(1024 * 1024);
+            try
+            {
+               numHoldOffBytes.Value = value / (decimal)(1024 * 1024);
+            }
+            catch (Exception ex)
+            {
+               Log.ErrorException("HoldOffMBytes", ex);
+            }
          }
       }
 

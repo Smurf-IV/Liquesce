@@ -122,13 +122,13 @@ namespace LiquesceSvc
          Log.Trace("GetDiskFreeSpace IN ");
          freeBytesAvailable = totalBytes = totalFreeBytes = 0;
 
-         HashSet<string> uniqueSources = new HashSet<string>();
+         HashSet<string> uniqueWriteableSources = new HashSet<string>();
          foreach (SourceLocation location in mountDetail.SourceLocations.Where(location => !location.UseIsReadOnly))
          {
-            uniqueSources.Add(NativeFileOps.GetRootOrMountFor(location.SourcePath));
+            uniqueWriteableSources.Add(NativeFileOps.GetRootOrMountFor(location.SourcePath));
          }
 
-         foreach (string source in uniqueSources)
+         foreach (string source in uniqueWriteableSources)
          {
             ulong num;
             ulong num2;
@@ -138,6 +138,24 @@ namespace LiquesceSvc
                freeBytesAvailable += num;
                totalBytes += num2;
                totalFreeBytes += num3;
+            }
+            Log.Debug("DirectoryName=[{0}], FreeBytesAvailable=[{1}], TotalNumberOfBytes=[{2}], TotalNumberOfFreeBytes=[{3}]",
+                  source, num, num2, num3);
+         }
+         HashSet<string> uniqueReadonlySources = new HashSet<string>();
+         foreach (SourceLocation location in mountDetail.SourceLocations.Where(location => location.UseIsReadOnly))
+         {
+            uniqueReadonlySources.Add(NativeFileOps.GetRootOrMountFor(location.SourcePath));
+         }
+
+         foreach (string source in uniqueReadonlySources)
+         {
+            ulong num;
+            ulong num2;
+            ulong num3;
+            if (GetDiskFreeSpaceExW(source, out num, out num2, out num3))
+            {
+               totalBytes += num2;
             }
             Log.Debug("DirectoryName=[{0}], FreeBytesAvailable=[{1}], TotalNumberOfBytes=[{2}], TotalNumberOfFreeBytes=[{3}]",
                   source, num, num2, num3);

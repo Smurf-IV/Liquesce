@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="AdvancedPropertiesDisplay.cs" company="Smurf-IV">
 // 
-//  Copyright (C) 2010-2013 Simon Coghlan (Aka Smurf-IV)
+//  Copyright (C) 2010-2014 Simon Coghlan (Aka Smurf-IV)
 // 
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -62,8 +62,8 @@ namespace Liquesce
        DisplayName("Thread Count")
       , CategoryAttribute("CBFS")
       ]
-      [TypeConverter(typeof (NumericUpDownTypeConverter))]
-      [Editor(typeof (NumericUpDownTypeEditor), typeof (UITypeEditor)), MinMaxAttribute(0, 31)]
+      [TypeConverter(typeof(NumericUpDownTypeConverter))]
+      [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMaxAttribute(0, 31)]
       public ushort ThreadCount
       {
          get { return cd.ThreadCount; }
@@ -76,7 +76,7 @@ namespace Liquesce
        DisplayName("Service Logging Level")
       , CategoryAttribute("Service")
       ]
-      [TypeConverter(typeof (ServiceLogLevelValues))]
+      [TypeConverter(typeof(ServiceLogLevelValues))]
       public string ServiceLogLevel
       {
          get { return cd.ServiceLogLevel; }
@@ -88,12 +88,25 @@ namespace Liquesce
        DisplayName("File Detail cache seconds")
       , CategoryAttribute("File")
       ]
-      [TypeConverter(typeof (NumericUpDownTypeConverter))]
-      [Editor(typeof (NumericUpDownTypeEditor), typeof (UITypeEditor)), MinMaxAttribute(UInt16.MaxValue)]
+      [TypeConverter(typeof(NumericUpDownTypeConverter))]
+      [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMaxAttribute(UInt16.MaxValue)]
       public UInt16 CacheLifetimeSeconds
       {
          get { return cd.CacheLifetimeSeconds; }
          set { cd.CacheLifetimeSeconds = value; }
+      }
+
+      [DescriptionAttribute("The CBFS has caches that enable missing file details etc to not be routed through the service.\r" +
+         "This enables faster lookup's but has the draw back of never being able to find files that have been copied to the actual source drives.\r"+
+         "e.g. http://www.eldos.com/documentation/cbfs/ref_cl_cbfs_prp_nonexistentfilescacheenabled.html"),
+       DisplayName("Use Internal Driver Caches")
+      , CategoryAttribute("File")
+      ]
+      [TypeConverter(typeof(bool))]
+      public bool UseInternalDriverCaches
+      {
+         get { return cd.UseInternalDriverCaches; }
+         set { cd.UseInternalDriverCaches = value; }
       }
    }
    // ReSharper restore UnusedMember.Global
