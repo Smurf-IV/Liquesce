@@ -563,7 +563,7 @@ namespace LiquesceSvc
          return index;
       }
 
-      private static bool IsDirectorySeparator(char c)
+      public static bool IsDirectorySeparator(char c)
       {
          if (c != Path.DirectorySeparatorChar)
             return c == Path.AltDirectorySeparatorChar;

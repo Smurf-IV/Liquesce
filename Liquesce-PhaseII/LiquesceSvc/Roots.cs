@@ -79,10 +79,13 @@ namespace LiquesceSvc
                Log.Trace("Found pathFileName in cache");
                return fsi;
             }
-            if (pathFileName == PathDirectorySeparatorChar)
+            if ( NativeFileOps.IsDirectorySeparator( pathFileName[0]) )
             {
-               Log.Trace("Assuming Home directory so add new to cache and return");
-               return (fsi = FindCreateNewAllocationRootPath(pathFileName, 0));
+               if (System.Diagnostics.Debugger.IsAttached)
+                  System.Diagnostics.Debugger.Break();
+               //   Log.Trace("Assuming Home directory so add new to cache and return");
+            //   mountDetail.SourceLocations.First().SourcePath
+            //   return (fsi = FindCreateNewAllocationRootPath(pathFileName, 0));
             }
 
             string searchFilename = RemoveStreamPart(pathFileName, out isNamedStream, out namedStream);
@@ -93,10 +96,13 @@ namespace LiquesceSvc
                   System.Diagnostics.Debugger.Break();
             }
 
-            if (cachedRootPathsSystemInfo.TryGetValue(searchFilename, out fsi))
+            if (isNamedStream)
             {
-               Log.Trace("Found in cache from native not stream");
-               return fsi = new NativeFileOps(string.Format("{0}:{1}", fsi.FullName, namedStream), IsRootReadOnly(fsi.DirectoryPathOnly));
+               if (cachedRootPathsSystemInfo.TryGetValue(searchFilename, out fsi))
+               {
+                  Log.Trace("Found in cache from native not stream");
+                  return fsi = new NativeFileOps(string.Format("{0}:{1}", fsi.FullName, namedStream), IsRootReadOnly(fsi.DirectoryPathOnly));
+               }
             }
             Log.Trace("Not found in cache so search for filename");
 
@@ -231,7 +237,7 @@ namespace LiquesceSvc
          string namedStream;
          string searchFilename = RemoveStreamPart(pathFileName, out isNamedStream, out namedStream);
 
-         string foundRoot;
+         string foundRoot = null;
          string relativeParent = NativeFileOps.GetParentPathName(pathFileName);
 
          NativeFileOps fsi;
@@ -239,29 +245,33 @@ namespace LiquesceSvc
          {
             Log.Trace("Found relativeParent in cache");
             foundRoot = GetRoot(fsi.FullName);
+            if (!CheckSourceForSpace(spaceRequired, foundRoot))
+            {
+               foundRoot = string.Empty;
+            }
          }
-         else
+         if ( string.IsNullOrEmpty( foundRoot ) )
          {
             switch (mountDetail.AllocationMode)
             {
             case MountDetail.AllocationModes.Folder:
-               foundRoot = GetSourceThatMatchesThisFolderWithSpace(relativeParent, spaceRequired);
+               foundRoot = GetWriteableSourceThatMatchesThisFolderWithSpace(relativeParent, spaceRequired);
                if (string.IsNullOrEmpty(foundRoot))
                   goto case MountDetail.AllocationModes.Priority;
                break;
 
             case MountDetail.AllocationModes.Priority:
-               foundRoot = GetHighestPrioritySourceWithSpace(spaceRequired);
+               foundRoot = GetWriteableHighestPrioritySourceWithSpace(spaceRequired);
                if (string.IsNullOrEmpty(foundRoot))
                   goto case MountDetail.AllocationModes.Balanced;
                break;
 
             case MountDetail.AllocationModes.Balanced:
-               foundRoot = GetSourceWithMostFreeSpace(spaceRequired);
+               foundRoot = GetWriteableSourceWithMostFreeSpace(spaceRequired);
                break;
 
             default:
-               foundRoot = GetSourceWithMostFreeSpace(spaceRequired);
+               foundRoot = GetWriteableSourceWithMostFreeSpace(spaceRequired);
                break;
             }
          }
@@ -284,61 +294,58 @@ namespace LiquesceSvc
 
       // returns the root for:
       //  The first disk where relativeFolder exists and if there is enough free space
-      private string GetSourceThatMatchesThisFolderWithSpace(string relativeFolder, ulong spaceRequired)
+      private string GetWriteableSourceThatMatchesThisFolderWithSpace(string relativeFolder, ulong spaceRequired)
       {
          Log.Trace("Trying GetSourceThatMatchesThisFolderWithSpace([{0}],[{1}])", relativeFolder, spaceRequired);
          // remove the last \ to delete the last directory
          relativeFolder = relativeFolder.TrimEnd(new[] { Path.DirectorySeparatorChar });
 
          // for every source location
-         foreach (string sourcePath in mountDetail.SourceLocations.Select(s => s.SourcePath))
+         foreach (string sourcePath in 
+            from sourcePath in mountDetail.SourceLocations
+                  .Where(s => !s.UseIsReadOnly)
+                  .Select(s => s.SourcePath) 
+                     where CheckSourceForSpace(spaceRequired, sourcePath) 
+                     let testpath = sourcePath + relativeFolder 
+                     where new NativeFileOps(testpath, AreAllReadOnly).Exists 
+                     select sourcePath
+                     )
          {
-            // first get free space
-            ulong lpFreeBytesAvailable, num2, num3;
-            if (GetDiskFreeSpaceExW(sourcePath, out lpFreeBytesAvailable, out num2, out num3))
-            {
-               Log.Trace("See if enough space on [{0}] lpFreeBytesAvailable[{1}] > spaceRequired[{2}]", sourcePath,
-                         lpFreeBytesAvailable, spaceRequired);
-               if (lpFreeBytesAvailable > spaceRequired)
-               {
-                  string testpath = sourcePath + relativeFolder;
-
-                  // check if relativeFolder is on this disk
-                  if (new NativeFileOps(testpath, AreAllReadOnly).Exists)
-                     return sourcePath;
-               }
-            }
+            return sourcePath;
          }
          return string.Empty;
       }
 
 
       // returns the next root with the highest priority and the space
-      private string GetHighestPrioritySourceWithSpace(ulong spaceRequired)
+      private string GetWriteableHighestPrioritySourceWithSpace(ulong spaceRequired)
       {
          Log.Trace("Trying GetHighestPrioritySourceWithSpace([{0}])", spaceRequired);
-         foreach (SourceLocation w in mountDetail.SourceLocations)
+         foreach (SourceLocation w in mountDetail.SourceLocations.Where(s => !s.UseIsReadOnly))
          {
-            ulong lpFreeBytesAvailable, num2, num3;
-            if (GetDiskFreeSpaceExW(w.SourcePath, out lpFreeBytesAvailable, out num2, out num3) 
-               && (lpFreeBytesAvailable > spaceRequired)
-               )
-            {
+            if (CheckSourceForSpace(spaceRequired, w.SourcePath))
                return w.SourcePath;
-            }
          }
          return string.Empty;
       }
 
+      private static bool CheckSourceForSpace(ulong spaceRequired, string sourcePath)
+      {
+         ulong lpFreeBytesAvailable, num2, num3;
+         return (GetDiskFreeSpaceExW(sourcePath, out lpFreeBytesAvailable, out num2, out num3)
+                 && (lpFreeBytesAvailable > spaceRequired)
+                );
+      }
+
 
       // returns the root with the most free space
-      private string GetSourceWithMostFreeSpace(ulong spaceRequired)
+      private string GetWriteableSourceWithMostFreeSpace(ulong spaceRequired)
       {
          Log.Trace("Trying GetSourceWithMostFreeSpace([{0}])", spaceRequired);
          ulong highestFreeSpace = 0;
          string sourceWithMostFreeSpace = string.Empty;
 
-         mountDetail.SourceLocations.ForEach(str =>
+         foreach (SourceLocation str in mountDetail.SourceLocations.Where(s => !s.UseIsReadOnly))
          {
             ulong num, num2, num3;
             if (GetDiskFreeSpaceExW(str.SourcePath, out num, out num2, out num3))
