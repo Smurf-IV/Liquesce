@@ -42,7 +42,12 @@ Keep an open eye on the \cf0\b{\field{\*\fldinst{HYPERLINK "http://liquesce.code
 \cf0\b0\f5 - \f2 Start\f5  - \cf6\b\f2 Search all usages of the DriveLetter and make sure they become MountPoint compatible\par
 \cf4\b0\f0\fs20 - UNC path instead of drive letter as a parameter to AddMountingPoint() method\par
 - Phase ][ Does not allow Teracopy to work - Re-Opened!\par
-\par
+\cf0 - Directory Renaming\par
+- - unique folder\par
+- - Spread testing\par
+- - Large drive contents\par
+- File Renaming\par
+\cf4\par
 \cf0\ul\b Done\par
 2014-07-##\par
 \ulnone\b0 - Fix Use existing folders when in "Folder" mode\par
@@ -59,14 +64,13 @@ Keep an open eye on the \cf0\b{\field{\*\fldinst{HYPERLINK "http://liquesce.code
 - - Sporadic BSOD (access violation) when the network mounting points were used. \par
 - - After directory enumeration had finished (the ERROR_NO_MORE_FILES returned) a new enumerate directory request with the same handle (and without the "restart scan" flag) restarted the enumeration. Now in order to make a new enumeration the directory must be reopened.  \par
 - - Possibility of BSOD during directory enumeration when the "enumeration mask" parameter points to user address space.\par
+- Add code for the new feature: \f2\fs19 UseInplaceRenaming\par
+\f0\fs20 - - Not fully functional yet.\par
 - Directory Renaming\par
 - - unique folder\par
 - - Spread testing\par
-- - Large drive contents\par
-- File Renaming\par
-- Add code for the new feature: \f2\fs19 UseInplaceRenaming\par
-\f0\fs20 - - Not fully functional yet.\par
--\par
+- After UAC request the MgtApp would be at the back :-(\par
+\par
 \ul\b\par
 2014-06-##\par
 \ulnone\b0 - Add Latest CBFS 5.1.148 (Supposed to fix these things since 145)\par

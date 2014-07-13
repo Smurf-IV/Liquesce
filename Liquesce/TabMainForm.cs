@@ -1,9 +1,9 @@
 ﻿#region Copyright (C)
 
 // ---------------------------------------------------------------------------------------------------------------
-//  <copyright file="LandingZone.cs" company="Smurf-IV">
+//  <copyright file="TabMainForm.cs" company="Smurf-IV">
 //
-//  Copyright (C) 2013 Simon Coghlan (Aka Smurf-IV)
+//  Copyright (C) 2013-2014 Simon Coghlan (Aka Smurf-IV)
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -23,24 +23,24 @@
 //  Email: http://www.codeplex.com/site/users/view/smurfiv
 //  </summary>
 // --------------------------------------------------------------------------------------------------------------------
-
 #endregion Copyright (C)
 
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
+
 using Liquesce.Tabs;
 using LiquesceFacade;
 using LiquesceTray;
 
 namespace Liquesce
 {
-   public partial class LandingZone : Form
+   public partial class TabMainForm : Form
    {
       private readonly ConfigDetails cd = new ConfigDetails();
 
-      public LandingZone()
+      public TabMainForm()
       {
          InitializeComponent();
          DoubleBuffered = true;
@@ -117,6 +117,12 @@ namespace Liquesce
          // persist our geometry string.
          Properties.Settings.Default.WindowLocation = WindowLocation.GeometryToString(this);
          Properties.Settings.Default.Save();
+      }
+
+      private void TabMainForm_Shown(object sender, System.EventArgs e)
+      {
+         BringToFront();
+         Activate();
       }
    }
 }

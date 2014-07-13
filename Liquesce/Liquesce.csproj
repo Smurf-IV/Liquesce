@@ -114,11 +114,11 @@
       <Link>Shared\WindowLocation.cs</Link>
     </Compile>
     <Compile Include="AdvancedPropertiesDisplay.cs" />
-    <Compile Include="LandingZone.cs">
+    <Compile Include="TabMainForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="LandingZone.Designer.cs">
-      <DependentUpon>LandingZone.cs</DependentUpon>
+    <Compile Include="TabMainForm.Designer.cs">
+      <DependentUpon>TabMainForm.cs</DependentUpon>
     </Compile>
     <Compile Include="LogDisplay.cs" />
     <Compile Include="DragDropItem.cs" />
@@ -202,8 +202,8 @@
     <None Include="Tabs\Welcome.rtf" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="LandingZone.resx">
-      <DependentUpon>LandingZone.cs</DependentUpon>
+    <EmbeddedResource Include="TabMainForm.resx">
+      <DependentUpon>TabMainForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Mounting\Edit.resx">
       <DependentUpon>Edit.cs</DependentUpon>
@@ -286,7 +286,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="YearStamp.MonthStamp.DayStamp.Increment" BuildVersion_UseGlobalSettings="True" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" />
+      <UserProperties BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_UseGlobalSettings="True" BuildVersion_BuildVersioningStyle="YearStamp.MonthStamp.DayStamp.Increment" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
