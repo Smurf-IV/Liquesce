@@ -79,29 +79,29 @@ namespace LiquesceSvc
                Log.Trace("Found pathFileName in cache");
                return fsi;
             }
-            if ( NativeFileOps.IsDirectorySeparator( pathFileName[0]) )
+            if ((pathFileName.Length == 1 )
+               && NativeFileOps.IsDirectorySeparator(pathFileName[0])
+               )
             {
-               if (System.Diagnostics.Debugger.IsAttached)
-                  System.Diagnostics.Debugger.Break();
-               //   Log.Trace("Assuming Home directory so add new to cache and return");
-            //   mountDetail.SourceLocations.First().SourcePath
-            //   return (fsi = FindCreateNewAllocationRootPath(pathFileName, 0));
+               Log.Trace("Assuming Home directory so add new to cache and return");
+               namedStream = mountDetail.SourceLocations.First().SourcePath;
+               return (fsi = new NativeFileOps(namedStream, IsRootReadOnly(namedStream)));
             }
 
             string searchFilename = RemoveStreamPart(pathFileName, out isNamedStream, out namedStream);
-            if (string.IsNullOrEmpty(searchFilename))
-            {
-               // TODO: Should something have gone boom before this ?
-               if (System.Diagnostics.Debugger.IsAttached)
-                  System.Diagnostics.Debugger.Break();
-            }
 
             if (isNamedStream)
             {
+               if (string.IsNullOrEmpty(searchFilename))
+               {
+                  // TODO: Should something have gone boom before this ?
+                  if (System.Diagnostics.Debugger.IsAttached)
+                     System.Diagnostics.Debugger.Break();
+               }
                if (cachedRootPathsSystemInfo.TryGetValue(searchFilename, out fsi))
                {
                   Log.Trace("Found in cache from native not stream");
-                  return fsi = new NativeFileOps(string.Format("{0}:{1}", fsi.FullName, namedStream), IsRootReadOnly(fsi.DirectoryPathOnly));
+                  return (fsi = new NativeFileOps(string.Format("{0}:{1}", fsi.FullName, namedStream), IsRootReadOnly(fsi.DirectoryPathOnly)));
                }
             }
             Log.Trace("Not found in cache so search for filename");
@@ -356,7 +356,7 @@ namespace LiquesceSvc
                   sourceWithMostFreeSpace = str.SourcePath;
                }
             }
-         });
+         }
          if (highestFreeSpace < spaceRequired)
             Log.Warn("Amount of free space[{0}] on [{1}] is less than required [{2}]", highestFreeSpace, sourceWithMostFreeSpace, spaceRequired);
          return sourceWithMostFreeSpace;

@@ -92,6 +92,9 @@ namespace LiquesceFacade
       [DataMember]
       public bool UseInternalDriverCaches = true;
 
+      [DataMember]
+      public bool UseInplaceRenaming = false;
+
 
       [DataMember]
       public List<MountDetail> MountDetails = new List<MountDetail>();
@@ -104,6 +107,7 @@ namespace LiquesceFacade
          sb = sb.AppendFormat("ServiceLogLevel[{0}]", ServiceLogLevel).AppendLine();
          sb = sb.AppendFormat("CacheLifetimeSeconds=[{0}]", CacheLifetimeSeconds).AppendLine();
          sb = sb.AppendFormat("UseInternalDriverCaches=[{0}]", UseInternalDriverCaches).AppendLine();
+         sb = sb.AppendFormat("UseInplaceRenaming=[{0}]", UseInplaceRenaming).AppendLine();
          sb = sb.AppendLine("MountDetails:");
          sb = MountDetails.Aggregate(sb, (current, mountDetail) => current.AppendLine(mountDetail.ToString()));
          return sb.ToString();

@@ -53,11 +53,20 @@ Keep an open eye on the \cf0\b{\field{\*\fldinst{HYPERLINK "http://liquesce.code
 - - Testing Teracopy\par
 - Improve performance on internal file finding\par
 - Fix exception when config file has be manually edited and HoldOfBytes is an out of range value\par
-- Add "Use Internal Driver cache" mode option (default to true)\par
+- Add code for the new feature: \f2\fs19 UseInternalDriverCaches\par
+\f0\fs20 - Add "Use Internal Driver cache" mode option (default to true)\par
 - Update to CBFS 5.1.149\par
 - - Sporadic BSOD (access violation) when the network mounting points were used. \par
 - - After directory enumeration had finished (the ERROR_NO_MORE_FILES returned) a new enumerate directory request with the same handle (and without the "restart scan" flag) restarted the enumeration. Now in order to make a new enumeration the directory must be reopened.  \par
 - - Possibility of BSOD during directory enumeration when the "enumeration mask" parameter points to user address space.\par
+- Directory Renaming\par
+- - unique folder\par
+- - Spread testing\par
+- - Large drive contents\par
+- File Renaming\par
+- Add code for the new feature: \f2\fs19 UseInplaceRenaming\par
+\f0\fs20 - - Not fully functional yet.\par
+-\par
 \ul\b\par
 2014-06-##\par
 \ulnone\b0 - Add Latest CBFS 5.1.148 (Supposed to fix these things since 145)\par
