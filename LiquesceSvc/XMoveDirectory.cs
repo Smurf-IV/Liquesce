@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="XMoveDirectory.cs" company="Smurf-IV">
 // 
-//  Copyright (C) 2010-2012 Simon Coghlan (Aka Smurf-IV) & fpDragon
+//  Copyright (C) 2010-2014 Simon Coghlan (Aka Smurf-IV) & fpDragon
 // 
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -24,10 +24,9 @@
 // --------------------------------------------------------------------------------------------------------------------
 #endregion
 
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Transactions;
+
 using ChinhDo.Transactions;
 using NLog;
 
@@ -38,49 +37,52 @@ namespace LiquesceSvc
    /// </summary>
    internal class XMoveDirectory
    {
+      private readonly TxFileManager fileManager;
       static private readonly Logger Log = LogManager.GetCurrentClassLogger();
       private readonly List<string> dirAllreadyCreatedInThisTrans = new List<string>();
 
-      public void Move(Roots roots, string source, string pathTarget_FullName, bool replaceIfExisting)
+      public XMoveDirectory(TxFileManager fileManager)
       {
-         Log.Trace("XMoveDirectory.Move(roots[{0}], dirSource[{1}], currentNewTarget[{2}], replaceIfExisting[{3}])", roots, source, pathTarget_FullName, replaceIfExisting);
-         try
-         {
-            TxFileManager fileManager = new TxFileManager();
-            using (TransactionScope scope1 = new TransactionScope())
-            {
-               Move(roots, new DirectoryInfo(source), pathTarget_FullName, replaceIfExisting, fileManager);
-               scope1.Complete();
-            }
-         }
-         catch ( Exception ex )
-         {
-            Log.ErrorException( "Transactions should have moved back:", ex );
-            throw;
-         }
+         this.fileManager = fileManager;
       }
 
-      private void Move(Roots roots, DirectoryInfo pathSource, string pathTarget_FullName, bool replaceIfExisting, TxFileManager fileManager)
+      public void Move(Roots roots, DirectoryInfo pathSource, string pathTarget_FullName, bool replaceIfExisting, bool useInplaceRenaming)
       {
          string pathSource_FullName = pathSource.FullName;
          Log.Trace("Move(pathSource[{0}], pathTarget[{1}], replaceIfExisting[{2}])", pathSource_FullName, pathTarget_FullName, replaceIfExisting);
          // Create in place ready for the files or other SubDir's
          CreateDirTrans(pathTarget_FullName, fileManager);
+         string newRoot = string.Empty;
+         if (!useInplaceRenaming)
+         {
+            newRoot = roots.GetRelative(pathSource_FullName);
+         }
          // for every file in the current folder
          foreach (FileInfo filein in pathSource.GetFiles())
          {
             // with each file, allow the target to distribute in case space is a problem
             string fileSource = Path.Combine(pathSource_FullName, filein.Name);
-            string fileTarget = Path.Combine(pathTarget_FullName, filein.Name);
+            string fileTarget;
+            if (useInplaceRenaming)
+            {
+               fileTarget = Path.Combine(pathTarget_FullName, filein.Name);
+            }
+            else
+            {
+               NativeFileOps newTarget = roots.FindCreateNewAllocationRootPath(newRoot + filein.Name, (ulong) filein.Length);
+               fileTarget = newTarget.FullName;
+               // The new target might be on a different drive, so re-create the folder path to the new location
+               NativeFileOps.CreateDirectory(newTarget.DirectoryPathOnly);
+            }
 
-            fileManager.Snapshot(fileSource);
+            fileManager.Move(fileSource, fileTarget);
             XMoveFile.MoveFileEx(fileSource, fileTarget, replaceIfExisting);
          }
 
          // for every subfolder recurse
          foreach (DirectoryInfo dr in pathSource.GetDirectories())
          {
-            Move(roots, dr, Path.Combine(pathTarget_FullName, dr.Name), replaceIfExisting, fileManager);
+            Move(roots, dr, Path.Combine(pathTarget_FullName, dr.Name), replaceIfExisting, useInplaceRenaming);
          }
 
          Log.Trace("Delete this Dir[{0}]", pathSource_FullName);

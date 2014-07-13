@@ -34,6 +34,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+
 using CallbackFS;
 using CBFS;
 using LiquesceFacade;
@@ -664,7 +665,7 @@ namespace LiquesceSvc
          }
          // Cbfs has handled the closing and replaceIfExists checks, so it needs to be set always here.
          // https://www.eldos.com/forum/read.php?FID=13&TID=2015
-         PID.Invoke(GetProcessId(), () => XMoveFile.Move(roots, fileInfo.FileName, NewFileName, true));
+         PID.Invoke(GetProcessId(), () => XMoveFile.Move(roots, fileInfo.FileName, NewFileName, true, mountDetail.UseInplaceRenaming));
       }
 
       public override void ReadFile(CbFsFileInfo fileInfo, long Position, byte[] Buffer, UInt32 BytesToRead, out UInt32 bytesRead)

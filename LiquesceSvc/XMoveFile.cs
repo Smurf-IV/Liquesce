@@ -29,8 +29,9 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using CallbackFS;
-using CBFS;
+using System.Transactions;
+
+using ChinhDo.Transactions;
 using NLog;
 
 // ReSharper disable UnusedMember.Local
@@ -47,83 +48,94 @@ namespace LiquesceSvc
       /// <param name="oldName">FullPath to Old</param>
       /// <param name="newName">FullPath to new</param>
       /// <param name="replaceIfExisting"></param>
-      public static void Move(Roots roots, string oldName, string newName, bool replaceIfExisting)
+      /// <param name="useInplaceRenaming"></param>
+      public static void Move(Roots roots, string oldName, string newName, bool replaceIfExisting, bool useInplaceRenaming)
       {
          Log.Info("MoveFile replaceIfExisting [{0}] filename: [{1}] newname: [{2}]", replaceIfExisting, oldName, newName);
 
          NativeFileOps pathSource = roots.GetFromPathFileName(oldName);
-         ulong pathSource_Length = (ulong) (pathSource.Length);
-         // TODO: UseInplaceRenaming
-         // Now check to see if this has enough space to make a "Copy" before the atomic delete of MoveFileEX
-         NativeFileOps pathTarget = roots.FindCreateNewAllocationRootPath(newName, pathSource_Length);
-         string pathTarget_FullName = pathTarget.FullName;
-         // Now check to see if this file exists, or exists in another location (Due to share redirect)
-         if (pathTarget.Exists 
-            && !replaceIfExisting
-            )
-         {
-            throw new ECBFSError(CBFSWinUtil.ERROR_ALREADY_EXISTS);
-         }
 
-         if (!pathSource.IsDirectory)
+         try
          {
-            //1 Same directory Rename Scenario:
-            //   MoveFileProxy replaceIfExisting [0] file: [\Test1\ds\New Text Document (2).txt] newfile: [\Test1\ds\test.txt] 
-            //
-            //2 Move into a subdir off "ds" Scenario:
-            //   MoveFileProxy replaceIfExisting [0] file: [\Test1\ds\New Text Document (3).txt] newfile: [\Test1\ds\ds\New Text Document (3).txt] 
-            //   File will be in [\Test1\ds\ds\New Text Document (3).txt]
-            //
-            //3 Rename a File when a directory name already exists
-            //   MoveFileProxy replaceIfExisting [0] file: [\Test1\ds\New Text Document (2).txt] newfile: [\Test1\ds\test.txt]  
-            //   But the Direcotory [\Test1\ds\test.txt] exists ! Resulting in the correct Explorer message
-            //
-            //4 Rename a file to be the same name as the parent directory
-            //   MoveFile [\Test1\ds\test.txt\New Text Document (2).txt] to [\test.txt] 
-            //   Should result in [\Test1\ds\test.txt\test.txt]
-            //
-            //5 Move a file to be Closer to the Mount point (higher) in the directory structure
-            //   MoveFileProxy replaceIfExisting [0] file: [\Test1\ds\ds\New Text Document (3).txt] newfile: [\Test1\New Text Document (3).txt]
-            //
-            //6 Rename a file to a Name that already exists at this level
-            //   MoveFileProxy replaceIfExisting [0] file: [\Test1\ds\testSame (2).txt] newfile: [\Test1\ds\testSame.txt] 
-            //   [\Test1\ds\testSame.txt] already exists; so should display a MessageBox in Explorer
-            //
-            //7 Now perform all the above via a share access that does not contain the dir name 
-            //   i.e. ShareName is [TestShare] pointing at [\Test1]
-            //   Scenario 1 produces MoveFile [\Test1\ds\New Text Document (2).txt] to [\ds\test.txt]
-            //
-            //8 Perform a delete on the Server Mount to see if the file is moved to the recycle bin
-            //   MoveFile Should be used to go to the Recycler dependent on the Drive Format Type and ACL Status
-            //
-
-            // The new target might be on a different drive, so re-create the folder path to the new location
-            int lastPathIndex = pathTarget_FullName.LastIndexOf(Roots.PathDirectorySeparatorChar, StringComparison.Ordinal);
-            string newPath = (lastPathIndex > -1) ? pathTarget_FullName.Remove(lastPathIndex) : pathTarget_FullName;
-            if ( !string.IsNullOrEmpty( newPath ) )
-               Directory.CreateDirectory(newPath);
-            MoveFileEx(pathSource.FullName, pathTarget_FullName, replaceIfExisting);
-         }
-         else
-         {
-            // Cannot use MoveFileEx, as this app needs to remove the old cached values.
-            // So call a function to move each file, and subdir recusively via XMoveDirectory
-            // Repeat the file tests above, but use directories instead.
-            Log.Trace("GetAllPaths [{0}]", oldName);
-            string[] allPossibleRootTargets = roots.GetAllRootPathsWhereExists(oldName).ToArray();
-            Log.Trace("Now do them backwards so that overwrites are done correctly");
-            // TODO: UseInplaceRenaming
-            Array.Reverse(allPossibleRootTargets);
-            XMoveDirectory dirMover = new XMoveDirectory();
-            // newName will already be calculated as the relative offset (Should have starting '\')
-            foreach (string dirRootSource in allPossibleRootTargets)
+            TxFileManager fileManager = new TxFileManager();
+            using (TransactionScope scope1 = new TransactionScope())
             {
-               dirMover.Move(roots, dirRootSource + oldName, dirRootSource + newName, replaceIfExisting);
+               if (!pathSource.IsDirectory)
+               {
+                  //1 Same directory Rename Scenario:
+                  //   MoveFileProxy replaceIfExisting [0] file: [\Test1\ds\New Text Document (2).txt] newfile: [\Test1\ds\test.txt] 
+                  //
+                  //2 Move into a subdir off "ds" Scenario:
+                  //   MoveFileProxy replaceIfExisting [0] file: [\Test1\ds\New Text Document (3).txt] newfile: [\Test1\ds\ds\New Text Document (3).txt] 
+                  //   File will be in [\Test1\ds\ds\New Text Document (3).txt]
+                  //
+                  //3 Rename a File when a directory name already exists
+                  //   MoveFileProxy replaceIfExisting [0] file: [\Test1\ds\New Text Document (2).txt] newfile: [\Test1\ds\test.txt]  
+                  //   But the Direcotory [\Test1\ds\test.txt] exists ! Resulting in the correct Explorer message
+                  //
+                  //4 Rename a file to be the same name as the parent directory
+                  //   MoveFile [\Test1\ds\test.txt\New Text Document (2).txt] to [\test.txt] 
+                  //   Should result in [\Test1\ds\test.txt\test.txt]
+                  //
+                  //5 Move a file to be Closer to the Mount point (higher) in the directory structure
+                  //   MoveFileProxy replaceIfExisting [0] file: [\Test1\ds\ds\New Text Document (3).txt] newfile: [\Test1\New Text Document (3).txt]
+                  //
+                  //6 Rename a file to a Name that already exists at this level
+                  //   MoveFileProxy replaceIfExisting [0] file: [\Test1\ds\testSame (2).txt] newfile: [\Test1\ds\testSame.txt] 
+                  //   [\Test1\ds\testSame.txt] already exists; so should display a MessageBox in Explorer
+                  //
+                  //7 Now perform all the above via a share access that does not contain the dir name 
+                  //   i.e. ShareName is [TestShare] pointing at [\Test1]
+                  //   Scenario 1 produces MoveFile [\Test1\ds\New Text Document (2).txt] to [\ds\test.txt]
+                  //
+                  //8 Perform a delete on the Server Mount to see if the file is moved to the recycle bin
+                  //   MoveFile Should be used to go to the Recycler dependent on the Drive Format Type and ACL Status
+                  //
+
+                  // Now check to see if this has enough space to make a "Copy" before the atomic delete of MoveFileEX
+                  NativeFileOps pathTarget = roots.FindCreateNewAllocationRootPath(newName, (ulong)(pathSource.Length));
+                  string fileTarget;
+                  if (useInplaceRenaming)
+                  {
+                     fileTarget = Path.Combine(pathSource.DirectoryPathOnly, pathTarget.FileName);
+                  }
+                  else
+                  {
+                     fileTarget = pathTarget.FullName;
+                     // The new target might be on a different drive, so re-create the folder path to the new location
+                     NativeFileOps.CreateDirectory(pathTarget.DirectoryPathOnly);
+                  }
+
+                  fileManager.Move(pathSource.FullName, fileTarget);
+                  MoveFileEx(pathSource.FullName, fileTarget, replaceIfExisting);
+               }
+               else
+               {
+                  // Cannot use MoveFileEx, as this app needs to remove the old cached values.
+                  // So call a function to move each file, and subdir recusively via XMoveDirectory
+                  // Repeat the file tests above, but use directories instead.
+                  Log.Trace("GetAllPaths [{0}]", oldName);
+                  string[] allPossibleRootTargets = roots.GetAllRootPathsWhereExists(oldName).ToArray();
+                  Log.Trace("Now do them backwards so that overwrites are done correctly");
+                  Array.Reverse(allPossibleRootTargets);
+                  XMoveDirectory dirMover = new XMoveDirectory(fileManager);
+                  // newName will already be calculated as the relative offset (Should have starting '\')
+                  foreach (string dirRootSource in allPossibleRootTargets)
+                  {
+                     dirMover.Move(roots, new DirectoryInfo(dirRootSource + oldName), dirRootSource + newName, replaceIfExisting, useInplaceRenaming);
+                  }
+               }
+               // While we are here, remove 
+               roots.RemoveTargetFromLookup(oldName); // File has been removed
+               roots.RemoveTargetFromLookup(newName); // Not a null file anymore
+               scope1.Complete();
             }
          }
-         // While we are here, remove 
-         roots.RemoveTargetFromLookup(oldName); // File has been removed
-         roots.RemoveTargetFromLookup(newName); // Not a null file anymore
+         catch (Exception ex)
+         {
+            Log.ErrorException("Transactions should have moved back:", ex);
+            throw;
+         }
       }
 
       internal static void MoveFileEx(string pathSource, string pathTarget, bool replaceIfExisting)
