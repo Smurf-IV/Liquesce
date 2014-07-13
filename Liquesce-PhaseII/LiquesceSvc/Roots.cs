@@ -30,6 +30,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+
 using LiquesceFacade;
 using LiquesceSvc.LowLevelOSAccess;
 using NLog;
@@ -185,14 +186,6 @@ namespace LiquesceSvc
          }
          string root = GetRoot(newTarget);
          return mountDetail.SourceLocations.Any(location => (location.SourcePath == root) && (location.UseIsReadOnly));
-      }
-
-      public IEnumerable<string> GetFullPathsThatContainThis(string relativefolder)
-      {
-         return from location in mountDetail.SourceLocations 
-                select new DirectoryInfo(location.SourcePath + relativefolder) 
-                into dir where dir.Exists 
-                select dir.FullName;
       }
 
       public IEnumerable<string> GetAllRootPathsWhereExists(string relativefolder)

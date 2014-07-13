@@ -143,6 +143,7 @@ namespace LiquesceFacade
       [DataMember]
       public List<LanManShareDetails> SharesToRestore;
 
+      public bool UseInplaceRenaming = false;
 
       public new string ToString()
       {

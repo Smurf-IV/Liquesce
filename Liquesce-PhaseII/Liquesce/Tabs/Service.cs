@@ -3,7 +3,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="Service.cs" company="Smurf-IV">
 //
-//  Copyright (C) 2013 Simon Coghlan (Aka Smurf-IV)
+//  Copyright (C) 2013-2014 Simon Coghlan (Aka Smurf-IV)
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@
 //  Email: http://www.codeplex.com/site/users/view/smurfiv
 //  </summary>
 // --------------------------------------------------------------------------------------------------------------------
-
 #endregion Copyright (C)
 
 using System;
@@ -31,6 +30,7 @@ using System.ComponentModel;
 using System.ServiceProcess;
 using System.Threading;
 using System.Windows.Forms;
+
 using LiquesceFacade;
 using NLog;
 
@@ -112,6 +112,10 @@ namespace Liquesce.Tabs
       private void btnSave_Click(object sender, EventArgs e)
       {
          Log.Info("Save the new details");
+         foreach (MountDetail detail in cd.MountDetails)
+         {
+            detail.UseInplaceRenaming = cd.UseInplaceRenaming;
+         }
          cd.WriteOutConfigDetails();
       }
 

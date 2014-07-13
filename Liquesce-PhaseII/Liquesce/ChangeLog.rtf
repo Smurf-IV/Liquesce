@@ -43,10 +43,7 @@ Keep an open eye on the \cf0\b{\field{\*\fldinst{HYPERLINK "http://liquesce.code
 \cf4\b0\f0\fs20 - UNC path instead of drive letter as a parameter to AddMountingPoint() method\par
 - Phase ][ Does not allow Teracopy to work - Re-Opened!\par
 \cf0 - Directory Renaming\par
-- - unique folder\par
-- - Spread testing\par
 - - Large drive contents\par
-- File Renaming\par
 \cf4\par
 \cf0\ul\b Done\par
 2014-07-##\par
@@ -64,12 +61,12 @@ Keep an open eye on the \cf0\b{\field{\*\fldinst{HYPERLINK "http://liquesce.code
 - - Sporadic BSOD (access violation) when the network mounting points were used. \par
 - - After directory enumeration had finished (the ERROR_NO_MORE_FILES returned) a new enumerate directory request with the same handle (and without the "restart scan" flag) restarted the enumeration. Now in order to make a new enumeration the directory must be reopened.  \par
 - - Possibility of BSOD during directory enumeration when the "enumeration mask" parameter points to user address space.\par
-- Add code for the new feature: \f2\fs19 UseInplaceRenaming\par
-\f0\fs20 - - Not fully functional yet.\par
 - Directory Renaming\par
 - - unique folder\par
 - - Spread testing\par
-- After UAC request the MgtApp would be at the back :-(\par
+- Fix: After UAC request the MgtApp would be at the back\par
+- Add new feature: \f2\fs19 UseInplaceRenaming\par
+\f0\fs20 - File Renaming\par
 \par
 \ul\b\par
 2014-06-##\par
