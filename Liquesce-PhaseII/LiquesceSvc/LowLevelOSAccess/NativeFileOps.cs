@@ -1006,9 +1006,11 @@ namespace LiquesceSvc
 
       // ReSharper disable UnusedMember.Local
 #pragma warning disable 169
+#pragma warning disable 414
       private static readonly int MaxLongPath = 32000;
 
       private static readonly string Prefix = "\\\\?\\";
+#pragma warning restore 414
 #pragma warning restore 169
       // ReSharper restore UnusedMember.Local
 

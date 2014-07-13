@@ -111,9 +111,11 @@ namespace Liquesce
 
       [DescriptionAttribute("If true, then this attempts to perform in place renaming.\r" +
       "If false, then renaming will also follow the priority rules and attempt to move files as if they are created anew.\r" +
-      "e.g. This means that if they exist on the last 2 drives, then via \'Priority\', they would all be moved to the first drive." +
-      "But; there a few applications that perform a move to temporary location before placing into the target (teracopy), these apps may produce variable results."
+      "e.g. This means that if they exist on the last 2 drives, then via \'Priority\', they would all be moved to the first drive.\r" +
+      "But; there a few applications that perform a move to temporary location _before) placing into the target (TeraCopy), these apps may produce variable results.\r" +
+      "Currently, this functionality is disabled (i.e false)"
       ),
+         // TODO: UseInplaceRenaming
        DisplayName("Use Inplace File Renaming")
       , CategoryAttribute("File"), ReadOnly(true)
       ]

@@ -53,6 +53,7 @@ namespace LiquesceSvc
 
          NativeFileOps pathSource = roots.GetFromPathFileName(oldName);
          ulong pathSource_Length = (ulong) (pathSource.Length);
+         // TODO: UseInplaceRenaming
          // Now check to see if this has enough space to make a "Copy" before the atomic delete of MoveFileEX
          NativeFileOps pathTarget = roots.FindCreateNewAllocationRootPath(newName, pathSource_Length);
          string pathTarget_FullName = pathTarget.FullName;
@@ -109,15 +110,15 @@ namespace LiquesceSvc
             // So call a function to move each file, and subdir recusively via XMoveDirectory
             // Repeat the file tests above, but use directories instead.
             Log.Trace("GetAllPaths [{0}]", oldName);
-            string[] allPossibleTargets = roots.GetAllPaths(oldName).ToArray();
+            string[] allPossibleRootTargets = roots.GetAllRootPathsWhereExists(oldName).ToArray();
             Log.Trace("Now do them backwards so that overwrites are done correctly");
-            Array.Reverse(allPossibleTargets);
+            // TODO: UseInplaceRenaming
+            Array.Reverse(allPossibleRootTargets);
             XMoveDirectory dirMover = new XMoveDirectory();
             // newName will already be calculated as the relative offset (Should have starting '\')
-            foreach (string dirSource in allPossibleTargets)
+            foreach (string dirRootSource in allPossibleRootTargets)
             {
-               string currentNewTarget = Path.GetFullPath(roots.GetRoot(dirSource) + newName);
-               dirMover.Move(roots, dirSource, currentNewTarget, replaceIfExisting);
+               dirMover.Move(roots, dirRootSource + oldName, dirRootSource + newName, replaceIfExisting);
             }
          }
          // While we are here, remove 

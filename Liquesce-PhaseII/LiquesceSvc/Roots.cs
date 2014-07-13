@@ -187,12 +187,15 @@ namespace LiquesceSvc
          return mountDetail.SourceLocations.Any(location => (location.SourcePath == root) && (location.UseIsReadOnly));
       }
 
-      public IEnumerable<string> GetAllPaths(string relativefolder)
+      public IEnumerable<string> GetFullPathsThatContainThis(string relativefolder)
       {
-         return mountDetail.SourceLocations.Select(t => t.SourcePath + relativefolder).Where(Directory.Exists);
+         return from location in mountDetail.SourceLocations 
+                select new DirectoryInfo(location.SourcePath + relativefolder) 
+                into dir where dir.Exists 
+                select dir.FullName;
       }
 
-      private IEnumerable<string> GetAllRootPathsWhereExists(string relativefolder)
+      public IEnumerable<string> GetAllRootPathsWhereExists(string relativefolder)
       {
          return mountDetail.SourceLocations.Where(location => Directory.Exists(location.SourcePath + relativefolder)).Select(location => location.SourcePath);
       }
@@ -217,10 +220,9 @@ namespace LiquesceSvc
 
       public string FindByFileId(long fileId)
       {
-         foreach (string found in GetAllPaths(PathDirectorySeparatorChar)
-                           .Select(rootToCheck => NfsSupport.GetByFileId(rootToCheck, fileId))
-                           .Where(found => !string.IsNullOrEmpty(found))
-                  )
+         foreach (string found in mountDetail.SourceLocations
+            .Select(location => NfsSupport.GetByFileId(location.SourcePath, fileId))
+            .Where(found => !string.IsNullOrEmpty(found)))
          {
             return GetRelative(found);
          }
