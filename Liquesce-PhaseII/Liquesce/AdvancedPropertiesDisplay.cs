@@ -108,6 +108,21 @@ namespace Liquesce
          get { return cd.UseInternalDriverCaches; }
          set { cd.UseInternalDriverCaches = value; }
       }
+
+      [DescriptionAttribute("If true, then this attempts to perform in place renaming.\r" +
+      "If false, then renaming will also follow the priority rules and attempt to move files as if they are created anew.\r" +
+      "e.g. This means that if they exist on the last 2 drives, then via \'Priority\', they would all be moved to the first drive." +
+      "But; there a few applications that perform a move to temporary location before placing into the target (teracopy), these apps may produce variable results."
+      ),
+       DisplayName("Use Inplace File Renaming")
+      , CategoryAttribute("File"), ReadOnly(true)
+      ]
+      [TypeConverter(typeof(bool))]
+      public bool UseInplaceRenaming
+      {
+         get { return cd.UseInplaceRenaming; }
+         set { cd.UseInplaceRenaming = value; }
+      }
    }
    // ReSharper restore UnusedMember.Global
    // ReSharper restore MemberCanBePrivate.Global
