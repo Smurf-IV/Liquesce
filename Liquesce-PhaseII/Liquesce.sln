@@ -15,7 +15,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiquesceSvc", "LiquesceSvc\
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ThirdParty", "ThirdParty", "{C1ADA293-B55A-4B33-AE5A-6FC40323FC39}"
 	ProjectSection(SolutionItems) = preProject
-		ThirdParty\ChinhDo.Transactions.dll = ThirdParty\ChinhDo.Transactions.dll
 		ThirdParty\NLog.dll = ThirdParty\NLog.dll
 		..\..\Amalgam\Phase III\ThirdParty\nunit.framework.dll = ..\..\Amalgam\Phase III\ThirdParty\nunit.framework.dll
 		..\..\Amalgam\Phase III\ThirdParty\nunit.framework.xml = ..\..\Amalgam\Phase III\ThirdParty\nunit.framework.xml
@@ -246,8 +245,8 @@ Global
 		{D661BAF6-AD37-44B3-AEF5-4ED5737540F5} = {A45FE901-B323-48BD-BC0B-69784A7321F2}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		BuildVersion_UseGlobalSettings = True
-		BuildVersion_AssemblyInfoFilename = LiquesceSvc\Properties\AssemblyInfo.cs
 		BuildVersion_BuildVersioningStyle = YearStamp.MonthStamp.DayStamp.Increment
+		BuildVersion_AssemblyInfoFilename = LiquesceSvc\Properties\AssemblyInfo.cs
+		BuildVersion_UseGlobalSettings = True
 	EndGlobalSection
 EndGlobal

@@ -1,19 +1,20 @@
 ﻿#region Copyright (C)
+
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="Roots.cs" company="Smurf-IV">
-// 
+//
 //  Copyright (C) 2010-2014 Simon Coghlan (Aka Smurf-IV)
-// 
+//
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation, either version 2 of the License, or
 //   any later version.
-// 
+//
 //  This program is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 //  GNU General Public License for more details.
-// 
+//
 //  You should have received a copy of the GNU General Public License
 //  along with this program. If not, see http://www.gnu.org/licenses/.
 //  </copyright>
@@ -22,7 +23,8 @@
 //  Email: http://www.codeplex.com/site/users/view/smurfiv
 //  </summary>
 // --------------------------------------------------------------------------------------------------------------------
-#endregion
+
+#endregion Copyright (C)
 
 using System;
 using System.Collections.Generic;
@@ -30,7 +32,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-
+using System.Security.Permissions;
 using LiquesceFacade;
 using LiquesceSvc.LowLevelOSAccess;
 using NLog;
@@ -38,21 +40,23 @@ using NLog;
 namespace LiquesceSvc
 {
    /// <summary>
-   /// this class delivers the current physical root of the disk which should be used next 
+   /// this class delivers the current physical root of the disk which should be used next
    /// for file/folder creation.
    /// It also handles a few other fileName operations like detection, and deletion.
    /// </summary>
    internal class Roots
    {
       public static readonly string PathDirectorySeparatorChar = Path.DirectorySeparatorChar.ToString(CultureInfo.InvariantCulture);
+      private static readonly string RootPathDirectorySeparatorChar = PathDirectorySeparatorChar + PathDirectorySeparatorChar;
       private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
-      private readonly CacheHelper<string, NativeFileOps> cachedRootPathsSystemInfo;
+      private readonly CachedRootPathsSystemInfo cachedRootPathsSystemInfo;
 
       private readonly MountDetail mountDetail;
 
       private readonly bool AreAllReadOnly;
       private readonly bool AreAnyAllReadOnly;
+
       // constructor
       public Roots(MountDetail mountDetail, uint cacheLifetimeSeconds)
       {
@@ -63,9 +67,8 @@ namespace LiquesceSvc
             AreAllReadOnly = mountDetail.SourceLocations.TrueForAll(sl => sl.UseIsReadOnly);
          }
          // NTFS is case-preserving but case-insensitive in the Win32 namespace
-         cachedRootPathsSystemInfo = new CacheHelper<string, NativeFileOps>(cacheLifetimeSeconds, true, StringComparer.OrdinalIgnoreCase);
+         cachedRootPathsSystemInfo = new CachedRootPathsSystemInfo(cacheLifetimeSeconds); 
       }
-
 
       public NativeFileOps GetFromPathFileName(string pathFileName)
       {
@@ -80,13 +83,13 @@ namespace LiquesceSvc
                Log.Trace("Found pathFileName in cache");
                return fsi;
             }
-            if ((pathFileName.Length == 1 )
+            if ((pathFileName.Length == 1)
                && NativeFileOps.IsDirectorySeparator(pathFileName[0])
                )
             {
                Log.Trace("Assuming Home directory so add new to cache and return");
-               namedStream = mountDetail.SourceLocations.First().SourcePath;
-               return (fsi = new NativeFileOps(namedStream, IsRootReadOnly(namedStream)));
+               string firstSourceLocation = mountDetail.SourceLocations.First().SourcePath;
+               return (fsi = new NativeFileOps(firstSourceLocation, IsRootReadOnly(firstSourceLocation)));
             }
 
             string searchFilename = RemoveStreamPart(pathFileName, out isNamedStream, out namedStream);
@@ -119,7 +122,7 @@ namespace LiquesceSvc
             //-------------------------------------
             Log.Trace("file/folder not found");
             // So create a holder for the return and do not store
-            fsi = new NativeFileOps(Path.Combine(mountDetail.SourceLocations[0].SourcePath, searchFilename), AreAllReadOnly);
+            fsi = FindCreateNewAllocationRootPath(searchFilename);
          }
          catch (Exception ex)
          {
@@ -127,7 +130,7 @@ namespace LiquesceSvc
          }
          finally
          {
-            if ( (fsi != null)
+            if ((fsi != null)
                && fsi.Exists
                )
             {
@@ -143,7 +146,7 @@ namespace LiquesceSvc
                if (isNamedStream)
                {
                   Log.Warn("isNamedStream [{0}] found [{1}]", pathFileName, namedStream);
-                  cachedRootPathsSystemInfo[string.Format("{0}:{1}",pathFileName, namedStream)] = fsi;
+                  cachedRootPathsSystemInfo[string.Format("{0}:{1}", pathFileName, namedStream)] = fsi;
                }
             }
             else
@@ -172,7 +175,6 @@ namespace LiquesceSvc
          }
          return searchFilename;
       }
-
 
       private bool IsRootReadOnly(string newTarget)
       {
@@ -208,7 +210,7 @@ namespace LiquesceSvc
       // return the path from a inputpath seen relative from the root
       public string GetRelative(string path)
       {
-         return path.Replace(GetRoot(path), string.Empty);
+         return RootPathDirectorySeparatorChar + path.Replace(GetRoot(path), string.Empty);
       }
 
       public string FindByFileId(long fileId)
@@ -223,10 +225,15 @@ namespace LiquesceSvc
       }
 
       // this method returns a path (real physical path) of a place where the next folder/file root can be created.
-      public NativeFileOps FindCreateNewAllocationRootPath(string pathFileName, ulong spaceRequired)
+      public NativeFileOps FindCreateNewAllocationRootPath(string pathFileName, UInt64 length = 0)
       {
-         // Even A directory requires 4KB to be created !
-         spaceRequired += 16384;
+         ulong spaceRequired = Math.Max(mountDetail.HoldOffBufferBytes, length);
+
+         const int dirSize = 4 * 1024; // Even A directory requires 4KB to be created !
+         if (spaceRequired < dirSize)
+         {
+            spaceRequired = dirSize;
+         }
          Log.Trace("FindCreateNewAllocationRootPath [{0}] spaceRequired [{1}]", pathFileName, spaceRequired);
          bool isNamedStream;
          string namedStream;
@@ -245,29 +252,29 @@ namespace LiquesceSvc
                foundRoot = string.Empty;
             }
          }
-         if ( string.IsNullOrEmpty( foundRoot ) )
+         if (string.IsNullOrEmpty(foundRoot))
          {
             switch (mountDetail.AllocationMode)
             {
-            case MountDetail.AllocationModes.Folder:
-               foundRoot = GetWriteableSourceThatMatchesThisFolderWithSpace(relativeParent, spaceRequired);
-               if (string.IsNullOrEmpty(foundRoot))
-                  goto case MountDetail.AllocationModes.Priority;
-               break;
+               case MountDetail.AllocationModes.Folder:
+                  foundRoot = GetWriteableSourceThatMatchesThisFolderWithSpace(relativeParent, spaceRequired);
+                  if (string.IsNullOrEmpty(foundRoot))
+                     goto case MountDetail.AllocationModes.Priority;
+                  break;
 
-            case MountDetail.AllocationModes.Priority:
-               foundRoot = GetWriteableHighestPrioritySourceWithSpace(spaceRequired);
-               if (string.IsNullOrEmpty(foundRoot))
-                  goto case MountDetail.AllocationModes.Balanced;
-               break;
+               case MountDetail.AllocationModes.Priority:
+                  foundRoot = GetWriteableHighestPrioritySourceWithSpace(spaceRequired);
+                  if (string.IsNullOrEmpty(foundRoot))
+                     goto case MountDetail.AllocationModes.Balanced;
+                  break;
 
-            case MountDetail.AllocationModes.Balanced:
-               foundRoot = GetWriteableSourceWithMostFreeSpace(spaceRequired);
-               break;
+               case MountDetail.AllocationModes.Balanced:
+                  foundRoot = GetWriteableSourceWithMostFreeSpace(spaceRequired);
+                  break;
 
-            default:
-               foundRoot = GetWriteableSourceWithMostFreeSpace(spaceRequired);
-               break;
+               default:
+                  foundRoot = GetWriteableSourceWithMostFreeSpace(spaceRequired);
+                  break;
             }
          }
          string newPathName = Path.Combine(foundRoot, searchFilename);
@@ -286,7 +293,6 @@ namespace LiquesceSvc
             : new NativeFileOps(newPathName, IsRootReadOnly(foundRoot));
       }
 
-
       // returns the root for:
       //  The first disk where relativeFolder exists and if there is enough free space
       private string GetWriteableSourceThatMatchesThisFolderWithSpace(string relativeFolder, ulong spaceRequired)
@@ -296,21 +302,20 @@ namespace LiquesceSvc
          relativeFolder = relativeFolder.TrimEnd(new[] { Path.DirectorySeparatorChar });
 
          // for every source location
-         foreach (string sourcePath in 
+         foreach (string sourcePath in
             from sourcePath in mountDetail.SourceLocations
                   .Where(s => !s.UseIsReadOnly)
-                  .Select(s => s.SourcePath) 
-                     where CheckSourceForSpace(spaceRequired, sourcePath) 
-                     let testpath = sourcePath + relativeFolder 
-                     where new NativeFileOps(testpath, AreAllReadOnly).Exists 
-                     select sourcePath
+                  .Select(s => s.SourcePath)
+            where CheckSourceForSpace(spaceRequired, sourcePath)
+            let testpath = sourcePath + relativeFolder
+            where new NativeFileOps(testpath, AreAllReadOnly).Exists
+            select sourcePath
                      )
          {
             return sourcePath;
          }
          return string.Empty;
       }
-
 
       // returns the next root with the highest priority and the space
       private string GetWriteableHighestPrioritySourceWithSpace(ulong spaceRequired)
@@ -327,11 +332,12 @@ namespace LiquesceSvc
       private static bool CheckSourceForSpace(ulong spaceRequired, string sourcePath)
       {
          ulong lpFreeBytesAvailable, num2, num3;
+         // Regardless of the API owner Process ID, make sure "we" can get the answer
+         new SecurityPermission(SecurityPermissionFlag.UnmanagedCode).Assert();
          return (GetDiskFreeSpaceExW(sourcePath, out lpFreeBytesAvailable, out num2, out num3)
                  && (lpFreeBytesAvailable > spaceRequired)
                 );
       }
-
 
       // returns the root with the most free space
       private string GetWriteableSourceWithMostFreeSpace(ulong spaceRequired)
@@ -340,6 +346,8 @@ namespace LiquesceSvc
          ulong highestFreeSpace = 0;
          string sourceWithMostFreeSpace = string.Empty;
 
+         // Regardless of the API owner Process ID, make sure "we" can get the answer
+         new SecurityPermission(SecurityPermissionFlag.UnmanagedCode).Assert();
          foreach (SourceLocation str in mountDetail.SourceLocations.Where(s => !s.UseIsReadOnly))
          {
             ulong num, num2, num3;
@@ -382,12 +390,17 @@ namespace LiquesceSvc
          cachedRootPathsSystemInfo.Remove(filename);
       }
 
+      public void RemoveAllTargetDirsFromLookup(string removeDirSource)
+      {
+         cachedRootPathsSystemInfo.RemoveAllTargetDirsFromLookup(removeDirSource);
+      }
 
       #region DLL Imports
 
       [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
       private static extern bool GetDiskFreeSpaceExW(string lpDirectoryName, out ulong lpFreeBytesAvailable, out ulong lpTotalNumberOfBytes, out ulong lpTotalNumberOfFreeBytes);
 
-      #endregion
+      #endregion DLL Imports
+
    }
 }

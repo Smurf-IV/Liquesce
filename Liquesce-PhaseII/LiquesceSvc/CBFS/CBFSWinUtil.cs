@@ -1,8 +1,36 @@
-﻿using System;
+﻿#region Copyright (C)
+
+// ---------------------------------------------------------------------------------------------------------------
+//  <copyright file="CBFSWinUtil.cs" company="Smurf-IV">
+//
+//  Copyright (C) 2013-2014 Simon Coghlan (Aka Smurf-IV)
+//
+//  This program is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation, either version 2 of the License, or
+//   any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program. If not, see http://www.gnu.org/licenses/.
+//  </copyright>
+//  <summary>
+//  Email: http://www.codeplex.com/site/users/view/smurfiv
+//  </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+#endregion Copyright (C)
+
+using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
+
 using CallbackFS;
 using LiquesceSvc;
 using NLog;
@@ -25,9 +53,9 @@ namespace CBFS
 
       /// <summary>
       /// If your application needs to report some error when processing the callback, it should throw ECBFSError exception.
-      /// The application must pass the error code with the exception by passing the error code as a parameter to 
-      /// ECBFSError constructor. 
-      /// Callback File System API will catch ECBFSError exception and extract the error code. 
+      /// The application must pass the error code with the exception by passing the error code as a parameter to
+      /// ECBFSError constructor.
+      /// Callback File System API will catch ECBFSError exception and extract the error code.
       /// The error code will be reported to the operating system.
       /// </summary>
       /// <param name="ex"></param>
@@ -45,7 +73,7 @@ namespace CBFS
          {
             throw new ECBFSError(socketException.Message, (uint)socketException.ErrorCode);
          }
-         uint HrForException = (uint) Marshal.GetHRForException(ex);
+         uint HrForException = (uint)Marshal.GetHRForException(ex);
          throw new ECBFSError(ex.Message, (HiWord(HrForException) == 0x8007) ? LoWord(HrForException) : ERROR_EXCEPTION_IN_SERVICE);
       }
 
@@ -55,6 +83,7 @@ namespace CBFS
       /// </summary>
       /// <param name="functionName">String to log out for this call</param>
       /// <param name="act">What to call from the derived class</param>
+      [DebuggerHidden]
       public static void Invoke(string functionName, Action act)
       {
          Log.Trace("{0} IN", functionName);
@@ -77,11 +106,13 @@ namespace CBFS
 #pragma warning disable 169
 
       #region File Operation Errors
+
       // ReSharper disable UnusedMember.Global
 
       // Check http://msdn.microsoft.com/en-us/library/ms819772.aspx (WinError.h) for error codes
       // From WinError.h -> http://msdn.microsoft.com/en-us/library/windows/desktop/ms681382%28v=vs.85%29.aspx
       public const int ERROR_FILE_NOT_FOUND = 2; // MessageText: The system cannot find the file specified.
+
       public const int ERROR_PATH_NOT_FOUND = 3; // MessageText: The system cannot find the path specified.
       public const int ERROR_ACCESS_DENIED = 5; // MessageText: Access is denied.
       public const int ERROR_SHARING_VIOLATION = 32;
@@ -101,7 +132,6 @@ namespace CBFS
       public const int ERROR_NOACCESS = 998; // Invalid access to memory location.
       public const int ERROR_NOT_SUPPORTED = 50; // The request is not supported.
 
-
       public const int ERROR_INVALID_PARAMETER = 87;  // The parameter is incorrect.
       public const int ERROR_INVALID_HANDLE = 1609;   // Handle is in an invalid state.
       public const int ERROR_NOT_LOCKED = 158;        // The segment is already unlocked.
@@ -118,8 +148,10 @@ namespace CBFS
       public const int ERROR_PROC_NOT_FOUND = 127;    // The specified procedure could not be found.
       public const int ERROR_OPERATION_ABORTED = 995; // The I/O operation has been aborted because of either a thread exit or an application request.
       public const int ERROR_IO_DEVICE = 1117;        // The request could not be performed because of an I/O device error.
+
       // public const uint TYPE_E_IOERROR = 0;
       public const int ERROR_BAD_UNIT = 20;           // The system cannot find the device specified.
+
       public const int ERROR_BAD_ARGUMENTS = 160;     // One or more arguments are not correct.
       public const int ERROR_BAD_EXE_FORMAT = 193;    // %1 is not a valid Win32 application.
       public const int ERROR_WAIT_NO_CHILDREN = 128;  // There are no child processes to wait for.
@@ -150,10 +182,11 @@ namespace CBFS
       public const int ERROR_WRITE_PROTECT = 19;      // The media is write protected.
       public const int ERROR_LOGON_FAILURE = 1326;    // Logon failure: unknown user name or bad password.
       public const int ERROR_NO_SECURITY_ON_OBJECT = 1350; // Unable to perform a security operation on an object that has no associated security.
-      
-      #endregion
+
+      #endregion File Operation Errors
 
       #region Win32 Constants for file controls
+
       public const uint FILE_SHARE_READ = 0x00000001;
       public const uint FILE_SHARE_WRITE = 0x00000002;
       public const uint FILE_SHARE_DELETE = 0x00000004;
@@ -164,12 +197,13 @@ namespace CBFS
       public const uint OPEN_ALWAYS = 4;
       public const uint TRUNCATE_EXISTING = 5;
 
-      #endregion
+      #endregion Win32 Constants for file controls
+
       // ReSharper restore UnusedMember.Global
 #pragma warning restore 169
       // ReSharper restore MemberCanBePrivate.Global
       // ReSharper restore InconsistentNaming
-      
+
       [DebuggerHidden]
       public static void ThrowNotFound(uint attributes)
       {
@@ -179,12 +213,12 @@ namespace CBFS
 
       public static bool IsDirectory(uint attributes)
       {
-         return IsDirectory((NativeFileOps.EFileAttributes) attributes);
+         return IsDirectory((NativeFileOps.EFileAttributes)attributes);
       }
 
       public static bool IsDirectory(NativeFileOps.EFileAttributes attributes)
       {
-         return ( attributes & NativeFileOps.EFileAttributes.Directory) == NativeFileOps.EFileAttributes.Directory;
+         return (attributes & NativeFileOps.EFileAttributes.Directory) == NativeFileOps.EFileAttributes.Directory;
       }
    }
 }

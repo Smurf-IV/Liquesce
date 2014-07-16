@@ -25,10 +25,6 @@
                <netfx:NativeImage Id="ngen_LiquesceFacade.dll" Platform="all" Priority="1" AppBaseDirectory="ServiceDIR"/>
             </File>
          </Component>
-         <Component Id="ChinhDo.Transactions.dll" Directory="ServiceDIR">
-            <File Source="$(var.SvcSource)\ChinhDo.Transactions.dll" KeyPath="yes" />
-         </Component>
-
          <Component Id="NLog.dll" Directory="ServiceDIR">
             <File Source="$(var.SvcSource)\NLog.dll" KeyPath="yes" />
          </Component>

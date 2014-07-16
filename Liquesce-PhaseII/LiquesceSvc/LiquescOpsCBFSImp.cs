@@ -34,7 +34,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-
+using System.Security.Permissions;
 using CallbackFS;
 using CBFS;
 using LiquesceFacade;
@@ -97,7 +97,7 @@ namespace LiquesceSvc
          set { volumeSerialNumber = value; }
       }
 
-      private static string[] RestrictedDirectoryNames = { @"$RECYCLE.BIN", @"Recycle Bin", @"RECYCLER", @"Recycled" };
+      private static readonly string[] RestrictedDirectoryNames = { @"$RECYCLE.BIN", @"Recycle Bin", @"RECYCLER", @"Recycled" };
 
       public override void CreateFile(string filename, uint DesiredAccess, uint fileAttributes, uint ShareMode,
                                       CbFsFileInfo fileInfo,
@@ -106,7 +106,7 @@ namespace LiquesceSvc
          int processId = GetProcessId();
          long openFileKey = fileInfo.UserContext.ToInt64();
 
-         NativeFileOps foundFileInfo = roots.FindCreateNewAllocationRootPath(filename, mountDetail.HoldOffBufferBytes);
+         NativeFileOps foundFileInfo = roots.FindCreateNewAllocationRootPath(filename);
          if (foundFileInfo.ForceUseAsReadOnly)
          {
             throw new Win32Exception(CBFSWinUtil.ERROR_WRITE_PROTECT);
@@ -539,6 +539,8 @@ namespace LiquesceSvc
                {
                   // Need to check that the source FullName drive has enough free space for this "Potential" allocation
                   ulong lpFreeBytesAvailable, num2, num3;
+                  // Regardless of the API owner Process ID, make sure "we" can get the answer
+                  new SecurityPermission(SecurityPermissionFlag.UnmanagedCode).Assert();
                   if (GetDiskFreeSpaceExW(roots.GetRoot(stream.FullName), out lpFreeBytesAvailable, out num2, out num3))
                   {
                      if (lpFreeBytesAvailable - (decimal) AllocationSize + thisFileSize < 0)

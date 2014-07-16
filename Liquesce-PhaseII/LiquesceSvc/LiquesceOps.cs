@@ -29,6 +29,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Security.Permissions;
 using System.Text;
 using System.Threading;
 using LiquesceFacade;
@@ -128,6 +129,8 @@ namespace LiquesceSvc
             uniqueWriteableSources.Add(NativeFileOps.GetRootOrMountFor(location.SourcePath));
          }
 
+         // Regardless of the API owner Process ID, make sure "we" can get the answer
+         new SecurityPermission(SecurityPermissionFlag.UnmanagedCode).Assert();
          foreach (string source in uniqueWriteableSources)
          {
             ulong num;
