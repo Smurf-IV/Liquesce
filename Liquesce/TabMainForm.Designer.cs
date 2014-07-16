@@ -31,14 +31,14 @@
          System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(TabMainForm));
          this.tabControl1 = new System.Windows.Forms.TabControl();
          this.tabWelcome = new System.Windows.Forms.TabPage();
-         this.tabLogging = new System.Windows.Forms.TabPage();
-         this.tabMounting = new System.Windows.Forms.TabPage();
-         this.tabSharing = new System.Windows.Forms.TabPage();
-         this.tabService = new System.Windows.Forms.TabPage();
          this.welcome1 = new Liquesce.Tabs.Welcome();
+         this.tabLogging = new System.Windows.Forms.TabPage();
          this.logging1 = new Liquesce.Tabs.Logging();
+         this.tabMounting = new System.Windows.Forms.TabPage();
          this.mountingPoints1 = new Liquesce.Tabs.MountingPoints();
+         this.tabSharing = new System.Windows.Forms.TabPage();
          this.currentShares1 = new Liquesce.Tabs.CurrentShares();
+         this.tabService = new System.Windows.Forms.TabPage();
          this.service1 = new Liquesce.Tabs.Service();
          this.tabControl1.SuspendLayout();
          this.tabWelcome.SuspendLayout();
@@ -79,6 +79,16 @@
          this.tabWelcome.TabIndex = 0;
          this.tabWelcome.Text = "Welcome";
          // 
+         // welcome1
+         // 
+         this.welcome1.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.welcome1.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+         this.welcome1.Location = new System.Drawing.Point(3, 3);
+         this.welcome1.Name = "welcome1";
+         this.welcome1.Padding = new System.Windows.Forms.Padding(3);
+         this.welcome1.Size = new System.Drawing.Size(600, 469);
+         this.welcome1.TabIndex = 0;
+         // 
          // tabLogging
          // 
          this.tabLogging.BackColor = System.Drawing.SystemColors.Control;
@@ -89,47 +99,6 @@
          this.tabLogging.Size = new System.Drawing.Size(606, 475);
          this.tabLogging.TabIndex = 1;
          this.tabLogging.Text = "Logging";
-         // 
-         // tabMounting
-         // 
-         this.tabMounting.BackColor = System.Drawing.SystemColors.Control;
-         this.tabMounting.Controls.Add(this.mountingPoints1);
-         this.tabMounting.Location = new System.Drawing.Point(154, 4);
-         this.tabMounting.Name = "tabMounting";
-         this.tabMounting.Size = new System.Drawing.Size(606, 475);
-         this.tabMounting.TabIndex = 2;
-         this.tabMounting.Text = "Mounting Point";
-         // 
-         // tabSharing
-         // 
-         this.tabSharing.BackColor = System.Drawing.SystemColors.Control;
-         this.tabSharing.Controls.Add(this.currentShares1);
-         this.tabSharing.Location = new System.Drawing.Point(154, 4);
-         this.tabSharing.Name = "tabSharing";
-         this.tabSharing.Padding = new System.Windows.Forms.Padding(3);
-         this.tabSharing.Size = new System.Drawing.Size(606, 475);
-         this.tabSharing.TabIndex = 4;
-         this.tabSharing.Text = "Sharing Control";
-         // 
-         // tabService
-         // 
-         this.tabService.BackColor = System.Drawing.SystemColors.Control;
-         this.tabService.Controls.Add(this.service1);
-         this.tabService.Location = new System.Drawing.Point(154, 4);
-         this.tabService.Name = "tabService";
-         this.tabService.Size = new System.Drawing.Size(606, 475);
-         this.tabService.TabIndex = 3;
-         this.tabService.Text = "Service Settings";
-         // 
-         // welcome1
-         // 
-         this.welcome1.Dock = System.Windows.Forms.DockStyle.Fill;
-         this.welcome1.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-         this.welcome1.Location = new System.Drawing.Point(3, 3);
-         this.welcome1.Name = "welcome1";
-         this.welcome1.Padding = new System.Windows.Forms.Padding(3);
-         this.welcome1.Size = new System.Drawing.Size(600, 469);
-         this.welcome1.TabIndex = 0;
          // 
          // logging1
          // 
@@ -142,6 +111,16 @@
          this.logging1.Size = new System.Drawing.Size(600, 469);
          this.logging1.TabIndex = 0;
          // 
+         // tabMounting
+         // 
+         this.tabMounting.BackColor = System.Drawing.SystemColors.Control;
+         this.tabMounting.Controls.Add(this.mountingPoints1);
+         this.tabMounting.Location = new System.Drawing.Point(154, 4);
+         this.tabMounting.Name = "tabMounting";
+         this.tabMounting.Size = new System.Drawing.Size(606, 475);
+         this.tabMounting.TabIndex = 2;
+         this.tabMounting.Text = "Mounting Point";
+         // 
          // mountingPoints1
          // 
          this.mountingPoints1.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -152,6 +131,17 @@
          this.mountingPoints1.Size = new System.Drawing.Size(606, 475);
          this.mountingPoints1.TabIndex = 0;
          // 
+         // tabSharing
+         // 
+         this.tabSharing.BackColor = System.Drawing.SystemColors.Control;
+         this.tabSharing.Controls.Add(this.currentShares1);
+         this.tabSharing.Location = new System.Drawing.Point(154, 4);
+         this.tabSharing.Name = "tabSharing";
+         this.tabSharing.Padding = new System.Windows.Forms.Padding(3);
+         this.tabSharing.Size = new System.Drawing.Size(606, 475);
+         this.tabSharing.TabIndex = 4;
+         this.tabSharing.Text = "Sharing Control";
+         // 
          // currentShares1
          // 
          this.currentShares1.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -160,6 +150,16 @@
          this.currentShares1.Name = "currentShares1";
          this.currentShares1.Size = new System.Drawing.Size(600, 469);
          this.currentShares1.TabIndex = 0;
+         // 
+         // tabService
+         // 
+         this.tabService.BackColor = System.Drawing.SystemColors.Control;
+         this.tabService.Controls.Add(this.service1);
+         this.tabService.Location = new System.Drawing.Point(154, 4);
+         this.tabService.Name = "tabService";
+         this.tabService.Size = new System.Drawing.Size(606, 475);
+         this.tabService.TabIndex = 3;
+         this.tabService.Text = "Service Settings";
          // 
          // service1
          // 
@@ -184,7 +184,6 @@
          this.Name = "TabMainForm";
          this.Padding = new System.Windows.Forms.Padding(3);
          this.Text = "Liquesce ][ Mount Manager";
-         this.TopMost = true;
          this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.LandingZone_FormClosing);
          this.Shown += new System.EventHandler(this.TabMainForm_Shown);
          this.tabControl1.ResumeLayout(false);

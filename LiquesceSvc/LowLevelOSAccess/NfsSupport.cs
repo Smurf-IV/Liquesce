@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.InteropServices;
+
 using Microsoft.Win32.SafeHandles;
 using NLog;
 
@@ -175,25 +176,28 @@ namespace LiquesceSvc.LowLevelOSAccess
           );
 
       // ReSharper disable UnusedMember.Local
-      enum FILE_ID_TYPE
+      private enum FILE_ID_TYPE
       {
          FileIdType,
          MaximumFileIdType
       }
-      // ReSharper disable NotAccessedField.Local
-      struct FILE_ID_DESCRIPTOR
-      {
-         UInt32 dwSize;  // Size of the struct
-         FILE_ID_TYPE Type; // Describes the type of identifier passed in. 0 == Use the FileId member of the union.
-         Int64 FileId;   // A EXT_FILE_ID_128 structure containing the 128-bit file ID of the file. This is used on ReFS file systems. 
 
-         public FILE_ID_DESCRIPTOR(uint dwSize, FILE_ID_TYPE type, long fileId) : this()
+      // ReSharper disable NotAccessedField.Local
+      private struct FILE_ID_DESCRIPTOR
+      {
+         private UInt32 dwSize;  // Size of the struct
+         private FILE_ID_TYPE Type; // Describes the type of identifier passed in. 0 == Use the FileId member of the union.
+         private Int64 FileId;   // A EXT_FILE_ID_128 structure containing the 128-bit file ID of the file. This is used on ReFS file systems.
+
+         public FILE_ID_DESCRIPTOR(uint dwSize, FILE_ID_TYPE type, long fileId)
+            : this()
          {
             this.dwSize = dwSize;
             Type = type;
             FileId = fileId;
          }
       };
+
       // ReSharper restore NotAccessedField.Local
       // ReSharper restore UnusedMember.Local
 
@@ -215,6 +219,7 @@ namespace LiquesceSvc.LowLevelOSAccess
       private struct FILE_NAME_INFO
       {
          internal UInt32 FileNameLength;
+
          [MarshalAsAttribute(UnmanagedType.ByValTStr, SizeConst = 512)]
          internal string FileName;
       }
@@ -224,6 +229,7 @@ namespace LiquesceSvc.LowLevelOSAccess
          FileNameInfo = 2,
          FileIdBothDirectoryInfo = 10
       }
+
       // ReSharper restore UnusedMember.Local
 
       [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]

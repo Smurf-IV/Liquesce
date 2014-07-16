@@ -86,6 +86,7 @@ namespace LiquesceSvc
       {
          // ReSharper disable UnusedMember.Local
          All = 0x001F0FFF,  // This is the default used by the Process class
+
          Terminate = 0x00000001,
          CreateThread = 0x00000002,
          VMOperation = 0x00000008,
@@ -98,6 +99,7 @@ namespace LiquesceSvc
          Synchronize = 0x00100000
          // ReSharper restore UnusedMember.Local
       }
+
       [DllImport("kernel32.dll")]
       private static extern IntPtr OpenProcess(ProcessAccessFlags dwDesiredAccess, [MarshalAs(UnmanagedType.Bool)] bool bInheritHandle, int dwProcessId);
 
@@ -161,8 +163,10 @@ namespace LiquesceSvc
          /// NOTE: Windows NT:  This impersonation level is not supported.
          /// </summary>
          SecurityDelegation = 3,
+
          // ReSharper restore UnusedMember.Local
       }
+
       [DllImport("advapi32.dll", CharSet = CharSet.Auto, SetLastError = true)]
       private extern static bool DuplicateToken(IntPtr ExistingTokenHandle, SecurityImpersonationLevel SECURITY_IMPERSONATION_LEVEL, ref IntPtr DuplicateTokenHandle);
    }

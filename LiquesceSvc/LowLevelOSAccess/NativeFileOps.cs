@@ -37,6 +37,7 @@ using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Text;
 using System.Threading;
+
 using CBFS;
 using Microsoft.Win32.SafeHandles;
 
@@ -198,16 +199,40 @@ namespace LiquesceSvc
 
       public void SetFilePointer(long offset, SeekOrigin origin)
       {
-         if (!SetFilePointerEx(handle, offset, IntPtr.Zero, (int)origin))
+         long currentOffset = offset;
+         if ((origin == SeekOrigin.Begin)
+            && (currentOffset != 0) // Reset's should be fast
+            )
+         {
+            origin = SeekOrigin.Current;
+            // Use the SetFilePointer function to query the current file pointer position.
+            // To do this, specify a move method of FILE_CURRENT and a distance of zero.
+            int loStart = 0;
+            int hiStart = 0;
+            loStart = SetFilePointer(handle, loStart, ref hiStart, SeekOrigin.Current);
+            if (loStart == -1)
+            {
+               throw new Win32Exception();
+            }
+            currentOffset -= (((long)hiStart << 32) | (loStart & UInt32.MaxValue));
+            if (currentOffset == 0)
+            {
+               // No movement required
+               return;
+            }
+         }
+
+         int lo = (int)(currentOffset & UInt32.MaxValue);
+         int hi = (lo != currentOffset) ? (int)(currentOffset >> 32) : 0;
+         if (SetFilePointer(handle, lo, ref hi, origin) == -1)
          {
             throw new Win32Exception();
          }
-         RemoveCachedFileInformation();
       }
 
       public bool ReadFile(byte[] bytes, UInt32 numBytesToRead, out UInt32 numBytesRead_mustBeZero)
       {
-// ReSharper disable once RedundantAssignment
+         // ReSharper disable once RedundantAssignment
          numBytesRead_mustBeZero = 0;
          //NativeOverlapped overlapped = new NativeOverlapped();
          return ReadFile(handle, bytes, numBytesToRead, out numBytesRead_mustBeZero, IntPtr.Zero);
@@ -294,7 +319,7 @@ namespace LiquesceSvc
                }
             }
             string tmp = GetParentPathName(path);
-            if ( string.IsNullOrEmpty(tmp))
+            if (string.IsNullOrEmpty(tmp))
             {
                return AddTrailingSeperator(path);
             }
@@ -405,7 +430,7 @@ namespace LiquesceSvc
                {
                   GetFileInformationByHandle();
                }
-               return (((long) cachedFileInformation.Value.nFileIndexHigh) << 32) + cachedFileInformation.Value.nFileIndexLow;
+               return (((long)cachedFileInformation.Value.nFileIndexHigh) << 32) + cachedFileInformation.Value.nFileIndexLow;
             }
             return 0;
          }
@@ -442,11 +467,11 @@ namespace LiquesceSvc
          }
       }
 
-      public long Length
+      public ulong Length
       {
          get
          {
-            return (!Exists || IsDirectory) ? 0 : ((long)cachedAttributeData.Value.nFileSizeHigh << 32) | (cachedAttributeData.Value.nFileSizeLow & UInt32.MaxValue);
+            return (!Exists || IsDirectory) ? 0 : ((ulong)cachedAttributeData.Value.nFileSizeHigh << 32) | (cachedAttributeData.Value.nFileSizeLow & UInt32.MaxValue);
          }
       }
 
@@ -550,12 +575,12 @@ namespace LiquesceSvc
                }
             }
          }
-         else if (length >= 2 
+         else if (length >= 2
             && path[1] == Path.VolumeSeparatorChar
             )
          {
             index = 2;
-            if (length >= 3 
+            if (length >= 3
                && IsDirectorySeparator(path[2])
                )
                ++index;
@@ -746,6 +771,7 @@ namespace LiquesceSvc
    UNPROTECTED_SACL_SECURITY_INFORMATION  The SACL inherits ACEs from the parent object.
           * */
       }
+
       // ReSharper restore UnusedMember.Global
 
       ///// <summary>
@@ -769,6 +795,7 @@ namespace LiquesceSvc
          public IntPtr sacl;     // == PACL
          public IntPtr dacl;     // == PACL
       }
+
       // ReSharper restore UnusedMember.Global
       // ReSharper restore MemberCanBePrivate.Global
 
@@ -932,9 +959,8 @@ namespace LiquesceSvc
       [return: MarshalAs(UnmanagedType.Bool)]
       private static extern bool FlushFileBuffers(SafeFileHandle hFile);
 
-      [DllImport("Kernel32.dll", SetLastError = true)]
-      [return: MarshalAs(UnmanagedType.Bool)]
-      private static extern bool SetFilePointerEx(SafeFileHandle Handle, Int64 i64DistanceToMove, IntPtr ptrNewFilePointer, int origin);
+      [DllImport("Kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+      private static extern int SetFilePointer(SafeFileHandle hFile, int lDistanceToMove, ref int lpDistanceToMoveHigh, SeekOrigin dwMoveMethod);
 
       [DllImport("kernel32.dll", SetLastError = true)]
       [return: MarshalAs(UnmanagedType.Bool)]
@@ -996,6 +1022,7 @@ namespace LiquesceSvc
          GetFileExInfoStandard,
          GetFileExMaxInfoLevel
       }
+
       // ReSharper restore UnusedMember.Local
 
       [DllImport("shlwapi.dll", CharSet = CharSet.Unicode)]
@@ -1056,6 +1083,7 @@ namespace LiquesceSvc
          DUPLICATE_CLOSE_SOURCE = (0x00000001),// Closes the source handle. This occurs regardless of any error status returned.
          DUPLICATE_SAME_ACCESS = (0x00000002), //Ignores the dwDesiredAccess parameter. The duplicate handle has the same access as the source handle.
       }
+
       // ReSharper restore UnusedMember.Local
 
       [DllImport("kernel32.dll", SetLastError = true)]
@@ -1075,6 +1103,5 @@ namespace LiquesceSvc
          }
          return new NativeFileOps(sourceHandle.FullName, lpTargetHandle, sourceHandle.ForceUseAsReadOnly);
       }
-
    }
 }

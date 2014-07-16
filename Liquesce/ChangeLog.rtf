@@ -25,11 +25,9 @@ Keep an open eye on the \cf0\b{\field{\*\fldinst{HYPERLINK "http://liquesce.code
 \ulnone\b0 - - Event messages\par
 - Change the space usage to be a table with scroll-bars to give better layout options (And sorting etc.)\par
 - Explorer plugin\par
-- Find an FTP service that works well with this and Amalgam to allow sharing.\par
 - Fix Issues\par
 - Performance\par
 \cf5\f6 - - FindFiles - Need a way to make this IEnumerable (Maybe) - \cf0{\field{\*\fldinst{HYPERLINK "https://visualstudio.uservoice.com/forums/121579-visual-studio/suggestions/2385336-optimize-file-system-operations"}}{\fldrslt{\ul\cf2 https://visualstudio.uservoice.com/forums/121579-visual-studio/suggestions/2385336-optimize-file-system-operations}}}\cf5\f6\fs20\par
-- - Move to Buffered IO classes used by .Net (NativeFileOps, to use FileStream base class)\par
 \cf4\f0 - - Test Suite (\cf5\f6 WINAFred ) \cf4\f0 of operations\par
 \cf5\f6 - Install advances\par
 - - Use Wix 3.7/8 to add bootstrapper functionality for .Net\par
@@ -53,20 +51,31 @@ Keep an open eye on the \cf0\b{\field{\*\fldinst{HYPERLINK "http://liquesce.code
 - - Test Move file\par
 - - Test Create folder\par
 - - Testing Teracopy\par
-- Improve performance on internal file finding\par
 - Fix exception when config file has be manually edited and HoldOfBytes is an out of range value\par
 - Add code for the new feature: \f2\fs19 UseInternalDriverCaches\par
-\f0\fs20 - Add "Use Internal Driver cache" mode option (default to true)\par
+\f0\fs20 - - Add "Use Internal Driver cache" mode option (default to true)\par
 - Update to CBFS 5.1.149\par
 - - Sporadic BSOD (access violation) when the network mounting points were used. \par
 - - After directory enumeration had finished (the ERROR_NO_MORE_FILES returned) a new enumerate directory request with the same handle (and without the "restart scan" flag) restarted the enumeration. Now in order to make a new enumeration the directory must be reopened.  \par
 - - Possibility of BSOD during directory enumeration when the "enumeration mask" parameter points to user address space.\par
+- Fix: After UAC request the MgtApp would be at the back\par
+- - Test to make sure not too intrusive!\par
+- Add new feature: \f2\fs19 UseInplaceRenaming\par
+\f0\fs20 - File Renaming\par
+- - Sort out problem with rename.\par
+- - Make sure rename uses the file size to allow merging\par
+- - Implement in place renaming\par
+- - Testing File inplace\par
+- Improve performance \par
+- - Use ReaderWriteLockSlim on internal file cache\par
+- - Use SetFilePointer with 0 first to get the position, before always moving for reads / write (Prevent Shlemiel algorithm problem)\par
+- Remove unused References in projects.\par
+- Remove thirdparty FileSystem transaction code (MS are trying to deprecate it anway!)\par
 - Directory Renaming\par
 - - unique folder\par
 - - Spread testing\par
-- Fix: After UAC request the MgtApp would be at the back\par
-- Add new feature: \f2\fs19 UseInplaceRenaming\par
-\f0\fs20 - File Renaming\par
+- - Make sure cache object for all objects in the rename source are removed.\par
+- - Testing directory inplace\par
 \par
 \ul\b\par
 2014-06-##\par
