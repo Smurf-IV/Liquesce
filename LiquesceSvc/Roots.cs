@@ -365,23 +365,13 @@ namespace LiquesceSvc
          return sourceWithMostFreeSpace;
       }
 
-      private string findOffsetPath(string fullFilePath)
+      private string FindOffsetPath(string fullFilePath)
       {
          foreach (SourceLocation location in mountDetail.SourceLocations.Where(location => fullFilePath.StartsWith(location.SourcePath)))
          {
             return fullFilePath.Remove(0, location.SourcePath.Length);
          }
          return string.Empty;
-      }
-
-      // removes a root from root lookup
-      public void RemoveTargetFromLookup(string realFilename)
-      {
-         string key = findOffsetPath(realFilename);
-         if (string.IsNullOrEmpty(key))
-         {
-            RemoveFromLookup(key);
-         }
       }
 
       // removes a path from root lookup
