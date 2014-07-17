@@ -86,11 +86,19 @@ namespace LiquesceSvc
             //   MoveFile Should be used to go to the Recycler dependent on the Drive Format Type and ACL Status
             //
             // While we are here, remove
-            roots.RemoveTargetFromLookup(oldName); // File has been removed
+            roots.RemoveFromLookup(oldName); // File has been removed
 
             if (useInplaceRenaming)
             {
-               string fileTarget = Path.Combine(pathSource.DirectoryPathOnly, new NativeFileOps(newName, true).FileName);
+               string relativeNewParent = NativeFileOps.GetParentPathName(newName);
+               string sourceRoot = roots.GetRoot(pathSource.DirectoryPathOnly);
+               // relativeNewParent will start with the //'s
+               string newTarget = sourceRoot + relativeNewParent;
+               // This will handle Drive 1 containg the dir, drive 2 containing the file at a lower point
+               // i.e. copying down the dir chain to a non-existing dir whilst inplace is in force.
+               NativeFileOps.CreateDirectory(newTarget );
+
+               string fileTarget = Path.Combine(newTarget, NativeFileOps.GetFileName(newName));
                MoveFileExInPlace(pathSource.FullName, fileTarget, replaceIfExisting);
             }
             else
@@ -135,7 +143,7 @@ namespace LiquesceSvc
             }
          }
 
-         roots.RemoveTargetFromLookup(newName); // Not a null file anymore
+         roots.RemoveFromLookup(newName); // Not a null file anymore
       }
 
       private static void Move(Roots roots, DirectoryInfo pathSource, string pathTarget_FullName, bool replaceIfExisting)
@@ -143,12 +151,16 @@ namespace LiquesceSvc
          string pathSource_FullName = pathSource.FullName;
          Log.Trace("Move(pathSource[{0}], pathTarget[{1}], replaceIfExisting[{2}], useInplaceRenaming[{3}])", pathSource_FullName, pathTarget_FullName, replaceIfExisting);
 
+         // Don't forget this directory
+         NativeFileOps newTarget = roots.FindCreateNewAllocationRootPath(pathTarget_FullName);
+         newTarget.CreateDirectory();
+
          // for every file in the current folder
          foreach (FileInfo filein in pathSource.EnumerateFiles())
          {
             // with each file, allow the target to distribute in case space is a problem
             string fileSource = Path.Combine(pathSource_FullName, filein.Name);
-            NativeFileOps newTarget = roots.FindCreateNewAllocationRootPath(Path.Combine(pathTarget_FullName, filein.Name), (ulong)filein.Length);
+            newTarget = roots.FindCreateNewAllocationRootPath(Path.Combine(pathTarget_FullName, filein.Name), (ulong)filein.Length);
             // The new target might be on a different drive, so re-create the folder path to the new location
             NativeFileOps.CreateDirectory(newTarget.DirectoryPathOnly);
 
@@ -160,9 +172,6 @@ namespace LiquesceSvc
          {
             string dirSource = Path.Combine(pathTarget_FullName, dr.Name);
             Move(roots, dr, dirSource, replaceIfExisting);
-            // Don't forget the empty directories
-            NativeFileOps newTarget = roots.FindCreateNewAllocationRootPath(dirSource);
-            newTarget.CreateDirectory();
          }
 
          Log.Trace("Delete this Dir[{0}]", pathSource_FullName);

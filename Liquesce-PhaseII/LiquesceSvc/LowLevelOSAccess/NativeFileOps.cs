@@ -447,24 +447,13 @@ namespace LiquesceSvc
             {
                ch = FullName[--length];
             } while (!IsDirectorySeparator(ch));
-            return FullName.Substring(0, length);
+            return AddTrailingSeperator(FullName.Substring(0, length));
          }
       }
 
       public string FileName
       {
-         get
-         {
-            // Stolen from Path.GetFileName() then simplified
-            int length = FullName.Length;
-            int index = length;
-            char ch;
-            do
-            {
-               ch = FullName[--index];
-            } while (!IsDirectorySeparator(ch));
-            return FullName.Substring(index + 1, length - index - 1);
-         }
+         get { return GetFileName(FullName); }
       }
 
       public ulong Length
@@ -593,6 +582,19 @@ namespace LiquesceSvc
          if (c != Path.DirectorySeparatorChar)
             return c == Path.AltDirectorySeparatorChar;
          return true;
+      }
+
+      public static string GetFileName(string fullName)
+      {
+         // Stolen from Path.GetFileName() then simplified
+         int length = fullName.Length;
+         int index = length;
+         char ch;
+         do
+         {
+            ch = fullName[--index];
+         } while (!IsDirectorySeparator(ch));
+         return fullName.Substring(index + 1, length - index - 1);
       }
 
       public static string GetParentPathName(string startPathFileName)
