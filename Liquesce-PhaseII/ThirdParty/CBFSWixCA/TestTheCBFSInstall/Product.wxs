@@ -27,9 +27,9 @@
       </Directory>
 
       <?define MgtSource=$(sys.SOURCEFILEDIR).\AnyCPU ?>
-      <?define x64=$(sys.SOURCEFILEDIR)..\..\..\..\..\Amalgam\Phase III\ThirdParty\CBFS\x64 ?>
-      <?define x86=$(sys.SOURCEFILEDIR)..\..\..\..\..\Amalgam\Phase III\ThirdParty\CBFS\32bit ?>
-      <?define IcoSource=$(sys.SOURCEFILEDIR)..\..\..\\Liquesce\Resources ?>
+      <?define x64=$(sys.SOURCEFILEDIR)..\..\CBFS\x64 ?>
+      <?define x86=$(sys.SOURCEFILEDIR)..\..\CBFS\32bit ?>
+      <?define IcoSource=$(sys.SOURCEFILEDIR)..\..\..\Liquesce\Resources ?>
 
 
       <ComponentGroup Id="Client" >
