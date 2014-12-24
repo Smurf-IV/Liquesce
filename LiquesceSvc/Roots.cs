@@ -110,6 +110,8 @@ namespace LiquesceSvc
             }
             Log.Trace("Not found in cache so search for filename");
 
+            // TODO: Not found, so check to see if this is a recycler bin offset
+
             foreach (string sourceLocation in GetAllRootPathsWhereExists(NativeFileOps.GetParentPathName(pathFileName)))
             {
                fsi = new NativeFileOps(Path.Combine(sourceLocation, searchFilename), IsRootReadOnly(sourceLocation));
@@ -190,6 +192,15 @@ namespace LiquesceSvc
          return mountDetail.SourceLocations.Any(location => (location.SourcePath == root) && (location.UseIsReadOnly));
       }
 
+      public IEnumerable<string> GetFullPathsThatContainThis(string relativefolder)
+      {
+         return from location in mountDetail.SourceLocations
+                select new DirectoryInfo(location.SourcePath + relativefolder)
+                   into dir
+                   where dir.Exists
+                   select dir.FullName;
+      }
+
       public IEnumerable<string> GetAllRootPathsWhereExists(string relativefolder)
       {
          return mountDetail.SourceLocations.Where(location => Directory.Exists(location.SourcePath + relativefolder)).Select(location => location.SourcePath);
@@ -223,6 +234,8 @@ namespace LiquesceSvc
          }
          return string.Empty;
       }
+
+      internal static readonly string[] RecyclerDirectoryNames = { @"$RECYCLE.BIN", @"Recycle Bin", @"RECYCLER", @"Recycled" };
 
       // this method returns a path (real physical path) of a place where the next folder/file root can be created.
       public NativeFileOps FindCreateNewAllocationRootPath(string pathFileName, UInt64 length = 0)
@@ -289,8 +302,16 @@ namespace LiquesceSvc
             }
          }
 
-         return isNamedStream ? new NativeFileOps(string.Format("{0}:{1}", newPathName, namedStream), IsRootReadOnly(foundRoot))
-            : new NativeFileOps(newPathName, IsRootReadOnly(foundRoot));
+         NativeFileOps newAllocationRootPath = isNamedStream ? new NativeFileOps(string.Format("{0}:{1}", newPathName, namedStream), IsRootReadOnly(foundRoot))
+                                                            : new NativeFileOps(newPathName, IsRootReadOnly(foundRoot));
+         // If a recycler is required then request usage of an existing one from a root drive.
+         if (RecyclerDirectoryNames.Any(pathFileName.Contains))
+         {
+            newAllocationRootPath = new NativeFileOps(NativeFileOps.GetRootOrMountFor(newAllocationRootPath.FullName) + pathFileName,
+               newAllocationRootPath.ForceUseAsReadOnly);
+         }
+
+         return newAllocationRootPath;
       }
 
       // returns the root for:

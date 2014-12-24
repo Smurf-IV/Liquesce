@@ -31,6 +31,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Security.AccessControl;
@@ -157,9 +158,20 @@ namespace LiquesceSvc
 
       static public void DeleteDirectory(string path)
       {
-         if (!RemoveDirectory(path))
+         try
          {
-            throw new Win32Exception();
+            if (!RemoveDirectory(path))
+            {
+               throw new Win32Exception();
+            }
+         }
+         catch
+         {
+            if (!Roots.RecyclerDirectoryNames.Any(path.Contains))
+            {
+               // only throw due to be unable to delete from Recycler, as it may have already been tidied up
+               throw;
+            }
          }
       }
 
@@ -178,9 +190,20 @@ namespace LiquesceSvc
 
       static public void DeleteFile(string path)
       {
-         if (!DeleteFileW(path))
+         try
          {
-            throw new Win32Exception();
+            if (!DeleteFileW(path))
+            {
+               throw new Win32Exception();
+            }
+         }
+         catch
+         {
+            if (!Roots.RecyclerDirectoryNames.Any(path.Contains))
+            {
+               // only throw due to be unable to delete from Recycler, as it may have already been tidied up
+               throw;
+            }
          }
       }
 
@@ -355,6 +378,7 @@ namespace LiquesceSvc
          return (fileTime != 0) ? DateTime.FromFileTimeUtc(fileTime) : DateTime.MinValue;
       }
 
+      [DebuggerHidden] // Stop it firing when setting file times inside recycler bin's
       public void SetFileTime(DateTime creationTime, DateTime lastAccessTime, DateTime lastWriteTime)
       {
          if (ForceUseAsReadOnly)
@@ -438,17 +462,25 @@ namespace LiquesceSvc
 
       public string DirectoryPathOnly
       {
-         get
-         {
-            // Stolen from Path.GetDirectoryName() then simplified
-            int length = FullName.Length;
-            char ch;
-            do
-            {
-               ch = FullName[--length];
-            } while (!IsDirectorySeparator(ch));
-            return AddTrailingSeperator(FullName.Substring(0, length));
+         get {
+            return GetDirectoryName(FullName);
          }
+      }
+
+      /// <summary>
+      /// Stolen from Path.GetDirectoryName() then simplified
+      /// </summary>
+      /// <param name="fullName"></param>
+      /// <returns></returns>
+      static public string GetDirectoryName(string fullName)
+      {
+         int length = fullName.Length;
+         char ch;
+         do
+         {
+            ch = fullName[--length];
+         } while (!IsDirectorySeparator(ch));
+         return AddTrailingSeperator(fullName.Substring(0, length));
       }
 
       public string FileName
@@ -579,9 +611,7 @@ namespace LiquesceSvc
 
       public static bool IsDirectorySeparator(char c)
       {
-         if (c != Path.DirectorySeparatorChar)
-            return c == Path.AltDirectorySeparatorChar;
-         return true;
+         return c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar;
       }
 
       public static string GetFileName(string fullName)
@@ -1105,5 +1135,6 @@ namespace LiquesceSvc
          }
          return new NativeFileOps(sourceHandle.FullName, lpTargetHandle, sourceHandle.ForceUseAsReadOnly);
       }
+
    }
 }
