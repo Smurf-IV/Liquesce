@@ -1,0 +1,13 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="LiquesceSvc.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="Salt" Type="(Connection string)" Scope="Application">
+      <DesignTimeValue Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
+&lt;SerializableConnectionString xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"&gt;
+  &lt;ConnectionString&gt;+Od6c3mNYXx4Ix17s1b9iwV7zOHdmMLj7nx+38vjnE36r9YlxR0/cZ6ISo/rez7Czcc4kZw55r/wVYDjNE2vqrjr4/VzgvgW1AgXzvTpLHAfK80RY58QQta1qtXbGgqsTxYJmFHk5ikCd5QFBth1xcJlZ5w62yaScPmWc2ygm58vorqrrTcgq7DIBJpz+YRaQhSKBFdj4IW6ug0OoOyoRkZRaHVTK/BwY2VR4QKRc1eK786/05qM4ABiX3tRrCFb7Ag2G4KleZD0Z2tznzk3ux0gPmLiXU5Hc/T+MEkxiGeQyXnI3Oy40TBgRL6Lv9dJ/TRiYXc32SvrfMgLqcaX0Ks56SfHmBIFLLwwFHRMx2U0HZnESsz2Nid+gJ4ILZDaUatqwAdUaS78rk7eMI3ubXrvA+n5PP3Df1PMI2M0C1LVX/b+OXSdlaVqS9XmMWtBlIh6xJQwlxz8PeargFlltKLroGpVROZJK1z5V5nP48yaaV8rKSb6SPIaybpfPPBy+CEdl57EU5Eh0MGmoWgAtDUQ2ygmEswHR1CyNKT/P7gt9rZDfcjatucd6rpoeY73BphSUQDNZY6MUTYlikg37l5Ob8HTRpI/FYwzSMTzxri4EbYA3reY4p5qNE/GiCmXcsgDaKGhKvz1gYHIugek4dVAaTA0tSqxiuyQtbO6jEz+KpwerYVI+4ir+oay3L1as8n603jeRdXHho7Vq5DsjtsipCEM4f/iq9rKy9sXSUXkOyS66gFktsCYUGxOacfAOeCtXIuIMsjhM8QRZJc+3A==&lt;/ConnectionString&gt;
+&lt;/SerializableConnectionString&gt;</DesignTimeValue>
+      <Value Profile="(Default)">+Od6c3mNYXx4Ix17s1b9iwV7zOHdmMLj7nx+38vjnE36r9YlxR0/cZ6ISo/rez7Czcc4kZw55r/wVYDjNE2vqrjr4/VzgvgW1AgXzvTpLHAfK80RY58QQta1qtXbGgqsTxYJmFHk5ikCd5QFBth1xcJlZ5w62yaScPmWc2ygm58vorqrrTcgq7DIBJpz+YRaQhSKBFdj4IW6ug0OoOyoRkZRaHVTK/BwY2VR4QKRc1eK786/05qM4ABiX3tRrCFb7Ag2G4KleZD0Z2tznzk3ux0gPmLiXU5Hc/T+MEkxiGeQyXnI3Oy40TBgRL6Lv9dJ/TRiYXc32SvrfMgLqcaX0Ks56SfHmBIFLLwwFHRMx2U0HZnESsz2Nid+gJ4ILZDaUatqwAdUaS78rk7eMI3ubXrvA+n5PP3Df1PMI2M0C1LVX/b+OXSdlaVqS9XmMWtBlIh6xJQwlxz8PeargFlltKLroGpVROZJK1z5V5nP48yaaV8rKSb6SPIaybpfPPBy+CEdl57EU5Eh0MGmoWgAtDUQ2ygmEswHR1CyNKT/P7gt9rZDfcjatucd6rpoeY73BphSUQDNZY6MUTYlikg37l5Ob8HTRpI/FYwzSMTzxri4EbYA3reY4p5qNE/GiCmXcsgDaKGhKvz1gYHIugek4dVAaTA0tSqxiuyQtbO6jEz+KpwerYVI+4ir+oay3L1as8n603jeRdXHho7Vq5DsjtsipCEM4f/iq9rKy9sXSUXkOyS66gFktsCYUGxOacfAOeCtXIuIMsjhM8QRZJc+3A==</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

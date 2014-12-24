@@ -1,10 +1,41 @@
-﻿using System;
+﻿#region Copyright (C)
+
+// ---------------------------------------------------------------------------------------------------------------
+//  <copyright file="NotifyIconHandler.cs" company="Smurf-IV">
+//
+//  Copyright (C) 2010-2014 Simon Coghlan (Aka Smurf-IV)
+//
+//  This program is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation, either version 2 of the License, or
+//   any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program. If not, see http://www.gnu.org/licenses/.
+//  </copyright>
+//  <summary>
+//  Url: http://Liquesce.codeplex.com/
+//  Email: http://www.codeplex.com/site/users/view/smurfiv
+//  </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+#endregion Copyright (C)
+
+using System;
+using System.ComponentModel;
 using System.Diagnostics;
-using System.Reflection;
+using System.IO;
 using System.ServiceProcess;
 using System.Windows.Forms;
 using LiquesceFacade;
+using LiquesceTray.Properties;
 using NLog;
+using TimeoutException = System.ServiceProcess.TimeoutException;
 
 namespace LiquesceTray
 {
@@ -17,9 +48,16 @@ namespace LiquesceTray
       public NotifyIconHandler()
       {
          InitializeComponent();
-         notifyIcon1.BalloonTipTitle = "Service Status";
+         if (Settings.Default.UpdateRequired)
+         {
+            // Thanks go to http://cs.rthand.com/blogs/blog_with_righthand/archive/2005/12/09/246.aspx
+            Settings.Default.Upgrade();
+            Settings.Default.UpdateRequired = false;
+            Settings.Default.Save();
+         }
+         notifyIcon1.BalloonTipTitle = Resources.NotifyIconHandler_NotifyIconHandler_Service_Status;
          // Use last state to prevent balloon tip showing on start !
-         SetState(lastState, "Application tray is starting");
+         SetState(lastState, Resources.NotifyIconHandler_NotifyIconHandler_Application_tray_is_starting);
          DoStatusCheck(0);
          timer1.Start();
       }
@@ -33,13 +71,33 @@ namespace LiquesceTray
       private void managementApp_Click(object sender, EventArgs e)
       {
          //Application.StartupPath;
-         Process process = new Process { StartInfo = { 
-                                            WorkingDirectory = Application.StartupPath,
-                                            FileName = "Liquesce.exe"
+         try
+         {
+            Process process = new Process
+            {
+               StartInfo =
+               {
+                  WorkingDirectory = Application.StartupPath,
+                  FileName = "Liquesce.exe"
+               }
+            };
+            process.Start();
          }
-         };
-
-         process.Start();
+         catch (Win32Exception w32)
+         {
+            if (w32.Message == "The operation was canceled by the user")
+            {
+               Log.InfoException("Attempting to launch Liquesce.exe", w32);
+            }
+            else
+            {
+               Log.ErrorException("Attempting to launch Liquesce.exe", w32);
+            }
+         }
+         catch (Exception ex)
+         {
+            Log.ErrorException("Attempting to launch Liquesce.exe", ex);
+         }
       }
 
       private void notifyIcon1_DoubleClick(object sender, EventArgs e)
@@ -58,27 +116,32 @@ namespace LiquesceTray
          switch (state)
          {
             case LiquesceSvcState.InWarning:
-               notifyIcon1.Text = "Liquesce State Warning";
+               notifyIcon1.Text = Resources.NotifyIconHandler_SetState_Liquesce_State_Warning;
                notifyIcon1.BalloonTipIcon = ToolTipIcon.Warning;
                break;
+
             case LiquesceSvcState.Unknown:
-               notifyIcon1.Text = "Liquesce State Unknown";
+               notifyIcon1.Text = Resources.NotifyIconHandler_SetState_Liquesce_State_Unknown;
                notifyIcon1.BalloonTipIcon = ToolTipIcon.Warning;
                break;
+
             case LiquesceSvcState.Running:
-               notifyIcon1.Text = "Liquesce State Running";
+               notifyIcon1.Text = Resources.NotifyIconHandler_SetState_Liquesce_State_Running;
                notifyIcon1.BalloonTipIcon = ToolTipIcon.None;
                break;
+
             case LiquesceSvcState.Stopped:
-               notifyIcon1.Text = "Liquesce State Stopped";
+               notifyIcon1.Text = Resources.NotifyIconHandler_SetState_Liquesce_State_Stopped;
                notifyIcon1.BalloonTipIcon = ToolTipIcon.Info;
                break;
+
             case LiquesceSvcState.InError:
-               notifyIcon1.Text = "Liquesce State In Error";
+               notifyIcon1.Text = Resources.NotifyIconHandler_SetState_Liquesce_State_In_Error;
                notifyIcon1.BalloonTipIcon = ToolTipIcon.Error;
                break;
+
             default:
-               notifyIcon1.Text = "Liquesce State Unknown";
+               notifyIcon1.Text = Resources.NotifyIconHandler_SetState_Liquesce_State_Unknown;
                Log.Error("SetState has an unknown state value [{0}]", state);
                notifyIcon1.BalloonTipIcon = ToolTipIcon.None;
                break;
@@ -89,6 +152,7 @@ namespace LiquesceTray
             notifyIcon1.ShowBalloonTip(5000);
          }
       }
+
       private void timer1_Tick(object sender, EventArgs e)
       {
          DoStatusCheck(timer1.Interval / 2);
@@ -102,20 +166,20 @@ namespace LiquesceTray
             serviceController1.WaitForStatus(ServiceControllerStatus.Running, timeSpan);
             if (LiquesceSvcState.Running != lastState)
             {
-               notifyIcon1.Icon = Properties.Resources.OKIcon;
-               SetState(LiquesceSvcState.Running, String.Format("Started @ {0}", DateTime.Now) );
+               notifyIcon1.Icon = Resources.OKIcon;
+               SetState(LiquesceSvcState.Running, String.Format(Resources.NotifyIconHandler_DoStatusCheck_Started____0_, DateTime.Now));
                stateChangeHandler.CreateCallBack(SetState);
             }
          }
-         catch (System.ServiceProcess.TimeoutException tex)
+         catch (TimeoutException tex)
          {
             stateChangeHandler.RemoveCallback();
             // Be nice to the log
             if (LiquesceSvcState.InWarning != lastState)
             {
                Log.WarnException("Service is not in a running state", tex);
-               SetState(LiquesceSvcState.InWarning, "Liquesce service is Stopped");
-               notifyIcon1.Icon = Properties.Resources.StopIcon;
+               SetState(LiquesceSvcState.InWarning, Resources.NotifyIconHandler_DoStatusCheck_Liquesce_service_is_Stopped);
+               notifyIcon1.Icon = Resources.StopIcon;
             }
          }
          catch (Exception ex)
@@ -125,61 +189,90 @@ namespace LiquesceTray
             if (LiquesceSvcState.InError != lastState)
             {
                Log.ErrorException("Liquesce service has a general exception", ex);
-               notifyIcon1.Icon = Properties.Resources.ErrorIcon;
+               notifyIcon1.Icon = Resources.ErrorIcon;
                SetState(LiquesceSvcState.InError, ex.Message);
             }
          }
       }
 
-      private void rightClickContextMenu_Opening(object sender, System.ComponentModel.CancelEventArgs e)
+      private void notifyIcon1_MouseDown(object sender, MouseEventArgs e)
       {
-         bool visible = ((ModifierKeys & Keys.Control) == Keys.Control);
+         if (e.Button == MouseButtons.Right)
          {
-            stopServiceToolStripMenuItem.Visible = visible;
-            startServiceToolStripMenuItem.Visible = visible;
+            bool visible = ((ModifierKeys & Keys.Control) == Keys.Control);
+            notifyIcon1.ContextMenuStrip = visible ? rightClickContextMenuService : rightClickContextMenuNormal;
          }
-         showFreeDiskSpaceToolStripMenuItem.Enabled = (LiquesceSvcState.Running == lastState);
+      }
+
+      private void rightClickContextMenu_Opening(object sender, CancelEventArgs e)
+      {
+         if (LiquesceSvcState.Running == lastState)
+         {
+            showFreeDiskSpaceToolStripMenuItem.Enabled = true;
+            dropperToolStripMenuItem.Enabled = true;
+         }
+         else
+         {
+            showFreeDiskSpaceToolStripMenuItem.Enabled = false;
+            dropperToolStripMenuItem.Enabled = false;
+         }
       }
 
       private void stopServiceToolStripMenuItem_Click(object sender, EventArgs e)
       {
          try
          {
-            CallTrayHelper("stop");
+            ProcessStartInfo startInfo = new ProcessStartInfo
+            {
+               UseShellExecute = true,
+               CreateNoWindow = true,
+               WindowStyle = ProcessWindowStyle.Hidden,
+               FileName = Path.Combine(Application.StartupPath, @"LiquesceTrayHelper.exe"),
+               Arguments = @"stop",
+               // Two lines below make the UAC dialog modal to this app
+               ErrorDialog = true,
+               ErrorDialogParentHandle = Handle
+            };
+
+            //// if the other process did not have a manifest
+            //// then force it to run elevated
+            //startInfo.Verb = "runas";
+            Process p = Process.Start(startInfo);
+
+            // block this UI until the launched process exits
+            // I.e. make it modal
+            p.WaitForExit();
          }
          catch (Exception ex)
          {
             Log.ErrorException("stopServiceToolStripMenuItem_Click", ex);
          }
-      }
-
-      private void CallTrayHelper(string action)
-      {
-         ProcessStartInfo startInfo = new ProcessStartInfo
-                                         {
-                                            UseShellExecute = false,
-                                            CreateNoWindow = true,
-                                            WindowStyle = ProcessWindowStyle.Hidden,
-                                            //WorkingDirectory = Environment.CurrentDirectory,
-                                            FileName = Application.ExecutablePath,
-                                            Arguments = action,
-                                            // Two lines below make the UAC dialog modal to this app
-                                            ErrorDialog = true,
-                                            ErrorDialogParentHandle = this.Handle,
-                                            // if the other process did not have a manifest then force it to run elevated
-                                            Verb = "runas"
-                                         };
-
-         // block this UI until the launched process exits
-         // I.e. make it modal
-         Process.Start(startInfo).WaitForExit();
       }
 
       private void startServiceToolStripMenuItem_Click(object sender, EventArgs e)
       {
          try
          {
-            CallTrayHelper("start");
+            ProcessStartInfo startInfo = new ProcessStartInfo
+            {
+               UseShellExecute = true,
+               CreateNoWindow = true,
+               WindowStyle = ProcessWindowStyle.Hidden,
+               FileName = Path.Combine(Application.StartupPath, @"LiquesceTrayHelper.exe"),
+               Arguments = @"start",
+               // Two lines below make the UAC dialog modal to this app
+               ErrorDialog = true,
+               ErrorDialogParentHandle = Handle
+            };
+
+            //// if the other process did not have a manifest
+            //// then force it to run elevated
+            //startInfo.Verb = "runas";
+            Process p = Process.Start(startInfo);
+
+            // block this UI until the launched process exits
+            // I.e. make it modal
+            p.WaitForExit();
          }
          catch (Exception ex)
          {
@@ -187,22 +280,35 @@ namespace LiquesceTray
          }
       }
 
-
       private FreeSpace fsform = null;
+
       private void showFreeDiskSpaceToolStripMenuItem_Click(object sender, EventArgs e)
       {
-          if (fsform != null)
-          {
-              fsform.Dispose();
-          }
-          fsform = new FreeSpace();
-          fsform.Activate();
-          fsform.Show();
-          fsform.Focus();
-          fsform.BringToFront();
-
+         if (fsform != null)
+         {
+            fsform.Dispose();
+         }
+         fsform = new FreeSpace();
+         fsform.Activate();
+         fsform.Show();
+         fsform.Focus();
+         fsform.BringToFront();
       }
 
+      private DropZone dropperForm = null;
+
+      private void dropperToolStripMenuItem_Click(object sender, EventArgs e)
+      {
+         if (dropperForm != null)
+         {
+            dropperForm.Dispose();
+         }
+         dropperForm = new DropZone();
+         dropperForm.Activate();
+         dropperForm.Show();
+         dropperForm.Focus();
+         dropperForm.BringToFront();
+      }
 
    }
 }

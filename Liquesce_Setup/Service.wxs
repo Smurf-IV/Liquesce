@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension"
+     xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension"
+     >
+
+   <?define SvcSource=$(sys.SOURCEFILEDIR)..\LiquesceSvc\bin\Release ?>
+
+   <Fragment>
+
+      <DirectoryRef Id="ServiceDIR" />
+                 
+      <ComponentGroup Id="Service">
+         <Component Id="LiquesceSvc" Guid="BEBF3F29-9CF1-44FE-A94C-CC1B4FE09367" Directory="ServiceDIR">
+            <File Id="LiquesceSvc.File" Name="LiquesceSvc.exe" Source="$(var.SvcSource)\LiquesceSvc.exe" KeyPath="yes">
+               <fire:FirewallException Id="LiquesceFWX2" Name="LiquesceSvc" Scope="localSubnet" IgnoreFailure="yes" />
+               <!-- Why Use NGen ? http://msdn.microsoft.com/en-gb/magazine/cc163610.aspx -->
+               <netfx:NativeImage Id="ngen_LiquesceSvc.exe" Platform="all" Priority="1" AppBaseDirectory="ServiceDIR"/>
+            </File>
+            <File Id="LiquesceSvc.exe.config.File" Name="LiquesceSvc.exe.config" Source="$(var.SvcSource)\LiquesceSvc.exe.config"/>
+            <ServiceControl Id='LiquesceSvcControl' Name='LiquesceSvc' Stop='both' Remove='uninstall' Wait='yes' />
+         </Component>
+         <Component Id="LiquesceFacade.dll" Directory="ServiceDIR">
+            <File Source="$(var.SvcSource)\LiquesceFacade.dll" KeyPath="yes">
+               <netfx:NativeImage Id="ngen_LiquesceFacade.dll" Platform="all" Priority="1" AppBaseDirectory="ServiceDIR"/>
+            </File>
+         </Component>
+         <Component Id="NLog.dll" Directory="ServiceDIR">
+            <File Source="$(var.SvcSource)\NLog.dll" KeyPath="yes" />
+         </Component>
+
+      </ComponentGroup>
+
+      <!--Write custom actions to install, uninstall, commit and rollback the changes-->
+      <CustomAction Id="LiquesceSvc.commit.SetProperty" Property="LiquesceSvc.commit"
+        Value='"[NETFRAMEWORK40FULLINSTALLROOTDIR]InstallUtil.exe" /installtype=notransaction /action=commit /LogFile="[LiquesceSvc_Data]LiquesceSvc.commit.log" /InstallStateDir="[CommonAppDataFolder]LiquesceSvc" "[#LiquesceSvc.File]"' />
+
+      <CustomAction Id="LiquesceSvc.rollback.SetProperty" Property="LiquesceSvc.rollback"
+        Value='"[NETFRAMEWORK40FULLINSTALLROOTDIR]InstallUtil.exe" /installtype=notransaction /action=rollback /LogFile="[LiquesceSvc_Data]LiquesceSvc.rollback.log" /InstallStateDir="[CommonAppDataFolder]LiquesceSvc" "[#LiquesceSvc.File]"' />
+
+      <CustomAction Id="LiquesceSvc.install.SetProperty" Property="LiquesceSvc.install"
+        Value='"[NETFRAMEWORK40FULLINSTALLROOTDIR]InstallUtil.exe" /installtype=notransaction /action=install /LogFile="[LiquesceSvc_Data]LiquesceSvc.install.log" /InstallStateDir="[CommonAppDataFolder]LiquesceSvc" "[#LiquesceSvc.File]"' />
+
+      <CustomAction Id="LiquesceSvc.uninstall.SetProperty" Property="LiquesceSvc.uninstall"
+        Value='"[NETFRAMEWORK40FULLINSTALLROOTDIR]InstallUtil.exe" /installtype=notransaction /action=uninstall /LogFile="[LiquesceSvc_Data]LiquesceSvc.uninstall.log" /InstallStateDir="[CommonAppDataFolder]LiquesceSvc" "[#LiquesceSvc.File]"' />
+
+      <CustomAction Id="LiquesceSvc.commit" BinaryKey="WixCA" DllEntry="CAQuietExec" Execute="commit" Impersonate="no" Return="check" />
+      <CustomAction Id="LiquesceSvc.rollback" BinaryKey="WixCA" DllEntry="CAQuietExec" Execute="rollback" Impersonate="no" Return="check" />
+      <CustomAction Id="LiquesceSvc.install" BinaryKey="WixCA" DllEntry="CAQuietExec" Execute="deferred" Impersonate="no" Return="check" />
+      <CustomAction Id="LiquesceSvc.uninstall" BinaryKey="WixCA" DllEntry="CAQuietExec" Execute="deferred" Impersonate="no" Return="check" />
+
+      <!-- Now to sequence these Custom Actions in the execute sequence -->
+      <InstallExecuteSequence>
+
+         <Custom Action="LiquesceSvc.commit.SetProperty" After="InstallServices"><![CDATA[ $LiquesceSvc > 2 ]]></Custom>
+         <Custom Action="LiquesceSvc.commit" After="LiquesceSvc.commit.SetProperty"><![CDATA[ $LiquesceSvc > 2 ]]></Custom>
+
+         <Custom Action="LiquesceSvc.rollback.SetProperty" After="LiquesceSvc.commit"><![CDATA[ $LiquesceSvc > 2 ]]></Custom>
+         <Custom Action="LiquesceSvc.rollback" After="LiquesceSvc.rollback.SetProperty"><![CDATA[ $LiquesceSvc > 2 ]]></Custom>
+
+         <Custom Action="LiquesceSvc.install.SetProperty" After="LiquesceSvc.rollback"><![CDATA[ $LiquesceSvc > 2 ]]></Custom>
+         <Custom Action="LiquesceSvc.install" After="LiquesceSvc.install.SetProperty"><![CDATA[ $LiquesceSvc > 2 ]]></Custom>
+
+         <Custom Action="LiquesceSvc.uninstall.SetProperty" After="MsiUnpublishAssemblies"><![CDATA[ $LiquesceSvc = 2 ]]></Custom>
+         <Custom Action="LiquesceSvc.uninstall" After="LiquesceSvc.uninstall.SetProperty"><![CDATA[ $LiquesceSvc = 2 ]]></Custom>
+      </InstallExecuteSequence>
+
+   </Fragment>
+</Wix>

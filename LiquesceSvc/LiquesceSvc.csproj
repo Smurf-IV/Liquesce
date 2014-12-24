@@ -14,7 +14,7 @@
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
-    <SccProjectName>%24/Liquesce/Liquesce/LiquesceSvc</SccProjectName>
+    <SccProjectName>%24/Liquesce/Liquesce-PhaseII/LiquesceSvc</SccProjectName>
     <SccLocalPath>.</SccLocalPath>
     <SccAuxPath>https://tfs.codeplex.com/tfs/tfs08</SccAuxPath>
     <SccProvider>{4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}</SccProvider>
@@ -44,16 +44,19 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <PlatformTarget>x86</PlatformTarget>
     <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
+    <Optimize>false</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet>BasicCorrectnessRules.ruleset</CodeAnalysisRuleSet>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Liquesce.ico</ApplicationIcon>
@@ -122,25 +125,47 @@
     <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
     <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>LiquesceSvc.Program</StartupObject>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
   <ItemGroup>
+    <Reference Include="CBFS5Net, Version=5.1.148.0, Culture=neutral, PublicKeyToken=0f194b348c109bec, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\ThirdParty\CBFS\32bit\CBFS5Net.dll</HintPath>
+    </Reference>
     <Reference Include="NLog, Version=2.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\ThirdParty\NLog.dll</HintPath>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Configuration.Install" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Management" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
     <Reference Include="System.ServiceProcess" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\..\Amalgam\Phase III\AmalgamClientTray\CBFS\ICBFSFuncs.cs">
+      <Link>CBFS\ICBFSFuncs.cs</Link>
+    </Compile>
+    <Compile Include="CachedRootPathsSystemInfo.cs" />
+    <Compile Include="CacheHelper.cs" />
+    <Compile Include="CBFS\CBFSWinUtil.cs" />
+    <Compile Include="CBFS\ICBFSFuncsAdvanced.cs" />
+    <Compile Include="LiquescOpsCBFSImp.cs" />
+    <Compile Include="LowLevelOSAccess\AlternateNativeInfo.cs" />
+    <Compile Include="LowLevelOSAccess\HGlobal.cs" />
+    <Compile Include="LowLevelOSAccess\NativeFileFind.cs" />
+    <Compile Include="LowLevelOSAccess\NativeFileOps.cs" />
+    <Compile Include="LowLevelOSAccess\NfsSupport.cs" />
+    <Compile Include="LowLevelOSAccess\ProcessExtensions.cs" />
+    <Compile Include="LowLevelOSAccess\ProcessIdentity.cs" />
+    <Compile Include="LowLevelOSAccess\SafeHGlobalHandle.cs" />
+    <Compile Include="LowLevelOSAccess\Win32Structs.cs" />
+    <Compile Include="Roots.cs" />
     <Compile Include="LiquesceCallBackFacade.cs" />
     <Compile Include="LiquesceFacade.cs" />
     <Compile Include="LiquesceOps.cs" />
@@ -159,42 +184,28 @@
       <DependentUpon>ProjectInstaller.cs</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Properties\Settings1.cs" />
-    <Compile Include="Properties\Settings1.Designer.cs">
+    <Compile Include="Salt.cs" />
+    <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
-      <DependentUpon>Settings1.settings</DependentUpon>
+      <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
+    <Compile Include="XMoveFile.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Properties\Settings1.settings">
+    <None Include="app.manifest" />
+    <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings1.Designer.cs</LastGenOutput>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LiquesceFaçade\LiquesceFacade.csproj">
       <Project>{CFE5DC7B-25FB-45C4-AF18-1963853375E1}</Project>
       <Name>LiquesceFacade</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\LiquesceSvcMEF\LiquesceSvcMEF.csproj">
-      <Project>{E39910A2-C72A-4D3C-BFD0-4356906B86A7}</Project>
-      <Name>LiquesceSvcMEF</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ServiceMEFs\FolderMEF\FolderMEF.csproj">
-      <Project>{8D071FB8-5E7B-43F4-81D4-839D2203D6AF}</Project>
-      <Name>FolderMEF</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ServiceMEFs\PriorityMEF\PriorityMEF.csproj">
-      <Project>{0B134E04-A1C8-4BA3-A5D6-E83AD26A73ED}</Project>
-      <Name>PriorityMEF</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ThirdParty\DokanNet\DokanNet.csproj">
-      <Project>{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C}</Project>
-      <Name>DokanNet</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -233,7 +244,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="YearStamp.MonthStamp.DayStamp.Increment" />
+      <UserProperties BuildVersion_BuildVersioningStyle="YearStamp.MonthStamp.DayStamp.Increment" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UseGlobalSettings="True" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

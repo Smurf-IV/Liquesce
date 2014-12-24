@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>3.6</ProductVersion>
+    <ProjectGuid>{3737e08f-ff33-4483-93eb-b71200af17fa}</ProjectGuid>
+    <SchemaVersion>2.0</SchemaVersion>
+    <OutputName>TestTheCBFSInstall</OutputName>
+    <OutputType>Package</OutputType>
+    <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
+    <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
+    <SccProjectName>SAK</SccProjectName>
+    <SccProvider>SAK</SccProvider>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccLocalPath>SAK</SccLocalPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+    <DefineConstants>Debug</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+    <SuppressAllWarnings>False</SuppressAllWarnings>
+    <Pedantic>True</Pedantic>
+    <SuppressSpecificWarnings>1137;1076</SuppressSpecificWarnings>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Product.wxs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CBFSWixCA.vcxproj">
+      <Name>CBFSWixCA</Name>
+      <Project>{2bf998a5-8bed-4975-91c5-7893dd138320}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="AnyCPU" />
+    <Folder Include="x64" />
+    <Folder Include="x86" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\..\Liquesce\Resources\Liquesce.ico">
+      <Link>Liquesce.ico</Link>
+    </Content>
+    <Content Include="..\..\CBFS\32bit\msvcp100.dll">
+      <Link>x86\msvcp100.dll</Link>
+    </Content>
+    <Content Include="..\..\CBFS\32bit\msvcr100.dll">
+      <Link>x86\msvcr100.dll</Link>
+    </Content>
+    <Content Include="..\..\CBFS\x64\msvcp100.dll">
+      <Link>x64\msvcp100.dll</Link>
+    </Content>
+    <Content Include="..\..\CBFS\x64\msvcr100.dll">
+      <Link>x64\msvcr100.dll</Link>
+    </Content>
+    <Content Include="AnyCPU\LiquesceSvc.exe" />
+  </ItemGroup>
+  <Import Project="$(WixTargetsPath)" />
+  <!--
+	To modify your build process, add your task inside one of the targets below and uncomment it.
+	Other similar extension points exist, see Wix.targets.
+	<Target Name="BeforeBuild">
+	</Target>
+	<Target Name="AfterBuild">
+	</Target>
+	-->
+</Project>

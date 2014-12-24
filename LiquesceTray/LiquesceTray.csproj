@@ -90,23 +90,29 @@
     <CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
     <CodeAnalysisFailOnMissingRules>false</CodeAnalysisFailOnMissingRules>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="NLog, Version=2.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\ThirdParty\NLog.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
-    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.ServiceProcess" />
     <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DropZone.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DropZone.Designer.cs">
+      <DependentUpon>DropZone.cs</DependentUpon>
+    </Compile>
     <Compile Include="FreeSpace.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -127,11 +133,6 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Service References\LiquesceCallbackSvcRef\Reference.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Reference.svcmap</DependentUpon>
-    </Compile>
     <Compile Include="StateChangeHandler.cs" />
     <Compile Include="DoubleProgressBar.cs">
       <SubType>UserControl</SubType>
@@ -142,8 +143,12 @@
     <Compile Include="TransparentLabel.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="WindowLocation.cs" />
     <EmbeddedResource Include="DoubleProgressBar.resx">
       <DependentUpon>DoubleProgressBar.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DropZone.resx">
+      <DependentUpon>DropZone.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FreeSpace.resx">
       <DependentUpon>FreeSpace.cs</DependentUpon>
@@ -177,38 +182,19 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <None Include="Service References\LiquesceCallbackSvcRef\item.xsd">
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Service References\LiquesceCallbackSvcRef\item1.xsd">
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Service References\LiquesceCallbackSvcRef\item2.xsd">
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Service References\LiquesceCallbackSvcRef\LiquesceCallBackFacade.wsdl" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LiquesceFaçade\LiquesceFacade.csproj">
       <Project>{CFE5DC7B-25FB-45C4-AF18-1963853375E1}</Project>
       <Name>LiquesceFacade</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Liquesce\Liquesce.csproj">
-      <Project>{74447D1D-F52F-485C-BDEE-66B114A45460}</Project>
-      <Name>Liquesce</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Icons\backup.ico" />
     <Content Include="Icons\base.ico" />
     <Content Include="Icons\Config.ico" />
+    <None Include="Icons\drop.ico" />
     <Content Include="Icons\Error.ico" />
-    <None Include="Service References\LiquesceCallbackSvcRef\Reference.svcmap">
-      <Generator>WCF Proxy Generator</Generator>
-      <LastGenOutput>Reference.cs</LastGenOutput>
-    </None>
-    <None Include="Service References\LiquesceCallbackSvcRef\configuration.svcinfo" />
-    <None Include="Service References\LiquesceCallbackSvcRef\configuration91.svcinfo" />
-    <None Include="Service References\LiquesceCallbackSvcRef\item.disco" />
     <None Include="Icons\free_space.ico" />
     <Content Include="Icons\info.ico" />
     <Content Include="Icons\Liquesce.ico" />
@@ -245,13 +231,10 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup>
-    <WCFMetadataStorage Include="Service References\LiquesceCallbackSvcRef\" />
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="YearStamp.MonthStamp.DayStamp.Increment" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UseGlobalSettings="False" />
+      <UserProperties BuildVersion_UseGlobalSettings="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="YearStamp.MonthStamp.DayStamp.Increment" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

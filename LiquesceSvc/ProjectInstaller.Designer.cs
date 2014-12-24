@@ -43,7 +43,7 @@
          this.serviceInstaller1.DisplayName = "Liquesce Service";
          this.serviceInstaller1.ServiceName = "LiquesceSvc";
          this.serviceInstaller1.ServicesDependedOn = new string[] {
-        "DokanMounter"};
+        "PlugPlay"};
          this.serviceInstaller1.StartType = System.ServiceProcess.ServiceStartMode.Automatic;
          // 
          // ProjectInstaller

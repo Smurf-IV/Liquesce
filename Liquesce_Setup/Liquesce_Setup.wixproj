@@ -10,7 +10,7 @@
     <OutputType>Package</OutputType>
     <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
     <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
-    <SccProjectName>$/Liquesce/Liquesce/Liquesce_Setup</SccProjectName>
+    <SccProjectName>$/Liquesce/Liquesce-PhaseII/Liquesce_Setup</SccProjectName>
     <SccProvider>{4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}</SccProvider>
     <SccAuxPath>https://tfs.codeplex.com/tfs/tfs08</SccAuxPath>
     <SccLocalPath>.</SccLocalPath>
@@ -25,11 +25,20 @@
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
     <SuppressAllWarnings>False</SuppressAllWarnings>
     <Pedantic>True</Pedantic>
+    <SuppressIces>ICE30</SuppressIces>
+    <SuppressSpecificWarnings>1137;1076</SuppressSpecificWarnings>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="CBFS.wxs" />
+    <Compile Include="Client.wxs" />
     <Compile Include="Product.wxs" />
+    <Compile Include="Service.wxs" />
   </ItemGroup>
   <ItemGroup>
+    <WixExtension Include="WixUIExtension">
+      <HintPath>$(WixExtDir)\WixUIExtension.dll</HintPath>
+      <Name>WixUIExtension</Name>
+    </WixExtension>
     <WixExtension Include="WixUtilExtension">
       <HintPath>$(WixExtDir)\WixUtilExtension.dll</HintPath>
       <Name>WixUtilExtension</Name>
@@ -42,14 +51,20 @@
       <HintPath>$(WixExtDir)\WixFirewallExtension.dll</HintPath>
       <Name>WixFirewallExtension</Name>
     </WixExtension>
-    <WixExtension Include="WixUIExtension">
-      <HintPath>C:\Program Files\Windows Installer XML v3.5\bin\WixUIExtension.dll</HintPath>
-      <Name>WixUIExtension</Name>
-    </WixExtension>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Banner.bmp" />
-    <Content Include="GPL.rtf" />
+    <Content Include="GPLv2.rtf" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ThirdParty\CBFSWixCA\CBFSWixCA.vcxproj">
+      <Name>CBFSWixCA</Name>
+      <Project>{2bf998a5-8bed-4975-91c5-7893dd138320}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(WixTargetsPath)" />
   <!--

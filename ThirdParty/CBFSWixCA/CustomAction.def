@@ -1,0 +1,6 @@
+LIBRARY "CBFSWixCA"
+
+EXPORTS
+
+InstallCBFS_CA
+UninstallCBFS_CA

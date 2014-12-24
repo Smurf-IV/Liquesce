@@ -148,4 +148,43 @@
   <data name="Config" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Icons\Config.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="drop" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Icons\drop.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="NotifyIconHandler_SetState_Liquesce_State_Unknown" xml:space="preserve">
+    <value>Liquesce State Unknown</value>
+  </data>
+  <data name="NotifyIconHandler_SetState_Liquesce_State_In_Error" xml:space="preserve">
+    <value>Liquesce State In Error</value>
+  </data>
+  <data name="NotifyIconHandler_SetState_Liquesce_State_Stopped" xml:space="preserve">
+    <value>Liquesce State Stopped</value>
+  </data>
+  <data name="NotifyIconHandler_SetState_Liquesce_State_Running" xml:space="preserve">
+    <value>Liquesce State Running</value>
+  </data>
+  <data name="NotifyIconHandler_SetState_Liquesce_State_Warning" xml:space="preserve">
+    <value>Liquesce State Warning</value>
+  </data>
+  <data name="NotifyIconHandler_NotifyIconHandler_Service_Status" xml:space="preserve">
+    <value>Service Status</value>
+  </data>
+  <data name="NotifyIconHandler_DoStatusCheck_Started____0_" xml:space="preserve">
+    <value>Started @ {0}</value>
+    <comment>
+			Displays the locale start time
+		</comment>
+  </data>
+  <data name="NotifyIconHandler_DoStatusCheck_Liquesce_service_is_Stopped" xml:space="preserve">
+    <value>Liquesce service is Stopped</value>
+  </data>
+  <data name="NotifyIconHandler_NotifyIconHandler_Application_tray_is_starting" xml:space="preserve">
+    <value>Application tray is starting</value>
+  </data>
+  <data name="Program_CheckAndRunSingleApp__is_already_running" xml:space="preserve">
+    <value> is already running</value>
+    <comment>
+			The application name is already running warning
+		</comment>
+  </data>
 </root>
