@@ -124,7 +124,7 @@ namespace CBFS
       public const int ERROR_ALREADY_EXISTS = 183; // MessageText: Cannot create a file when that file already exists.
 
       public const int ERROR_EXCEPTION_IN_SERVICE = 1064;
-      //  An exception occurred in the service when handling thecontrol request.
+      //  An exception occurred in the service when handling the control request.
 
       public const int ERROR_FILE_READ_ONLY = 6009; // The specified file is read only.
 

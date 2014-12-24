@@ -3,7 +3,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 //  <copyright file="Program.cs" company="Smurf-IV">
 //
-//  Copyright (C) 2010-2013 Simon Coghlan (Aka Smurf-IV)
+//  Copyright (C) 2010-2014 Simon Coghlan (Aka Smurf-IV)
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -88,6 +88,8 @@ namespace Liquesce
             {
                Application.EnableVisualStyles();
                Application.SetCompatibleTextRenderingDefault(false);
+               Application.DoEvents();
+
                Application.Run(new TabMainForm());
             }
             else

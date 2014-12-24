@@ -1,19 +1,20 @@
 ﻿#region Copyright (C)
+
 // ---------------------------------------------------------------------------------------------------------------
-//  <copyright file="ProjectInstaller.cs" company="Smurf-IV">
-// 
-//  Copyright (C) 2010-2012 Simon Coghlan (Aka Smurf-IV)
-// 
+//  <copyright file="Program.cs" company="Smurf-IV">
+//
+//  Copyright (C) 2010-2014 Simon Coghlan (Aka Smurf-IV)
+//
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation, either version 2 of the License, or
 //   any later version.
-// 
+//
 //  This program is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 //  GNU General Public License for more details.
-// 
+//
 //  You should have received a copy of the GNU General Public License
 //  along with this program. If not, see http://www.gnu.org/licenses/.
 //  </copyright>
@@ -22,8 +23,8 @@
 //  Email: http://www.codeplex.com/site/users/view/smurfiv
 //  </summary>
 // --------------------------------------------------------------------------------------------------------------------
-#endregion
 
+#endregion Copyright (C)
 
 using System;
 using System.Diagnostics;
@@ -34,16 +35,17 @@ using NLog;
 
 namespace LiquesceSvc
 {
-   static class Program
+   internal static class Program
    {
       static private readonly Logger Log = LogManager.GetCurrentClassLogger();
+
       /// <summary>
       /// The main entry point for the application.
       /// </summary>
       /// <remarks>
       /// Option to either start from SCM or from Console to allow debugging
       /// </remarks>
-      static void Main(string[] args)
+      private static void Main(string[] args)
       {
          try
          {
@@ -100,7 +102,9 @@ namespace LiquesceSvc
             string cs = Assembly.GetExecutingAssembly().GetName().Name;
             EventLog eventLog = new EventLog();
             if (!EventLog.SourceExists(cs))
+            {
                EventLog.CreateEventSource(cs, "Application");
+            }
 
             EventLog.WriteEntry(cs, e.ExceptionObject.ToString(), EventLogEntryType.Error);
             Log.Fatal("Unhandled exception.\r\n{0}", e.ExceptionObject);
@@ -119,6 +123,5 @@ namespace LiquesceSvc
          {
          }
       }
-
    }
 }

@@ -97,16 +97,14 @@ namespace LiquesceSvc
          set { volumeSerialNumber = value; }
       }
 
-      private static readonly string[] RestrictedDirectoryNames = { @"$RECYCLE.BIN", @"Recycle Bin", @"RECYCLER", @"Recycled" };
-
       public override void CreateFile(string filename, uint DesiredAccess, uint fileAttributes, uint ShareMode,
                                       CbFsFileInfo fileInfo,
                                       CbFsHandleInfo userContextInfo)
       {
          int processId = GetProcessId();
          long openFileKey = fileInfo.UserContext.ToInt64();
-
          NativeFileOps foundFileInfo = roots.FindCreateNewAllocationRootPath(filename);
+
          if (foundFileInfo.ForceUseAsReadOnly)
          {
             throw new Win32Exception(CBFSWinUtil.ERROR_WRITE_PROTECT);
@@ -120,11 +118,6 @@ namespace LiquesceSvc
 
          if (CBFSWinUtil.IsDirectory(attributes))
          {
-            // If a recycler is required then request usage of an existing one from a root drive.
-            if (RestrictedDirectoryNames.Contains(foundFileInfo.FileName))
-            {
-               throw new Win32Exception(CBFSWinUtil.ERROR_ACCESS_DENIED);
-            }
             PID.Invoke(processId, foundFileInfo.CreateDirectory);
             CallOpenCreateFile(DesiredAccess, attributes, ShareMode, fileInfo, CBFSWinUtil.OPEN_EXISTING, processId, fullName, userContextInfo);
             return;
@@ -604,6 +597,7 @@ namespace LiquesceSvc
             );
       }
 
+      [DebuggerHidden] // Stop it firing when setting file times inside recycler bin's
       public override void SetFileAttributes(CbFsFileInfo fileInfo, CbFsHandleInfo userContextInfo,
                                              DateTime creationTime,
                                              DateTime lastAccessTime, DateTime lastWriteTime, uint fileAttributes)
@@ -638,6 +632,10 @@ namespace LiquesceSvc
                   )
                {
                   Log.Trace("changing Times");
+                  // if (Roots.RecyclerDirectoryNames.Any(stream.FullName.Contains))
+                  // is true then this will throw an exception
+                  // !! THAT IS IMPORTANT !!
+                  // AS it sets up Explorer to allow the movement to the Recycler bin, usinfg the Processes credentials.
                   PID.Invoke(processId, () => stream.SetFileTime(creationTime, lastAccessTime, lastWriteTime));
                }
             }
@@ -649,7 +647,11 @@ namespace LiquesceSvc
          NativeFileOps nfo = roots.GetFromPathFileName(fileInfo.FileName);
          if (nfo.IsDirectory)
          {
-            PID.Invoke(GetProcessId(), nfo.DeleteDirectory);
+            foreach (string fullPathsThatContainThis in roots.GetFullPathsThatContainThis(fileInfo.FileName))
+            {
+               nfo = new NativeFileOps(fullPathsThatContainThis, false);
+               PID.Invoke(GetProcessId(), nfo.DeleteDirectory);
+            }
          }
          else
          {
@@ -667,6 +669,7 @@ namespace LiquesceSvc
          }
          // Cbfs has handled the closing and replaceIfExists checks, so it needs to be set always here.
          // https://www.eldos.com/forum/read.php?FID=13&TID=2015
+
          PID.Invoke(GetProcessId(), () => XMoveFile.Move(roots, fileInfo.FileName, NewFileName, true, mountDetail.UseInplaceRenaming));
       }
 
@@ -737,7 +740,9 @@ namespace LiquesceSvc
          {
             CBFSWinUtil.ThrowNotFound((uint)NativeFileOps.EFileAttributes.Directory);
          }
-         return nfo.IsEmptyDirectory;
+         return roots.GetFullPathsThatContainThis(DirectoryName)
+            .Select(fullPathsThatContainThis => new NativeFileOps(fullPathsThatContainThis, false).IsEmptyDirectory)
+            .All(isEmptyDirectory => isEmptyDirectory);
       }
 
       #endregion CBFS Implementation

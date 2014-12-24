@@ -29,9 +29,10 @@
 using System;
 using System.ComponentModel;
 using System.IO;
+using System.IO.IsolatedStorage;
 using System.Linq;
 using System.Runtime.InteropServices;
-
+using CBFS;
 using NLog;
 
 // ReSharper disable UnusedMember.Local
@@ -88,7 +89,12 @@ namespace LiquesceSvc
             // While we are here, remove
             roots.RemoveFromLookup(oldName); // File has been removed
 
-            if (useInplaceRenaming)
+            // Need to check if this is going to the recycler
+            if (Roots.RecyclerDirectoryNames.Any(newName.Contains))
+            {
+               SendToRecycler(roots, pathSource.FullName, newName);
+            }
+            else if (useInplaceRenaming)
             {
                string relativeNewParent = NativeFileOps.GetParentPathName(newName);
                string sourceRoot = roots.GetRoot(pathSource.DirectoryPathOnly);
@@ -96,7 +102,7 @@ namespace LiquesceSvc
                string newTarget = sourceRoot + relativeNewParent;
                // This will handle Drive 1 containg the dir, drive 2 containing the file at a lower point
                // i.e. copying down the dir chain to a non-existing dir whilst inplace is in force.
-               NativeFileOps.CreateDirectory(newTarget );
+               NativeFileOps.CreateDirectory(newTarget);
 
                string fileTarget = Path.Combine(newTarget, NativeFileOps.GetFileName(newName));
                MoveFileExInPlace(pathSource.FullName, fileTarget, replaceIfExisting);
@@ -125,8 +131,21 @@ namespace LiquesceSvc
             // newName will already be calculated as the relative offset (Should have starting '\')
             foreach (string dirRootSource in allPossibleRootTargets)
             {
-               DirectoryInfo target = new DirectoryInfo(dirRootSource + newName);
-               DirectoryInfo source = new DirectoryInfo(dirRootSource + oldName);
+               string sourceName = dirRootSource + oldName;
+               // Need to check if this is going to the recycler
+               if (Roots.RecyclerDirectoryNames.Any(newName.Contains))
+               {
+                  SendToRecycler(roots, sourceName, newName);
+                  continue;
+               }
+
+               DirectoryInfo source = new DirectoryInfo(sourceName);
+               string newTarget = dirRootSource + newName;
+               DirectoryInfo target = new DirectoryInfo(newTarget);
+
+               // This will handle Drive 1 containg the dir, drive 2 containing the file at a lower point
+               // i.e. copying down the dir chain to a non-existing dir whilst inplace is in force.
+               NativeFileOps.CreateDirectory(NativeFileOps.GetDirectoryName(newTarget));
 
                if (useInplaceRenaming
                   && !target.Exists    // Cannot do inplace if the DirExists
@@ -215,6 +234,38 @@ namespace LiquesceSvc
          {
             throw new Win32Exception();
          }
+      }
+
+      private static void SendToRecycler(Roots roots, string pathSource, string pathTarget)
+      {
+         // Work out the location of the Recycler
+         string trimmedTarget = (from recyclerDirectoryName in Roots.RecyclerDirectoryNames 
+                                 let indexOf = pathTarget.IndexOf(recyclerDirectoryName, StringComparison.Ordinal) 
+                                 where indexOf >= 0 
+                                 select pathTarget.Remove(0, indexOf + recyclerDirectoryName.Length)
+                                 ).FirstOrDefault();
+
+         string sourceRoot = roots.GetRoot(pathSource);
+         string recyclerTarget = (from recycler in Roots.RecyclerDirectoryNames 
+                                  select new DirectoryInfo(sourceRoot + recycler) 
+                                  into info1 
+                                  where info1.Exists 
+                                  select info1.FullName + trimmedTarget
+                                  ).FirstOrDefault();
+         
+         if (string.IsNullOrEmpty(recyclerTarget))
+         {
+            // Set to use the @"Recycle Bin"
+            DirectoryInfo info = new DirectoryInfo(sourceRoot + Roots.RecyclerDirectoryNames[1]);
+            info.Create();
+            info.Attributes = info.Attributes | FileAttributes.Hidden | FileAttributes.System;
+            recyclerTarget = info.FullName + trimmedTarget;
+            //throw new Win32Exception(CBFSWinUtil.ERROR_INVALID_ADDRESS, string.Format("Unable to send {0} to the Recycle.bin", pathTarget));
+         }
+         // Create the Directory - In case it is in mixed mode
+         NativeFileOps.CreateDirectory(NativeFileOps.GetDirectoryName(recyclerTarget));
+         // Move and overwrite - Just in case
+         MoveFileEx(pathSource, recyclerTarget, true);
       }
 
       #region Win32
