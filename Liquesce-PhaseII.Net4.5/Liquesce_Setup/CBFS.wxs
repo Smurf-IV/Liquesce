@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+
+   <?define x64=$(sys.SOURCEFILEDIR)..\ThirdParty\CBFS\x64 ?>
+   <?define x86=$(sys.SOURCEFILEDIR)..\ThirdParty\CBFS\32bit ?>
+   <?define IcoSource=$(sys.SOURCEFILEDIR)..\Liquesce\Resources ?>
+
+   <Fragment>
+      <DirectoryRef Id="ServiceDIR" />
+
+      <ComponentGroup Id="CBFS">
+
+         <Component Id="Liquesce.ico" Directory="ServiceDIR">
+            <File Id="Liquesce.ico" Source="$(var.IcoSource)\Liquesce.ico" KeyPath="yes" />
+         </Component>
+         <Component Directory="ServiceDIR">
+            <Condition><![CDATA[VersionNT64]]></Condition>
+            <File Id="CBFS5Net.dll_x64" Source="$(var.x64)\CBFS5Net.dll" KeyPath="yes" />
+         </Component>
+         <Component  Directory="ServiceDIR">
+            <File Id="CBFS5Net.dll_x86" Source="$(var.x86)\CBFS5Net.dll" KeyPath="yes" />
+            <Condition><![CDATA[Not VersionNT64]]></Condition>
+         </Component>
+
+         <Component Directory="ServiceDIR">
+            <File Id="msvcp100.dll_x64" Source="$(var.x64)\msvcp100.dll" KeyPath="yes" />
+            <Condition><![CDATA[VersionNT64]]></Condition>
+         </Component>
+         <Component  Directory="ServiceDIR">
+            <File Id="msvcp100.dll_x86" Source="$(var.x86)\msvcp100.dll" KeyPath="yes" />
+            <Condition><![CDATA[Not VersionNT64]]></Condition>
+         </Component>
+
+         <Component Directory="ServiceDIR">
+            <File Id="msvcr100.dll_x64" Source="$(var.x64)\msvcr100.dll" KeyPath="yes" />
+            <Condition><![CDATA[VersionNT64]]></Condition>
+         </Component>
+         <Component  Directory="ServiceDIR">
+            <File Id="msvcr100.dll_x86" Source="$(var.x86)\msvcr100.dll" KeyPath="yes" />
+            <Condition><![CDATA[Not VersionNT64]]></Condition>
+         </Component>
+
+      </ComponentGroup>
+
+      <!-- Name to be used for the registration key of the CBFS application -->
+      <Property Id="PRODUCTNAME" Value="LiquesceSvc" />
+      <!--Values of ModulesToInstall
+      [Pascal] [C++ (VCL)] [C++ (Lib)] [C++ (.NET)] [C#] [VB.NET] [Java] Value Meaning
+      CBFS_MODULE_DRIVER 1 The driver (.sys file)
+      CBFS_MODULE_NET_REDIRECTOR_DLL 65536 (0x00010000) Network redirector DLL (CbFsNetRdr3.dll)
+      CBFS_MODULE_MOUNT_NOTIFIER_DLL 131072 (0x00020000) Mount Notifier DLL (CbFsMntNtf3.dll)
+      http://www.eldos.com/documentation/cbfs/ref_gen_helper_dlls.html
+      //CBFSModule( 1UL + 0x00010000 + 0x00020000);
+      -->
+      <Property Id="CBFSMODULESTOINSTALL" Value="196609" />
+
+      <Binary Id="CBFSWixCA.dll" SourceFile="$(var.CBFSWixCA.TargetDir)$(var.CBFSWixCA.TargetName).dll" />
+      <CustomAction Id="SetCBFS_CA_Values" Return="check" Property="InstallCBFS_CA" Value="[PRODUCTNAME];[CBFSMODULESTOINSTALL];[#Liquesce.ico];Liquesce.ico" />
+      <CustomAction Id="InstallCBFS_CA" BinaryKey="CBFSWixCA.dll" DllEntry="InstallCBFS_CA" Execute="deferred" Impersonate="no" Return="check" />
+      <CustomAction Id="SetUnCBFS_CA_Value" Return="check" Property="UninstallCBFS_CA" Value="[PRODUCTNAME];Liquesce.ico" />
+      <CustomAction Id="UninstallCBFS_CA" BinaryKey="CBFSWixCA.dll" DllEntry="UninstallCBFS_CA" Execute="deferred" Impersonate="no" Return="check" />
+
+      <InstallExecuteSequence>
+         <Custom Action="SetCBFS_CA_Values" Before="InstallCBFS_CA">NOT Installed AND NOT UPGRADINGPRODUCTCODE</Custom>
+         <Custom Action="InstallCBFS_CA" Before="InstallServices" >NOT Installed AND NOT UPGRADINGPRODUCTCODE</Custom>
+
+         <Custom Action="SetUnCBFS_CA_Value" After="MsiUnpublishAssemblies" >Installed AND NOT UPGRADINGPRODUCTCODE</Custom>
+         <Custom Action="UninstallCBFS_CA" After="SetUnCBFS_CA_Value" >Installed AND NOT UPGRADINGPRODUCTCODE</Custom>
+      </InstallExecuteSequence>
+
+      <UI>
+         <ProgressText Action="InstallCBFS_CA">Installing CBFS</ProgressText>
+         <ProgressText Action="UninstallCBFS_CA">Uninstalling CBFS</ProgressText>
+      </UI>
+      </Fragment>
+</Wix>

@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
+     >
+
+   <!-- do not change this ever !-->
+   <?define UpgradeCode = "F6F94F17-A05F-4824-8DD9-9F5E8267D783" ?>
+
+   <!-- Change this when creating new release YY-MM-REV-DD -->
+   <?define Version = "!(bind.FileVersion.LiquesceSvc.File)" ?>
+   
+   <?define ProductName = "Liquesce Windows HDD Pooling Suite"?>
+
+   <Product Version="$(var.Version)" Id="*" UpgradeCode="$(var.UpgradeCode)"
+          Name="$(var.ProductName)" Language="1033" Manufacturer="http://liquesce.codeplex.com/" >
+
+      <Package Id="*" Keywords='Installer'
+               InstallScope='perMachine'
+               Description="$(var.ProductName)"
+               Comments="Liquesce" InstallerVersion="301" Compressed="yes"
+               AdminImage='no'
+               InstallPrivileges='elevated'
+                 Platform='x86'
+               />
+
+      <MajorUpgrade DowngradeErrorMessage="Downgrades are not allowed - Use add/remove from the control panel" />
+
+      <!-- Support Information shown in Add/Remove programs (this is optional) -->
+      <Property Id="ARPHELPLINK" Value="http://liquesce.codeplex.com/documentation" />
+      <Property Id="ARPCOMMENTS" Value="http://liquesce.codeplex.com/discussions"/>
+      <Property Id="ARPCONTACT" Value="Simon Coghlan (Aka Smurf-IV)" />
+      <Property Id="ARPURLINFOABOUT" Value="http://liquesce.codeplex.com/" />
+      <Icon Id="InstallerIcon" SourceFile="$(sys.SOURCEFILEDIR)..\Liquesce\Resources\Liquesce.ico" />
+      <Property Id="ARPPRODUCTICON" Value="InstallerIcon" />
+      <WixVariable Id="WixUILicenseRtf" Value="GPLv2.rtf" />
+      
+      <!-- Properties to allow detection of .Net installation -->
+      <PropertyRef Id="NETFRAMEWORK40FULL"/>
+      <PropertyRef Id="NETFRAMEWORK40FULLINSTALLROOTDIR" />
+
+      <Condition Message="[ProductName] Requires .NET Framework 4.0 Main profile to be installed">
+         <![CDATA[Installed OR NETFRAMEWORK40FULL]]>
+      </Condition>
+      <Condition Message="You need to be an administrator to install this product.">
+         Privileged
+      </Condition>
+
+      <!--Allow 7z / zip compression to squeeze this tighter afterwards -->
+      <Media Id="1" Cabinet="Setup.cab" EmbedCab="yes" CompressionLevel="none" />
+
+      <Directory Id="TARGETDIR" Name="SourceDir">
+         <Directory Id="ProgramFilesFolder">
+            <Directory Id="INSTALLDIR" Name="Liquesce">
+               <Directory Id="ClientDIR" Name="Liquesce Client" />
+               <Directory Id="ServiceDIR" Name="Liquesce Service" />
+            </Directory>
+         </Directory>
+         <Directory Id="ProgramMenuFolder">
+            <Directory Id="ProgramMenuDir" Name="Liquesce"/>
+            <Directory Id="StartupFolder" Name="Startup" />
+         </Directory>
+
+         <Directory Id="CommonAppDataFolder" Name="CommonAppData">
+            <Directory Id="LiquesceSvc_Data" Name="LiquesceSvc" >
+               <Component Id="DataDir" Guid="01234567-7E98-44CE-B049-C477CC0A2B01" KeyPath="yes" />
+            </Directory>
+         </Directory>
+
+      </Directory>
+
+
+      <Feature Id="ProductFeature" Title="Liquesce_Setup" Level="1">
+         <ComponentGroupRef Id="Service" />
+         <ComponentGroupRef Id="CBFS" />
+         <ComponentRef Id="DataDir" />
+         <ComponentGroupRef Id="Client" />
+         <ComponentRef Id='ProgramMenuDir2'/>
+      </Feature>
+
+
+      <!-- Get the install to skip a few steps -->
+      <UIRef Id="WixUI_Common" />
+      <WixVariable Id="WixUIBannerBmp" Value="banner.bmp" />
+      <!-- This just adds 90K on top of the UI Extension.dll -->
+      <UI>
+         <Property Id="DefaultUIFont" Value="WixUI_Font_Normal" />
+         <TextStyle Id="WixUI_Font_Normal" FaceName="Tahoma" Size="8" />
+         <TextStyle Id="WixUI_Font_Bigger" FaceName="Tahoma" Size="12" />
+         <TextStyle Id="WixUI_Font_Title" FaceName="Tahoma" Size="9" Bold="yes" />
+
+         <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
+         <Property Id="ARPNOMODIFY" Value="1" />
+
+         <DialogRef Id="BrowseDlg" />
+         <DialogRef Id="DiskCostDlg" />
+         <DialogRef Id="ErrorDlg" />
+         <DialogRef Id="FatalError" />
+         <DialogRef Id="FilesInUse" />
+         <DialogRef Id="MsiRMFilesInUse" />
+         <DialogRef Id="PrepareDlg" />
+         <DialogRef Id="ProgressDlg" />
+         <DialogRef Id="ResumeDlg" />
+         <DialogRef Id="UserExit" />
+
+         <Publish Dialog="ExitDialog" Control="Finish" Event="EndDialog" Value="Return" Order="999">1</Publish>
+         <Publish Dialog="WelcomeEulaDlg" Control="Install" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+         <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="WelcomeEulaDlg" Order="1">NOT Installed</Publish>
+         <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="MaintenanceTypeDlg" Order="2">Installed</Publish>
+
+         <Publish Dialog="MaintenanceWelcomeDlg" Control="Next" Event="NewDialog" Value="MaintenanceTypeDlg">1</Publish>
+         <Publish Dialog="MaintenanceTypeDlg" Control="RepairButton" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+         <Publish Dialog="MaintenanceTypeDlg" Control="RemoveButton" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+         <Publish Dialog="MaintenanceTypeDlg" Control="Back" Event="NewDialog" Value="MaintenanceWelcomeDlg">1</Publish>
+
+      </UI>
+
+
+
+      <UIRef Id="WixUI_ErrorProgressText" />
+
+   </Product>
+</Wix>
