@@ -1,0 +1,50 @@
+<div class="wikidoc">
+<p><strong>Project Description</strong> <br>
+Liquesce <br>
+Definition: melt from solid to liquid; mix in <br>
+Synonyms: fuse, liquefy, blend, pool. <br>
+<br>
+This project will take the Dokan Library, with .Net and attempt to solve some of the issues of making a number of drives / directories appear as one pool dir in Win XPsp3 / 7 / 2008 ....</p>
+<h1>Aspirations</h1>
+<h2>(Phase 1):</h2>
+<ul>
+<li>A <a href="/wikipage?title=Service&referringTitle=Documentation">Service</a> that performs the actions to create the pool.
+<ul>
+<li>Allow re-enable the shares (If any) and perform the merging on start-up. </li><li>Attempt to perform the necessary ACL actions. </li></ul>
+</li><li>A <a href="/wikipage?title=Management%20GUI&referringTitle=Documentation">Management GUI</a> to aid in the construction and to show what the existing merging will &quot;Look like&quot; to the clients of the pool letter;
+<ul>
+<li>Could this be a WPF app into the service ? </li><li>Some helper (Tool-tips etc) to make the GUI easier to use for the first time user.
+</li><li>Stop - Start service to apply the changes. </li></ul>
+</li><li><a href="/wikipage?title=Application%20Tray&referringTitle=Documentation">Application Tray</a> user application;
+<ul>
+<li>Allow user to see if there are any issues that the service may have:
+<ul>
+<li>Running out of space, </li><li>unable to delete, </li><li>Stats. </li></ul>
+</li></ul>
+</li><li>An &quot;Aware&quot; Installer
+<ul>
+<li>Check the correct version Dokan Library. </li><li>Check correct version of .Net </li><li>Notify of Failure </li><li><em>Use WIX installer for this development.</em> </li></ul>
+</li><li>Some <a href="/wikipage?title=Test%20Scenarios&referringTitle=Documentation">
+Test Scenarios</a> </li></ul>
+<p>&#160;</p>
+<h2>Phase 2:</h2>
+<ul>
+<li>&#160;<a href="http://www.eldos.com/cbfs/no-dokan.php">http://www.eldos.com/cbfs/no-dokan.php</a>
+</li><li>Use up to date thirdparty Dll’s </li><li>Fix the&#160; <a href="http://liquesce.codeplex.com/wikipage?title=Management%20GUI&referringTitle=Documentation">
+Management GUI</a> to be admin only </li><li>x64 / x32 independence. </li><li>Log Tailing </li><li>Unit Tests from early on. </li></ul>
+<p>&#160;</p>
+<h2>Phase 3:</h2>
+<p>Currently in the “Thinking stage”, so please add your suggestions.</p>
+<ul>
+<li>Refactor and make ready for <a href="http://msdn.microsoft.com/en-us/magazine/ee291628.aspx">
+Managed Extensibility Framework (MEF)</a>, (or similar). </li><li>Remove the existing “Spread” options and convert into MEF. </li><li>Investigate the usage WPF for some / all of the Forms. </li><li>Better examples / explanations of what is going on. </li><li>Publish events to allow other services (Not MEF this time) to perform external actions; e.g. triggers for script engines.
+</li><li><span style="color:#0066cc"><a href="http://liquesce.codeplex.com/discussions/226878">More than one spanning drive</a></span>
+</li><li>Extended Feedback via the tray application </li><li>A better management app to set which folders to be automatically backed up </li><li>External service module(s) to perform the <em>backup / </em>mirror / _Something else functionality
+</li><li>? </li></ul>
+<h3><a href="http://liquesce.codeplex.com/wikipage?title=Plans&referringTitle=Documentation">Plans</a></h3>
+<h3><a href="http://liquesce.codeplex.com/wikipage?title=FAQs&referringTitle=Documentation">FAQs</a></h3>
+<h1>Aspirations phase 1 diagram:-</h1>
+<p><img title="Liquesce.png" alt="Liquesce.png" src="http://i3.codeplex.com/download?ProjectName=Liquesce&DownloadId=196664"></p>
+<h2><a href="/wikipage?title=Credits&referringTitle=Documentation">Credits</a></h2>
+<p><a href="/wikipage?title=Pictures&referringTitle=Documentation">Pictures</a></p>
+</div><div class="ClearBoth"></div>

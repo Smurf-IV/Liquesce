@@ -1,0 +1,102 @@
+
+<h2><strong>Liquesce: <font size="4">dictionary description</font></strong></h2>
+<p><strong>Definition</strong>: melt from solid to liquid; mix in <br>
+<strong>Synonyms</strong>: fuse, liquefy, blend, pool.</p>
+<h1><span style="text-decoration:underline">What is Liquesce?</span></h1>
+<p>The driving force behind the Liquesce code base is to take you hard drives that have Space / Directories and merge them into a single representation in an explorer view. This is very similar to the “Drive Extender” functionality in WHS,
+<strong>but </strong>without the need to format your drives :-)</p>
+<table cellspacing="0" cellpadding="2" width="1000" border="0">
+<tbody>
+<tr>
+<td valign="top" width="527">
+<ul>
+<li>The storage pool can use any type and size of hard drive, including SATA, IDE, ESATA, FIREWIRE, USB etc.
+</li><li>
+<p>If the drives have the same directory representation i.e. Movies on the root of both, then these will be merged into a single Movies directory within the view.</p>
+</li><li>
+<p>Writing to this merged pool will have different strategies dependent on the setup, e.g. Folder / Balanced / Priority.</p>
+</li></ul>
+</td>
+</tr>
+<tr>
+<td width="471" align="center"><a href="http://download.codeplex.com/download?ProjectName=Liquesce&DownloadId=213722"><img title="image" border="0" alt="image" src="http://download.codeplex.com/download?ProjectName=Liquesce&DownloadId=213723" width="504" height="248" style="border-left-width:0px; border-right-width:0px; border-bottom-width:0px; padding-top:0px; padding-left:0px; display:inline; padding-right:0px; border-top-width:0px"></a></td>
+</tr>
+</tbody>
+</table>
+<p>So read on and find out what Liquesce could possibly do for your separate hard drives (logically and physically), and see if it can be of use to you.</p>
+<p><em><span style="font-size:medium">For more information: go to </span></em><a href="http://liquesce.codeplex.com/wikipage?title=FAQs"><em><span style="font-size:medium">The FAQS</span></em></a><em><span style="font-size:medium"> section</span></em></p>
+<h2>OS Requirements:</h2>
+<ul>
+<li>You will need the <a href="http://www.microsoft.com/en-us/download/details.aspx?id=40773">
+.Net 4.5.1</a> or greater, so please install that. </li><li>And <strong>then</strong> run the MS updates to ensure that the security fixes are applied.
+</li></ul>
+<p><em><sup>Notes:<br>
+-&nbsp; For Phase I code only you will need </sup></em><a href="http://dokan-dev.net/en/download/"><em><sup>Dokan
+</sup></em></a><em><sup>for the OS you are using.<br>
+-&nbsp; For Phase II code only you will need </sup></em><sup><a href="https://www.microsoft.com/download/en/details.aspx?id=17718">.Net4
+<em>Full</em> profile</a>,</sup><a href="http://dokan-dev.net/en/download/"><em><sup>
+</sup></em></a><em><sup>for the OS you are using.</sup></em></p>
+<hr>
+<h3>Directory / Drive Merging</h3>
+<p>After an install, the Management Application will be launched showing the default setup.</p>
+<p>This will be a direct mirror of Drive C with a default delay of over 32 seconds.</p>
+<p>The management window is split into three areas</p>
+<ol>
+<li>The File System </li><li>Merge Points </li><li>Expected Output </li></ol>
+<p><span style="text-decoration:underline">The File System </span>window shows what can be “Seen” as a potential source for the merge points. These can be opened and will show directories only. once you have selected a source, it can be dragged and dropped
+ into the Merge Points area.</p>
+<p><span style="text-decoration:underline">The Merge Points</span>, can be reordered and deleted in case mistakes a re made. The order in this window is used to determines the preference order for filling the storage locations.</p>
+<p><span style="text-decoration:underline">The Expected Output</span>, allows you to traverse over the merged directories to see if the structure is correct. This will also show duplicate filenames if they exist, so please expand all the directories to see
+ if any collisions have occurred. The system will not scan, as this is resource and time expensive.</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<hr>
+<p>&nbsp;</p>
+<p>Below is an example of 3 small HDD’s (50MB), that have been used to set up an initial merge size of 150 MB.</p>
+<ul>
+<li>The “Hold Of Bytes” was set to 10MB, meaning that when a new file was to be placed onto the storage, and there is less than that number of bytes, it would move to the next in order.
+</li><li>The configuration was then sent to the Liquesce Service via the menu operation “<span style="text-decoration:underline">S</span>end Configuration”
+</li><li>The then Music Directory was created, and the Artist was copied into it (On the “N” drive).
+</li><li>The Liquesce Service then spread the directory structure across the drives (See right hand explorer window)
+</li><li>The management application was then refreshed and now you can see that it shows all the files from the album appearing as a single listing (Bottom window)
+</li><li>Right clicking on the properties of the Music directory within the “N” drive shows that this is read as a single system.
+</li></ul>
+<p><a href="http://download.codeplex.com/download?ProjectName=Liquesce&DownloadId=208309"><img title="Merge-Results_thumb3[3]" border="0" alt="Merge-Results_thumb3[3]" src="http://download.codeplex.com/download?ProjectName=Liquesce&DownloadId=208310" width="701" height="448" style="border-left-width:0px; border-right-width:0px; border-bottom-width:0px; padding-top:0px; padding-left:0px; display:inline; padding-right:0px; border-top-width:0px"></a></p>
+<h1>&nbsp;</h1>
+<hr>
+<h2>The Application Tray</h2>
+<p><strong>So why one of these ?</strong></p>
+<ul>
+<li>Need to inform the logged on user that something might be going on. </li><li>Need to have some way of alerting the normal user that things may not be good in the new drive
+<ul>
+<li>Running out of space, </li><li>unable to delete, </li><li>Stats. </li></ul>
+</li><li>Just need to show that it's running (Like AV's do :-) </li><li>Application Management </li><li>Current Space usage </li></ul>
+<h3>Current Space Usage</h3>
+<p>The tray app when running on the host has a menu to show the distribution of the space over the mount points that make up the space available.
+<br>
+<br>
+Here's a view from XP <br>
+<img title="Liquesce FreeDiskSpace.png" alt="Liquesce FreeDiskSpace.png" src="http://i3.codeplex.com/download?ProjectName=Liquesce&DownloadId=166543" width="687" height="143">
+<br>
+- The light blue shows the amount of space currently allocated in the _backup directories
+<br>
+- The Red border is showing that the drive has fallen below the &quot;Hold Of Bytes&quot; number
+<br>
+- The Orange border is showing that the free space is approaching the &quot;Hold Of Bytes&quot;
+<br>
+- The Green indicator bar (Below) shows where the next new file is likely to be created
+<br>
+- All of this is updated on a timer</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>.</p>
+<hr>
+<p><a href="file:///C:/wikipage?title=Credits&referringTitle=Home">Credits</a></p>
+<div id="WikiContent">
+<div class="wikidoc">
+<p><a href="http://www.jetbrains.com/resharper/features/index.html?linklogos" style="border-left-width:0px; text-decoration:none; height:30px; border-right-width:0px; width:120px; border-bottom-width:0px; padding-bottom:0px; padding-top:0px; padding-left:0px; margin:0px; display:block; padding-right:0px; border-top-width:0px; text-indent:0px"><span style="border-left-width:0px; font-size:9px; font-family:trebuchet ms,arial,sans-serif; border-right-width:0px; border-bottom-width:0px; font-weight:normal; color:#333; padding-bottom:0px; padding-top:0px; padding-left:0px; left:35px; margin:0px; top:-1px; padding-right:0px; border-top-width:0px">Development
+ assisted by</span><img border="0" alt="The Most Intelligent Add-In To Visual Studio" src="http://www.jetbrains.com/resharper/features/rs/rs1/rs120x30_violet.gif"></a></p>
+</div>
+</div>
+<p>&nbsp;</p>
+<p><a id="clustrMapsLink" href="http://www2.clustrmaps.com/counter/maps.php?url=http://liquesce.codeplex.com/"><img id="clustrMapsImg" title="Locations of visitors to this page" alt="Locations of visitors to this page" src="http://www2.clustrmaps.com/counter/index2.php?url=http://liquesce.codeplex.com/" width="330" height="218" style="border-left-width:0px; border-right-width:0px; border-bottom-width:0px; border-top-width:0px"></a></p>

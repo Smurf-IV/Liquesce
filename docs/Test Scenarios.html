@@ -1,0 +1,148 @@
+<div class="wikidoc">
+<h1>Test Scenarios</h1>
+<p><strong>This is where <span style="text-decoration:underline">you can</span> help and make some suggestions for what this will need to test for, and how the &quot;suite&quot; will deal with these situations</strong></p>
+<ul>
+<li>These will also have to be carried out in/on <em>(and clients of/with)</em>:
+<ul>
+<li>XP SP3 </li><li>Win 7
+<ul>
+<li>x86 </li><li>64 bit </li></ul>
+</li><li>Server 2008 R2
+<ul>
+<li><em>(Yes I am missing Vista and 2008 32bits on purpose !)</em> </li></ul>
+</li></ul>
+</li></ul>
+<ul>
+<li><a href="http://en.wikipedia.org/wiki/Create,_read,_update_and_delete">The Obvious :-</a>
+<ul>
+<li><strong>B</strong>rowse, </li><li><strong>R</strong>ead, </li><li><strong>E</strong>dit, </li><li><strong>A</strong>dd, </li><li><strong>D</strong>elete </li></ul>
+</li></ul>
+<ul>
+<li>Missing Physical Location </li><li>Read only Physical Location </li><li>No Space in Physical location(s) </li><li>Physical location disappears after service start </li><li>User account is removed </li><li>Collision of directories
+<ul>
+<li>What to do if one of them is readonly </li></ul>
+</li><li>Collision of files in apparent same location </li><li>Folder Share </li><li>Folder Library (Win 7 and above) </li><li>Mount point usage <a href="http://liquesce.codeplex.com/workitem/7150">Move to duplicate dirname does not work correctly.</a>
+</li><li>Junction Redirects </li><li>Number of files open exceeds the number of threads </li><li>Strange programs
+<ul>
+<li>Media-Browser does &quot;funny things&quot; when opening files </li><li>IIS Shares </li><li>Lots' of files being open and closed rapidly (C&#43;&#43; project builds) </li></ul>
+</li></ul>
+<ul>
+<li>The existing Dokan problems (Reported in <a href="http://code.google.com/p/dokan/issues/list">
+http://code.google.com/p/dokan/issues/list</a>) </li><li>
+<h3>Problems Encountered:-</h3>
+</li><li>Copy / Move over existing (File / Directory) </li><li>Delete / rename / move spanned directories </li><li>Restart service ad then the shares not being created. </li><li>Restart Machine and the shares not being re-enabled on SBS7 </li><li>Mount points starting at sub dirs (Not drive roots) </li><li>Space calculations when using Mounted drives into directories </li><li><span id="WikiLinkLabel">[workitem:7540]</span> </li></ul>
+<p><img alt="High five" src="http://download.codeplex.com/Download?ProjectName=Liquesce&DownloadId=291148" style="border-bottom-style:none; border-right-style:none; border-top-style:none; border-left-style:none"></p>
+<hr width="90">
+<img alt="High five" src="http://download.codeplex.com/Download?ProjectName=Liquesce&DownloadId=291148" style="border-bottom-style:none; border-right-style:none; border-top-style:none; border-left-style:none">
+<p>&#160;</p>
+<h1></h1>
+<h1>The Following is the current Test Scenario Table</h1>
+<p>please print out or take a copy and fill in the pass fail criteria and open new (Or re-open) Issues.</p>
+<span lang="">
+<p>2011-##-## Release Name: ____________________</p>
+<p><i>!! Remember to turn off the AV's on the source and Merge points !!</i></p>
+<u>
+<p>Source OS</p>
+used for the Mount:- __________ </u><a href="http://liquesce.codeplex.com/workitem/7364"><u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/7364</span></font></font></u></a></span><b><font size="3"><span lang="">
+<p>Put in the Issue Numbers.</p>
+<u>
+<h2>Install Testing </h2>
+</u></span></font><a href="http://liquesce.codeplex.com/workitem/7107"><u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/7107</span></font></font></u></a></b>
+<ol>
+<font size="3">
+<li>Attempt Install without Dokan </li><li>Attempt install with earlier version of Dokan <a href="http://liquesce.codeplex.com/workitem/7039">
+<u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/7039</span></font></font></u></a>
+<font size="3"><span lang=""></span></font></li><li>Clean install </li><li>Look for TrayIcon </li><li>Start of Management program </li><li>Look in explorer for the N Drive </li><li>Check that it has the C Drive contents. </li><li>Ensure Readonly / Hidden attributes (e.g $Recycler) on files and Drives </li><li>Check for security </li><li>Upgrade (Install older - then install this version) (Check the build number displayed in the management app)
+<a href="http://liquesce.codeplex.com/workitem/7771"><u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/7771</span></font></font></u></a>
+<font size="3"><span lang=""></span></font></li><li>Ctrl Click and stop / start service on Tray App <a href="http://liquesce.codeplex.com/workitem/7770">
+<u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/7770</span></font></font></u></a>
+<font size="3"><span lang=""></span></font></li><li>Double click on the tray app multiple times (Only 1 managment app should start)
+<a href="http://liquesce.codeplex.com/workitem/7840"><u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/7840</span></font></font></u></a>
+<font size="3"><span lang=""></span></font><b><u></u></b></font></li></ol>
+<h2>Test management app.</h2>
+<p><a href="http://liquesce.codeplex.com/workitem/7285"><u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/7285</span></font></font></u></a></p>
+<ol>
+<font size="3">
+<li>Delete the C drive </li><li>Attempt to select mount letter already in use by OS </li><li>Attempt to type a long Mount volume label (Use paste) </li><li>Drag some drives / directories into the merge area. </li><li>Drag the same drives / directories again <a href="http://liquesce.codeplex.com/workitem/8502">
+<u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/8502</span></font></font></u></a>
+<font size="3"><span lang=""></span></font></li><li>Re-Order the entries <a href="http://liquesce.codeplex.com/workitem/7373"><u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/7373</span></font></font></u></a><font size="3"><span lang="">
+ / </span></font><a href="http://liquesce.codeplex.com/workitem/7769"><u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/7769</span></font></font></u></a>
+<font size="3"><span lang=""></span></font></li><li>Attempt to Use a network drive (Shouldn't be shown) </li><li>Send the configuration (Does a messageBox appear) </li><li>Open Logging file(s) - ensure file end is displayed <a href="http://liquesce.codeplex.com/workitem/7487">
+<u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/7487</span></font></font></u></a>
+<font size="3"><span lang=""></span></font></li><li>Change Name and reload </li><li>Change logging and reload </li><li>Open Logging file(s) - ensure file end is displayed </li><li>Use tray app, to open the &quot;Free space view&quot; <a href="http://liquesce.codeplex.com/workitem/7486">
+<u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/7486</span></font></font></u></a>
+<font size="3"><span lang=""></span></font></li><li>Check logging for the tray app. <a href="http://liquesce.codeplex.com/workitem/7485">
+<u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/7485</span></font></font></u></a><font size="3"><span lang=""> /
+</span></font><a href="http://liquesce.codeplex.com/workitem/7360"><u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/7360</span></font></font></u></a>
+</li><li><br>
+</font></li></ol>
+<h2>Explorer testing</h2>
+<ol>
+<li>Use notepad to create / reopen / edit file(s) <a href="http://liquesce.codeplex.com/workitem/8560">
+<u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/8560</span></font></font></u></a><font size="3"><span lang=""> /
+</span></font><a href="http://liquesce.codeplex.com/workitem/7025"><u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/7025</span></font></font></u></a>
+<font size="3"><span lang=""></span></font></li><li>Use Wordpad to create / reopen / edit file(s) </li><li>Create directories (Hierarchy) </li><li>Rename base directory <a href="http://liquesce.codeplex.com/workitem/7312"><u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/7312</span></font></font></u></a>
+<font size="3"><span lang=""></span></font></li><li>Fill a source drive and then see where a new file will be created. </li><li>Right click and observe the properties of a file (Attribs and time stamps) <a href="http://code.google.com/p/dokan/issues/detail?id=177">
+<u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://code.google.com/p/dokan/issues/detail?id=177</span></font></font></u></a><font size="3"><span lang=""> /
+</span></font><a href="http://liquesce.codeplex.com/workitem/8488"><u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/8488</span></font></font></u></a>
+<font size="3"><span lang=""></span></font></li><li>Delete a file and see if goes into the Recycle Bin <a href="http://liquesce.codeplex.com/workitem/7253">
+<u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/7253</span></font></font></u></a><font size="3"><span lang=""> /
+</span></font><a href="http://liquesce.codeplex.com/workitem/7489"><u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/7489</span></font></font></u></a>
+<font size="3"><span lang=""></span></font></li><li>Run an application from the mount drive <a href="http://code.google.com/p/dokan/issues/detail?id=209">
+<u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://code.google.com/p/dokan/issues/detail?id=209</span></font></font></u></a>
+</li><li><br>
+</li></ol>
+<h2>Application Access Testing</h2>
+<ol>
+<li>Use Teracopy to copy to the Mount and from a share <a href="http://liquesce.codeplex.com/workitem/7841">
+<u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/7841</span></font></font></u></a>
+<font size="3"><span lang=""></span></font></li><li>Use PureSync to copy to the Mount <a href="http://liquesce.codeplex.com/workitem/7659">
+<u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/7659</span></font></font></u></a><font size="3"><span lang=""> /
+</span></font><a href="http://liquesce.codeplex.com/workitem/7556"><u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/7556</span></font></font></u></a>
+<font size="3"><span lang=""></span></font></li><li>Use FreeFileSync to copy to the Mount </li><li>Use WMPlayer <a href="http://liquesce.codeplex.com/workitem/7388"><u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/7388</span></font></font></u></a><font size="3"><span lang=""> /
+</span></font><a href="http://liquesce.codeplex.com/workitem/7204"><u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/7204</span></font></font></u></a>
+<font size="3"><span lang=""></span></font></li><li>VLC Over the share <a href="http://liquesce.codeplex.com/workitem/7812"><u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/7812</span></font></font></u></a>
+<font size="3"><span lang=""></span></font></li><li>Use firefox to download to the mount <a href="http://liquesce.codeplex.com/workitem/7572">
+<u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/7572</span></font></font></u></a>
+</li><li><br>
+</li></ol>
+<h2>Share Testing</h2>
+<ol>
+<li>
+<div align="left">Create a share </div>
+<a href="http://liquesce.codeplex.com/workitem/7313"><u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/7313</span></font></font></u></a>
+<font size="3"><span lang=""></span></font></li><li>Use management app to view the shares and save <a href="http://liquesce.codeplex.com/workitem/7374">
+<u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/7374</span></font></font></u></a>
+<font size="3"><span lang=""></span></font></li><li>Restart and see if share is re-enabled <a href="http://liquesce.codeplex.com/workitem/7375">
+<u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/7375</span></font></font></u></a>
+<font size="3"><span lang=""></span></font></li><li>Restart OS and see if share is re-enabled <a href="http://liquesce.codeplex.com/workitem/7669">
+<u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/7669</span></font></font></u></a>
+<font size="3"><span lang=""></span></font></li><li>Access share from same machine (Via Network Places) </li><li>Perform Explorer Testing again i.e rename a dir <a href="http://liquesce.codeplex.com/workitem/7097">
+<u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/7097</span></font></font></u></a>
+<font size="3"><span lang=""></span></font></li><li>Access from External OS <a href="http://liquesce.codeplex.com/workitem/8162">
+<u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/8162</span></font></font></u></a><font size="3"><span lang=""> /
+</span></font><a href="http://code.google.com/p/dokan/issues/detail?id=197"><u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://code.google.com/p/dokan/issues/detail?id=197</span></font></font></u></a>
+<ol>
+<li>Use XP </li><li>Use win2k3 (WHS if available) </li><li>Use Win 7 x32 </li><li>Use Win 7 x64 <a href="http://liquesce.codeplex.com/workitem/7491"><u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/7491</span></font></font></u></a>
+</li></ol>
+<font size="3"><span lang=""></span></font></li><li>Use Win 2k8 (Use WHS if available) </li><li>Use Win 7 Ultimate </li><li><br>
+</li></ol>
+<h2>Performance Testing</h2>
+<p align="left">Create very deep and Some directories with large number of files for copying to and from tests</p>
+<ol>
+<li>
+<div align="left">View Large number of files (&gt;1000) </div>
+</li><li><a href="http://liquesce.codeplex.com/workitem/8424 "><u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/8424
+</span></font></font></u></a><font size="3"><span lang=""></span></font></li><li>Copy large amount of data that will force a breach of a the main source area <a href="http://liquesce.codeplex.com/workitem/7272">
+<u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/7272</span></font></font></u></a><font size="3"><span lang=""> /
+</span></font><a href="http://liquesce.codeplex.com/workitem/7471"><u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/7471</span></font></font></u></a><font size="3"><span lang="">
+</span></font></li><li>Perform a &quot;Find Files&quot; <a href="http://liquesce.codeplex.com/workitem/7556">
+<u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/7556</span></font></font></u></a>
+<font size="3"><span lang=""></span></font></li><li>Perform a directory / File move within the mount <a href="http://liquesce.codeplex.com/workitem/7156">
+<u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/7156</span></font></font></u></a><font size="3"><span lang=""> /
+</span></font><a href="http://liquesce.codeplex.com/workitem/7150"><u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/7150</span></font></font></u></a>
+</li><li>Perform a spanned directory delete <a href="http://liquesce.codeplex.com/workitem/7096">
+<u><font color="#0000ff" size="3"><font color="#0000ff" size="3"><span lang="">http://liquesce.codeplex.com/workitem/7096</span></font></font></u></a>
+</li><li><br>
+</li></ol>
+</div><div class="ClearBoth"></div>

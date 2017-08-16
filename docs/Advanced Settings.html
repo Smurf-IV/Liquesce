@@ -1,0 +1,53 @@
+<div class="wikidoc">
+<h1></h1>
+<p>The advanced settings (From the Management application) apply to the whole service, so if you modify the log level, then all calls to that logging level anywhere in the service code base will be changed.</p>
+<p><img src="http://download.codeplex.com/download?ProjectName=Liquesce&DownloadId=156013"></p>
+<p>Pressing save will then put the values into the pending config file, and will need to be resent to the Service via the “Send Configuration” menu item
+<br>
+</p>
+<h2>Global Config Settings</h2>
+<h3>Service Level Values</h3>
+<b>Delay Mount Start</b>
+<ul>
+<li>This is a Delay Start Service, But this gives the OS a little extra to mount Networks and USB devices before attempting to start the Pool driver.
+</li><li>Range 250 &lt;-&gt; 10000000 </li></ul>
+<br>
+<b>Service Logging Level</b>
+<ul>
+<li>The amount of information that will be placed into the Log files (Trace means slower performance!).
+</li></ul>
+<ol>
+<li>Warn </li><li>Debug </li><li>Trace </li></ol>
+<h3>File (handles via the OS) parameters</h3>
+<b>Buffer Read Size</b>
+<ul>
+<li>The number of KBytes allocated to buffered file reading (4KB is the OS default!).
+</li><li>Range 1 &lt;-&gt; 256 </li></ul>
+<br>
+<b>Hold Off Buffer</b>
+<ul>
+<li>Number of free MegaBytes to leave, before attempting to use another drive to write to.
+</li><li>Range 1 &lt;-&gt; 1024000 </li></ul>
+<br>
+<b>File Lock Timeout (mSec)</b>
+<ul>
+<li>Useful if you are getting file overwrites in some applications that perform quick creation deletion / creation of files, and multiple threads - Can be set to -1 for infinite.
+</li><li>Range -1 &lt;-&gt; 100000 </li></ul>
+<br>
+<h3>Dokan Driver Values</h3>
+<b>Dokan Debug Mode</b>
+<ul>
+<li>Later on will allow Dokan Debug information to be captured into the Service log.&quot;
+</li></ul>
+<br>
+<b>Thread Count</b>
+<ul>
+<li>0 is automatic, use 1 for problem finding scenario's. </li><li>Range 0 &lt;-&gt; 32 </li></ul>
+<p>&#160;</p>
+<h2></h2>
+<h2>Current Shares</h2>
+<p>This allows you to see the shares that have been setup via the administrator against the mounted Drive letter(s). Any matches will be shown in this form if the application is also started with administrative privileges</p>
+<p><a href="http://download.codeplex.com/download?ProjectName=Liquesce&DownloadId=156016"><img title="Current Shares" border="0" alt="Current Shares" src="http://download.codeplex.com/download?ProjectName=Liquesce&DownloadId=174370" width="576" height="488" style="border-bottom:0px; border-left:0px; padding-left:0px; padding-right:0px; display:inline; border-top:0px; border-right:0px; padding-top:0px"></a>
+ .</p>
+<p>Pressing save will then put the values into the pending config file, and will need to be resent to the Service via the “Send Configuration” menu item</p>
+</div><div class="ClearBoth"></div>

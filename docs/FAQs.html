@@ -1,0 +1,77 @@
+<div class="wikidoc">
+<h2><a href="#x_x_sharing">Shares and Sharing</a></h2>
+<h2><a href="#x_x_formats">Hard drive formats (File Systems)</a></h2>
+<h2><a href="#x_x_Directories">Directories (Deleting etc)</a></h2>
+<h2><a href="/wikipage?title=How%20To%20Get%20Logs&referringTitle=FAQs">How To Get Logs</a></h2>
+<h2><a href="/wikipage?title=How are the files spread across the drives %3f" target="_blank">How are the files spread across the drives ?</a></h2>
+<h2><a href="/wikipage?title=Setup Merging&referringTitle=FAQs">How do you set up the merging</a></h2>
+<h2><a href="http://liquesce.codeplex.com/wikipage?title=Advanced Settings&referringTitle=FAQs">Advanced Settings</a></h2>
+<h2><a href="/wikipage?title=Performance&referringTitle=FAQs">Performance</a></h2>
+<p>&nbsp;</p>
+<h2><a name="sharing"><span style="font-size:large"><strong><span style="text-decoration:underline">Shares and Sharing</span></strong></span></a></h2>
+<h2><strong>Do Liquesce views have their own share user/group security ?</strong></h2>
+<ul>
+<li>Currently - Whatever the system has set up for access, should be replicated when the service restarts
+<ul>
+<li>But you need to let Liquesce know what to restore when it starts up (Which is after the lanmanserver !!)
+</li><li>i.e. You need to store these in Liquesce; see <a href="http://liquesce.codeplex.com/wikipage?title=Advanced Settings&referringTitle=FAQs">
+Advanced Settings</a> </li></ul>
+</li></ul>
+<p>&nbsp;</p>
+<h2>I am having trouble with XP accessing shares</h2>
+<blockquote>
+<p>See the workaround here: <a href="http://liquesce.codeplex.com/workitem/8162">
+http://liquesce.codeplex.com/workitem/8162</a> or use the Advanced settings button</p>
+</blockquote>
+<h2>I am having trouble with Shares between different x64 and 32bit OS types.</h2>
+<blockquote>
+<p>See the work around here: <a href="http://liquesce.codeplex.com/discussions/236580">
+http://liquesce.codeplex.com/discussions/236580</a> or use the Advanced settings button</p>
+</blockquote>
+<h2>I am having trouble with XP Serving other XP clients</h2>
+<blockquote>
+<p>See the workaround here: <a href="http://liquesce.codeplex.com/workitem/10543">
+http://liquesce.codeplex.com/workitem/10543</a>or use the Advanced settings button</p>
+<p>&nbsp;</p>
+</blockquote>
+<h2><a name="formats">What file systems does this work with?</a></h2>
+<ul>
+<li>This will <strong><span style="text-decoration:underline">not</span></strong> work with FAT or FAT32 formats,
+</li><li>Put simply - It does not care for the FS as long as ACL system calls work
+<ul>
+<li>If the Windows OS can read / write to it, then <em>according to the MSDN</em>, this should be able to as well.
+</li></ul>
+</li><li>I have NTFS (3 / 4) and exFat currently being used. </li></ul>
+<p>&nbsp;</p>
+<h2><a name="Directories">Directories:</a></h2>
+<h2>What Happens when a directory is renamed?</h2>
+<ul>
+<li>Internal to the dokan driver this is presented as a directory move to a new name.
+</li><li>The rename will then be cascaded to all directories that make up that current view.
+</li></ul>
+<ul>
+</ul>
+<p>&nbsp;</p>
+<h2>What Happens when a directory is Moved?</h2>
+<ul>
+<li>All Spanned directories are moved in preference order </li><li>The Target drive will be the 1st in the list </li><li>This means that if a file has a duplicate, the highest in the preference order (And the one that would have been presented in the Mount view) will be written first
+</li><li>A delete operation will follow the copy to perform an internal transaction using the windows Kernel MoveFileEx(...)
+</li></ul>
+<p>&nbsp;</p>
+<h2>What Happens when a directory is Deleted?</h2>
+<ul>
+<li>All the directories that make up the current known view will be deleted. </li><li>Recursion will <em>not</em>&nbsp; be performed by this service, as that is <em>
+supposed</em> to have been taken care of by the &ldquo;<em>Caller application</em>&rdquo;
+</li></ul>
+<p>&nbsp;</p>
+<h2>What Happens when a directory is moved from the Mount to an existing source?</h2>
+<ul>
+<li>The operation should succeed but beware of the scenario in <a href="http://liquesce.codeplex.com/workitem/7096">
+Delete directory (If spanned) will not delete &quot;All&quot; sources of that directory</a>
+<ul>
+<li>This means that if move from the Mount to the same location in the highest drive, all data will be deleted.
+</li><li>This is due to the Dokan driver not being informed of anything going on outside of it's mount (i.e. the copy before delete)
+</li></ul>
+</li><li>So basically <span style="font-size:small"><strong><span style="color:#ff0000"><span style="text-decoration:underline">Do not do that !</span></span></strong>
+</span></li></ul>
+</div><div class="ClearBoth"></div>

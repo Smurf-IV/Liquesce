@@ -1,0 +1,30 @@
+<div class="wikidoc">
+<h2>Different Modes:</h2>
+<ul>
+<li>Folder </li><li>Priority </li><li>Balanced </li></ul>
+<p><a href="http://liquesce.codeplex.com/wikipage?title=Application Tray" target="_blank">The Folder Tray form</a> is mentioned a lot, but it also includes another form that allows you to see where a file or directory may be placed across the merged drives.</p>
+<h3>&nbsp;</h3>
+<h3><span style="text-decoration:underline">Folder Mode</span></h3>
+<ul>
+<li>Attempts to keep all new creations in the directory they are targeted at. </li><li>Once the &ldquo;HoldOffBytes&rdquo; value is breached, then it will create a new directory with the same path elements on the highest drive that has greater than the &ldquo;HoldOffBytes&rdquo;.
+</li><li>The &ldquo;HoldOffBytes&rdquo; must be larger than the largest file that the user envisages creating. so if Archiving home videos @ DVD size of 4.4GB, then make the Hold of Size 5GB as a minimum.
+</li><li>Currently updates to existing files that cause a breach in the space, will <strong>
+<span style="text-decoration:underline">not</span></strong> be moved to another drive.
+</li><li>The Folder Tray form, will show the &ldquo;HoldOffBytes&rdquo; status in different colours: Orange for getting close, and Red for breached.
+</li></ul>
+<p>&nbsp;</p>
+<h3><span style="text-decoration:underline">Priority</span></h3>
+<ul>
+<li>All new Creations will be in the order the drives have been placed in the management app.
+</li><li>Once the &ldquo;HoldOffBytes&rdquo; value is breached, then it will create a new directory with the same path elements on the highest drive that has greater than the &ldquo;HoldOffBytes&rdquo;.
+</li><li>This mode is good if you want all new creations to be on a fast drive, that will then allow a backup application to move them to slower drives in Idle time etc..
+</li><li>The Folder Tray form, will show the next drive to be used with a green colour.
+</li></ul>
+<p>&nbsp;</p>
+<h3><span style="text-decoration:underline">Balanced</span></h3>
+<ul>
+<li>It will place the files to get a balanced free space on all disks. </li><li>This will mean that the bigger (and usually faster) disks will be used first.
+</li><li>There may also be a speed improvements due to parallel disk use, like in a software RAID0 but this will only be faster if you are copying multiple files at the same time. If you only copy one file after another it will only access one disk at a time...
+</li><li>The Folder Tray form, will show the amount of free space, either in proportional or default windows explorer styles.
+</li></ul>
+</div><div class="ClearBoth"></div>
